@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example
+.vercel/
+supabase/.temp/
+
+/test-results/
+/public/precache-manifest.json
+/public/sw.js

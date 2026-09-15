@@ -1,0 +1,397 @@
+import { uid } from "@/lib/constants";
+import { dateKey, parseDate } from "@/lib/calculations/dates";
+import {
+  pause,
+  resume,
+  review,
+  sessionFromTimer,
+  startTimer,
+} from "@/lib/calculations/timer";
+import type {
+  DailyTask,
+  Goals,
+  Settings,
+  StudyData,
+  Subject,
+  TimerMode,
+  TimerPhase,
+} from "@/types/study";
+const record = (prefix: string, now: number) => ({
+  id: uid(prefix),
+  createdAt: now,
+  updatedAt: now,
+  deletedAt: null,
+  extras: {},
+});
+function subject(data: StudyData, id: string) {
+  const s = data.subjects.find((s) => s.id === id && !s.deletedAt);
+  if (!s) throw Error("Хичээл олдсонгүй.");
+  return s;
+}
+function validDate(date: string) {
+  if (!parseDate(date)) throw Error("Огноог шалгана уу.");
+}
+export const actions = {
+  addSubject:
+    (name: string, color: string) =>
+    (data: StudyData): StudyData => {
+      const clean = name.trim();
+      if (!clean || clean.length > 100)
+        throw Error("Хичээлийн нэр 1–100 тэмдэгт байна.");
+      if (!/^#[a-f0-9]{6}$/i.test(color)) throw Error("Өнгө буруу байна.");
+      if (
+        data.subjects.some(
+          (s) =>
+            !s.deletedAt &&
+            s.name.trim().toLocaleLowerCase() === clean.toLocaleLowerCase(),
+        )
+      )
+        throw Error("Ийм нэртэй хичээл байна.");
+      return {
+        ...data,
+        subjects: [
+          ...data.subjects,
+          {
+            ...record("subject", Date.now()),
+            name: clean,
+            color,
+            icon: "book",
+            archived: false,
+          },
+        ],
+      };
+    },
+  editSubject:
+    (id: string, patch: Pick<Subject, "name" | "color" | "archived">) =>
+    (data: StudyData): StudyData => {
+      subject(data, id);
+      if (
+        !patch.name.trim() ||
+        patch.name.length > 100 ||
+        !/^#[a-f0-9]{6}$/i.test(patch.color)
+      )
+        throw Error("Нэр болон өнгөө шалгана уу.");
+      return {
+        ...data,
+        subjects: data.subjects.map((s) =>
+          s.id === id
+            ? { ...s, ...patch, name: patch.name.trim(), updatedAt: Date.now() }
+            : s,
+        ),
+      };
+    },
+  deleteSubject:
+    (id: string) =>
+    (data: StudyData): StudyData => {
+      if (data.activeTimer?.subjectId === id)
+        throw Error("Энэ хичээлийн timer-аа эхлээд дуусгана уу.");
+      const now = Date.now();
+      return {
+        ...data,
+        subjects: data.subjects.map((s) =>
+          s.id === id ? { ...s, deletedAt: now, updatedAt: now } : s,
+        ),
+        sessions: data.sessions.map((s) =>
+          s.subjectId === id && !s.deletedAt
+            ? { ...s, deletedAt: now, updatedAt: now }
+            : s,
+        ),
+        entries: data.entries.map((e) =>
+          e.subjectId === id && !e.deletedAt
+            ? { ...e, deletedAt: now, updatedAt: now }
+            : e,
+        ),
+        studyGoals: data.studyGoals.map((g) =>
+          g.subjectId === id && !g.deletedAt
+            ? { ...g, deletedAt: now, updatedAt: now }
+            : g,
+        ),
+        tasks: data.tasks.map((t) =>
+          t.subjectId === id && !t.deletedAt
+            ? { ...t, deletedAt: now, updatedAt: now }
+            : t,
+        ),
+      };
+    },
+  markDay:
+    (id: string, date: string) =>
+    (data: StudyData): StudyData => {
+      subject(data, id);
+      validDate(date);
+      if (date > dateKey())
+        throw Error("Ирээдүйн өдрийг суралцсан гэж тэмдэглэх боломжгүй.");
+      const matches = data.entries.filter(
+          (e) => e.subjectId === id && e.date === date,
+        ),
+        old = matches[0],
+        marked = matches.some((e) => !e.deletedAt),
+        now = Date.now();
+      return {
+        ...data,
+        entries: old
+          ? data.entries.map((e) =>
+              e.subjectId === id && e.date === date
+                ? { ...e, deletedAt: marked ? now : null, updatedAt: now }
+                : e,
+            )
+          : [...data.entries, { ...record("entry", now), subjectId: id, date }],
+      };
+    },
+  start:
+    (
+      id: string,
+      mode: TimerMode,
+      phase: TimerPhase,
+      minutes: number | null,
+      taskId: string | null = null,
+    ) =>
+    (data: StudyData): StudyData => {
+      subject(data, id);
+      if (data.activeTimer) throw Error("Ажиллаж буй timer байна.");
+      if (
+        taskId &&
+        !data.tasks.some(
+          (t) => t.id === taskId && !t.deletedAt && t.subjectId === id,
+        )
+      )
+        throw Error("Төлөвлөгөө олдсонгүй.");
+      if (mode === "pomodoro" && (!minutes || minutes < 1 || minutes > 240))
+        throw Error("Хугацаа 1–240 минут байна.");
+      return {
+        ...data,
+        activeTimer: {
+          ...startTimer(id, mode, phase, minutes, Date.now(), taskId),
+          extras: taskId
+            ? {
+                taskId,
+                goalId:
+                  data.tasks.find((t) => t.id === taskId && !t.deletedAt)
+                    ?.goalId ?? null,
+              }
+            : {},
+        },
+      };
+    },
+  pause:
+    () =>
+    (data: StudyData): StudyData =>
+      data.activeTimer
+        ? { ...data, activeTimer: pause(data.activeTimer, Date.now()) }
+        : data,
+  resume:
+    () =>
+    (data: StudyData): StudyData =>
+      data.activeTimer
+        ? { ...data, activeTimer: resume(data.activeTimer, Date.now()) }
+        : data,
+  finish:
+    () =>
+    (data: StudyData): StudyData =>
+      data.activeTimer
+        ? { ...data, activeTimer: review(data.activeTimer, Date.now()) }
+        : data,
+  discard:
+    () =>
+    (data: StudyData): StudyData => ({ ...data, activeTimer: null }),
+  timerNote:
+    (note: string) =>
+    (data: StudyData): StudyData =>
+      data.activeTimer
+        ? {
+            ...data,
+            activeTimer: { ...data.activeTimer, note: note.slice(0, 10000) },
+          }
+        : data,
+  saveTimer:
+    (note: string, completeTask: boolean) =>
+    (data: StudyData): StudyData => {
+      const timer = data.activeTimer;
+      if (!timer) throw Error("Timer олдсонгүй.");
+      const now = Date.now(),
+        session = sessionFromTimer(timer, note, now);
+      return {
+        ...data,
+        activeTimer: null,
+        sessions: data.sessions.some((s) => s.id === session.id)
+          ? data.sessions
+          : [...data.sessions, session],
+        tasks: completeTask
+          ? data.tasks.map((t) =>
+              t.id === timer.taskId
+                ? { ...t, completed: true, updatedAt: now }
+                : t,
+            )
+          : data.tasks,
+      };
+    },
+  editSession:
+    (
+      id: string,
+      patch: { note: string; date: string; durationSec: number },
+      expected: number,
+    ) =>
+    (data: StudyData): StudyData => {
+      const old = data.sessions.find((s) => s.id === id && !s.deletedAt);
+      if (!old) throw Error("Хичээл олдсонгүй.");
+      if (old.updatedAt !== expected)
+        throw Error("Энэ бичлэг өөрчлөгдсөн байна. Дахин нээгээд засна уу.");
+      validDate(patch.date);
+      if (
+        patch.date > dateKey() ||
+        !Number.isFinite(patch.durationSec) ||
+        patch.durationSec < 5 ||
+        patch.durationSec > 86400 * 366
+      )
+        throw Error("Огноо эсвэл хугацаа буруу.");
+      const timeChanged =
+        patch.date !== old.date || patch.durationSec !== old.durationSec;
+      return {
+        ...data,
+        sessions: data.sessions.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                ...patch,
+                note: patch.note.trim().slice(0, 10000),
+                updatedAt: Date.now(),
+                manuallyEdited: s.manuallyEdited || timeChanged,
+                segments: timeChanged ? [] : s.segments,
+                extras: timeChanged
+                  ? {
+                      ...s.extras,
+                      originalTiming: s.extras.originalTiming ?? {
+                        date: s.date,
+                        durationSec: s.durationSec,
+                        startEpoch: s.startEpoch,
+                        endEpoch: s.endEpoch,
+                        segments: s.segments,
+                      },
+                    }
+                  : s.extras,
+              }
+            : s,
+        ),
+      };
+    },
+  deleteSession:
+    (id: string) =>
+    (data: StudyData): StudyData => ({
+      ...data,
+      sessions: data.sessions.map((s) =>
+        s.id === id
+          ? { ...s, deletedAt: Date.now(), updatedAt: Date.now() }
+          : s,
+      ),
+    }),
+  restore:
+    (collection: "sessions" | "subjects" | "tasks", id: string) =>
+    (data: StudyData): StudyData => {
+      const row = data[collection].find((r) => r.id === id);
+      if (!row) return data;
+      const now = Date.now();
+      let next = {
+        ...data,
+        [collection]: data[collection].map((r) =>
+          r.id === id ? { ...r, deletedAt: null, updatedAt: now } : r,
+        ),
+      };
+      if (collection === "subjects") {
+        const restoreRelated = <
+          T extends {
+            subjectId: string;
+            deletedAt: number | null;
+            updatedAt: number;
+          },
+        >(
+          items: T[],
+        ) =>
+          items.map((r) =>
+            r.subjectId === id && r.deletedAt === row.deletedAt
+              ? { ...r, deletedAt: null, updatedAt: now }
+              : r,
+          );
+        next = {
+          ...next,
+          sessions: restoreRelated(next.sessions),
+          entries: restoreRelated(next.entries),
+          tasks: restoreRelated(next.tasks),
+          studyGoals: restoreRelated(next.studyGoals),
+        };
+      }
+      if (collection === "sessions" || collection === "tasks") {
+        const parent = (row as DailyTask).subjectId;
+        next = {
+          ...next,
+          subjects: next.subjects.map((s) =>
+            s.id === parent && s.deletedAt
+              ? { ...s, deletedAt: null, archived: true, updatedAt: now }
+              : s,
+          ),
+        };
+      }
+      return next;
+    },
+  addTask:
+    (
+      task: Pick<
+        DailyTask,
+        "subjectId" | "date" | "minutes" | "title" | "startTime"
+      >,
+    ) =>
+    (data: StudyData): StudyData => {
+      subject(data, task.subjectId);
+      validDate(task.date);
+      if (
+        !task.title.trim() ||
+        !Number.isFinite(task.minutes) ||
+        task.minutes < 1 ||
+        task.minutes > 1440
+      )
+        throw Error("Төлөвлөгөөний нэр, хугацааг шалгана уу.");
+      return {
+        ...data,
+        tasks: [
+          ...data.tasks,
+          {
+            ...record("task", Date.now()),
+            goalId: null,
+            ...task,
+            title: task.title.trim().slice(0, 200),
+            completed: false,
+          },
+        ],
+      };
+    },
+  toggleTask:
+    (id: string) =>
+    (data: StudyData): StudyData => ({
+      ...data,
+      tasks: data.tasks.map((t) =>
+        t.id === id
+          ? { ...t, completed: !t.completed, updatedAt: Date.now() }
+          : t,
+      ),
+    }),
+  deleteTask:
+    (id: string) =>
+    (data: StudyData): StudyData => ({
+      ...data,
+      tasks: data.tasks.map((t) =>
+        t.id === id
+          ? { ...t, deletedAt: Date.now(), updatedAt: Date.now() }
+          : t,
+      ),
+    }),
+  goals:
+    (patch: Partial<Goals>) =>
+    (data: StudyData): StudyData => ({
+      ...data,
+      goals: { ...data.goals, ...patch, updatedAt: Date.now() },
+    }),
+  settings:
+    (patch: Partial<Settings>) =>
+    (data: StudyData): StudyData => ({
+      ...data,
+      settings: { ...data.settings, ...patch, updatedAt: Date.now() },
+    }),
+};

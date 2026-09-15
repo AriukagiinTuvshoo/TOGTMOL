@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111310">
+<meta name="description" content="Тогтмол — өдөр бүр бага багаар. Тайван, хувийн суралцах тэмдэглэл.">
+<title>Тогтмол — өдөр бүр бага багаар</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%23e6c75a'/%3E%3Cpath d='M10 27V19m10 8V11m10 16V15' stroke='%23111310' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Unbounded:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+/* Self-contained design system. System fallbacks keep the app usable offline. */
+:root{color-scheme:dark;--bg:#111310;--surface:#191c17;--surface-2:#20241d;--surface-3:#2a2f25;--text:#f1f0e8;--muted:#a3a79b;--accent:#e6c75a;--success:#b4c892;--danger:#eea398;--border:#30352b;--faint:#757d6e;--display:'Unbounded','Arial Black',sans-serif;--body:'Manrope',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 var(--body);-webkit-font-smoothing:antialiased}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button,input,select,textarea{color:inherit}button,a,input,textarea,select{touch-action:manipulation}button{border:0}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}button{transition:background .15s,color .15s,transform .15s}button:active:not(:disabled){transform:translateY(1px)}a{color:inherit}h1,h2,h3,p{margin:0}h1{font-family:var(--display);font-size:clamp(25px,3.5vw,37px);line-height:1.35;font-weight:500;letter-spacing:-.045em}h2{font-size:17px;font-weight:700;letter-spacing:-.025em}h3{font-size:14px}svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}[hidden]{display:none!important}.muted{color:var(--muted)}.eyebrow{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:var(--muted)}.accent{color:var(--accent)}.mono{font-variant-numeric:tabular-nums}.small{font-size:12px}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}.rule{border:0;border-top:1px solid var(--border);margin:26px 0}.wrap{max-width:1120px;padding:0 28px;margin:0 auto}.skip{position:fixed;left:12px;top:-80px;z-index:200;background:var(--accent);color:var(--bg);padding:10px}.skip:focus{top:12px}
+.app-header{height:100px;display:flex;align-items:center;justify-content:space-between;gap:28px;border-bottom:1px solid var(--border)}.brand-block{display:flex;align-items:center;gap:11px;min-width:145px}.brand-mark{display:flex;align-items:flex-end;justify-content:center;gap:4px;width:34px;height:34px;border:1px solid #554d2c;border-radius:10px;padding:8px;color:var(--accent)}.brand-mark i{display:block;width:3px;border-radius:2px;background:currentColor}.brand-mark i:nth-child(1){height:10px}.brand-mark i:nth-child(2){height:18px}.brand-mark i:nth-child(3){height:14px}.brand{font:600 17px var(--display);letter-spacing:-.05em}.brand-caption{font-size:9px;color:var(--faint);letter-spacing:.13em;margin-top:4px}.tabs{display:flex;height:100%;gap:25px;align-items:stretch}.tabs button{background:none;color:var(--muted);font-size:12px;position:relative;padding:0 1px;white-space:nowrap}.tabs button:hover,.tabs button.active{color:var(--text)}.tabs button.active:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent)}.header-right{display:flex;gap:16px;align-items:center}.local-badge{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}.local-badge .dot{width:5px;height:5px;background:var(--success)}.icon-btn{width:38px;height:38px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:9px}.icon-btn:hover{background:var(--surface-2);color:var(--text)}.icon-btn.primary{color:var(--accent);border-color:#605735}.icon-btn.danger:hover{color:var(--danger)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:9px;padding:11px 17px;font-size:12px;font-weight:700;background:var(--surface-2);border:1px solid var(--border)}.btn:hover{background:var(--surface-3)}.btn.primary{background:var(--accent);color:#252415;border-color:var(--accent)}.btn.primary:hover{background:#f1d573}.btn.subtle{background:transparent}.btn.danger{color:var(--danger)}.link-btn{background:none;color:var(--muted);padding:6px 0;font-size:11px;display:inline-flex;gap:6px;align-items:center}.link-btn:hover{color:var(--accent)}.link-btn svg{width:14px;height:14px}
+main{padding:38px 0 10px}.tab-panel{display:none}.tab-panel.active{display:block;animation:appear .2s ease}.page-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:27px}.page-heading .eyebrow{margin-bottom:9px}.today-date{color:var(--muted);font-size:11px;margin-top:9px}.date-chip{border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:11px;color:var(--muted)}.date-chip svg{width:15px;height:15px}.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);gap:24px}.dashboard-main,.dashboard-aside{min-width:0}.hero-card{display:grid;grid-template-columns:minmax(0,1fr) 142px;align-items:center;gap:18px;border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:29px 30px;min-height:216px}.hero-number-row{display:flex;align-items:baseline;gap:12px;margin:10px 0 11px}.hero-number{font:500 62px/1.1 var(--display);letter-spacing:-.07em;color:var(--accent)}.hero-label{font-size:12px;color:var(--muted)}.hero-sub{font-size:12px;color:var(--muted);max-width:32ch;line-height:1.8}.streak-orbit{width:132px;height:132px;border-radius:50%;border:1px dashed #555b47;position:relative;display:grid;place-items:center;color:var(--accent);background:radial-gradient(circle,#36331b 0,transparent 68%)}.streak-orbit:before{content:'';position:absolute;inset:11px;border-radius:50%;border:1px solid #424632}.streak-orbit:after{content:'';position:absolute;right:11px;top:19px;background:var(--accent);border:5px solid var(--surface);width:8px;height:8px;border-radius:50%;box-sizing:content-box}.streak-orbit svg{width:43px;height:43px;stroke-width:1.15}.stat-strip{display:grid;grid-template-columns:1.2fr 1.2fr .8fr;padding:25px 0 23px;border-bottom:1px solid var(--border);margin-bottom:26px}.stat-cell{padding-left:23px;border-left:1px solid var(--border);min-width:0}.stat-cell:first-child{padding-left:0;border:0}.stat-cell .v{font:500 clamp(17px,2vw,23px)/1.4 var(--display);letter-spacing:-.04em;white-space:nowrap}.stat-cell .l{font-size:11px;color:var(--muted);margin-top:6px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.section-hint{font-size:12px;color:var(--muted);margin-top:4px}.count-badge{display:inline-flex;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:0 6px;font-size:10px;vertical-align:middle;margin-left:7px}.study-row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--border)}.subject-icon{width:40px;height:42px;min-width:40px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--border);background:var(--surface-2);font-size:15px;font-weight:800}.study-main{display:flex;flex:1;min-width:0;align-items:center;gap:13px;text-align:left;background:none;padding:0}.study-main:hover .name{color:var(--accent)}.study-main .name{font-size:13px;font-weight:700;overflow-wrap:anywhere}.study-main .subline{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}.study-main .subline.done{color:var(--success)}.study-row .mins{font-size:12px;color:var(--muted);white-space:nowrap}.row-actions{display:flex;gap:7px}.row-actions .icon-btn{width:32px;height:34px;min-width:32px;border-color:transparent}.row-actions .icon-btn.play{border:1px solid var(--border);color:var(--accent)}.row-actions svg{width:15px;height:15px}.add-row{display:flex;gap:9px;margin-top:17px}.add-row input{flex:1;min-width:0}.input,input[type=text],input[type=number],textarea,select{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:11px 13px;min-width:0;font-size:12px}.input::placeholder,input::placeholder,textarea::placeholder{color:var(--faint)}.input:focus,input:focus,textarea:focus,select:focus{border-color:var(--accent)}.add-row .btn{padding:8px 14px}.empty-state{padding:28px 15px;text-align:center;border:1px dashed var(--border);border-radius:11px;color:var(--muted);font-size:12px}.empty-state svg{margin-bottom:8px;color:var(--accent)}.focus-card{background:var(--accent);color:#2b2a1a;border-radius:15px;padding:24px;margin-bottom:22px}.focus-card .eyebrow{color:#5f5832}.focus-card h2{font-size:19px;margin:12px 0 6px;letter-spacing:-.04em}.focus-card p{font-size:11px;color:#5e5734;line-height:1.8}.start-study-btn{width:100%;background:#24271d;color:#f1f0e8;border-radius:9px;min-height:46px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:21px}.start-study-btn:hover{background:#353b29}.start-study-btn svg{width:15px;height:15px}.focus-caption{display:block;text-align:center;font-size:9px;margin-top:10px;color:#625a35}.goal-card{padding:1px 0 21px;border-bottom:1px solid var(--border);margin-bottom:21px}.goal-mini-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin:17px 0 8px;color:var(--muted)}.goal-mini-row b{color:var(--text);font-weight:600}.bar-track{height:5px;border-radius:5px;overflow:hidden;background:var(--surface-3)}.bar-fill{background:var(--accent);height:100%;border-radius:5px;transition:width .25s ease}.goal-remaining{font-size:10px;color:var(--muted);margin-top:8px}.week-dots{display:flex;gap:8px;justify-content:space-between;margin-top:12px}.week-dot{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:9px;color:var(--muted)}.week-dot i{display:grid;place-items:center;border-radius:50%;width:25px;height:25px;border:1px solid var(--border);font-style:normal}.week-dot.on i{background:var(--surface-3);color:var(--success);border-color:#58634c}.week-dot.today i{outline:1px solid var(--accent);outline-offset:3px}.insight-box{font-size:11px;color:var(--muted)}.insight-box h2{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}.insight-box h2 svg{width:15px;color:var(--accent)}.insight-box ul{list-style:none;padding:0;margin:9px 0 0}.insight-box li{padding:10px 0;line-height:1.85;border-bottom:1px solid var(--border)}.insight-box li:last-child{border:0}.overview-bottom{display:flex;gap:25px;color:var(--muted);font-size:10px;padding-top:17px}.overview-bottom b{font-size:12px;color:var(--text);padding-right:5px}.activity-section{border-top:1px solid var(--border);margin-top:34px;padding-top:25px}.recent-item{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border);font-size:12px}.recent-item:last-child{border:0}.recent-left{display:flex;align-items:center;gap:12px;min-width:0}.recent-copy{min-width:0;overflow-wrap:anywhere}.ri-name{font-weight:600}.ri-note,.ri-date{display:block;font-size:10px;color:var(--muted);margin-top:3px}.ri-dur{font-size:12px;white-space:nowrap}.activity-subtitle{font-size:10px;color:var(--muted)}.recent-group{margin-top:19px}.rg-date{font-size:10px;color:var(--muted);letter-spacing:.07em;margin-bottom:4px}.page-foot{display:flex;justify-content:space-between;gap:12px;padding:25px 0 26px;border-top:1px solid var(--border);margin-top:36px;font-size:10px;color:var(--faint)}.status-line{color:var(--muted)}
+.timer-bar{display:none;border:1px solid #675c30;border-radius:14px;background:var(--surface);padding:22px 25px;margin-bottom:27px;box-shadow:inset 3px 0 var(--accent)}.timer-bar.show{display:grid;grid-template-columns:1fr auto;gap:15px;align-items:center}.timer-info{display:flex;align-items:center;gap:10px;font-size:12px}.timer-label{font-size:10px;color:var(--accent);margin-left:8px}.tb-time{font:500 clamp(24px,4vw,37px) var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.055em;margin-top:9px;color:var(--text)}.tb-actions{display:flex;gap:9px}.tb-note{grid-column:1/-1;width:100%}.storage-banner{display:flex;gap:15px;align-items:center;flex-wrap:wrap;background:#322a1e;border:1px solid #736039;border-radius:10px;padding:14px;margin-top:20px;font-size:12px}.storage-banner p{flex:1;min-width:190px}
+.calendar-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(250px,1fr);gap:30px}.calendar-surface{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:25px}.month-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.month-label{font-size:15px;font-weight:700}.nbtns{display:flex;gap:7px}.weekday-row,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.weekday-row{margin-bottom:9px;text-align:center;color:var(--muted);font-size:10px}.cal-cell{aspect-ratio:1;background:var(--surface-2);border:1px solid transparent;border-radius:8px;color:var(--muted);font-size:12px;padding:2px;position:relative;min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column}.cal-cell small{font-size:8px;line-height:1.2;margin-top:3px}.cal-cell:hover{border-color:var(--faint)}.cal-cell.blank{background:none}.cal-cell.today{outline:1px solid var(--accent);outline-offset:2px}.cal-cell.selected{border-color:var(--text)}.cal-cell.future{opacity:.35}.cal-cell[data-level="1"],.legend-cell[data-level="1"]{background:#373b26;color:#e1e4c5}.cal-cell[data-level="2"],.legend-cell[data-level="2"]{background:#646435;color:#fbf2c8}.cal-cell[data-level="3"],.legend-cell[data-level="3"]{background:#aaa04b;color:#1d2016}.cal-cell[data-level="4"],.legend-cell[data-level="4"]{background:var(--accent);color:#252415}.calendar-legend{display:flex;gap:5px;align-items:center;justify-content:flex-end;margin-top:21px;font-size:9px;color:var(--muted)}.legend-cell{width:11px;height:11px;background:var(--surface-2);border-radius:2px}.calendar-legend span:first-child{margin-right:4px}.calendar-legend span:last-child{margin-left:4px}.day-detail{padding:23px;border:1px solid var(--border);border-radius:15px;align-self:start;min-width:0}.day-detail .dd-title{font:500 17px var(--display);margin:8px 0 20px;line-height:1.5}.day-total{font:500 30px var(--display);margin-bottom:6px;letter-spacing:-.05em}.dd-line{color:var(--muted);font-size:11px;margin:5px 0;overflow-wrap:anywhere}.dd-line b{color:var(--text)}.cal-tooltip{position:fixed;z-index:160;pointer-events:none;max-width:255px;border:1px solid var(--border);border-radius:9px;padding:12px 15px;background:#292d24;box-shadow:0 8px 22px #0004;font-size:11px;white-space:pre-line}
+.subject-row{border-bottom:1px solid var(--border);padding:20px 0;display:flex;gap:15px;align-items:center}.subject-stats{display:flex;gap:28px;align-items:center}.subject-stat{font-size:14px;text-align:right}.subject-stat small{display:block;font-size:10px;color:var(--muted)}.streak-badge{color:var(--accent)}.subjects-layout{display:grid;grid-template-columns:1.8fr 1fr;gap:35px}.subject-help{border:1px solid var(--border);border-radius:14px;padding:24px;align-self:start;background:var(--surface)}.subject-help h3{margin:12px 0 8px}.subject-help p{font-size:12px;color:var(--muted)}.subject-help svg{color:var(--accent);width:27px;height:27px}
+.stats-top{display:flex;align-items:flex-end;justify-content:space-between;gap:25px;padding:25px 0 30px;border-bottom:1px solid var(--border);margin-bottom:28px}.total-hero .tv{font:500 clamp(29px,4vw,43px) var(--display);letter-spacing:-.06em;margin-top:10px}.mini-stats-row,.week-summary{display:flex;gap:30px;flex-wrap:wrap}.mini-stat .v{font-size:15px;font-weight:600}.mini-stat .l{font-size:10px;color:var(--muted);margin-top:5px}.stats-grid{display:grid;grid-template-columns:1.65fr 1fr;gap:32px}.week-chart{display:flex;gap:14px;align-items:flex-end;height:188px;margin-top:28px;border-bottom:1px solid var(--border);padding:0 12px 10px}.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;height:100%;min-width:0}.bar-col .bar{width:100%;max-width:38px;background:#424832;border-radius:6px 6px 2px 2px;min-height:2px}.bar-col .bar.best{background:var(--accent)}.bar-label{font-size:10px;color:var(--muted)}.bar-value{font-size:9px;color:var(--muted);white-space:nowrap}.week-summary{margin-top:20px;justify-content:space-between;gap:10px}.stats-goals{padding:22px;background:var(--surface);border:1px solid var(--border);border-radius:14px}.goal-block{margin-top:20px}.goal-head,.goal-numbers{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:var(--muted);margin-bottom:7px}.goal-numbers b{color:var(--text);font-weight:600}.goal-edit-row{display:flex;gap:8px;margin-top:12px}.goal-edit-row input{width:90px}.goal-edit-row .btn{padding:8px 10px}.achievement-section{border-top:1px solid var(--border);margin-top:35px;padding-top:25px}.ach-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.ach-card{border:1px solid var(--border);border-radius:11px;padding:17px;background:var(--surface)}.ach-card.locked{background:transparent;color:var(--muted)}.ach-card.unlocked{border-color:#5e5934}.a-icon{display:flex;align-items:center;justify-content:space-between;color:var(--faint)}.unlocked .a-icon{color:var(--accent)}.a-icon svg{width:21px;height:21px}.a-icon span{font-size:9px}.a-name{font-size:12px;font-weight:700;margin-top:12px}.unlocked .a-name{color:var(--accent)}.a-desc,.a-date{font-size:10px;color:var(--muted);margin-top:3px}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#191c17f5;backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:9px 8px calc(9px + env(safe-area-inset-bottom));justify-content:space-around}.bottom-nav button{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;color:var(--muted);font-size:9px;min-width:57px;min-height:43px}.bottom-nav button.active{color:var(--accent)}.bottom-nav svg{width:20px;height:20px}.modal-overlay{display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;padding:25px;background:#090c08c9;backdrop-filter:blur(5px)}.modal-overlay.show{display:flex}.modal-card{width:100%;max-width:590px;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:27px;animation:appear .18s ease}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:23px}.modal-title{font:500 20px var(--display);letter-spacing:-.04em;line-height:1.5;overflow-wrap:anywhere}.modal-title .dot{margin-right:9px}.modal-close{flex-shrink:0}.modal-stat-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding:22px 0;border-block:1px solid var(--border);margin:20px 0}.modal-stat-strip .v{font:500 19px var(--display);letter-spacing:-.06em}.modal-stat-strip .l{font-size:10px;color:var(--muted);margin-top:6px}.mini-week{display:flex;gap:5px;margin:12px 0 23px}.mc{flex:1;text-align:center;color:var(--muted);font-size:9px}.mc i{display:block;background:var(--surface-3);height:25px;border-radius:4px;margin-bottom:6px}.mc.on i{background:var(--accent)}.modal-study-btn{width:100%;margin-bottom:22px}.modal-remove{margin-top:22px;padding-top:15px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;align-items:center}.modal-remove button{background:none;color:var(--danger);font-size:11px}.color-options{display:flex;gap:7px}.color-option{width:22px;height:22px;border-radius:50%;border:3px solid var(--surface)}.color-option[aria-pressed=true]{outline:1px solid var(--text)}.picker-list{display:grid;gap:9px}.picker-item{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);padding:13px;text-align:left}.picker-item:hover{border-color:#776d3e}.picker-item .picker-name{flex:1;overflow-wrap:anywhere;font-size:13px}.picker-item svg{color:var(--accent);width:17px;height:17px}.settings-block{padding:18px 0;border-top:1px solid var(--border)}.settings-block p{font-size:12px;color:var(--muted);margin:7px 0 14px}.settings-actions{display:flex;gap:9px;flex-wrap:wrap}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:180;padding:12px 18px;max-width:calc(100vw - 30px);background:var(--surface-3);border:1px solid #657149;border-radius:10px;font-size:12px;box-shadow:0 8px 24px #0005}.toast:empty{display:none}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(min-width:1000px){.header-right{min-width:145px;justify-content:flex-end}}
+@media(max-width:860px){.wrap{padding:0 22px}.app-header{height:84px;gap:20px}.tabs{gap:19px}.local-badge{display:none}.dashboard-grid{grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr);gap:22px}.hero-card{padding:23px;grid-template-columns:1fr 90px}.streak-orbit{width:90px;height:90px}.streak-orbit svg{width:30px;height:30px}.hero-number{font-size:49px}.stat-cell{padding-left:13px}.calendar-layout{gap:20px;grid-template-columns:1.55fr 1fr}.calendar-surface{padding:18px}.stats-grid{gap:23px}.ach-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.subject-stats{gap:18px}}
+@media(max-width:680px){.wrap{padding:0 19px}.app-header{height:78px}.tabs{display:none}.brand{font-size:16px}.brand-caption{font-size:8px}.local-badge{display:flex;font-size:9px}.header-right{gap:12px}.bottom-nav{display:flex}body{padding-bottom:76px}.page-heading{margin-bottom:23px;align-items:flex-start}.date-chip{display:none}main{padding-top:28px}h1{font-size:27px}.dashboard-grid,.calendar-layout,.subjects-layout,.stats-grid{grid-template-columns:1fr}.dashboard-aside{display:grid;grid-template-columns:1fr;gap:0}.focus-card{padding:22px;margin:3px 0 24px}.focus-card h2{margin-top:7px}.start-study-btn{margin-top:17px}.hero-card{grid-template-columns:1fr 115px;min-height:190px;padding:23px}.streak-orbit{width:108px;height:108px}.streak-orbit svg{width:35px;height:35px}.hero-number{font-size:53px}.stat-strip{padding:22px 0}.stat-cell .v{font-size:20px}.hero-sub{font-size:11px}.dashboard-aside .focus-card{order:-1}.overview-bottom{justify-content:space-between;gap:12px}.activity-section{margin-top:24px}.goal-card{margin-top:0}.page-foot{padding-bottom:16px;flex-wrap:wrap;font-size:9px}.timer-bar.show{grid-template-columns:1fr;padding:18px}.tb-actions{justify-content:stretch}.tb-actions .btn{flex:1}.tb-time{font-size:36px}.timer-info{flex-wrap:wrap}.tb-note{grid-column:auto}.stats-top{align-items:flex-start;flex-direction:column;padding-top:5px;gap:20px}.mini-stats-row{gap:30px}.calendar-surface{padding:20px}.day-detail{min-height:0}.subject-help{margin-top:0}.subject-stats{gap:15px}.subject-stat{font-size:12px}.subject-stat small{font-size:9px}.ach-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-overlay{padding:0;align-items:flex-end}.modal-card{border-radius:19px 19px 0 0;padding:23px 20px calc(24px + env(safe-area-inset-bottom));max-height:90dvh}.modal-stat-strip{gap:10px}.modal-stat-strip .v{font-size:17px}.modal-title{font-size:19px}.toast{bottom:90px}.week-chart{height:180px}.cal-cell small{font-size:8px}}
+@media(max-width:360px){.wrap{padding:0 14px}.local-badge{display:none}h1{font-size:23px}.hero-card{padding:19px;grid-template-columns:1fr 76px;gap:10px}.streak-orbit{width:77px;height:77px}.hero-number{font-size:46px}.hero-label{font-size:10px}.stat-cell .v{font-size:16px}.stat-cell .l{font-size:10px}.study-row{gap:5px}.study-main{gap:9px}.subject-icon{width:33px;height:38px;min-width:33px}.row-actions{gap:2px}.study-row .mins{font-size:10px}.study-main .name{font-size:12px}.calendar-surface{padding:15px}.weekday-row,.cal-grid{gap:5px}.cal-cell{border-radius:5px;font-size:11px}.cal-cell small{display:none}.month-label{font-size:13px}.modal-stat-strip .v{font-size:14px}.subject-stat.days{display:none}.bar-value{font-size:8px}.tb-time{font-size:31px}.btn{padding:10px 12px}.ach-card{padding:14px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Compact screens retain the primary action before the subject list. */
+.picker-hint{margin-bottom:18px}.study-main .name{display:block}.timer-info strong{overflow-wrap:anywhere;min-width:0}.timer-bar{scroll-margin-top:12px}.day-total,.total-hero .tv,.modal-stat-strip .v{overflow-wrap:anywhere}
+@media(max-width:680px){.dashboard-main,.dashboard-aside{display:contents}.dashboard-grid{gap:0}.dashboard-grid .hero-card{order:0}.dashboard-grid .stat-strip{order:1}.dashboard-grid .focus-card{order:2;margin:0 0 26px}.dashboard-main>section:not(.hero-card){order:3}.overview-bottom{order:4;margin-bottom:25px}.goal-card{order:5}.insight-box{order:6}.row-actions .icon-btn{width:38px;min-width:38px;height:44px}.icon-btn{min-height:44px}.color-option{width:30px;height:30px}.hero-number-row{flex-wrap:wrap;gap:4px 10px}.focus-card p{font-size:12px}.focus-caption{font-size:10px}.tabs button{font-size:13px}.study-main .subline{font-size:11px}.bottom-nav button{font-size:10px}.stat-cell .v{font-size:clamp(15px,4.5vw,21px)}.subject-row{gap:10px}.subject-stats{gap:12px}.subject-stat{font-size:12px}.page-foot{margin-top:24px}}
+@media(max-width:360px){.color-options{gap:5px}.row-actions{gap:1px}.subject-row .subject-stat.days{display:none}.hero-card{grid-template-columns:minmax(0,1fr) 76px}.study-row .mins{max-width:50px;white-space:normal}.stat-cell{padding-left:9px}.week-chart{gap:7px;padding-inline:0}.week-summary .mini-stat .v{font-size:12px}}
+
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><defs>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-overview" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 11h18M8 15h1M15 15h1"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6v15M12 6C9 3 5 3 2 5v14c3-2 7-2 10 2 3-4 7-4 10-2V5c-3-2-7-2-10 1Z"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20V13M12 20V4M19 20V8"/></symbol>
+<symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C7 2 3 8 5 14c2 6 9 7 12 2 2-3 3-8 3-13ZM4 21 15 10M8 17v-6M8 17h6"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--bg)"/><circle cx="16" cy="17" r="3" fill="var(--bg)"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="m8 14-1 7 5-3 5 3-1-7"/></symbol>
+</defs></svg>
+<a class="skip" href="#main">Үндсэн хэсэг рүү</a>
+<div class="wrap" id="app">
+ <header class="app-header">
+  <div class="brand-block"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><div class="brand">Тогтмол</div><div class="brand-caption">ӨДӨР БҮР БАГА БАГААР</div></div></div>
+  <nav class="tabs" id="tabsNav" aria-label="Үндсэн цэс"><button data-tab="overview" class="active" aria-current="page">Ерөнхий</button><button data-tab="calendar">Хуанли</button><button data-tab="subjects">Хичээлүүд</button><button data-tab="stats">Статистик</button></nav>
+  <div class="header-right"><span class="local-badge"><span class="dot"></span>Таны хувийн орон зай</span><button class="icon-btn" id="settingsBtn" aria-label="Тохиргоо ба өгөгдөл"><svg><use href="#i-settings"/></svg></button></div>
+ </header>
+ <div id="storageBanner" class="storage-banner" role="alert" hidden><p id="storageMessage"></p><button class="btn subtle" id="retryStorage">Дахин оролдох</button><button class="btn subtle" id="recoveryExport">Нөөц татах</button></div>
+ <main id="main" tabindex="-1" aria-busy="true">
+  <div class="timer-bar" id="timerBar" aria-label="Идэвхтэй цаг хэмжигч">
+   <div><div class="timer-info"><span class="dot" id="tbDot"></span><strong id="tbName"></strong><span class="timer-label" id="tbState">Суралцаж байна</span></div><div class="tb-time" id="tbTime" aria-label="Суралцсан хугацаа">00:00:00</div></div>
+   <div class="tb-actions"><button class="btn subtle" id="tbPauseBtn" aria-label="Түр зогсоох"></button><button class="btn primary" id="tbFinishBtn"><svg><use href="#i-check"/></svg>Дуусгах</button><button class="icon-btn danger" id="tbResetBtn" aria-label="Цаг хэмжигчийг хадгалахгүй цуцлах"><svg><use href="#i-close"/></svg></button></div>
+   <input type="text" class="tb-note" id="tbNote" maxlength="500" aria-label="Хичээлийн тэмдэглэл" placeholder="Юун дээр ажиллаж байна вэ? Тэмдэглэл нэмэх (заавал биш)">
+  </div>
+  <div class="tab-panel active" id="tab-overview">
+   <div class="page-heading"><div><div class="eyebrow">ӨӨРТӨӨ ЗОРИУЛАХ ЦАГ</div><h1>Өнөөдөр бага ч гэсэн.</h1><p class="today-date" id="todayDate"></p></div><div class="date-chip"><svg><use href="#i-calendar"/></svg><span id="dateChip"></span></div></div>
+   <div class="dashboard-grid">
+    <div class="dashboard-main">
+     <section class="hero-card" aria-label="Таны дараалал"><div><div class="eyebrow">ТАНЫ ДАРААЛАЛ</div><div class="hero-number-row"><span class="hero-number" id="streakNumber">0</span><span class="hero-label">өдөр дараалан</span></div><p class="hero-sub" id="streakSub"></p></div><div class="streak-orbit" aria-hidden="true"><svg><use href="#i-leaf"/></svg></div></section>
+     <div class="stat-strip"><div class="stat-cell"><div class="v" id="statToday">0м</div><div class="l">Өнөөдөр суралцсан</div></div><div class="stat-cell"><div class="v" id="statWeek">0м</div><div class="l">Энэ 7 хоногт</div></div><div class="stat-cell"><div class="v" id="statSubjects">0</div><div class="l">Өнөөдрийн хичээл</div></div></div>
+     <section><div class="section-head"><h2>Өнөөдрийн хичээлүүд <span id="subjectCount" class="count-badge">0</span></h2><button class="link-btn" data-goto="subjects">Бүгд <svg><use href="#i-arrow"/></svg></button></div><div id="todayList"></div><div id="noSubjectsOverview" class="empty-state"><svg><use href="#i-book"/></svg><p>Эхний хичээлээ нэмээд өнөөдрөөс эхлээрэй.</p></div><form class="add-row" id="addForm"><input type="text" id="newSubjectInput" maxlength="60" placeholder="Шинэ хичээлийн нэр…" aria-label="Шинэ хичээлийн нэр" autocomplete="off"><button class="btn subtle" id="addSubjectBtn" type="submit"><svg><use href="#i-plus"/></svg>Нэмэх</button></form></section>
+     <div class="overview-bottom"><span><b id="bestStreak">0</b>хамгийн урт дараалал</span><span><b id="totalStudyDays">0</b>нийт суралцсан өдөр</span></div>
+    </div>
+    <aside class="dashboard-aside">
+     <section class="focus-card"><div class="eyebrow">НЭГ ЖИЖИГ АЛХАМ</div><h2>Өөртөө цаг гаргая.</h2><p>Хичээлээ сонгоод төвлөрөөрэй.<br>Бага ч гэсэн хийсэн нь чухал.</p><button class="start-study-btn" id="startStudyBtn"><svg><use href="#i-play"/></svg>Start Study</button><span class="focus-caption">Нэг хичээл. Нэг тайван эхлэл.</span></section>
+     <section class="goal-card"><div class="section-head"><h2>7 хоногийн зорилго</h2><button class="link-btn" id="overviewEditGoals" aria-label="Зорилго өөрчлөх">Засах <svg><use href="#i-arrow"/></svg></button></div><div id="goalMini"></div></section>
+     <section class="insight-box" id="insightBox" hidden><h2><svg><use href="#i-spark"/></svg>Таны жижиг ахиц</h2><ul id="insightList"></ul></section>
+    </aside>
+   </div>
+   <section class="activity-section"><div class="section-head"><h2>Сүүлийн үйл ажиллагаа</h2><button class="link-btn" data-goto="stats">Бүх түүх <svg><use href="#i-arrow"/></svg></button></div><div id="overviewRecent"></div></section>
+  </div>
+  <div class="tab-panel" id="tab-calendar">
+   <div class="page-heading"><div><div class="eyebrow">ӨДӨР БҮРИЙН ЖИЖИГ АЛХАМ</div><h1>Таны суралцсан өдрүүд.</h1><p class="section-hint">Өдөр дээр дарж тухайн өдрийн ахицаа хараарай.</p></div><button class="btn subtle" id="calendarToday">Өнөөдөр</button></div>
+   <div class="calendar-layout"><section class="calendar-surface"><div class="month-nav"><h2 class="month-label" id="monthLabel"></h2><div class="nbtns"><button class="icon-btn" id="prevMonth" aria-label="Өмнөх сар"><svg><use href="#i-left"/></svg></button><button class="icon-btn" id="nextMonth" aria-label="Дараагийн сар"><svg><use href="#i-right"/></svg></button></div></div><div class="weekday-row" aria-hidden="true"><div>Да</div><div>Мя</div><div>Лх</div><div>Пү</div><div>Ба</div><div>Бя</div><div>Ня</div></div><div class="cal-grid" id="calGrid" aria-label="Суралцсан өдрүүд"></div><div class="calendar-legend"><span>Бага</span><i class="legend-cell"></i><i class="legend-cell" data-level="1"></i><i class="legend-cell" data-level="2"></i><i class="legend-cell" data-level="3"></i><i class="legend-cell" data-level="4"></i><span>Их</span></div></section><aside class="day-detail" id="dayDetail" aria-live="polite"></aside></div>
+  </div>
+  <div class="tab-panel" id="tab-subjects">
+   <div class="page-heading"><div><div class="eyebrow">СОНИРХЛОО ДАГААД</div><h1>Суралцах зүйлс.</h1><p class="section-hint">Таны хэмнэл. Таны сонирхол. Таны ахиц.</p></div></div>
+   <div class="subjects-layout"><section><div id="subjectListFull"></div><div id="noSubjectsFull" class="empty-state">Эхний хичээлээ нэмээд өнөөдрөөс эхлээрэй.</div><form class="add-row" id="addForm2"><input type="text" id="newSubjectInput2" maxlength="60" placeholder="Жишээ: Python, Япон хэл…" aria-label="Нэмэх хичээлийн нэр" autocomplete="off"><button class="btn subtle" id="addSubjectBtn2" type="submit"><svg><use href="#i-plus"/></svg>Нэмэх</button></form></section><aside class="subject-help"><svg><use href="#i-leaf"/></svg><h3>Бүхнийг нэг дор хийх албагүй.</h3><p>Өнөөдөр сонирхсон нэг зүйлээсээ эхлээрэй. Хичээл дээр дарвал суралцсан цаг, дараалал, тэмдэглэлээ харж болно.</p></aside></div>
+  </div>
+  <div class="tab-panel" id="tab-stats">
+   <div class="page-heading"><div><div class="eyebrow">ХИЙСЭН БҮХЭН ТАНЬ ҮЛДЭНЭ</div><h1>Жижиг алхам, бодит ахиц.</h1></div></div>
+   <section class="stats-top"><div class="total-hero"><div class="eyebrow">НИЙТ СУРАЛЦСАН ХУГАЦАА</div><div class="tv" id="totalAllTime">0м</div></div><div class="mini-stats-row"><div class="mini-stat"><div class="v" id="totTodayV">0m</div><div class="l">Өнөөдөр</div></div><div class="mini-stat"><div class="v" id="totWeekV">0m</div><div class="l">Энэ 7 хоног</div></div><div class="mini-stat"><div class="v" id="totMonthV">0m</div><div class="l">Энэ сар</div></div></div></section>
+   <div class="stats-grid"><section><div class="section-head"><h2>Энэ 7 хоног</h2><span class="small muted" id="weekRange"></span></div><div class="week-chart" id="weekChart" role="img" aria-label="Долоо хоногийн суралцсан хугацаа"></div><div class="week-summary"><div class="mini-stat"><div class="v" id="wsTotal">0m</div><div class="l">Нийт</div></div><div class="mini-stat"><div class="v" id="wsAvg">0m</div><div class="l">Дундаж / 7 өдөр</div></div><div class="mini-stat"><div class="v" id="wsBest">—</div><div class="l">Хамгийн их өдөр</div></div><div class="mini-stat"><div class="v" id="wsDays">0</div><div class="l">Суралцсан өдөр</div></div></div></section>
+    <section class="stats-goals" id="goalsSection"><h2>Таны зорилго</h2><div class="goal-block"><div class="goal-head"><span>7 хоногийн цаг</span><button class="link-btn" id="editGoalHours">Өөрчлөх</button></div><div class="goal-numbers"><span id="goalHoursNow">0m</span><b id="goalHoursTarget">/ 5ц</b></div><div class="bar-track"><div class="bar-fill" id="goalHoursBar"></div></div><p class="goal-remaining" id="goalHoursRemaining"></p><form class="goal-edit-row" id="goalHoursEdit" hidden><input type="number" min="0.5" max="168" step="0.5" id="goalHoursInput" aria-label="7 хоногийн зорилго, цагаар" required><button class="btn primary" id="goalHoursSave" type="submit">Хадгалах</button></form></div><div class="goal-block"><div class="goal-head"><span>7 хоногийн өдөр</span><button class="link-btn" id="editGoalDays">Өөрчлөх</button></div><div class="goal-numbers"><span id="goalDaysNow">0</span><b id="goalDaysTarget">/ 5 өдөр</b></div><div class="bar-track"><div class="bar-fill" id="goalDaysBar"></div></div><form class="goal-edit-row" id="goalDaysEdit" hidden><input type="number" min="1" max="7" step="1" id="goalDaysInput" aria-label="7 хоногт суралцах өдрийн тоо" required><button class="btn primary" id="goalDaysSave" type="submit">Хадгалах</button></form></div></section>
+   </div>
+   <section class="achievement-section"><div class="section-head"><h2>Замын жижиг тэмдэглэлүүд</h2><span class="small muted" id="achievementCount"></span></div><div class="ach-grid" id="achGrid"></div></section>
+   <section class="activity-section"><div class="section-head"><h2>Сүүлийн үйл ажиллагаа</h2><span class="activity-subtitle" id="allCounts"></span></div><div id="recentActivity"></div><div id="noRecent" class="empty-state">Цаг хэмжигчээр суралцсан түүх энд харагдана.</div></section>
+  </div>
+ </main>
+ <footer class="page-foot"><span>Нэг өдөр ч гэсэн зүгээр. Дахиад эхэлж болно.</span><span id="statusLine" class="status-line" role="status">Өгөгдлийг уншиж байна…</span></footer>
+</div>
+<nav class="bottom-nav" id="bottomNav" aria-label="Гар утасны үндсэн цэс"><button data-tab="overview" class="active" aria-current="page"><svg><use href="#i-overview"/></svg>Ерөнхий</button><button data-tab="calendar"><svg><use href="#i-calendar"/></svg>Хуанли</button><button data-tab="subjects"><svg><use href="#i-book"/></svg>Хичээлүүд</button><button data-tab="stats"><svg><use href="#i-chart"/></svg>Статистик</button></nav>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"></div></div>
+<div class="cal-tooltip" id="calTooltip" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input id="importFile" type="file" accept="application/json,.json" hidden>
+<script>
+(function () {
+  'use strict';
+
+  // The original storage key and all original collections stay compatible.
+  const STORAGE_KEY = 'tracker-data';
+  const BACKUP_KEY = STORAGE_KEY + ':backup:v2';
+  const PENDING_KEY = STORAGE_KEY + ':pending:v2';
+  const PALETTE = ['#ffc845', '#6fcf97', '#e07a6a', '#8ab4f8', '#c792ea', '#7fd8d0', '#f2a65a'];
+  const WEEKDAY_FULL = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
+  const WEEKDAY_SHORT_MON_START = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const object = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const validId = v => typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v));
+  const sameId = (a, b) => validId(a) && validId(b) && String(a) === String(b);
+  const positive = v => Number.isFinite(Number(v)) && Number(v) > 0;
+  const nonnegative = v => Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : 0;
+  const escapeHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+  const icon = name => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const safeColor = color => /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(String(color)) ? color : PALETTE[0];
+  const uid = prefix => prefix + '_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '_' + Math.random().toString(36).slice(2));
+
+  let data = null, lastRaw = null, sourceRaw = null, recoveryRaw = null;
+  let storageMode = 'local', readOnly = true, saveFailed = false, dirty = false;
+  let saveChain = Promise.resolve(), tickTimer = null, toastTimer = null;
+  let viewMonth = new Date(); viewMonth.setDate(1);
+  let selectedDay = null, lastDay = '', currentTab = 'overview', focusBeforeModal = null;
+
+  // Local calendar arithmetic also works through DST boundaries.
+  function dstr(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+  function todayStr() { return dstr(new Date()); }
+  function parseDateKey(ds) {
+    if (typeof ds !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return null;
+    const [y, m, d] = ds.split('-').map(Number);
+    const date = new Date(0); date.setFullYear(y, m - 1, d); date.setHours(12, 0, 0, 0);
+    return dstr(date) === ds ? date : null;
+  }
+  function offsetDate(ds, amount) { const d = parseDateKey(ds); d.setDate(d.getDate() + amount); return dstr(d); }
+  function startOfWeek(d) { const n = new Date(d); n.setDate(n.getDate() - (n.getDay() + 6) % 7); n.setHours(12, 0, 0, 0); return n; }
+  function weekDates() { const mon = dstr(startOfWeek(new Date())); return Array.from({length:7}, (_, i) => offsetDate(mon, i)); }
+  function last7Dates() { return Array.from({length:7}, (_, i) => offsetDate(todayStr(), i - 6)); }
+  function isYesterday(ds) { return ds === offsetDate(todayStr(), -1); }
+  function dateLabel(ds) {
+    const d = parseDateKey(ds);
+    return ds === todayStr() ? 'Өнөөдөр' : isYesterday(ds) ? 'Өчигдөр' : d ? `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}` : 'Огноо тодорхойгүй';
+  }
+  function fmtMin(minutes) {
+    const n = Math.round(nonnegative(minutes)), h = Math.floor(n / 60), m = n % 60;
+    return h ? `${h}ц${m ? ` ${m}м` : ''}` : `${m}м`;
+  }
+  function fmtSecShort(seconds) { return seconds > 0 && seconds < 60 ? `${Math.floor(seconds)}с` : fmtMin(seconds / 60); }
+  function fmtHMS(ms) { const s = Math.floor(nonnegative(ms) / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`; }
+  function timeLabel(epoch) { const d = new Date(Number(epoch)); return positive(epoch) && !isNaN(d) ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : ''; }
+
+  // Keep unknown fields and malformed records in storage; only valid records are rendered.
+  function defaultData() { return {subjects:[], entries:[], sessions:[], goals:{weeklyHours:5, weeklyDays:5}, achievementsUnlocked:{}, settings:{}, activeTimer:null, schemaVersion:2}; }
+  function migrate(raw) {
+    if (!object(raw)) throw new Error('Өгөгдлийн бүтэц танигдсангүй.');
+    const d = {...defaultData(), ...raw};
+    const preserve = key => { d.legacyInvalidFields = {...(object(d.legacyInvalidFields) ? d.legacyInvalidFields : {}), [key]:d[key]}; };
+    for (const key of ['subjects', 'entries', 'sessions']) {
+      if (!Array.isArray(d[key])) { preserve(key); d[key] = []; }
+    }
+    for (const key of ['goals', 'settings', 'achievementsUnlocked']) {
+      if (!object(d[key])) { preserve(key); d[key] = {}; }
+    }
+    d.goals = {weeklyHours:5, weeklyDays:5, ...d.goals};
+    if (d.activeTimer != null) {
+      if (!object(d.activeTimer) || !validId(d.activeTimer.subjectId)) { preserve('activeTimer'); d.activeTimer = null; }
+      else {
+        const old = d.activeTimer, accumulatedMs = nonnegative(old.accumulatedMs);
+        const running = old.running === true;
+        const epoch = positive(old.runningSince) ? Number(old.runningSince) : positive(old.startEpoch) ? Number(old.startEpoch) : Date.now();
+        // Legacy startEpoch was rewritten on resume; its original wall-clock start is unrecoverable.
+        const estimated = !positive(old.sessionStartedAt);
+        const start = estimated ? Math.max(1, epoch - accumulatedMs) : Number(old.sessionStartedAt);
+        d.activeTimer = {...old, id:old.id || uid('sess'), date:parseDateKey(old.date) ? old.date : dstr(new Date(start)), sessionStartedAt:start,
+          runningSince:running ? epoch : null, accumulatedMs, running, note:typeof old.note === 'string' ? old.note : '', startTimeEstimated:old.startTimeEstimated || estimated};
+      }
+    }
+    d.schemaVersion = 2;
+    return d;
+  }
+  function subjects() {
+    const seen = new Set();
+    return data.subjects.filter(s => {
+      if (!object(s) || !validId(s.id) || typeof s.name !== 'string' || seen.has(String(s.id))) return false;
+      seen.add(String(s.id)); return true;
+    });
+  }
+  function entries() { return data.entries.filter(e => object(e) && validId(e.subjectId) && parseDateKey(e.date) && e.date <= todayStr()); }
+  function sessions() { return data.sessions.filter(s => object(s) && validId(s.subjectId) && parseDateKey(s.date) && s.date <= todayStr() && positive(s.durationSec)); }
+  function subjectById(id) { return subjects().find(s => sameId(s.id, id)); }
+  function secondsForDate(ds, subjectId) { return sessions().reduce((n, s) => n + (s.date === ds && (subjectId === undefined || sameId(s.subjectId, subjectId)) ? Number(s.durationSec) : 0), 0); }
+  function minutesForDate(ds) { return secondsForDate(ds) / 60; }
+  function minutesForDate2(subjectId, ds) { return secondsForDate(ds, subjectId) / 60; }
+  function subjectsStudiedOnDate(ds) { return new Set([...entries(), ...sessions()].filter(e => e.date === ds).map(e => String(e.subjectId))); }
+  function studiedDateSet(subjectId) { return new Set([...entries(), ...sessions()].filter(e => subjectId === undefined || sameId(e.subjectId, subjectId)).map(e => e.date)); }
+  function subjectDateSet(id) { return studiedDateSet(id); }
+  function currentStreak(set) {
+    let ds = todayStr(), n = 0;
+    if (!set.has(ds)) ds = offsetDate(ds, -1);
+    while (set.has(ds)) { n++; ds = offsetDate(ds, -1); }
+    return n;
+  }
+  function computeCurrentStreak() { return currentStreak(studiedDateSet()); }
+  function subjectStreak(id) { return currentStreak(subjectDateSet(id)); }
+  function computeBestStreak(set = studiedDateSet()) {
+    let best = 0, run = 0, previous = null;
+    [...set].sort().forEach(ds => { run = previous && offsetDate(previous, 1) === ds ? run + 1 : 1; best = Math.max(best, run); previous = ds; });
+    return best;
+  }
+  function subjectTotalSec(id) { return sessions().reduce((n, s) => n + (sameId(s.subjectId, id) ? Number(s.durationSec) : 0), 0); }
+  function subjectSessionCount(id) { return sessions().filter(s => sameId(s.subjectId, id)).length; }
+  function totalAllTimeSec() { return sessions().reduce((n, s) => n + Number(s.durationSec), 0); }
+  function totalForMonth(year, month) { const prefix = `${year}-${pad(month + 1)}-`; return sessions().reduce((n, s) => n + (s.date.startsWith(prefix) ? Number(s.durationSec) : 0), 0); }
+  function weekSeconds() { return weekDates().reduce((n, ds) => n + secondsForDate(ds), 0); }
+  function weeklyHours() { return positive(data.goals.weeklyHours) ? Number(data.goals.weeklyHours) : 5; }
+  function weeklyDays() { return positive(data.goals.weeklyDays) ? Math.min(7, Number(data.goals.weeklyDays)) : 5; }
+  function streakSubtext(n) {
+    if (!n) return studiedDateSet().size ? 'Зүгээр. Өнөөдөр дахин эхэлж болно.' : 'Өнөөдөр эхэлье. Нэг хичээл тэмдэглэхэд л хангалттай.';
+    if (n === 1) return '1 өдөр ч гэсэн зүгээр — эхэлсэн нь чухал.';
+    return n < 5 ? 'Сайн эхэллээ. Өдөр алдвал дахин эхэлнэ, тэр нь хэвийн зүйл.' : 'Сайн явж байна. Энэ чинь дадал болж байна.';
+  }
+
+  // Timer: the original session start never changes on pause or resume.
+  function timerElapsedMs() { const t = data?.activeTimer; return t ? t.accumulatedMs + (t.running ? Math.max(0, Date.now() - t.runningSince) : 0) : 0; }
+  function startTimer(subjectId) {
+    if (!canEdit()) return;
+    const sub = subjectById(subjectId); if (!sub) return;
+    if (data.activeTimer) {
+      if (sameId(data.activeTimer.subjectId, sub.id)) { closeModal(); $('timerBar').scrollIntoView({block:'start'}); return; }
+      toast('Одоогийн хичээлээ дуусгах эсвэл цуцлаад дараагийнхыг эхлүүлээрэй.');
+      closeModal(); $('timerBar').scrollIntoView({block:'start'}); return;
+    }
+    const now = Date.now();
+    data.activeTimer = {id:uid('sess'), subjectId:sub.id, date:todayStr(), sessionStartedAt:now, runningSince:now, accumulatedMs:0, running:true, note:''};
+    closeModal(); changed(); $('timerBar').scrollIntoView({block:'start'});
+  }
+  function pauseResumeTimer() {
+    if (!canEdit() || !data.activeTimer) return;
+    const t = data.activeTimer;
+    if (t.running) { t.accumulatedMs = timerElapsedMs(); t.running = false; t.runningSince = null; }
+    else { t.runningSince = Date.now(); t.running = true; }
+    renderTimerBar(); scheduleSave();
+  }
+  function finishTimer() {
+    if (!canEdit() || !data.activeTimer) return;
+    const t = data.activeTimer, durationSec = Math.floor(timerElapsedMs() / 1000);
+    if (durationSec < 5) { toast('5 секундээс урт хичээлийг хадгална. Үргэлжлүүлэх эсвэл цуцалж болно.'); return; }
+    // Stable ID prevents the same timer from producing duplicate sessions.
+    if (!data.sessions.some(s => object(s) && s.id === t.id)) data.sessions.push({id:t.id || uid('sess'), subjectId:t.subjectId, date:t.date,
+      startEpoch:t.sessionStartedAt, endEpoch:Date.now(), durationSec, note:t.note.trim(), ...(t.startTimeEstimated ? {startTimeEstimated:true} : {})});
+    data.activeTimer = null; changed('Суралцсан хугацаа хадгалагдлаа ✓');
+  }
+  function resetTimer() {
+    if (!canEdit() || !data.activeTimer || !confirm('Одоогийн хичээлийн хугацаа, тэмдэглэлийг хадгалахгүйгээр цуцлах уу?')) return;
+    data.activeTimer = null; changed('Цаг хэмжигчийг цуцаллаа.');
+  }
+  function stopTicking() { if (tickTimer) clearInterval(tickTimer); tickTimer = null; }
+  function startTicking() {
+    stopTicking();
+    tickTimer = setInterval(() => { if (data.activeTimer) $('tbTime').textContent = fmtHMS(timerElapsedMs()); checkDayChange(); }, 1000);
+  }
+  function renderTimerBar() {
+    const t = data.activeTimer; $('timerBar').classList.toggle('show', !!t);
+    if (!t) { stopTicking(); document.title = 'Тогтмол — өдөр бүр бага багаар'; return; }
+    const sub = subjectById(t.subjectId);
+    $('tbDot').style.background = safeColor(sub?.color); $('tbName').textContent = sub?.name || 'Өмнөх хичээл';
+    $('tbState').textContent = t.running ? 'Суралцаж байна' : 'Түр зогссон';
+    $('tbTime').textContent = fmtHMS(timerElapsedMs());
+    if (document.activeElement !== $('tbNote')) $('tbNote').value = t.note;
+    $('tbPauseBtn').innerHTML = icon(t.running ? 'pause' : 'play') + (t.running ? 'Түр зогсоох' : 'Үргэлжлүүлэх');
+    $('tbPauseBtn').setAttribute('aria-label', t.running ? 'Түр зогсоох' : 'Үргэлжлүүлэх');
+    document.title = `${t.running ? '▶' : 'Ⅱ'} ${sub?.name || 'Хичээл'} · Тогтмол`;
+    if (t.running) startTicking(); else stopTicking();
+  }
+  function checkDayChange() { if (data && lastDay !== todayStr()) { lastDay = todayStr(); renderAll(); } }
+
+  function addSubject(name) {
+    if (!canEdit()) return false;
+    name = String(name || '').trim(); if (!name || name.length > 60) { toast('Хичээлийн нэр 1–60 тэмдэгт байна.'); return false; }
+    if (subjects().some(s => s.name.trim().normalize('NFKC').toLocaleLowerCase() === name.normalize('NFKC').toLocaleLowerCase())) { toast('Ийм нэртэй хичээл байна.'); return false; }
+    data.subjects.push({id:uid('s'), name, color:PALETTE[subjects().length % PALETTE.length]}); changed('Хичээл нэмэгдлээ.'); return true;
+  }
+  function toggleEntry(subjectId) {
+    if (!canEdit()) return;
+    const sub = subjectById(subjectId); if (!sub) return;
+    const ds = todayStr(), found = data.entries.some(e => object(e) && sameId(e.subjectId, sub.id) && e.date === ds);
+    if (found) data.entries = data.entries.filter(e => !object(e) || !sameId(e.subjectId, sub.id) || e.date !== ds);
+    else data.entries.push({date:ds, subjectId:sub.id});
+    changed(found ? 'Гараар хийсэн тэмдэглэгээг арилгалаа. Хэмжсэн хугацаа хэвээр.' : 'Өнөөдрийн хичээлийг тэмдэглэлээ ✓');
+  }
+  function removeSubject(subjectId) {
+    if (!canEdit()) return;
+    const sub = subjectById(subjectId); if (!sub) return;
+    const timerText = sameId(data.activeTimer?.subjectId, sub.id) ? ' Идэвхтэй цаг хэмжигч мөн цуцлагдана.' : '';
+    if (!confirm(`«${sub.name}» хичээлийг устгах уу? Энэ хичээлийн бүх тэмдэглэгээ, суралцсан хугацаа, тэмдэглэл устна.${timerText}`)) return;
+    data.subjects = data.subjects.filter(s => !object(s) || !sameId(s.id, sub.id));
+    data.entries = data.entries.filter(e => !object(e) || !sameId(e.subjectId, sub.id));
+    data.sessions = data.sessions.filter(s => !object(s) || !sameId(s.subjectId, sub.id));
+    if (sameId(data.activeTimer?.subjectId, sub.id)) data.activeTimer = null;
+    closeModal(); changed('Хичээл болон холбогдох түүхийг устгалаа.');
+  }
+
+  // Render user strings through escaping; never accept arbitrary inline color values.
+  function subjectIcon(sub) { return `<span class="subject-icon" style="color:${safeColor(sub.color)}">${escapeHtml([...sub.name][0] || '·')}</span>`; }
+  function renderOverview() {
+    const now = new Date(), today = todayStr(), list = subjects(), wSec = weekSeconds(), set = studiedDateSet();
+    $('todayDate').textContent = `${now.getFullYear()} оны ${now.getMonth() + 1}-р сарын ${now.getDate()} · ${WEEKDAY_FULL[now.getDay()]}`;
+    $('dateChip').textContent = `${pad(now.getMonth() + 1)} / ${pad(now.getDate())}`;
+    const streak = computeCurrentStreak(); $('streakNumber').textContent = streak; $('streakSub').textContent = streakSubtext(streak);
+    $('statToday').textContent = fmtSecShort(secondsForDate(today)); $('statWeek').textContent = fmtSecShort(wSec);
+    $('statSubjects').textContent = subjectsStudiedOnDate(today).size; $('subjectCount').textContent = list.length;
+    $('bestStreak').textContent = computeBestStreak(); $('totalStudyDays').textContent = set.size;
+    $('noSubjectsOverview').hidden = list.length > 0;
+    $('todayList').innerHTML = list.map(sub => {
+      const sec = secondsForDate(today, sub.id), manual = entries().some(e => e.date === today && sameId(e.subjectId, sub.id)), done = manual || sec > 0;
+      return `<div class="study-row"><button class="study-main" data-detail="${escapeHtml(sub.id)}" aria-label="${escapeHtml(sub.name)} дэлгэрэнгүй">${subjectIcon(sub)}<span><span class="name">${escapeHtml(sub.name)}</span><span class="subline ${done ? 'done' : ''}">${done ? '✓ Өнөөдөр суралцсан' : 'Хүссэн үедээ эхлээрэй'}</span></span></button><span class="mins">${fmtSecShort(sec)}</span><span class="row-actions"><button class="icon-btn ${manual ? 'primary' : ''}" data-toggle="${escapeHtml(sub.id)}" aria-pressed="${manual}" aria-label="${escapeHtml(sub.name)} гараар тэмдэглэх" title="Гараар тэмдэглэх">${icon('check')}</button><button class="icon-btn play" data-start="${escapeHtml(sub.id)}" aria-label="${escapeHtml(sub.name)} эхлүүлэх" title="Эхлүүлэх">${icon('play')}</button></span></div>`;
+    }).join('');
+    const goalSec = weeklyHours() * 3600, pct = Math.min(100, wSec / goalSec * 100), activeDays = weekDates().filter(ds => set.has(ds)).length;
+    $('goalMini').innerHTML = `<div class="goal-mini-row"><span>Суралцсан хугацаа</span><b>${fmtSecShort(wSec)} / ${fmtSecShort(goalSec)}</b></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><p class="goal-remaining">${wSec >= goalSec ? 'Энэ 7 хоногийн цагийн зорилгодоо хүрлээ ✓' : `${fmtSecShort(goalSec - wSec)} үлдлээ. Өөрийн хэмнэлээр.`}</p><div class="goal-mini-row"><span>Суралцсан өдрүүд</span><b>${activeDays} / ${weeklyDays()} өдөр</b></div><div class="week-dots">${weekDates().map((ds,i) => `<span class="week-dot ${set.has(ds) ? 'on' : ''} ${ds === today ? 'today' : ''}" title="${ds}"><i>${set.has(ds) ? '✓' : '·'}</i>${WEEKDAY_SHORT_MON_START[i]}</span>`).join('')}</div>`;
+    const insights = computeInsights(); $('insightBox').hidden = !insights.length; $('insightList').innerHTML = insights.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+    renderRecent($('overviewRecent'), 4, true);
+  }
+  function recentItem(s, showDate = true) {
+    const sub = subjectById(s.subjectId), name = sub?.name || 'Өмнөх хичээл';
+    return `<div class="recent-item"><div class="recent-left"><span class="dot" style="background:${safeColor(sub?.color)}"></span><span class="recent-copy"><span class="ri-name">${escapeHtml(name)}</span><span class="ri-date">${showDate ? escapeHtml(dateLabel(s.date)) + ' · ' : ''}${timeLabel(s.startEpoch)}${s.startTimeEstimated ? ' (ойролцоо)' : ''}</span>${s.note ? `<span class="ri-note">${escapeHtml(s.note)}</span>` : ''}</span></div><span class="ri-dur">${fmtSecShort(Number(s.durationSec))}</span></div>`;
+  }
+  function newestSessions(list = sessions()) { return [...list].sort((a,b) => b.date.localeCompare(a.date) || nonnegative(b.startEpoch) - nonnegative(a.startEpoch)); }
+  function renderRecent(target, count = 20, flat = false) {
+    const recent = newestSessions().slice(0, count);
+    if (!recent.length) { target.innerHTML = flat ? '<div class="empty-state">Цаг хэмжигч ашиглаж суралцсан түүх энд харагдана.</div>' : ''; return; }
+    if (flat) { target.innerHTML = recent.map(s => recentItem(s)).join(''); return; }
+    const groups = new Map(); recent.forEach(s => { if (!groups.has(s.date)) groups.set(s.date, []); groups.get(s.date).push(s); });
+    target.innerHTML = [...groups].map(([ds,list]) => `<div class="recent-group"><div class="rg-date">${escapeHtml(dateLabel(ds))}</div>${list.map(s => recentItem(s, false)).join('')}</div>`).join('');
+  }
+  function calendarLevel(ds) { const m = minutesForDate(ds); return m > 120 ? 4 : m > 60 ? 3 : m > 30 ? 2 : m > 0 || subjectsStudiedOnDate(ds).size ? 1 : 0; }
+  function renderCalendar() {
+    const year = viewMonth.getFullYear(), month = viewMonth.getMonth();
+    $('monthLabel').textContent = `${year} оны ${month + 1}-р сар`;
+    const offset = (new Date(year, month, 1).getDay() + 6) % 7, days = new Date(year, month + 1, 0).getDate();
+    let html = '<span class="cal-cell blank" aria-hidden="true"></span>'.repeat(offset);
+    for (let day = 1; day <= days; day++) {
+      const ds = dstr(new Date(year, month, day)), future = ds > todayStr(), sec = secondsForDate(ds), selected = ds === selectedDay;
+      html += `<button class="cal-cell ${future ? 'future' : ''} ${ds === todayStr() ? 'today' : ''} ${selected ? 'selected' : ''}" data-date="${ds}" data-level="${calendarLevel(ds)}" aria-label="${ds}, ${fmtSecShort(sec)}, ${subjectsStudiedOnDate(ds).size} хичээл" aria-pressed="${selected}" ${ds === todayStr() ? 'aria-current="date"' : ''}>${day}${sec > 0 ? `<small>${fmtSecShort(sec)}</small>` : ''}</button>`;
+    }
+    $('calGrid').innerHTML = html; showDayDetail(selectedDay || todayStr(), false);
+  }
+  function showDayDetail(ds, highlight = true) {
+    if (!parseDateKey(ds)) return;
+    selectedDay = ds; const date = parseDateKey(ds), daySessions = newestSessions(sessions().filter(s => s.date === ds)), studied = subjectsStudiedOnDate(ds);
+    const names = [...studied].map(id => subjectById(id)?.name || 'Өмнөх хичээл');
+    $('dayDetail').innerHTML = `<div class="eyebrow">${WEEKDAY_FULL[date.getDay()]}</div><h2 class="dd-title">${date.getMonth() + 1}-р сарын ${date.getDate()}</h2><div class="day-total">${fmtSecShort(secondsForDate(ds))}</div><div class="dd-line">${daySessions.length} удаа · ${studied.size} хичээл</div><div class="dd-line">${escapeHtml(names.join(', '))}</div>${daySessions.length ? '<hr class="rule">' + daySessions.slice(0,10).map(s => recentItem(s, false)).join('') : `<p class="section-hint">${ds > todayStr() ? 'Өөрийн хэмнэлээр суралцах дараагийн өдөр.' : studied.size ? 'Гараар тэмдэглэсэн өдөр. Хугацаа хэмжээгүй.' : 'Энэ өдөр суралцсан тэмдэглэл алга.'}</p>`}`;
+    if (highlight) document.querySelectorAll('[data-date]').forEach(b => { b.classList.toggle('selected', b.dataset.date === ds); b.setAttribute('aria-pressed', String(b.dataset.date === ds)); });
+  }
+  function showCalendarTooltip(button) {
+    const ds = button.dataset.date, names = [...subjectsStudiedOnDate(ds)].map(id => subjectById(id)?.name || 'Өмнөх хичээл');
+    const tip = $('calTooltip'); tip.textContent = `${dateLabel(ds)}\nСуралцсан хугацаа: ${fmtSecShort(secondsForDate(ds))}\nСуралцсан удаа: ${sessions().filter(s => s.date === ds).length}\nХичээл: ${names.join(', ') || '—'}`;
+    tip.hidden = false; button.setAttribute('aria-describedby', 'calTooltip');
+    const r = button.getBoundingClientRect();
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, r.left)) + 'px';
+    tip.style.top = Math.max(8, r.top > tip.offsetHeight + 12 ? r.top - tip.offsetHeight - 8 : Math.min(window.innerHeight - tip.offsetHeight - 8, r.bottom + 8)) + 'px';
+  }
+  function hideCalendarTooltip() { $('calTooltip').hidden = true; document.querySelectorAll('[aria-describedby="calTooltip"]').forEach(b => b.removeAttribute('aria-describedby')); }
+  function renderSubjectsTab() {
+    const list = subjects(); $('noSubjectsFull').hidden = !!list.length;
+    $('subjectListFull').innerHTML = list.map(sub => `<div class="subject-row"><button class="study-main" data-detail="${escapeHtml(sub.id)}">${subjectIcon(sub)}<span class="name">${escapeHtml(sub.name)}</span></button><div class="subject-stats"><span class="subject-stat">${fmtSecShort(subjectTotalSec(sub.id))}<small>нийт хугацаа</small></span><span class="subject-stat days"><span class="streak-badge">${subjectStreak(sub.id)}</span><small>өдөр дараалан</small></span></div><button class="icon-btn" data-start="${escapeHtml(sub.id)}" aria-label="${escapeHtml(sub.name)} эхлүүлэх">${icon('play')}</button></div>`).join('');
+  }
+  function renderStats() {
+    const now = new Date(), dates = weekDates(), seconds = dates.map(ds => secondsForDate(ds)), total = seconds.reduce((a,b) => a+b, 0), max = Math.max(...seconds, 1), set = studiedDateSet();
+    $('totalAllTime').textContent = fmtSecShort(totalAllTimeSec()); $('totTodayV').textContent = fmtSecShort(secondsForDate(todayStr()));
+    $('totWeekV').textContent = fmtSecShort(total); $('totMonthV').textContent = fmtSecShort(totalForMonth(now.getFullYear(), now.getMonth()));
+    $('weekRange').textContent = `${dates[0].slice(5).replace('-', '.')} — ${dates[6].slice(5).replace('-', '.')}`;
+    $('weekChart').innerHTML = seconds.map((sec,i) => `<div class="bar-col"><span class="bar-value">${sec ? fmtSecShort(sec) : '—'}</span><div class="bar ${sec === max ? 'best' : ''}" style="height:${Math.max(2, sec/max*125)}px" title="${dates[i]}: ${fmtSecShort(sec)}"></div><span class="bar-label">${WEEKDAY_SHORT_MON_START[i]}</span></div>`).join('');
+    $('weekChart').setAttribute('aria-label', dates.map((ds,i) => `${WEEKDAY_SHORT_MON_START[i]} ${fmtSecShort(seconds[i])}`).join(', '));
+    $('wsTotal').textContent = fmtSecShort(total); $('wsAvg').textContent = fmtSecShort(total/7);
+    $('wsBest').textContent = total > 0 ? WEEKDAY_FULL[parseDateKey(dates[seconds.indexOf(Math.max(...seconds))]).getDay()] : '—';
+    const active = dates.filter(ds => set.has(ds)).length; $('wsDays').textContent = active;
+    $('goalHoursNow').textContent = fmtSecShort(total); $('goalHoursTarget').textContent = '/ ' + fmtSecShort(weeklyHours()*3600);
+    $('goalHoursBar').style.width = Math.min(100, total/(weeklyHours()*3600)*100) + '%';
+    $('goalHoursRemaining').textContent = total >= weeklyHours()*3600 ? 'Цагийн зорилгодоо хүрлээ ✓' : `${fmtSecShort(weeklyHours()*3600-total)} үлдлээ`;
+    $('goalDaysNow').textContent = active; $('goalDaysTarget').textContent = `/ ${weeklyDays()} өдөр`;
+    $('goalDaysBar').style.width = Math.min(100, active/weeklyDays()*100) + '%';
+    $('achievementCount').textContent = `${ACH_DEFS.filter(a => data.achievementsUnlocked[a.id]).length} / ${ACH_DEFS.length}`;
+    $('achGrid').innerHTML = ACH_DEFS.map(a => {
+      const unlocked = data.achievementsUnlocked[a.id];
+      return `<div class="ach-card ${unlocked ? 'unlocked' : 'locked'}"><div class="a-icon">${icon(a.icon)}<span>${unlocked ? '✓' : 'Цаашдын алхам'}</span></div><div class="a-name">${a.name}</div><div class="a-desc">${a.desc}</div>${unlocked && parseDateKey(unlocked) ? `<div class="a-date">${escapeHtml(dateLabel(unlocked))}</div>` : ''}</div>`;
+    }).join('');
+    $('allCounts').textContent = `${set.size} өдөр · ${sessions().length} удаа`;
+    $('noRecent').hidden = sessions().length > 0; renderRecent($('recentActivity'));
+  }
+
+  const ACH_DEFS = [
+    {id:'first_study', icon:'leaf', name:'Эхний алхам', desc:'Анхны суралцсан өдөр', test:() => studiedDateSet().size > 0},
+    {id:'days_7', icon:'calendar', name:'7 өдөр', desc:'Нийт 7 өдөр суралцсан', test:() => studiedDateSet().size >= 7},
+    {id:'hours_10', icon:'clock', name:'10 цаг', desc:'Өөртөө зориулсан 10 цаг', test:() => totalAllTimeSec() >= 36000},
+    {id:'hours_50', icon:'spark', name:'50 цаг', desc:'Өөртөө зориулсан 50 цаг', test:() => totalAllTimeSec() >= 180000},
+    {id:'hours_100', icon:'award', name:'100 цаг', desc:'Өөртөө зориулсан 100 цаг', test:() => totalAllTimeSec() >= 360000},
+    {id:'sessions_100', icon:'book', name:'100 удаа', desc:'100 удаа хичээлээ дуусгасан', test:() => sessions().length >= 100},
+    {id:'streak_30', icon:'leaf', name:'30 өдрийн дараалал', desc:'30 өдөр дараалан суралцсан', test:() => computeBestStreak() >= 30}
+  ];
+  function refreshAchievements() {
+    let changed = false;
+    ACH_DEFS.forEach(a => { if (!data.achievementsUnlocked[a.id] && a.test()) { data.achievementsUnlocked[a.id] = todayStr(); changed = true; } });
+    return changed;
+  }
+  function computeInsights() {
+    const result = [], total = weekSeconds(), priorDates = weekDates().filter(d => d <= todayStr()).map(d => offsetDate(d, -7));
+    const prior = priorDates.reduce((n, ds) => n + secondsForDate(ds), 0);
+    if (prior > 0 && total >= prior * 1.05) result.push(`Энэ 7 хоногийн одоог хүртэлх хугацаанд өнгөрсөн 7 хоногийн ижил өдрүүдээс ${Math.round((total / prior - 1) * 100)}% илүү суралцжээ.`);
+    const top = subjects().map(s => ({name:s.name, sec:subjectTotalSec(s.id)})).sort((a,b) => b.sec-a.sec)[0];
+    if (top?.sec > 0) result.push(`${top.name} дээр хамгийн их цаг зарцуулжээ (${fmtSecShort(top.sec)}).`);
+    const set = studiedDateSet(), days = Array.from({length:14}, (_,i) => offsetDate(todayStr(), -i)).filter(d => set.has(d)).length;
+    if (days) result.push(`Сүүлийн 14 хоногт ${days} өдөр суралцжээ.`);
+    if (total > 0) result.push(`Энэ 7 хоногийн цагийн зорилгын ${Math.round(total / (weeklyHours() * 3600) * 100)}%-д хүрсэн байна.`);
+    return result.slice(0, 4);
+  }
+
+  // Storage failures never turn unreadable existing data into an empty saved file.
+  function localGet(key) { return window.localStorage.getItem(key); }
+  function localSet(key, value) { window.localStorage.setItem(key, value); }
+  function clearPending(snapshot) { try { const p = JSON.parse(localGet(PENDING_KEY) || 'null'); if (p?.payload === snapshot) window.localStorage.removeItem(PENDING_KEY); } catch (_) {} }
+  function storageWarning(message) { $('storageMessage').textContent = message; $('storageBanner').hidden = false; }
+  function status(message) { $('statusLine').textContent = message; }
+  async function storageGet(key = STORAGE_KEY) {
+    if (storageMode === 'local') return localGet(key);
+    let value;
+    try { value = await window.storage.get(key, false); }
+    catch (err) {
+      if (err?.code === 'NOT_FOUND' || err?.code === 'KEY_NOT_FOUND' || err?.status === 404 || /(?:key|item|value).*not found/i.test(String(err?.message))) return null;
+      throw err;
+    }
+    return value == null ? null : typeof value === 'string' ? value : value.value ?? null;
+  }
+  async function storageSet(key, value) {
+    if (storageMode === 'local') { localSet(key, value); return; }
+    const result = await window.storage.set(key, value, false);
+    if (result === false || result === null) throw new Error('Хадгалалт амжилтгүй.');
+  }
+  function setSaveError(message, conflict = false) {
+    saveFailed = true; if (conflict) readOnly = true;
+    storageWarning(message); status('Хадгалагдаагүй өөрчлөлт байна');
+  }
+  function saveLocal(snapshot) {
+    try {
+      if (localGet(STORAGE_KEY) !== lastRaw) { setSaveError('Өөр цонхонд өгөгдөл өөрчлөгдсөн байна. Одоогийн хувилбараа нөөцлөөд дахин уншина уу.', true); return false; }
+      if (sourceRaw !== null && localGet(BACKUP_KEY) === null) localSet(BACKUP_KEY, sourceRaw);
+      localSet(STORAGE_KEY, snapshot); lastRaw = snapshot; dirty = false; saveFailed = false;
+      clearPending(snapshot); status('Хадгалагдлаа ✓'); return true;
+    } catch (_) { setSaveError('Өөрчлөлт хадгалагдсангүй. Хадгалах зай, браузерын тохиргоог шалгаад дахин оролдоно уу. Нөөцөө татаж авч болно.'); return false; }
+  }
+  function saveData() {
+    if (!data || readOnly) return Promise.resolve(false);
+    const snapshot = JSON.stringify(data); dirty = true;
+    status('Хадгалж байна…');
+    if (storageMode === 'local') return Promise.resolve(saveLocal(snapshot));
+    try { localSet(PENDING_KEY, JSON.stringify({base:lastRaw, payload:snapshot})); } catch (_) {}
+    saveChain = saveChain.then(async () => {
+      if (readOnly) return false;
+      try {
+        if ((await storageGet()) !== lastRaw) { setSaveError('Өөр цонхонд өгөгдөл өөрчлөгдсөн байна. Одоогийн хувилбараа нөөцлөөд дахин уншина уу.', true); return false; }
+        if (sourceRaw !== null && (await storageGet(BACKUP_KEY)) === null) await storageSet(BACKUP_KEY, sourceRaw);
+        await storageSet(STORAGE_KEY, snapshot); lastRaw = snapshot;
+        try {
+          localSet(STORAGE_KEY, snapshot);
+          const pending = JSON.parse(localGet(PENDING_KEY) || 'null');
+          if (pending && pending.payload !== snapshot) localSet(PENDING_KEY, JSON.stringify({...pending, base:snapshot}));
+        } catch (_) {}
+        clearPending(snapshot); dirty = JSON.stringify(data) !== snapshot; saveFailed = false;
+        status(dirty ? 'Хадгалж байна…' : 'Хадгалагдлаа ✓'); return true;
+      } catch (_) { setSaveError('Өөрчлөлт хадгалагдсангүй. Холболтоо шалгаад дахин оролдоно уу. Нөөцөө татаж авч болно.'); return false; }
+    });
+    return saveChain;
+  }
+  function scheduleSave() { return saveData(); }
+  function canEdit() { if (!data || readOnly) { toast('Өгөгдлийг дахин уншиж байж өөрчлөлт хийнэ үү.'); return false; } return true; }
+  function changed(message) { refreshAchievements(); renderAll(); const save = scheduleSave(); if (message) save.then(ok => toast(ok ? message : 'Өөрчлөлт хадгалагдсангүй. Нөөцөө татаж авна уу.')); return save; }
+  async function loadData() {
+    readOnly = true; $('main').setAttribute('aria-busy', 'true');
+    $('storageBanner').hidden = true; recoveryRaw = null; saveFailed = false;
+    storageMode = window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function' ? 'host' : 'local';
+    let raw = null, fallback = false, recovered = false;
+    try {
+      try { raw = await storageGet(); }
+      catch (err) {
+        if (storageMode !== 'host') throw err;
+        raw = localGet(STORAGE_KEY);
+        if (raw === null) throw err;
+        storageMode = 'local'; fallback = true;
+      }
+      if (storageMode === 'host' && raw === null) {
+        try { const saved = localGet(STORAGE_KEY); if (saved !== null) { raw = saved; storageMode = 'local'; fallback = true; } } catch (_) {}
+      }
+      lastRaw = raw; sourceRaw = raw;
+      if (storageMode === 'host') {
+        try {
+          const pending = JSON.parse(localGet(PENDING_KEY) || 'null');
+          if (pending && (pending.base === raw || pending.payload === raw)) { raw = pending.payload; recovered = raw !== lastRaw; }
+          else if (pending) { recoveryRaw = pending.payload; storageWarning('Өмнөх цонхны хадгалагдаагүй нөөц байна. «Нөөц татах» товчоор авч, тохиргооноос нэгтгэн оруулж болно.'); }
+        } catch (_) {}
+      }
+      const parsed = raw === null ? defaultData() : JSON.parse(raw);
+      if (!object(parsed) || (!['subjects','entries','sessions'].some(k => Array.isArray(parsed[k])) && raw !== null)) throw new Error('Танигдаагүй бүтэц');
+      if (positive(parsed.schemaVersion) && Number(parsed.schemaVersion) > 2) throw new Error('Шинэ хувилбарын бүтэц');
+      data = migrate(parsed); readOnly = false; dirty = false;
+      const newAchievements = refreshAchievements();
+      status(storageMode === 'host' ? 'Өгөгдөл бэлэн' : 'Энэ браузерт хадгална');
+      if (fallback) storageWarning('Энэ удаа браузерт хадгалсан хувилбарыг ашиглаж байна. Өөр төхөөрөмж рүү нөөц файлаар зөөж болно.');
+      const invalid = data.subjects.length - subjects().length + data.entries.filter(e => !object(e) || !validId(e.subjectId) || !parseDateKey(e.date)).length + data.sessions.filter(s => !object(s) || !validId(s.subjectId) || !parseDateKey(s.date) || !Number.isFinite(Number(s.durationSec)) || Number(s.durationSec) < 0).length;
+      if (invalid || data.legacyInvalidFields) storageWarning('Зарим хуучин бичлэгийн бүтэц танигдсангүй. Тэдгээрийг өгөгдөл болон нөөцөд хэвээр хадгалж, зөв бичлэгүүдийг харуулж байна.');
+      if (raw !== null && (JSON.stringify(data) !== raw || recovered || newAchievements)) await saveData();
+      if (recovered) toast('Дуусаагүй хадгалалтаас сэргээв.');
+    } catch (_) {
+      recoveryRaw = raw; data = defaultData(); readOnly = true;
+      storageWarning('Өмнөх өгөгдлийг уншиж чадсангүй. Эх өгөгдөл өөрчлөгдөөгүй. Нөөцөө татах эсвэл дахин унших боломжтой.'); status('Өгөгдлийг хамгаалж, засварыг түр зогсоов');
+    }
+    lastDay = todayStr(); renderAll(); $('main').setAttribute('aria-busy', 'false');
+  }
+
+  // Dialogs, keyboard focus and safe data portability.
+  function toast(message) { $('toast').textContent = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').textContent = ''; }, 4500); }
+  function openModal(title, content) {
+    const wasOpen = $('modalOverlay').classList.contains('show');
+    if (!wasOpen) focusBeforeModal = document.activeElement;
+    $('modalCard').innerHTML = `<div class="modal-head"><h2 class="modal-title" id="modalTitle">${escapeHtml(title)}</h2><button class="icon-btn modal-close" data-close aria-label="Хаах">${icon('close')}</button></div>${content}`;
+    $('modalOverlay').classList.add('show'); $('app').inert = true; $('bottomNav').inert = true; document.body.style.overflow = 'hidden';
+    $('modalCard').scrollTop = 0; $('modalCard').focus(); hideCalendarTooltip();
+  }
+  function closeModal() {
+    const wasOpen = $('modalOverlay').classList.contains('show');
+    $('modalOverlay').classList.remove('show'); $('app').inert = false; $('bottomNav').inert = false; document.body.style.overflow = '';
+    if (wasOpen && focusBeforeModal?.isConnected) focusBeforeModal.focus();
+  }
+  function openSubjectModal(id) {
+    const sub = subjectById(id); if (!sub) return;
+    const set = subjectDateSet(sub.id), streak = subjectStreak(sub.id), recent = newestSessions(sessions().filter(s => sameId(s.subjectId, sub.id))).slice(0, 8);
+    openModal(sub.name, `<p class="section-hint accent">${streak ? `${streak} өдөр дараалан` : 'Өнөөдөр нэг жижиг алхам хийе.'}</p><div class="modal-stat-strip"><div><div class="v">${fmtSecShort(subjectTotalSec(sub.id))}</div><div class="l">Нийт хугацаа</div></div><div><div class="v">${subjectSessionCount(sub.id)}</div><div class="l">Суралцсан удаа</div></div><div><div class="v">${set.size}</div><div class="l">Суралцсан өдөр</div></div></div><p class="section-hint">Хамгийн урт дараалал: ${computeBestStreak(set)} өдөр</p><p class="section-hint">Сүүлийн 7 өдөр</p><div class="mini-week">${last7Dates().map(ds => `<span class="mc ${set.has(ds) ? 'on' : ''}" title="${ds}: ${fmtSecShort(secondsForDate(ds, sub.id))}"><i></i>${pad(parseDateKey(ds).getDate())}</span>`).join('')}</div><button class="btn primary modal-study-btn" data-start="${escapeHtml(sub.id)}">${icon('play')} Суралцаж эхлэх</button><h3>Сүүлийн хичээлүүд</h3>${recent.length ? recent.map(s => recentItem(s)).join('') : '<div class="empty-state">Цаг хэмжигчээр суралцсан түүх энд харагдана.</div>'}<div class="modal-remove"><div class="color-options" role="group" aria-label="Хичээлийн өнгө">${PALETTE.map((c,i) => `<button class="color-option" style="background:${c}" data-color="${c}" data-subject="${escapeHtml(sub.id)}" aria-pressed="${safeColor(sub.color) === c}" aria-label="${['Шар','Ногоон','Улаан','Цэнхэр','Ягаан','Оюу','Улбар шар'][i]}"></button>`).join('')}</div><button data-remove="${escapeHtml(sub.id)}">Хичээлийг устгах</button></div>`);
+  }
+  function openStudyPicker() {
+    if (!data || readOnly) { canEdit(); return; }
+    if (data.activeTimer) { closeModal(); $('timerBar').scrollIntoView({block:'start'}); $('tbPauseBtn').focus(); return; }
+    if (!subjects().length) { switchTab('overview'); $('newSubjectInput').focus(); toast('Эхлээд суралцах хичээлээ нэмээрэй.'); return; }
+    openModal('Юу суралцах вэ?', `<p class="section-hint picker-hint">Хичээлээ сонгоход цаг шууд эхэлнэ.</p><div class="picker-list">${subjects().map(sub => `<button class="picker-item" data-start="${escapeHtml(sub.id)}">${subjectIcon(sub)}<span class="picker-name">${escapeHtml(sub.name)}</span>${icon('play')}</button>`).join('')}</div>`);
+  }
+  function downloadText(filename, text) {
+    const url = URL.createObjectURL(new Blob([text], {type:'application/json;charset=utf-8'}));
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function exportData() {
+    if (readOnly && recoveryRaw !== null) { downloadText(`togtmol-recovery-${todayStr()}.json`, String(recoveryRaw)); return; }
+    if (!data) return;
+    const copy = JSON.parse(JSON.stringify(data));
+    // A portable backup contains the timer elapsed at export, paused for safe transport.
+    if (copy.activeTimer) { copy.activeTimer.accumulatedMs = timerElapsedMs(); copy.activeTimer.running = false; copy.activeTimer.runningSince = null; }
+    downloadText(`togtmol-backup-${todayStr()}.json`, JSON.stringify({format:'togtmol-backup', version:2, exportedAt:new Date().toISOString(), data:copy}, null, 2));
+    toast('Нөөц файлыг татаж байна.');
+  }
+  async function exportOriginal() {
+    try { const raw = await storageGet(BACKUP_KEY); if (raw === null) { toast('Өмнөх хувилбарын нөөц хараахан үүсээгүй.'); return; } downloadText('togtmol-before-upgrade.json', raw); }
+    catch (_) { toast('Хуучин нөөцийг уншиж чадсангүй.'); }
+  }
+  function openSettings() {
+    openModal('Таны өгөгдөл', `<div class="settings-block"><h3>Нөөцлөх ба зөөх</h3><p>Шинэ браузер, өөр төхөөрөмж, өөр хаягт нээхээсээ өмнө нөөцөө татаж аваарай. Нөөц файлыг оруулахад түүхийг одоогийн өгөгдөлтэй нэгтгэнэ.</p><div class="settings-actions"><button class="btn primary" data-export>${icon('download')} Нөөц татах</button><button class="btn subtle" data-import>Нөөц оруулах</button></div></div><div class="settings-block"><h3>Шинэчлэхийн өмнөх нөөц</h3><p>Хуучин өгөгдлийг анх шинэчлэхийн өмнө эх хувилбарын нөөцийг тусад нь хадгална.</p><button class="btn subtle" data-original>Хуучин нөөц татах</button></div><div class="settings-block"><h3>Хугацааг хэрхэн тооцох вэ?</h3><p>Түр зогссон хугацаа суралцсан цагт орохгүй. Шөнө дамнасан хичээл эхэлсэн өдрөөрөө бүртгэгдэнэ. Долоо хоног Даваа гарагаас эхэлнэ. Цаг хэмжигчийг дуусгахад статистик шинэчлэгдэнэ.</p><p>Хуучин цаг хэмжигчийн эхэлсэн мөч түр зогсоох үед өөрчлөгдсөн бол эхлэх цагийг ойролцоогоор сэргээнэ. Ийм түүхийн цагийн дэргэд «ойролцоо» гэж тэмдэглэнэ.</p></div><div class="settings-block"><h3>Хувийн суралцах орон зай</h3><p>Бүртгэл, нэвтрэх нэр шаардлагагүй. Түүх автоматаар өөр төхөөрөмжтэй ижилсэхгүй. Браузерын өгөгдлийг цэвэрлэхээс өмнө нөөцлөөрэй.</p><p class="small">Тогтмол · 2.0</p></div>`);
+  }
+  function mergeData(base, incoming, exportedAt) {
+    const merged = {...incoming, ...base, subjects:[...base.subjects], entries:[...base.entries], sessions:[...base.sessions],
+      goals:{...incoming.goals, ...base.goals}, settings:{...incoming.settings, ...base.settings}, achievementsUnlocked:{...incoming.achievementsUnlocked, ...base.achievementsUnlocked}};
+    // Empty installations adopt the imported goals and preferences.
+    if (!base.subjects.length && !base.entries.length && !base.sessions.length && !lastRaw) { merged.goals = {...incoming.goals}; merged.settings = {...incoming.settings}; }
+    const mapping = new Map();
+    for (const sub of incoming.subjects) {
+      if (!object(sub) || !validId(sub.id) || typeof sub.name !== 'string') { if (!merged.subjects.some(s => JSON.stringify(s) === JSON.stringify(sub))) merged.subjects.push(sub); continue; }
+      const found = merged.subjects.find(s => object(s) && sameId(s.id, sub.id));
+      if (!found) { merged.subjects.push({...sub}); mapping.set(String(sub.id), sub.id); }
+      else if (found.name === sub.name) { mapping.set(String(sub.id), found.id); Object.keys(sub).forEach(k => { if (!(k in found)) found[k] = sub[k]; }); }
+      else {
+        const prior = merged.subjects.find(s => object(s) && sameId(s._togtmolOriginalId, sub.id) && s.name === sub.name);
+        if (prior) mapping.set(String(sub.id), prior.id);
+        else { const id = uid('s'); mapping.set(String(sub.id), id); merged.subjects.push({...sub, id, _togtmolOriginalId:sub.id}); }
+      }
+    }
+    const mapRecord = r => object(r) && mapping.has(String(r.subjectId)) ? {...r, subjectId:mapping.get(String(r.subjectId))} : r;
+    for (const original of incoming.entries) {
+      const record = mapRecord(original);
+      const match = object(record) ? merged.entries.find(e => object(e) && e.date === record.date && sameId(e.subjectId, record.subjectId)) : undefined;
+      if (match) Object.keys(record).forEach(k => { if (!(k in match)) match[k] = record[k]; });
+      else if (!merged.entries.some(e => JSON.stringify(e) === JSON.stringify(record))) merged.entries.push(record);
+    }
+    const signature = s => JSON.stringify(object(s) ? [s.subjectId, s.date, s.startEpoch, s.endEpoch, Number(s.durationSec), s.note || ''] : s);
+    for (const original of incoming.sessions) {
+      let record = mapRecord(original);
+      const match = merged.sessions.find(s => {
+        if (signature(s) !== signature(record)) return false;
+        if (!object(record) || !object(s)) return s === record;
+        if (validId(record.id)) return sameId(s.id, record.id) || sameId(s._togtmolOriginalSessionId, record.id);
+        return !validId(s.id);
+      });
+      if (match && object(match) && object(record)) { Object.keys(record).forEach(k => { if (!(k in match)) match[k] = record[k]; }); continue; }
+      if (!object(record)) { if (!merged.sessions.includes(record)) merged.sessions.push(record); continue; }
+      if (validId(record.id) && merged.sessions.some(s => object(s) && sameId(s.id, record.id))) record = {...record, id:uid('sess'), _togtmolOriginalSessionId:record.id};
+      merged.sessions.push(record);
+    }
+    if (!base.activeTimer && incoming.activeTimer) {
+      const t = mapRecord(incoming.activeTimer), end = Number.isFinite(exportedAt) ? exportedAt : t.runningSince;
+      merged.activeTimer = {...t, accumulatedMs:t.accumulatedMs + (t.running ? Math.max(0, end - t.runningSince) : 0), running:false, runningSince:null};
+    }
+    return merged;
+  }
+  async function importFile(file) {
+    if (!file || !canEdit()) return;
+    if (data.activeTimer) { toast('Одоогийн хичээлээ дуусгасны дараа нөөцөө оруулаарай.'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast('Нөөц файл 20 МБ-аас бага байна.'); return; }
+    try {
+      const parsed = JSON.parse(await file.text()), raw = parsed?.format === 'togtmol-backup' ? parsed.data : parsed;
+      if (!object(raw) || !Array.isArray(raw.subjects) || !Array.isArray(raw.entries) || ('sessions' in raw && !Array.isArray(raw.sessions)) || Number(raw.schemaVersion) > 2) throw new Error('invalid');
+      const incoming = migrate(raw);
+      if (!confirm(`${incoming.subjects.length} хичээл, ${incoming.sessions.length} удаагийн түүх, ${incoming.entries.length} тэмдэглэгээг одоогийн өгөгдөлтэй нэгтгэх үү? Одоогийн түүх, зорилго хадгалагдана. Дуусаагүй цаг хэмжигч түр зогссон төлөвөөр орно.`)) return;
+      await saveChain;
+      if (!canEdit()) return;
+      const before = JSON.stringify(data);
+      // Import is only applied after a durable copy of the current state exists.
+      await storageSet(STORAGE_KEY + ':before-import:' + Date.now(), before);
+      data = mergeData(data, incoming, Date.parse(parsed.exportedAt));
+      closeModal(); await changed('Нөөцийн өгөгдлийг нэгтгэж хадгаллаа ✓');
+    } catch (_) { toast('Нөөц оруулж чадсангүй. Файлын бүтэц болон хадгалах боломжийг шалгана уу.'); }
+    finally { $('importFile').value = ''; }
+  }
+  function switchTab(name) {
+    if (!['overview','calendar','subjects','stats'].includes(name)) return;
+    currentTab = name; hideCalendarTooltip();
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('active', b.dataset.tab === name); if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    if (name === 'calendar') renderCalendar(); if (name === 'subjects') renderSubjectsTab(); if (name === 'stats') renderStats();
+  }
+  function renderAll() {
+    if (!data) return;
+    renderOverview(); renderTimerBar();
+    if (currentTab === 'calendar') renderCalendar(); if (currentTab === 'subjects') renderSubjectsTab(); if (currentTab === 'stats') renderStats();
+  }
+  function bindAdd(formId, inputId) { $(formId).addEventListener('submit', e => { e.preventDefault(); if (addSubject($(inputId).value)) $(inputId).value = ''; }); }
+  function bindGoalEdit(editId, rowId, inputId, key) {
+    $(editId).addEventListener('click', () => {
+      const row = $(rowId); row.hidden = !row.hidden;
+      if (!row.hidden) { $(inputId).value = key === 'weeklyHours' ? weeklyHours() : weeklyDays(); $(inputId).focus(); }
+    });
+    $(rowId).addEventListener('submit', e => {
+      e.preventDefault(); if (!canEdit() || !$(rowId).reportValidity()) return;
+      const v = Number($(inputId).value);
+      if (!Number.isFinite(v) || (key === 'weeklyHours' ? v < 0.5 || v > 168 || v*2 % 1 !== 0 : !Number.isInteger(v) || v < 1 || v > 7)) { toast('Зорилгын утгыг шалгана уу.'); return; }
+      data.goals[key] = v; $(rowId).hidden = true; changed('Зорилгыг хадгаллаа.');
+    });
+  }
+  function bindEvents() {
+    bindAdd('addForm', 'newSubjectInput'); bindAdd('addForm2', 'newSubjectInput2');
+    bindGoalEdit('editGoalHours', 'goalHoursEdit', 'goalHoursInput', 'weeklyHours');
+    bindGoalEdit('editGoalDays', 'goalDaysEdit', 'goalDaysInput', 'weeklyDays');
+    $('tbPauseBtn').addEventListener('click', pauseResumeTimer); $('tbFinishBtn').addEventListener('click', finishTimer); $('tbResetBtn').addEventListener('click', resetTimer);
+    $('tbNote').addEventListener('input', e => { if (canEdit() && data.activeTimer) { data.activeTimer.note = e.target.value; scheduleSave(); } });
+    $('startStudyBtn').addEventListener('click', openStudyPicker); $('settingsBtn').addEventListener('click', openSettings);
+    $('overviewEditGoals').addEventListener('click', () => { switchTab('stats'); $('goalsSection').scrollIntoView({block:'center'}); $('editGoalHours').focus(); });
+    $('prevMonth').addEventListener('click', () => { viewMonth.setMonth(viewMonth.getMonth() - 1); selectedDay = dstr(viewMonth); hideCalendarTooltip(); renderCalendar(); });
+    $('nextMonth').addEventListener('click', () => { viewMonth.setMonth(viewMonth.getMonth() + 1); selectedDay = dstr(viewMonth); hideCalendarTooltip(); renderCalendar(); });
+    $('calendarToday').addEventListener('click', () => { viewMonth = new Date(); viewMonth.setDate(1); selectedDay = todayStr(); renderCalendar(); });
+    $('importFile').addEventListener('change', e => importFile(e.target.files[0]));
+    $('recoveryExport').addEventListener('click', () => recoveryRaw !== null ? downloadText(`togtmol-recovery-${todayStr()}.json`, String(recoveryRaw)) : exportData());
+    $('retryStorage').addEventListener('click', async () => {
+      if (saveFailed && !readOnly) { if (await saveData()) { $('storageBanner').hidden = true; toast('Өөрчлөлтийг хадгаллаа.'); } return; }
+      if (dirty && !confirm('Хадгалагдаагүй өөрчлөлт байна. Нөөцөө татаж авсны дараа дахин уншихыг зөвлөе. Одоо дахин унших уу?')) return;
+      closeModal(); await loadData();
+    });
+    document.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (e.target === $('modalOverlay')) closeModal();
+      if (!b) return;
+      if (b.hasAttribute('data-close')) closeModal();
+      else if (b.dataset.tab) switchTab(b.dataset.tab);
+      else if (b.dataset.goto) switchTab(b.dataset.goto);
+      else if (b.hasAttribute('data-detail')) openSubjectModal(b.dataset.detail);
+      else if (b.hasAttribute('data-start')) startTimer(b.dataset.start);
+      else if (b.hasAttribute('data-toggle')) toggleEntry(b.dataset.toggle);
+      else if (b.hasAttribute('data-remove')) removeSubject(b.dataset.remove);
+      else if (b.dataset.date) { hideCalendarTooltip(); showDayDetail(b.dataset.date); }
+      else if (b.dataset.color && PALETTE.includes(b.dataset.color) && canEdit()) {
+        const sub = subjectById(b.dataset.subject); if (sub) { sub.color = b.dataset.color; changed(); b.parentElement.querySelectorAll('button').forEach(c => c.setAttribute('aria-pressed', String(c === b))); }
+      }
+      else if (b.hasAttribute('data-export')) exportData();
+      else if (b.hasAttribute('data-import')) { if (canEdit()) $('importFile').click(); }
+      else if (b.hasAttribute('data-original')) exportOriginal();
+    });
+    $('calGrid').addEventListener('pointerover', e => { const b = e.target.closest('[data-date]'); if (b && e.pointerType !== 'touch') showCalendarTooltip(b); });
+    $('calGrid').addEventListener('pointerout', hideCalendarTooltip);
+    $('calGrid').addEventListener('focusin', e => { if (e.target.dataset.date) showCalendarTooltip(e.target); });
+    $('calGrid').addEventListener('focusout', hideCalendarTooltip);
+    window.addEventListener('scroll', hideCalendarTooltip, {passive:true});
+    document.addEventListener('keydown', e => {
+      if (!$('modalOverlay').classList.contains('show')) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+      if (e.key === 'Tab') {
+        const focusable = [...$('modalCard').querySelectorAll('button, input, select, textarea, a[href], [tabindex="0"]')].filter(el => !el.disabled && !el.hidden);
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === $('modalCard'))) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    });
+    window.addEventListener('storage', e => {
+      if (storageMode === 'local' && e.key === STORAGE_KEY && e.newValue !== lastRaw) { readOnly = true; storageWarning('Өөр цонхонд өгөгдөл өөрчлөгдсөн байна. Дахин уншиж үргэлжлүүлээрэй.'); status('Өөр цонхны өөрчлөлт байна'); }
+    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkDayChange(); if (data?.activeTimer) renderTimerBar(); } });
+    window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+    setInterval(checkDayChange, 30000);
+  }
+  bindEvents();
+  loadData();
+})();
+
+</script>
+</body>
+</html>

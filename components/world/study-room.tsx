@@ -1,0 +1,191 @@
+"use client";
+import { useEffect, useMemo } from "react";
+import { useStudy, useClock } from "@/hooks/use-study";
+import {
+  companionProgress,
+  companionState,
+  greeting,
+} from "@/lib/world/progress";
+import { clock, currentStreak, formatTime } from "@/lib/calculations/dates";
+import { actions } from "@/lib/persistence/actions";
+import { RoomScene } from "./room-scene";
+import { StudyTimer } from "@/components/timer/study-timer";
+import { DailyPlan } from "@/components/dashboard/daily-plan";
+import { Progress } from "@/components/ui/common";
+import { Icon } from "@/components/ui/icon";
+export function StudyRoom({ focus = false }: { focus?: boolean }) {
+  const { data, index, today, navigate, run, store } = useStudy(),
+    now = useClock(false);
+  const state = companionState(data, index, today),
+    world = data.settings.world;
+  const progress = useMemo(() => companionProgress(data, today), [data, today]);
+  const todaySeconds = index.days.get(today)?.seconds ?? 0,
+    daily =
+      data.goals.dailyMinutes ??
+      Math.round((data.goals.weeklyHours * 60) / data.goals.weeklyDays),
+    streak = currentStreak(new Set(index.sortedDates), today);
+  const last = [...index.sessions].sort((a, b) => b.endEpoch - a.endEpoch)[0];
+  useEffect(() => {
+    if (!focus) return;
+    const exit = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector("dialog[open]"))
+        navigate("overview");
+    };
+    window.addEventListener("keydown", exit);
+    return () => window.removeEventListener("keydown", exit);
+  }, [focus, navigate]);
+  return (
+    <div className={`study-world ${focus ? "focus-world" : ""}`}>
+      <div className="world-heading">
+        <div>
+          <span className="eyebrow">
+            {focus ? "FOCUS TIME" : "YOUR LITTLE STUDY WORLD"}
+          </span>
+          <h1>
+            {focus
+              ? "Яг одоо, нэг алхам."
+              : greeting(new Date(now).getHours(), state)}
+          </h1>
+          {!focus && <p>Тогитой хамт. Өөрийн хэмнэлээр.</p>}
+        </div>
+        <div className="button-row">
+          {focus ? (
+            <button className="button" onClick={() => navigate("overview")}>
+              <Icon name="close" /> Focus-оос гарах
+            </button>
+          ) : (
+            <>
+              <button className="button" onClick={() => navigate("room")}>
+                <Icon name="settings" /> Өрөөгөө өөрчлөх
+              </button>
+              <button
+                className="icon-button bordered"
+                aria-label="Focus mode"
+                onClick={() => navigate("focus")}
+              >
+                <Icon name="expand" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <section className="room-stage" aria-label="Study Room">
+        <div className="room-art">
+          <RoomScene world={world} state={state} />
+          <div className="companion-caption">
+            <span className="live-dot" />
+            <span>
+              Тоги ·{" "}
+              {state === "studying"
+                ? "хамт суралцаж байна"
+                : state === "break"
+                  ? "цайны завсарлага"
+                  : state === "welcome"
+                    ? "таныг хүлээж байлаа"
+                    : state === "happy"
+                      ? "жижиг ялалтаа тэмдэглэе"
+                      : state === "celebrating"
+                        ? "таны хэмнэлийг тэмдэглэж байна"
+                        : state === "paused"
+                          ? "түр амсхийж байна"
+                          : "тантай хамт"}
+            </span>
+            <span className="level-pill">Lv. {progress.level}</span>
+          </div>
+        </div>
+        <StudyTimer
+          key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+          compact
+        />
+      </section>
+      <div className="daily-strip">
+        <div>
+          <span>Өнөөдөр</span>
+          <strong>
+            {formatTime(todaySeconds)} <small>/ {daily}м</small>
+          </strong>
+        </div>
+        <div className="daily-progress">
+          <Progress
+            value={(todaySeconds / (daily * 60)) * 100}
+            label="Өнөөдрийн суралцах зорилго"
+          />
+          <span>
+            {todaySeconds >= daily * 60
+              ? "Өнөөдрийн зорилгодоо хүрлээ. Амралтаа ч бас бодоорой."
+              : "Бага багаар, өөрийн хэмнэлээр."}
+          </span>
+        </div>
+        {!focus && (
+          <div>
+            <span>Дараалал</span>
+            <strong>
+              {streak} <small>өдөр</small>
+            </strong>
+          </div>
+        )}
+      </div>
+      {!data.activeTimer &&
+        last?.mode === "pomodoro" &&
+        last.date === today && (
+          <div className="break-suggestion">
+            <span>Нүдээ амрааж, ус уух завсарлага аваарай.</span>
+            <button
+              className="button small"
+              onClick={() =>
+                run(() =>
+                  store.mutate(
+                    actions.start(
+                      last.subjectId,
+                      "pomodoro",
+                      "shortBreak",
+                      data.settings.shortBreakMinutes,
+                    ),
+                  ),
+                )
+              }
+            >
+              {data.settings.shortBreakMinutes} минут амрах
+            </button>
+          </div>
+        )}
+      {!focus && (
+        <div className="world-bottom">
+          <DailyPlan />
+          <section className="card world-journal">
+            <div className="eyebrow">A LITTLE AT A TIME</div>
+            <h2>Өчигдрөөс нэг алхам цааш.</h2>
+            <p>Тоги тантай хамт {progress.xp} XP цуглуулжээ.</p>
+            <Progress
+              value={progress.intoLevel}
+              label="Тогигийн түвшний ахиц"
+            />
+            <p className="tiny muted">
+              Дараагийн түвшин хүртэл {100 - progress.intoLevel} XP. Өдөрт 60
+              хүртэл XP; урт суулт хийх шаардлагагүй.
+            </p>
+            {last ? (
+              <div className="last-reflection">
+                <span className="eyebrow">СҮҮЛЧИЙН ТЭМДЭГЛЭЛ</span>
+                <p>
+                  {last.note ||
+                    `${index.subjects.get(last.subjectId)?.name ?? "Хичээл"} · ${clock(last.durationSec * 1000)}`}
+                </p>
+              </div>
+            ) : (
+              <p className="muted">
+                Эхний хичээлээ дуусгаад юу сурснаа үлдээгээрэй.
+              </p>
+            )}
+            <button
+              className="text-button"
+              onClick={() => navigate("assistant")}
+            >
+              Тогитой ярилцах <Icon name="arrow" size={16} />
+            </button>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}

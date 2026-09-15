@@ -1,0 +1,8 @@
+node_modules
+.next
+legacy
+package-lock.json
+public/sw.js
+public/precache-manifest.json
+test-results
+*.zip
