@@ -23,6 +23,7 @@ export function TogiChat() {
     [busy, setBusy] = useState(false),
     [online, setOnline] = useState(false),
     [consent, setConsent] = useState(false),
+    [includeNotes, setIncludeNotes] = useState(false),
     [error, setError] = useState(""),
     [plan, setPlan] = useState<string | null>(null),
     end = useRef<HTMLDivElement>(null),
@@ -62,7 +63,7 @@ export function TogiChat() {
             )
               return null;
             return session?.access_token ?? null;
-          })
+          }, includeNotes)
         : localChatProvider;
       const reply = await provider.reply(prompt, { data, index, today });
       if (!disposed.current && request.current === token)
@@ -71,8 +72,36 @@ export function TogiChat() {
           { ...reply, id: token * 2 + 1, role: "assistant", kind },
         ]);
     } catch (e) {
-      if (!disposed.current && request.current === token)
+      if (
+        !disposed.current &&
+        request.current === token &&
+        store.getSnapshot().namespace === namespace
+      ) {
         setError(e instanceof Error ? e.message : "Түр алдаа гарлаа.");
+        if (kind === "ai") {
+          const fallback = await localChatProvider.reply(prompt, {
+            data,
+            index,
+            today,
+          });
+          if (
+            !disposed.current &&
+            request.current === token &&
+            store.getSnapshot().namespace === namespace
+          ) {
+            setMessages((m) => [
+              ...m,
+              {
+                ...fallback,
+                id: token * 2 + 1,
+                role: "assistant",
+                kind: "local",
+              },
+            ]);
+            setOnline(false);
+          }
+        }
+      }
     } finally {
       if (!disposed.current && request.current === token) setBusy(false);
     }
@@ -100,7 +129,10 @@ export function TogiChat() {
               onChange={(e) => {
                 if (e.target.checked) {
                   setConsent(true);
-                } else setOnline(false);
+                } else {
+                  setOnline(false);
+                  setIncludeNotes(false);
+                }
               }}
             />
             Онлайн AI ашиглах
@@ -110,14 +142,34 @@ export function TogiChat() {
               Таны мэдээллийг гаднын AI руу илгээхгүй.
             </span>
           )}
+          {online && (
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={includeNotes}
+                disabled={busy}
+                onChange={(e) => setIncludeNotes(e.target.checked)}
+              />
+              Сүүлийн 5 хүртэл тэмдэглэл хуваалцах
+            </label>
+          )}
         </div>
         {consent && !online && (
           <div className="ai-consent">
             <p>
               Онлайн AI-д асуулт, хичээлийн нэр, зорилго, суралцсан хугацааны
-              товч дүгнэлт илгээнэ. Хичээлийн тэмдэглэл илгээхгүй. Серверийн AI
-              тохиргоо болон зөвшөөрөгдсөн бүртгэл шаардлагатай.
+              товч дүгнэлт илгээнэ. Тэмдэглэлийг доорх сонголтоор л хуваалцана.
+              Серверийн AI тохиргоо болон зөвшөөрөгдсөн бүртгэл шаардлагатай.
             </p>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={includeNotes}
+                onChange={(e) => setIncludeNotes(e.target.checked)}
+              />
+              Сүүлийн 7 өдрийн 5 хүртэл тэмдэглэлийг хуваалцах (тус бүр эхний
+              500 тэмдэгт)
+            </label>
             <div className="button-row">
               <button
                 className="button small primary"
@@ -143,6 +195,7 @@ export function TogiChat() {
             "Долоо хоногоо харъя",
             "Өнөөдөр юу хийх вэ?",
             "Тэмдэглэлээ дүгнэе",
+            "Хуваарь маань бодитой юу?",
           ].map((q) => (
             <button
               className="button small"
@@ -183,7 +236,7 @@ export function TogiChat() {
                   className="button small"
                   onClick={() =>
                     m.action === "plan"
-                      ? setPlan("")
+                      ? setPlan(m.planPrompt ?? "")
                       : navigate(m.action === "timer" ? "timer" : "goals")
                   }
                 >
@@ -202,7 +255,7 @@ export function TogiChat() {
         </div>
         {error && (
           <div role="alert" className="ai-consent">
-            <p>{error}</p>
+            <p>{error} Тоги төхөөрөмж дээрх мэдээллээр хариуллаа.</p>
             <button
               className="text-button"
               onClick={() => {

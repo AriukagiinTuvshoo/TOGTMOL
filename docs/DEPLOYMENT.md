@@ -17,7 +17,7 @@ The included GitHub Actions workflow runs the same gates on pushes and pull requ
 
 Use the intended development/staging project first. Obtain its Project URL and **publishable key** from the Supabase dashboard. Do not put a secret/service-role key in `NEXT_PUBLIC_*` variables.
 
-Apply both versioned migrations, in filename order, in `supabase/migrations/`. For an existing v3 database apply only `20260915131805_study_world_v4.sql`. Apply them through the SQL editor of the selected project, or use the installed Supabase CLI. Inspect `supabase --help`, `supabase link --help` and `supabase db push --help` before your installed version's commands. Confirm the target project and inspect the migration before applying it. Do not use a production project to run tests.
+v4.1 reuses the v4 JSON payload and needs no additional SQL migration if both existing migrations are applied. Apply both versioned migrations, in filename order, in `supabase/migrations/`. For an existing v3 database apply only `20260915131805_study_world_v4.sql`. Apply them through the SQL editor of the selected project, or use the installed Supabase CLI. Inspect `supabase --help`, `supabase link --help` and `supabase db push --help` before your installed version's commands. Confirm the target project and inspect the migration before applying it. Do not use a production project to run tests.
 
 This schema is new. If the target project already has tables called `subjects`, `goals`, or the other included names, reconcile them in a separate migration first; do not drop existing tables.
 
@@ -51,7 +51,7 @@ Use two test accounts and two browser profiles/devices:
 - Sign in with Google; refresh the callback; test password recovery.
 - Create/edit/delete a session on one device, then sync the second. Make conflicting edits offline and choose the intended conflict version after reconnecting.
 - Start/pause/resume a timer, navigate away, close/reopen, finish/review/save. Confirm the original start and duration.
-- Check 375, 390, 430, 768, 1024 and 1440 px layouts, keyboard focus, dialog Escape, long subject names and all five design themes plus light/dark preferences.
+- Check 320, 375, 390, 430, 768, 1024 and 1440 px layouts, keyboard focus, dialog Escape, long subject names and all five design themes plus light/dark preferences.
 - Install the PWA; wait for the worker to finish installing; disable the network; navigate and save study data; reconnect and sync.
 - Deploy a second build while a timer is open. Confirm no forced reload, then close tabs and reopen to adopt the update.
 
@@ -63,13 +63,13 @@ Local insights need no AI service. To enable the optional paid provider, configu
 
 The `/api/togi` route verifies the user's Supabase access token, requires the server allowlist and consumes an atomic per-user 20/day UTC quota in `private.togi_usage` before calling the provider. Anonymous requests cannot spend provider credit. Failed upstream requests still count toward the daily cap. This quota does not replace the provider account's own spending limits.
 
-Users explicitly enable online mode. The app sends their question and limited study totals, subject names and goal titles, **not session notes**. Responses use `store:false`; no conversation database is created. No provider response can mutate study records. The key, raw upstream errors, and auth token are never returned to the browser.
+Users explicitly enable online mode. The app sends their question and limited study totals, subject names and goal titles, with session notes excluded by default. A separate opt-in can include the five latest notes from the last seven days (up to 500 characters each). Responses use `store:false`; no conversation database is created. No provider response can mutate study records. The key, raw upstream errors, and auth token are never returned to the browser.
 
 On the real deployment, test an allowed account, a denied account, no token, offline/error fallback, and a provider request. The delivered tests use fake credentials and a mocked provider; no paid request has been made.
 
 ## 6. Music and YouTube
 
-Six original browser soundscapes work offline after the production assets are cached. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. A visible official player with controls is retained across app views. Minimizing, hiding the tab or scrolling the player off-screen pauses playback. Do not add hidden YouTube audio, ad blocking or downloads.
+Seven original browser soundscapes are included in the production assets and require no external music host. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. A visible official player with controls is retained across app views. Minimizing, hiding the tab or scrolling the player off-screen pauses playback. Do not add hidden YouTube audio, ad blocking or downloads.
 
 Test a real video and playlist on the deployed origin, including autoplay blocking, unavailable/embedding-disabled videos, volume, previous/next and mobile tap behavior. Preserve `Referrer-Policy: strict-origin-when-cross-origin`; YouTube needs origin identification.
 

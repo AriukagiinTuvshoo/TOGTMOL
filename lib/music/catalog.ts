@@ -5,5 +5,16 @@ export const AMBIENTS = [
   { id: "piano", name: "Little piano", detail: "Тайван төгөлдөр хуур" },
   { id: "nature", name: "Forest morning", detail: "Салхи, шувууд" },
   { id: "ambient", name: "Evening air", detail: "Зөөлөн ambient" },
+  { id: "night", name: "Night study", detail: "Үдшийн зөөлөн аялгуу" },
 ] as const;
 export type AmbientId = (typeof AMBIENTS)[number]["id"];
+export const THEME_MUSIC: Record<
+  import("@/types/study").DesignTheme,
+  AmbientId[]
+> = {
+  cozy: ["lofi", "cafe", "piano"],
+  forest: ["nature", "rain", "ambient"],
+  night: ["night", "rain", "ambient"],
+  sakura: ["piano", "nature", "rain"],
+  minimal: ["ambient", "piano", "rain"],
+};

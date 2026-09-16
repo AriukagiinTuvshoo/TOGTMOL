@@ -45,6 +45,24 @@ export const ACHIEVEMENTS = [
     icon: "calendar",
   },
   {
+    id: "days_30",
+    name: "Гучин өдрийн ахиц",
+    description: "Нийт 30 өдөр суралцсан",
+    icon: "leaf",
+  },
+  {
+    id: "early_rhythm",
+    name: "Өглөөний хэмнэл",
+    description: "Өглөөний 3 хэмжсэн хичээл",
+    icon: "sun",
+  },
+  {
+    id: "evening_rhythm",
+    name: "Үдшийн хэмнэл",
+    description: "19–22 цагт 3 хэмжсэн хичээл",
+    icon: "moon",
+  },
+  {
     id: "streak_7",
     name: "Нэг долоо хоног",
     description: "7 өдөр дараалан суралцсан",
@@ -121,6 +139,23 @@ export function unlock(
     first_session: index.sessions.length > 0,
     days_7: days >= 7,
     days_10: days >= 10,
+    days_30: days >= 30,
+    early_rhythm:
+      index.sessions.filter(
+        (s) =>
+          !s.startTimeEstimated &&
+          !s.manuallyEdited &&
+          new Date(s.startEpoch).getHours() >= 5 &&
+          new Date(s.startEpoch).getHours() < 9,
+      ).length >= 3,
+    evening_rhythm:
+      index.sessions.filter(
+        (s) =>
+          !s.startTimeEstimated &&
+          !s.manuallyEdited &&
+          new Date(s.startEpoch).getHours() >= 19 &&
+          new Date(s.startEpoch).getHours() < 22,
+      ).length >= 3,
     streak_7: best >= 7,
     streak_30: best >= 30,
     hours_10: index.totalSeconds >= 36000,

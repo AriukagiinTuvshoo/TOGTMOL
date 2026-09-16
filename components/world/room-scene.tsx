@@ -2,6 +2,7 @@ import { useId } from "react";
 import type { WorldSettings } from "@/types/study";
 import type { CompanionState } from "@/lib/world/progress";
 import { CompanionArt } from "./companion";
+import { roomFurniture } from "@/lib/world/furniture";
 const palette = {
   cozy: {
     wall: "#f3e8d5",
@@ -64,6 +65,19 @@ export function RoomScene({
           ? "#b3c7c8"
           : p.sky;
   const has = (i: WorldSettings["desk"][number]) => world.desk.includes(i);
+  const furniture = roomFurniture(world),
+    deskColor =
+      furniture.desk === "white"
+        ? "#d6d7d0"
+        : furniture.desk === "walnut"
+          ? "#80634f"
+          : p.wood;
+  const chairColor =
+    furniture.chair === "sage"
+      ? "#8ea68d"
+      : furniture.chair === "rose"
+        ? "#c59b9e"
+        : p.floor;
   return (
     <svg
       viewBox="0 0 760 430"
@@ -228,7 +242,7 @@ export function RoomScene({
         />
       )}
       <rect x="216" y="275" width="349" height="12" rx="4" fill={p.wood} />
-      {bg === "library" ? (
+      {bg === "library" || furniture.bookshelf ? (
         <g>
           <path
             d="M55 54H188V274H55Z"
@@ -255,7 +269,7 @@ export function RoomScene({
             </g>
           ))}
         </g>
-      ) : (
+      ) : furniture.poster !== "none" ? (
         <g>
           <path
             d="M65 121H171V211H65Z"
@@ -263,12 +277,21 @@ export function RoomScene({
             stroke={p.wood}
             strokeWidth="5"
           />
-          <path
-            d="M79 194L109 151 128 177 146 159 161 194Z"
-            fill={p.accent}
-            opacity=".7"
-          />
-          <circle cx="143" cy="144" r="9" fill="#f4daaa" />
+          {furniture.poster === "botanical" ? (
+            <g fill="none" stroke={p.accent} strokeWidth="3">
+              <path d="M118 196V145M118 178Q81 174 98 152Q120 156 118 178ZM118 168Q146 168 145 145Q117 147 118 168Z" />
+              <circle cx="118" cy="138" r="7" fill={p.accent} />
+            </g>
+          ) : (
+            <>
+              <path
+                d="M79 194L109 151 128 177 146 159 161 194Z"
+                fill={p.accent}
+                opacity=".7"
+              />
+              <circle cx="143" cy="144" r="9" fill="#f4daaa" />
+            </>
+          )}
           {bg === "cafe" && (
             <text
               x="118"
@@ -282,24 +305,24 @@ export function RoomScene({
             </text>
           )}
         </g>
-      )}
+      ) : null}
       <ellipse cx="390" cy="397" rx="220" ry="20" fill={p.wood} opacity=".19" />
       <path
         d="M222 345L214 409M571 345L579 409"
         fill="none"
-        stroke={p.wood}
+        stroke={deskColor}
         strokeWidth="14"
       />
       <path
         d="M239 310Q228 237 257 222H479Q508 237 495 310"
-        fill={p.floor}
+        fill={chairColor}
         stroke={p.wood}
         strokeWidth="5"
       />
       <g transform="translate(287 112) scale(1.28)">
         <CompanionArt world={world} state={state} />
       </g>
-      <rect x="175" y="337" width="450" height="20" rx="7" fill={p.wood} />
+      <rect x="175" y="337" width="450" height="20" rx="7" fill={deskColor} />
       <rect
         x="175"
         y="337"

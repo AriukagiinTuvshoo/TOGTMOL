@@ -1,6 +1,7 @@
 import type { DailyTask, StudyData, StudyGoal } from "@/types/study";
 import { uid } from "@/lib/constants";
 import { shiftDate, dateKey, parseDate } from "@/lib/calculations/dates";
+import { milestoneSuggestions } from "./milestones";
 export interface PlanInput {
   title: string;
   subjectId: string;
@@ -8,6 +9,8 @@ export interface PlanInput {
   weeks: number;
   daysPerWeek: number;
   minutesPerDay: number;
+  description?: string;
+  milestoneTitles?: string[];
 }
 export interface PlanPreview {
   goal: StudyGoal;
@@ -35,6 +38,8 @@ export function inferPlan(
     weeks: Math.max(1, Math.min(12, weeks)),
     daysPerWeek: 5,
     minutesPerDay: Math.max(5, Math.min(120, minutes)),
+    description: "",
+    milestoneTitles: milestoneSuggestions(`${text} ${subject?.name ?? ""}`),
   };
 }
 export function planPreview(
@@ -56,10 +61,21 @@ export function planPreview(
     input.daysPerWeek > 7 ||
     !Number.isInteger(input.minutesPerDay) ||
     input.minutesPerDay < 5 ||
-    input.minutesPerDay > 120
+    input.minutesPerDay > 120 ||
+    (input.description?.length ?? 0) > 2000
   )
     throw Error("Нэр, эхлэх өдөр, долоо хоног болон хугацаагаа шалгана уу.");
   const base = { createdAt: now, updatedAt: now, deletedAt: null, extras: {} };
+  const titles = input.milestoneTitles ?? milestoneSuggestions(input.title);
+  if (
+    !titles.length ||
+    titles.length > 12 ||
+    titles.some((t) => !t.trim() || t.length > 120)
+  )
+    throw Error("1–12 үе шат оруулж, үе шат бүрд нэр өгнө үү.");
+  const milestones = titles
+    .slice(0, Math.min(titles.length, input.weeks * input.daysPerWeek))
+    .map((title) => ({ id: uid("milestone"), title: title.trim() }));
   const goal: StudyGoal = {
     ...base,
     id: uid("goal"),
@@ -69,16 +85,25 @@ export function planPreview(
     endsOn: shiftDate(input.startsOn, input.weeks * 7 - 1),
     weeklyMinutes: input.minutesPerDay * input.daysPerWeek,
     targetMinutes: input.weeks * input.daysPerWeek * input.minutesPerDay,
+    extras: {
+      studyPlan: {
+        version: 1,
+        description: input.description?.trim() ?? "",
+        weeklyDays: input.daysPerWeek,
+        milestones,
+      },
+    },
   };
   const tasks: DailyTask[] = [];
-  const stages = [
-    "Сууриа давтах",
-    "Жишээгээр ажиллах",
-    "Бие даан турших",
-    "Давтаж, дүгнэх",
-  ];
   for (let w = 0; w < input.weeks; w++) {
     for (let day = 0; day < input.daysPerWeek; day++) {
+      const milestone =
+        milestones[
+          Math.floor(
+            ((w * input.daysPerWeek + day) * milestones.length) /
+              (input.weeks * input.daysPerWeek),
+          )
+        ];
       tasks.push({
         ...base,
         id: uid("task"),
@@ -89,13 +114,10 @@ export function planPreview(
           w * 7 + Math.floor((day * 7) / input.daysPerWeek),
         ),
         minutes: input.minutesPerDay,
-        title:
-          `${stages[Math.min(3, Math.floor((w / input.weeks) * 4))]} · ${goal.title}`.slice(
-            0,
-            200,
-          ),
+        title: `${milestone.title} · ${goal.title}`.slice(0, 200),
         completed: false,
         startTime: null,
+        extras: { milestoneId: milestone.id },
       });
     }
   }

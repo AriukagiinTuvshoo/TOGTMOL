@@ -1,5 +1,6 @@
 import { uid } from "@/lib/constants";
 import { dateKey, parseDate } from "@/lib/calculations/dates";
+import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
   resume,
@@ -155,18 +156,32 @@ export const actions = {
         )
       )
         throw Error("Төлөвлөгөө олдсонгүй.");
-      if (mode === "pomodoro" && (!minutes || minutes < 1 || minutes > 240))
+      if (
+        mode === "pomodoro" &&
+        (!Number.isFinite(minutes) || !minutes || minutes < 1 || minutes > 240)
+      )
         throw Error("Хугацаа 1–240 минут байна.");
       return {
         ...data,
         activeTimer: {
-          ...startTimer(id, mode, phase, minutes, Date.now(), taskId),
+          ...startTimer(
+            id,
+            mode,
+            mode === "stopwatch" ? "focus" : phase,
+            minutes,
+            Date.now(),
+            taskId,
+          ),
           extras: taskId
             ? {
                 taskId,
                 goalId:
                   data.tasks.find((t) => t.id === taskId && !t.deletedAt)
                     ?.goalId ?? null,
+                milestoneId:
+                  data.tasks.find((t) => t.id === taskId)?.extras.milestoneId ??
+                  null,
+                taskTitle: data.tasks.find((t) => t.id === taskId)?.title ?? "",
               }
             : {},
         },
@@ -217,8 +232,16 @@ export const actions = {
           : [...data.sessions, session],
         tasks: completeTask
           ? data.tasks.map((t) =>
-              t.id === timer.taskId
-                ? { ...t, completed: true, updatedAt: now }
+              t.id === timer.taskId && !t.deletedAt
+                ? {
+                    ...t,
+                    completed: true,
+                    updatedAt: now,
+                    extras: {
+                      ...t.extras,
+                      completedOn: dateKey(new Date(now)),
+                    },
+                  }
                 : t,
             )
           : data.tasks,
@@ -336,7 +359,7 @@ export const actions = {
       task: Pick<
         DailyTask,
         "subjectId" | "date" | "minutes" | "title" | "startTime"
-      >,
+      > & { goalId?: string | null; milestoneId?: string | null },
     ) =>
     (data: StudyData): StudyData => {
       subject(data, task.subjectId);
@@ -348,6 +371,26 @@ export const actions = {
         task.minutes > 1440
       )
         throw Error("Төлөвлөгөөний нэр, хугацааг шалгана уу.");
+      const goal = data.studyGoals.find(
+        (g) =>
+          g.id === task.goalId &&
+          !g.deletedAt &&
+          g.subjectId === task.subjectId,
+      );
+      if (task.goalId && !goal)
+        throw Error("Хичээлтэй тохирох зорилго сонгоно уу.");
+      if (
+        task.milestoneId &&
+        (!goal ||
+          !goalDetails(goal).milestones.some((m) => m.id === task.milestoneId))
+      )
+        throw Error("Зорилгын үе шатыг шалгана уу.");
+      if (
+        task.startTime !== null &&
+        !/^([01]\d|2[0-3]):[0-5]\d$/.test(task.startTime)
+      )
+        throw Error("Эхлэх цагийг шалгана уу.");
+      const { milestoneId, ...fields } = task;
       return {
         ...data,
         tasks: [
@@ -355,33 +398,103 @@ export const actions = {
           {
             ...record("task", Date.now()),
             goalId: null,
-            ...task,
+            ...fields,
             title: task.title.trim().slice(0, 200),
             completed: false,
+            extras: milestoneId ? { milestoneId } : {},
           },
         ],
       };
     },
   toggleTask:
     (id: string) =>
-    (data: StudyData): StudyData => ({
-      ...data,
-      tasks: data.tasks.map((t) =>
-        t.id === id
-          ? { ...t, completed: !t.completed, updatedAt: Date.now() }
-          : t,
-      ),
-    }),
+    (data: StudyData): StudyData => {
+      const now = Date.now();
+      return {
+        ...data,
+        tasks: data.tasks.map((t) =>
+          t.id === id && !t.deletedAt
+            ? {
+                ...t,
+                completed: !t.completed,
+                updatedAt: now,
+                extras: {
+                  ...t.extras,
+                  completedOn: t.completed ? null : dateKey(new Date(now)),
+                },
+              }
+            : t,
+        ),
+      };
+    },
   deleteTask:
     (id: string) =>
-    (data: StudyData): StudyData => ({
-      ...data,
-      tasks: data.tasks.map((t) =>
-        t.id === id
-          ? { ...t, deletedAt: Date.now(), updatedAt: Date.now() }
-          : t,
-      ),
-    }),
+    (data: StudyData): StudyData => {
+      if (data.activeTimer?.taskId === id)
+        throw Error("Энэ алхмын цагийг эхлээд хадгалж эсвэл цуцална уу.");
+      return {
+        ...data,
+        tasks: data.tasks.map((t) =>
+          t.id === id
+            ? { ...t, deletedAt: Date.now(), updatedAt: Date.now() }
+            : t,
+        ),
+      };
+    },
+  editTask:
+    (
+      id: string,
+      expected: number,
+      patch: Pick<DailyTask, "title" | "date" | "minutes" | "startTime"> & {
+        milestoneId?: string | null;
+      },
+    ) =>
+    (data: StudyData): StudyData => {
+      const task = data.tasks.find((t) => t.id === id && !t.deletedAt);
+      if (!task || task.updatedAt !== expected)
+        throw Error("Алхам өөрчлөгдсөн тул дахин нээж засна уу.");
+      if (data.activeTimer?.taskId === id)
+        throw Error("Энэ алхмын цагийг эхлээд хадгалж эсвэл цуцална уу.");
+      validDate(patch.date);
+      if (
+        !patch.title.trim() ||
+        patch.title.length > 200 ||
+        !Number.isFinite(patch.minutes) ||
+        patch.minutes < 1 ||
+        patch.minutes > 1440 ||
+        (patch.startTime !== null &&
+          !/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.startTime))
+      )
+        throw Error("Алхмын нэр, хугацаа, цагийг шалгана уу.");
+      const { milestoneId, ...fields } = patch;
+      if (milestoneId) {
+        const goal = data.studyGoals.find(
+          (g) => g.id === task.goalId && !g.deletedAt,
+        );
+        if (
+          !goal ||
+          !goalDetails(goal).milestones.some((m) => m.id === milestoneId)
+        )
+          throw Error("Зорилгын үе шат олдсонгүй.");
+      }
+      return {
+        ...data,
+        tasks: data.tasks.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                ...fields,
+                title: fields.title.trim(),
+                updatedAt: Date.now(),
+                extras:
+                  milestoneId === undefined
+                    ? t.extras
+                    : { ...t.extras, milestoneId },
+              }
+            : t,
+        ),
+      };
+    },
   goals:
     (patch: Partial<Goals>) =>
     (data: StudyData): StudyData => ({

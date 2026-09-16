@@ -1,5 +1,5 @@
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
-import { buildIndex } from "@/lib/calculations/analytics";
+import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
 import {
   shiftDate,
   dateKey,
@@ -77,39 +77,27 @@ export function greeting(hour: number, state: CompanionState) {
       ? "Өдрийн мэнд. Хамтдаа эхэлье."
       : "Оройн мэнд. Тайван суралцъя.";
 }
-export function goalProgress(
-  data: StudyData,
-  goal: StudyGoal,
-  today: string,
-  existingIndex?: StudyIndex,
-) {
+export function goalProgress(data: StudyData, goal: StudyGoal, today: string) {
   const tasks = data.tasks.filter((t) => t.goalId === goal.id && !t.deletedAt);
   const taskIds = new Set(tasks.map((t) => t.id));
-  const seconds = data.sessions
-    .filter(
-      (s) =>
-        !s.deletedAt &&
-        s.date <= today &&
-        s.subjectId === goal.subjectId &&
-        (s.extras.goalId === goal.id ||
-          (typeof s.extras.taskId === "string" &&
-            taskIds.has(s.extras.taskId))),
-    )
-    .reduce((n, s) => n + s.durationSec, 0);
-  const start = weekStart(today),
-    end = shiftDate(start, 6);
-  const index = existingIndex ?? buildIndex(data, today);
-  const weeklySeconds = [
-    ...(index.subjectDays.get(goal.subjectId)?.values() ?? []),
-  ]
-    .filter(
-      (d) =>
-        d.date >= start &&
-        d.date <= end &&
-        d.date >= goal.startsOn &&
-        d.date <= goal.endsOn,
-    )
-    .reduce((n, d) => n + d.seconds, 0);
+  const linked = data.sessions.filter(
+    (s) =>
+      !s.deletedAt &&
+      s.date <= today &&
+      s.subjectId === goal.subjectId &&
+      (s.extras.goalId === goal.id ||
+        (typeof s.extras.taskId === "string" && taskIds.has(s.extras.taskId))),
+  );
+  const seconds = linked.reduce((n, s) => n + s.durationSec, 0);
+  const start = weekStart(today);
+  const weeklySeconds = linked.reduce(
+    (n, session) =>
+      n +
+      sessionAllocations(session)
+        .filter((d) => d.date >= start && d.date <= today)
+        .reduce((sum, d) => sum + d.seconds, 0),
+    0,
+  );
   return {
     seconds,
     weeklySeconds,

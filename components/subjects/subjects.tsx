@@ -52,7 +52,7 @@ export function Subjects() {
             className="button primary"
             onClick={async () => {
               if (data.activeTimer) {
-                navigate("timer");
+                navigate("focus");
                 return;
               }
               if (
@@ -67,7 +67,7 @@ export function Subjects() {
                   ),
                 )
               )
-                navigate("timer");
+                navigate("focus");
             }}
           >
             <Icon name="play" />

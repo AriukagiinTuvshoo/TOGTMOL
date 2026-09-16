@@ -3,20 +3,44 @@ import { useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
 import { dateLabel } from "@/lib/calculations/dates";
-import {
-  Empty,
-  Modal,
-  Progress,
-  SectionTitle,
-  SubjectSelect,
-} from "@/components/ui/common";
+import { Empty, Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { TaskForm } from "./task-form";
+import { nextTask } from "@/lib/world/milestones";
 export function DailyPlan() {
   const { data, store, run, index, today, navigate } = useStudy(),
     [date, setDate] = useState(today),
-    [adding, setAdding] = useState(false);
-  const tasks = data.tasks.filter((t) => !t.deletedAt && t.date === date),
-    completed = tasks.filter((t) => t.completed).length;
+    [adding, setAdding] = useState(false),
+    [editing, setEditing] = useState<string | null>(null);
+  const tasks = data.tasks
+      .filter((t) => !t.deletedAt && t.date === date)
+      .sort(
+        (a, b) =>
+          (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99") ||
+          a.createdAt - b.createdAt,
+      ),
+    completed = tasks.filter((t) => t.completed).length,
+    next = nextTask(tasks, today);
+  const startTask = async (t: (typeof tasks)[number]) => {
+    if (data.activeTimer) {
+      navigate("focus");
+      return;
+    }
+    if (
+      await run(() =>
+        store.mutate(
+          actions.start(
+            t.subjectId,
+            "pomodoro",
+            "focus",
+            Math.min(240, t.minutes),
+            t.id,
+          ),
+        ),
+      )
+    )
+      navigate("focus");
+  };
   return (
     <section className="card">
       <SectionTitle
@@ -70,49 +94,50 @@ export function DailyPlan() {
                 {t.startTime ? ` · ${t.startTime}` : ""}
               </span>
             </div>
-            {!t.completed && (
+            <div className="task-actions">
+              {!t.completed && (
+                <button
+                  className="icon-button"
+                  aria-label={`${t.title} эхлүүлэх`}
+                  onClick={() => startTask(t)}
+                >
+                  <Icon name="play" size={17} />
+                </button>
+              )}
               <button
-                className="icon-button"
-                aria-label={`${t.title} эхлүүлэх`}
-                onClick={async () => {
-                  if (data.activeTimer) {
-                    navigate("timer");
-                    return;
-                  }
-                  if (
-                    await run(() =>
-                      store.mutate(
-                        actions.start(
-                          t.subjectId,
-                          "pomodoro",
-                          "focus",
-                          Math.min(240, t.minutes),
-                          t.id,
-                        ),
-                      ),
-                    )
-                  )
-                    navigate("timer");
-                }}
+                className="icon-button subtle"
+                aria-label={`${t.title} засах`}
+                onClick={() => setEditing(t.id)}
               >
-                <Icon name="play" size={17} />
+                <Icon name="edit" size={16} />
               </button>
-            )}
-            <button
-              className="icon-button subtle"
-              aria-label={`${t.title} устгах`}
-              onClick={() =>
-                run(
-                  () => store.mutate(actions.deleteTask(t.id)),
-                  "Төлөвлөгөөг хогийн сав руу шилжүүллээ.",
-                )
-              }
-            >
-              <Icon name="close" size={16} />
-            </button>
+              <button
+                className="icon-button subtle"
+                aria-label={`${t.title} устгах`}
+                onClick={() =>
+                  run(
+                    () => store.mutate(actions.deleteTask(t.id)),
+                    "Төлөвлөгөөг хогийн сав руу шилжүүллээ.",
+                  )
+                }
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
+      {next && (
+        <button
+          className="button primary next-task-button"
+          onClick={() => startTask(next)}
+        >
+          <Icon name="play" size={17} />
+          {data.activeTimer
+            ? "Ажиллаж буй цаг руу"
+            : "Дараагийн алхмаа эхлүүлэх"}
+        </button>
+      )}
       {!tasks.length && (
         <Empty
           title="Энэ өдөр таны хэмнэлээр"
@@ -125,101 +150,14 @@ export function DailyPlan() {
         />
       )}{" "}
       {adding && <TaskForm date={date} onClose={() => setAdding(false)} />}
-    </section>
-  );
-}
-function TaskForm({ date, onClose }: { date: string; onClose: () => void }) {
-  const { data, store, run, navigate } = useStudy(),
-    [subject, setSubject] = useState(
-      data.subjects.find((s) => !s.deletedAt && !s.archived)?.id ?? "",
-    ),
-    [title, setTitle] = useState(""),
-    [minutes, setMinutes] = useState("25"),
-    [startTime, setTime] = useState(""),
-    [busy, setBusy] = useState(false);
-  return (
-    <Modal title="Жижиг алхам төлөвлөх" onClose={onClose}>
-      {!data.subjects.some((s) => !s.deletedAt) ? (
-        <Empty
-          title="Эхлээд хичээл нэмнэ үү"
-          description="Төлөвлөгөөг хичээлтэй холбоно."
-          action={
-            <button
-              className="button primary"
-              onClick={() => {
-                onClose();
-                navigate("subjects");
-              }}
-            >
-              Хичээл нэмэх
-            </button>
-          }
+      {editing && (
+        <TaskForm
+          key={editing}
+          date={date}
+          task={data.tasks.find((t) => t.id === editing)}
+          onClose={() => setEditing(null)}
         />
-      ) : (
-        <form
-          className="form-stack"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true);
-            if (
-              await run(
-                () =>
-                  store.mutate(
-                    actions.addTask({
-                      subjectId: subject,
-                      date,
-                      minutes: Number(minutes),
-                      title,
-                      startTime: startTime || null,
-                    }),
-                  ),
-                "Төлөвлөгөө нэмэгдлээ.",
-              )
-            )
-              onClose();
-            setBusy(false);
-          }}
-        >
-          <label>
-            Хичээл
-            <SubjectSelect value={subject} onChange={setSubject} required />
-          </label>
-          <label>
-            Юу хийх вэ?
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Жишээ: 10 шинэ үг давтах"
-              required
-              maxLength={200}
-            />
-          </label>
-          <div className="form-grid">
-            <label>
-              Минут
-              <input
-                type="number"
-                min={1}
-                max={1440}
-                value={minutes}
-                onChange={(e) => setMinutes(e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Эхлэх цаг (заавал биш)
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setTime(e.target.value)}
-              />
-            </label>
-          </div>
-          <button className="button primary" disabled={busy}>
-            Төлөвлөх
-          </button>
-        </form>
       )}
-    </Modal>
+    </section>
   );
 }

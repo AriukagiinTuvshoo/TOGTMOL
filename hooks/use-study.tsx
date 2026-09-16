@@ -10,6 +10,7 @@ import {
 } from "react";
 import { StudyStore } from "@/lib/persistence/store";
 import { buildIndex } from "@/lib/calculations/analytics";
+import { ACHIEVEMENTS } from "@/lib/calculations/achievements";
 import { dateKey } from "@/lib/calculations/dates";
 import type { StudyData, StudyIndex, View } from "@/types/study";
 type ContextValue = {
@@ -71,9 +72,28 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   }, [notice]);
   const run = useCallback(
     async (fn: () => Promise<void>, message?: string) => {
+      const previous = store.getSnapshot();
       try {
         await fn();
-        if (message) setNotice(message);
+        const current = store.getSnapshot();
+        if (current.namespace === previous.namespace) {
+          const newAwards = ACHIEVEMENTS.filter(
+            (a) =>
+              current.data.achievementsUnlocked[a.id] &&
+              !previous.data.achievementsUnlocked[a.id],
+          );
+          if (message || newAwards.length)
+            setNotice(
+              [
+                message,
+                newAwards.length
+                  ? `Амжилт: ${newAwards.map((a) => a.name).join(" · ")}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+            );
+        }
         return true;
       } catch (error) {
         store.reportError(error);

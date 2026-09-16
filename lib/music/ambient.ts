@@ -61,6 +61,13 @@ export class AmbientPlayer {
             Math.sin(2 * Math.PI * 260 * t)) *
           0.045 *
           (0.8 + 0.2 * Math.cos((t * Math.PI) / 8));
+      if (id === "night")
+        v =
+          (Math.sin(2 * Math.PI * 110 * t) +
+            0.6 * Math.sin(2 * Math.PI * 165 * t)) *
+            0.06 *
+            (0.75 + 0.25 * Math.cos((t * Math.PI) / 8)) +
+          low * 0.25;
       if (id === "piano" || id === "lofi") {
         const n = notes[Math.floor(t / 2) % notes.length],
           age = t % 2;

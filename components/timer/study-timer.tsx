@@ -42,7 +42,7 @@ export function TimerWatch() {
   }, [t, now, store, run, data.settings]);
   if (!t) return null;
   return (
-    <button className="active-timer-chip" onClick={() => navigate("timer")}>
+    <button className="active-timer-chip" onClick={() => navigate("focus")}>
       <span className={t.running ? "live-dot" : ""} />
       <Icon name={t.status === "review" ? "check" : "clock"} size={16} />
       {t.status === "review" ? "Үр дүнгээ хадгалах" : clock(elapsed(t, now))}
@@ -66,7 +66,8 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [complete, setComplete] = useState(true);
+    [complete, setComplete] = useState(true),
+    [showNote, setShowNote] = useState(false);
   const tId = t?.id;
   useEffect(() => {
     if (!tId) return;
@@ -110,8 +111,10 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           ),
         ),
       )
-    )
+    ) {
       setNote("");
+      navigate("focus");
+    }
   };
   return (
     <div className={`timer-layout ${compact ? "timer-compact" : ""}`}>
@@ -124,6 +127,14 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             ? index.subjects.get(t.subjectId)?.name
             : "Нэг жижиг алхам эхлүүлье."}
         </h2>
+        {t?.taskId && (
+          <p className="timer-task">
+            {data.tasks.find((task) => task.id === t.taskId)?.title ??
+              (typeof t.extras.taskTitle === "string"
+                ? t.extras.taskTitle
+                : "Төлөвлөсөн алхам")}
+          </p>
+        )}
         <p className="muted">
           {t?.status === "review"
             ? "Хийсэн зүйлээ тэмдэглээд, үр дүнгээ хадгалаарай."
@@ -343,8 +354,18 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             {t.startTimeEstimated ? " · ойролцоо" : ""} · Төвлөрсөн: {clock(ms)}
           </p>
         )}
+        {compact && t?.phase === "focus" && t.status !== "review" && (
+          <button
+            className="text-button"
+            aria-expanded={showNote}
+            onClick={() => setShowNote(!showNote)}
+          >
+            <Icon name="edit" size={15} />
+            {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
+          </button>
+        )}
       </section>
-      {(!compact || t?.status === "review") && (
+      {(!compact || showNote || t?.status === "review") && (
         <aside className="stack">
           <section className="card">
             <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>

@@ -12,7 +12,7 @@ import {
 } from "@/lib/world/planner";
 import { goalProgress } from "@/lib/world/progress";
 import { actions } from "@/lib/persistence/actions";
-import { formatTime, parseDate } from "@/lib/calculations/dates";
+import { formatTime } from "@/lib/calculations/dates";
 import {
   Modal,
   Progress,
@@ -20,10 +20,18 @@ import {
   SubjectSelect,
 } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { GoalEditor } from "./goal-editor";
+import {
+  goalDetails,
+  milestoneProgress,
+  nextTask,
+} from "@/lib/world/milestones";
+import { TaskForm } from "@/components/dashboard/task-form";
 export function GoalPlanner() {
   const { data, index, today, store, run, navigate } = useStudy(),
     [adding, setAdding] = useState(false),
-    [editing, setEditing] = useState<string | null>(null);
+    [editing, setEditing] = useState<string | null>(null),
+    [editingTask, setEditingTask] = useState<string | null>(null);
   const active = data.studyGoals.filter((g) => !g.deletedAt),
     deleted = data.studyGoals.filter((g) => g.deletedAt),
     progress = useMemo(
@@ -31,9 +39,9 @@ export function GoalPlanner() {
         new Map(
           data.studyGoals
             .filter((g) => !g.deletedAt)
-            .map((g) => [g.id, goalProgress(data, g, today, index)]),
+            .map((g) => [g.id, goalProgress(data, g, today)]),
         ),
-      [data, index, today],
+      [data, today],
     );
   return (
     <section className="stack">
@@ -64,9 +72,9 @@ export function GoalPlanner() {
       <div className="goal-plans">
         {active.map((g) => {
           const p = progress.get(g.id)!,
-            next = p.tasks
-              .filter((t) => !t.completed)
-              .sort((a, b) => a.date.localeCompare(b.date))[0];
+            next = nextTask(p.tasks, today),
+            details = goalDetails(g),
+            milestones = milestoneProgress(data, g, today);
           return (
             <article className="card goal-plan" key={g.id}>
               <div className="section-heading">
@@ -96,8 +104,14 @@ export function GoalPlanner() {
                 </div>
               </div>
               <h3>{g.title}</h3>
+              {details.description && (
+                <p className="goal-description">{details.description}</p>
+              )}
               <p className="tiny muted">
-                {g.startsOn} — {g.endsOn}
+                {g.startsOn} — {g.endsOn} ·{" "}
+                {g.extras.studyPlan
+                  ? `${details.weeklyDays} өдөр/долоо хоног`
+                  : "Суралцах өдрүүдээ тохируулаарай"}
               </p>
               <strong className="goal-time">
                 {formatTime(p.seconds)}{" "}
@@ -109,7 +123,7 @@ export function GoalPlanner() {
                 {p.tasks.length} алхам
               </p>
               <div className="subject-week">
-                <span>Хичээлдээ энэ долоо хоногт</span>
+                <span>Энэ зорилгод энэ долоо хоногт</span>
                 <strong>
                   {formatTime(p.weeklySeconds)} /{" "}
                   {formatTime(g.weeklyMinutes * 60)}
@@ -119,6 +133,30 @@ export function GoalPlanner() {
                 value={(p.weeklySeconds / (g.weeklyMinutes * 60)) * 100}
                 label={`${g.title} долоо хоногийн зорилго`}
               />
+              {milestones.length > 0 && (
+                <ol
+                  className="milestone-list"
+                  aria-label={`${g.title} үе шатууд`}
+                >
+                  {milestones.map((m, i) => (
+                    <li key={m.id} className={m.done ? "is-complete" : ""}>
+                      <span
+                        className="milestone-number"
+                        aria-label={m.done ? "Биелсэн" : `${i + 1}-р үе шат`}
+                      >
+                        {m.done ? "✓" : String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <strong>{m.title}</strong>
+                        <small>
+                          {m.completed}/{m.tasks.length} алхам ·{" "}
+                          {formatTime(m.seconds)} хэмжсэн
+                        </small>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
               {next ? (
                 <div className="goal-next">
                   <div>
@@ -130,7 +168,7 @@ export function GoalPlanner() {
                     aria-label={`${g.title} дараагийн алхам эхлүүлэх`}
                     onClick={async () => {
                       if (data.activeTimer) {
-                        navigate("timer");
+                        navigate("focus");
                         return;
                       }
                       if (
@@ -140,7 +178,7 @@ export function GoalPlanner() {
                               g.subjectId,
                               "pomodoro",
                               "focus",
-                              next.minutes,
+                              Math.min(240, next.minutes),
                               next.id,
                             ),
                           ),
@@ -177,6 +215,13 @@ export function GoalPlanner() {
                           {t.title}
                         </span>
                       </label>
+                      <button
+                        className="icon-button"
+                        aria-label={`${t.title} засах`}
+                        onClick={() => setEditingTask(t.id)}
+                      >
+                        <Icon name="edit" size={16} />
+                      </button>
                     </li>
                   ))}
                 </ol>
@@ -206,116 +251,23 @@ export function GoalPlanner() {
           ))}
         </details>
       )}
+      {editingTask && (
+        <TaskForm
+          key={editingTask}
+          date={today}
+          task={data.tasks.find((t) => t.id === editingTask)}
+          onClose={() => setEditingTask(null)}
+        />
+      )}
       {adding && <PlanWizard onClose={() => setAdding(false)} />}
       {editing && (
-        <EditGoal key={editing} id={editing} onClose={() => setEditing(null)} />
+        <GoalEditor
+          key={editing}
+          id={editing}
+          onClose={() => setEditing(null)}
+        />
       )}
     </section>
-  );
-}
-function EditGoal({ id, onClose }: { id: string; onClose: () => void }) {
-  const { data, store, run } = useStudy(),
-    goal = data.studyGoals.find((g) => g.id === id)!,
-    [expected] = useState(goal.updatedAt),
-    [title, setTitle] = useState(goal.title),
-    [weekly, setWeekly] = useState(goal.weeklyMinutes),
-    [target, setTarget] = useState(goal.targetMinutes),
-    [end, setEnd] = useState(goal.endsOn);
-  return (
-    <Modal title="Зорилго засах" onClose={onClose}>
-      <form
-        className="form-stack"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (
-            await run(
-              () =>
-                store.mutate((d) => {
-                  if (
-                    !title.trim() ||
-                    title.length > 200 ||
-                    !Number.isFinite(weekly) ||
-                    weekly < 5 ||
-                    weekly > 10080 ||
-                    !Number.isFinite(target) ||
-                    target < 5 ||
-                    target > 120960 ||
-                    !parseDate(end) ||
-                    end < goal.startsOn
-                  )
-                    throw Error("Зорилгын нэр, хугацаа, огноог шалгана уу.");
-                  const old = d.studyGoals.find((g) => g.id === id);
-                  if (!old || old.updatedAt !== expected)
-                    throw Error("Зорилго өөрчлөгдсөн тул дахин нээж засна уу.");
-                  return {
-                    ...d,
-                    studyGoals: d.studyGoals.map((g) =>
-                      g.id === id
-                        ? {
-                            ...g,
-                            title: title.trim(),
-                            weeklyMinutes: weekly,
-                            targetMinutes: target,
-                            endsOn: end,
-                            updatedAt: Date.now(),
-                          }
-                        : g,
-                    ),
-                  };
-                }),
-              "Зорилго шинэчлэгдлээ.",
-            )
-          )
-            onClose();
-        }}
-      >
-        <label>
-          Зорилгын нэр
-          <input
-            required
-            maxLength={200}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        <label>
-          Долоо хоногт (минут)
-          <input
-            type="number"
-            required
-            min={5}
-            max={10080}
-            value={weekly}
-            onChange={(e) => setWeekly(Number(e.target.value))}
-          />
-        </label>
-        <label>
-          Нийт зорилтот минут
-          <input
-            type="number"
-            required
-            min={5}
-            max={120960}
-            value={target}
-            onChange={(e) => setTarget(Number(e.target.value))}
-          />
-        </label>
-        <label>
-          Дуусах өдөр
-          <input
-            type="date"
-            required
-            min={goal.startsOn}
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-          />
-        </label>
-        <p className="tiny muted">
-          Өмнөх төлөвлөгөө, суралцсан хугацаа хэвээр хадгалагдана.
-        </p>
-        <button className="button primary">Өөрчлөлт хадгалах</button>
-      </form>
-    </Modal>
   );
 }
 export function PlanWizard({
@@ -379,9 +331,8 @@ export function PlanWizard({
             Алхмуудын санал гаргах
           </button>
           <p className="tiny muted">
-            Local planner: хичээлийн нэр, долоо хоног/сар, минутыг таньж хуваарь
-            санал болгоно. Агуулгын түвшинг дүгнэхгүй; доорх утгуудаа өөрчилж
-            болно.
+            Тоги хичээлийн нэр, хугацаанд тулгуурлан хуваарь санал болгоно. Үе
+            шатны агуулгыг өөрийн түвшин, сурах материалаар тохируулаарай.
           </p>
           {input && (
             <>
@@ -391,6 +342,16 @@ export function PlanWizard({
                   value={input.title}
                   maxLength={200}
                   onChange={(e) => patch({ title: e.target.value })}
+                />
+              </label>
+              <label>
+                Тайлбар
+                <textarea
+                  rows={2}
+                  maxLength={2000}
+                  value={input.description ?? ""}
+                  onChange={(e) => patch({ description: e.target.value })}
+                  placeholder="Юунд хүрэхээ товч бичээрэй"
                 />
               </label>
               <label>
@@ -444,6 +405,55 @@ export function PlanWizard({
                   />
                 </label>
               </div>
+              <fieldset className="milestone-editor">
+                <legend>Үе шатууд — өөрийн агуулгад тааруулж засаарай</legend>
+                {(input.milestoneTitles ?? []).map((title, i) => (
+                  <div className="milestone-edit-row" key={i}>
+                    <label>
+                      {i + 1}-р үе шат
+                      <input
+                        maxLength={120}
+                        value={title}
+                        onChange={(e) =>
+                          patch({
+                            milestoneTitles: input.milestoneTitles?.map(
+                              (t, j) => (i === j ? e.target.value : t),
+                            ),
+                          })
+                        }
+                      />
+                    </label>
+                    <button
+                      className="icon-button"
+                      aria-label={`${i + 1}-р үе шат хасах`}
+                      disabled={(input.milestoneTitles?.length ?? 0) <= 1}
+                      onClick={() =>
+                        patch({
+                          milestoneTitles: input.milestoneTitles?.filter(
+                            (_, j) => j !== i,
+                          ),
+                        })
+                      }
+                    >
+                      <Icon name="close" size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  className="button small"
+                  disabled={(input.milestoneTitles?.length ?? 0) >= 12}
+                  onClick={() =>
+                    patch({
+                      milestoneTitles: [
+                        ...(input.milestoneTitles ?? []),
+                        "Шинэ үе шат",
+                      ],
+                    })
+                  }
+                >
+                  Үе шат нэмэх
+                </button>
+              </fieldset>
               <button
                 className="button"
                 onClick={() => {

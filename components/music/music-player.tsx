@@ -2,41 +2,43 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useStudy } from "@/hooks/use-study";
-import { AMBIENTS, type AmbientId } from "@/lib/music/catalog";
+import { AMBIENTS, THEME_MUSIC, type AmbientId } from "@/lib/music/catalog";
 import type { AmbientPlayer } from "@/lib/music/ambient";
 import { parseYouTube, youtubeURL } from "@/lib/music/youtube";
 import type { YTPlayer } from "@/lib/music/youtube-player";
 import type { MusicProvider } from "@/lib/music/provider";
 import { uid } from "@/lib/constants";
 import { Icon } from "@/components/ui/icon";
+import { useMusicPreference } from "@/hooks/use-music-preference";
+import {
+  initialMusicSelection,
+  type MusicPreferences,
+} from "@/lib/music/preferences";
 const YouTubeEmbed = dynamic(
   () => import("./youtube-embed").then((m) => m.YouTubeEmbed),
   { ssr: false, loading: () => <p>Бичлэгийг ачаалж байна…</p> },
 );
-function readPreference(namespace: string) {
-  try {
-    const saved = JSON.parse(
-      localStorage.getItem(`togtmol:music:${namespace}`) ?? "null",
-    );
-    if (saved && Number.isFinite(saved.volume))
-      return {
-        volume: Math.max(0, Math.min(1, saved.volume)),
-        muted: saved.muted === true,
-      };
-  } catch {
-    /* Preferences are optional. */
-  }
-  return { volume: 0.4, muted: false };
-}
 export function MusicPlayer() {
   const { data, store, run } = useStudy(),
     namespace = store.getSnapshot().namespace;
-  const [preference] = useState(() => readPreference(namespace));
+  const [preference, updatePreference] = useMusicPreference(namespace);
+  const { volume, muted } = preference;
+  const savePreference = (patch: Partial<MusicPreferences>) => {
+    try {
+      updatePreference(patch);
+    } catch (e) {
+      store.reportError(e);
+    }
+  };
   const [open, setOpen] = useState(false),
-    [selection, setSelected] = useState("ambient:lofi"),
+    [selection, setSelected] = useState(() =>
+      initialMusicSelection(
+        preference,
+        data.settings.world.design,
+        data.musicSources,
+      ),
+    ),
     [playing, setPlaying] = useState(false),
-    [volume, setVolume] = useState(preference.volume),
-    [muted, setMuted] = useState(preference.muted),
     [error, setError] = useState(""),
     [url, setUrl] = useState(""),
     [title, setTitle] = useState(""),
@@ -76,14 +78,6 @@ export function MusicPlayer() {
       youtube.current.setVolume(volume * 100);
       if (muted) youtube.current.mute();
       else youtube.current.unMute();
-    }
-    try {
-      localStorage.setItem(
-        `togtmol:music:${namespace}`,
-        JSON.stringify({ volume, muted }),
-      );
-    } catch {
-      /* Playback remains usable without preference storage. */
     }
   }, [volume, muted, namespace, ready]);
   useEffect(() => {
@@ -144,8 +138,10 @@ export function MusicPlayer() {
       provider.current = adapter;
       adapter.setVolume(volume, muted);
       await adapter.play();
-      if (!disposed.current && generation.current === token) setPlaying(true);
-      else await engine.pause();
+      if (!disposed.current && generation.current === token) {
+        setPlaying(true);
+        savePreference({ lastPlayed: selected });
+      } else await engine.pause();
     } catch (e) {
       if (!disposed.current)
         setError(e instanceof Error ? e.message : "Дуу эхэлсэнгүй.");
@@ -260,7 +256,7 @@ export function MusicPlayer() {
             className="icon-button"
             aria-label={muted ? "Дууг нээх" : "Дууг хаах"}
             aria-pressed={muted}
-            onClick={() => setMuted(!muted)}
+            onClick={() => savePreference({ muted: !muted })}
           >
             <Icon name={muted ? "muted" : "volume"} size={18} />
           </button>
@@ -272,7 +268,7 @@ export function MusicPlayer() {
             max="1"
             step=".05"
             value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
+            onChange={(e) => savePreference({ volume: Number(e.target.value) })}
           />
           <button
             className="icon-button"
@@ -302,7 +298,18 @@ export function MusicPlayer() {
       {open && (
         <div className="music-panel">
           <div className="music-library">
-            <div className="eyebrow">CHOOSE YOUR ATMOSPHERE</div>
+            <div className="eyebrow">ӨРӨӨНД ТАНЬ ТОХИРОХ АЯ</div>
+            <div className="music-recommendations">
+              {THEME_MUSIC[data.settings.world.design].map((id) => (
+                <button
+                  className="button small"
+                  key={id}
+                  onClick={() => select(`ambient:${id}`)}
+                >
+                  {AMBIENTS.find((a) => a.id === id)?.name}
+                </button>
+              ))}
+            </div>
             <div className="ambient-options">
               {AMBIENTS.map((a) => (
                 <button
@@ -415,7 +422,10 @@ export function MusicPlayer() {
                     setReady(Boolean(p));
                     if (!p) setPlaying(false);
                   }}
-                  onState={(s) => setPlaying(s === 1)}
+                  onState={(s) => {
+                    setPlaying(s === 1);
+                    if (s === 1) savePreference({ lastPlayed: selected });
+                  }}
                   onError={setError}
                 />
                 <p className="tiny muted">

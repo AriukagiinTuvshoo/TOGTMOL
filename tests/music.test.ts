@@ -51,21 +51,21 @@ describe("original soundscape playback", () => {
     expect(started).not.toHaveBeenCalled();
     for (const preset of AMBIENTS)
       await ambientProvider(engine, preset.id).play();
-    expect(started).toHaveBeenCalledTimes(6);
-    expect(buffers).toHaveLength(6);
+    expect(started).toHaveBeenCalledTimes(7);
+    expect(buffers).toHaveLength(7);
     for (const samples of buffers) {
       expect(
         samples.every((v) => Number.isFinite(v) && Math.abs(v) <= 0.8),
       ).toBe(true);
       expect(samples.some((v) => Math.abs(v) > 0.001)).toBe(true);
     }
-    const provider = ambientProvider(engine, "ambient");
+    const provider = ambientProvider(engine, "night");
     await provider.pause();
     expect(suspend).toHaveBeenCalled();
     await provider.play();
-    expect(started).toHaveBeenCalledTimes(6);
+    expect(started).toHaveBeenCalledTimes(7);
     engine.close();
     expect(close).toHaveBeenCalled();
-    expect(stopped).toHaveBeenCalledTimes(6);
+    expect(stopped).toHaveBeenCalledTimes(7);
   });
 });

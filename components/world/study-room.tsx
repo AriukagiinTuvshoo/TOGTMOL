@@ -11,6 +11,8 @@ import { actions } from "@/lib/persistence/actions";
 import { RoomScene } from "./room-scene";
 import { StudyTimer } from "@/components/timer/study-timer";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
+import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
+import { ACCESSORIES } from "@/lib/world/config";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
 export function StudyRoom({ focus = false }: { focus?: boolean }) {
@@ -19,6 +21,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
   const state = companionState(data, index, today),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
+  const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
   const todaySeconds = index.days.get(today)?.seconds ?? 0,
     daily =
       data.goals.dailyMinutes ??
@@ -81,7 +84,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
                 : state === "break"
                   ? "цайны завсарлага"
                   : state === "welcome"
-                    ? "таныг хүлээж байлаа"
+                    ? "дахин уулзсандаа баяртай"
                     : state === "happy"
                       ? "жижиг ялалтаа тэмдэглэе"
                       : state === "celebrating"
@@ -150,41 +153,52 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           </div>
         )}
       {!focus && (
-        <div className="world-bottom">
-          <DailyPlan />
-          <section className="card world-journal">
-            <div className="eyebrow">A LITTLE AT A TIME</div>
-            <h2>Өчигдрөөс нэг алхам цааш.</h2>
-            <p>Тоги тантай хамт {progress.xp} XP цуглуулжээ.</p>
-            <Progress
-              value={progress.intoLevel}
-              label="Тогигийн түвшний ахиц"
-            />
-            <p className="tiny muted">
-              Дараагийн түвшин хүртэл {100 - progress.intoLevel} XP. Өдөрт 60
-              хүртэл XP; урт суулт хийх шаардлагагүй.
-            </p>
-            {last ? (
-              <div className="last-reflection">
-                <span className="eyebrow">СҮҮЛЧИЙН ТЭМДЭГЛЭЛ</span>
-                <p>
-                  {last.note ||
-                    `${index.subjects.get(last.subjectId)?.name ?? "Хичээл"} · ${clock(last.durationSec * 1000)}`}
-                </p>
-              </div>
-            ) : (
-              <p className="muted">
-                Эхний хичээлээ дуусгаад юу сурснаа үлдээгээрэй.
+        <>
+          <WeeklyPulse />
+          <div className="world-bottom">
+            <DailyPlan />
+            <section className="card world-journal">
+              <div className="eyebrow">A LITTLE AT A TIME</div>
+              <h2>Өчигдрөөс нэг алхам цааш.</h2>
+              <p>Тоги тантай хамт {progress.xp} XP цуглуулжээ.</p>
+              <Progress
+                value={progress.intoLevel}
+                label="Тогигийн түвшний ахиц"
+              />
+              <p className="tiny muted">
+                Дараагийн түвшин хүртэл {100 - progress.intoLevel} XP. Өдөрт 60
+                хүртэл XP; урт суулт хийх шаардлагагүй.
               </p>
-            )}
-            <button
-              className="text-button"
-              onClick={() => navigate("assistant")}
-            >
-              Тогитой ярилцах <Icon name="arrow" size={16} />
-            </button>
-          </section>
-        </div>
+              {nextUnlock && (
+                <div className="next-unlock">
+                  <Icon name="leaf" size={18} />
+                  <span>
+                    Дараагийн чимэглэл: <strong>{nextUnlock.name}</strong>
+                  </span>
+                </div>
+              )}
+              {last ? (
+                <div className="last-reflection">
+                  <span className="eyebrow">СҮҮЛЧИЙН ТЭМДЭГЛЭЛ</span>
+                  <p>
+                    {last.note ||
+                      `${index.subjects.get(last.subjectId)?.name ?? "Хичээл"} · ${clock(last.durationSec * 1000)}`}
+                  </p>
+                </div>
+              ) : (
+                <p className="muted">
+                  Эхний хичээлээ дуусгаад юу сурснаа үлдээгээрэй.
+                </p>
+              )}
+              <button
+                className="text-button"
+                onClick={() => navigate("assistant")}
+              >
+                Тогитой ярилцах <Icon name="arrow" size={16} />
+              </button>
+            </section>
+          </div>
+        </>
       )}
     </div>
   );

@@ -142,6 +142,39 @@ export class StudyStore {
       mergeData(current, snapshotForExport(imported, Date.now())),
     );
   }
+  clearGuestData(): Promise<void> {
+    return this.serialize(async () => {
+      if (!this.state.ready || this.state.namespace !== "guest")
+        throw Error("Эхлээд төхөөрөмжийн локал горимд шилжинэ үү.");
+      if (this.state.data.activeTimer)
+        throw Error("Ажиллаж буй цагийг эхлээд хадгалж эсвэл цуцална уу.");
+      this.publish({ busy: true });
+      try {
+        // Complete the durable backup before replacing any study records.
+        await this.repository.backup(
+          "guest",
+          "Локал түүхийг цэвэрлэхийн өмнөх нөөц",
+          JSON.stringify(this.exportData()),
+        );
+        const document = await this.repository.save(
+          "guest",
+          emptyData(),
+          this.state.revision,
+        );
+        this.publish({ ...document, error: null });
+        this.channel?.postMessage("guest");
+      } catch (error) {
+        if (error instanceof RevisionError) {
+          const document = await this.repository.load("guest");
+          if (document) this.publish({ ...document });
+        }
+        this.reportError(error);
+        throw error;
+      } finally {
+        this.publish({ busy: false });
+      }
+    });
+  }
   exportData() {
     return {
       format: "togtmol-backup",

@@ -122,7 +122,9 @@ function timer(raw: unknown): ActiveTimer | null {
 export function migrate(input: unknown): StudyData {
   if (!isObject(input)) throw Error("Нөөц файлын бүтэц танигдсангүй.");
   const raw =
-    input.format === "togtmol-backup" && isObject(input.data)
+    (input.format === "togtmol-backup" ||
+      (Number.isSafeInteger(input.revision) && Number(input.revision) >= 1)) &&
+    isObject(input.data)
       ? input.data
       : input;
   if (finite(raw.schemaVersion) > 4)

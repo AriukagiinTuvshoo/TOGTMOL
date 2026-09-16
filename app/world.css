@@ -1498,3 +1498,461 @@ details.card[open] > summary {
     animation: none;
   }
 }
+
+/* v4.1: linked study loop and intentional small-screen layouts. */
+.weekly-pulse {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.week-total {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.week-total strong {
+  font-size: 30px;
+  font-weight: 550;
+}
+.week-total > span,
+.week-bars small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.week-bars {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 15px;
+  text-align: center;
+}
+.week-bar-track {
+  height: 65px;
+  border-radius: 8px;
+  background: var(--moss-soft);
+  display: flex;
+  align-items: end;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.week-bar-track > span {
+  width: 100%;
+  border-radius: 8px;
+  background: var(--moss);
+  opacity: 0.65;
+}
+.is-today .week-bar-track > span {
+  opacity: 1;
+}
+.week-bars .is-today small {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.coach-card {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 18px;
+  background: var(--moss-soft);
+}
+.coach-card .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.coach-card h2 {
+  font-size: 23px;
+  line-height: 1.5;
+}
+.coach-card > p {
+  line-height: 1.85;
+  color: var(--muted);
+  font-size: 14px;
+}
+.coach-card > small {
+  margin-top: auto;
+}
+.next-unlock {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--moss-soft);
+  border-radius: 12px;
+  font-size: 12px;
+}
+.next-task-button {
+  width: 100%;
+  margin-top: 14px;
+}
+.task-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.task-row strong,
+.goal-description,
+.milestone-list strong,
+.timer-task {
+  overflow-wrap: anywhere;
+}
+.timer-task {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 auto 12px;
+  max-width: 350px;
+  line-height: 1.65;
+}
+.timer-compact .timer-card > .text-button {
+  justify-content: center;
+  margin: 14px auto 0;
+}
+.timer-compact .timer-card > .timer-task {
+  display: block;
+}
+.milestone-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.milestone-list li {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.milestone-number {
+  flex: 0 0 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--muted);
+}
+.milestone-list .is-complete .milestone-number {
+  background: var(--moss);
+  color: var(--surface);
+}
+.milestone-list strong {
+  font-size: 13px;
+  display: block;
+  font-weight: 550;
+}
+.milestone-list small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.milestone-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-width: 0;
+}
+.milestone-editor legend {
+  font-size: 12px;
+  padding: 0 5px;
+}
+.milestone-edit-row {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.milestone-edit-row > label {
+  flex: 1;
+  min-width: 0;
+}
+.goal-task-list > li {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+}
+.goal-task-list > li > label {
+  flex: 1;
+  min-width: 0;
+}
+.goal-task-list > li > label > span {
+  overflow-wrap: anywhere;
+}
+.plan-preview .goal-task-list > li {
+  flex-direction: column;
+}
+.goal-description {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin: 9px 0;
+  white-space: pre-wrap;
+}
+.statistics-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.statistics-highlights > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.statistics-highlights span,
+.statistics-highlights small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.statistics-highlights strong {
+  font-size: 19px;
+  overflow-wrap: anywhere;
+  font-weight: 550;
+}
+.calendar-tasks {
+  padding: 20px 0;
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.calendar-tasks h3 {
+  margin-bottom: 13px;
+}
+.calendar-task {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  margin-top: 10px;
+}
+.calendar-task > span {
+  color: var(--moss);
+}
+.calendar-task small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+.calendar-task strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.heat-cell.manual-only {
+  position: relative;
+}
+.heat-cell.manual-only::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text);
+  bottom: 2px;
+  left: calc(50% - 2px);
+}
+.music-recommendations {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 10px 0 16px;
+}
+.furniture-options {
+  margin-top: 20px;
+}
+.danger-text {
+  color: var(--danger, #ae4940);
+}
+.app-shell main:focus {
+  outline: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .weekly-pulse .week-bar-track > span {
+    transition: height 0.3s ease;
+  }
+  .milestone-number,
+  .task-row {
+    transition:
+      background-color 0.18s ease,
+      opacity 0.18s ease;
+  }
+}
+@media (max-width: 650px) {
+  .weekly-pulse {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .week-bars {
+    gap: 9px;
+  }
+  .week-bar-track {
+    height: 45px;
+  }
+  .coach-card {
+    gap: 12px;
+  }
+  .coach-card h2 {
+    font-size: 20px;
+  }
+  .statistics-highlights {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .statistics-highlights > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+  }
+  .statistics-highlights small {
+    grid-column: 1/-1;
+  }
+  .statistics-highlights strong {
+    font-size: 16px;
+    text-align: right;
+  }
+  .task-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 6px;
+  }
+  .task-row > .task-actions {
+    grid-column: 2;
+    display: flex;
+    gap: 6px;
+  }
+  .task-actions .icon-button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .task-row strong {
+    font-size: 13px;
+  }
+  .filter-row .segmented {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .filter-row > .segmented > button {
+    flex: 1 0 auto;
+  }
+  .plan-date {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .app-shell #main-content,
+  .is-focus #main-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .card {
+    padding: 16px;
+  }
+  .world-heading h1 {
+    font-size: 24px;
+    letter-spacing: -0.4px;
+  }
+  .world-heading > .button-row {
+    flex-wrap: wrap;
+  }
+  .room-art {
+    padding: 8px 8px 0;
+  }
+  .companion-caption {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .timer-compact .timer-card {
+    padding: 13px;
+  }
+  .timer-compact .timer-digits {
+    font-size: 36px;
+  }
+  .timer-compact .preset-row {
+    flex-wrap: wrap;
+  }
+  .daily-strip {
+    padding: 14px;
+  }
+  .daily-strip .daily-progress {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .daily-strip > div:last-child:not(.daily-progress) {
+    margin-left: auto;
+  }
+  .form-grid,
+  .form-grid.three {
+    grid-template-columns: 1fr;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+  }
+  .theme-gallery {
+    gap: 8px;
+  }
+  .theme-preview {
+    padding: 8px;
+  }
+  .music-title {
+    flex: 1;
+  }
+  .music-title strong,
+  .music-title small {
+    max-width: 108px;
+  }
+  .music-disc {
+    display: none;
+  }
+  .music-controls .icon-button {
+    min-width: 36px;
+    min-height: 40px;
+  }
+  .music-panel {
+    padding: 12px;
+  }
+  .music-preview {
+    min-width: 200px;
+  }
+  .youtube-form .button-row {
+    flex-wrap: wrap;
+  }
+  .youtube-form .button-row > input {
+    width: 100%;
+  }
+  .chat-header > .badge {
+    margin-left: 0;
+    margin-top: 0;
+  }
+  .chat-header > div {
+    min-width: 0;
+    flex: 1;
+  }
+  .chat-header .eyebrow {
+    letter-spacing: 1px;
+  }
+  .chat-header h2 {
+    font-size: 20px;
+  }
+  .chat-compose {
+    gap: 6px;
+  }
+  .modal {
+    max-width: calc(100vw - 16px);
+    padding: 18px 14px;
+  }
+  .heat-grid {
+    gap: 3px;
+  }
+}
+
+.task-row > .task-actions {
+  display: flex;
+  gap: 3px;
+  flex: 0 0 auto;
+}

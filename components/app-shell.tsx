@@ -82,7 +82,11 @@ function Shell() {
             >
               <Icon name={n.icon} />
               {n.label}
-              {n.view === "assistant" && <span className="nav-tag">LOCAL</span>}
+              {n.view === "assistant" && (
+                <span className="nav-tag" aria-hidden="true">
+                  LOCAL
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -221,7 +225,7 @@ function Shell() {
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
             <span>Өнөөдөр бага байсан ч ахиц.</span>
-            <span>Тогтмол v4</span>
+            <span>Тогтмол v4.1</span>
           </footer>
         </main>
       </div>

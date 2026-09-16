@@ -54,7 +54,7 @@ Records use tombstones for deletion. Import and cloud merges retain unknown fiel
 
 The postbuild script enumerates all immutable Next assets and computes a build identifier. Installation caches those assets and the public shell before offline is available. A changed worker waits for old tabs to close. Supabase requests, auth callbacks, token-bearing URLs and authorization headers are never cached.
 
-The app contains no AI network request. The local assistant reports observable study behavior and explicitly avoids inferring knowledge proficiency from time spent. A future server-backed provider can implement the existing interface with opt-in data sharing and server-held credentials.
+The local assistant makes no AI request and explicitly avoids inferring knowledge proficiency from time spent. An optional authenticated server-backed provider implements the chat interface with explicit opt-in data sharing and server-held credentials.
 
 Cloud synchronization currently exchanges complete snapshots. This is straightforward to audit at the requested 10,000-session scale; substantially larger histories should move to per-record dirty queues and paginated pull, with the same revision/conflict semantics. This is a documented future optimization, not a claim that incremental sync already exists.
 
@@ -66,4 +66,16 @@ The existing shell, timer, repository, analytics and account layers remain. The 
 
 `MusicProvider` is the playback contract. Browser soundscapes and official YouTube player adapters implement it. The persistent player lives outside view content; namespace changes dispose audio. Music volume/mute preferences are small device-local preferences, while saved YouTube sources sync as record entities. Heavy sound generation, YouTube code, room customization, statistics and the assistant are loaded only when needed.
 
-The chat uses a local deterministic provider by default. The optional online provider calls a Node API route; authenticated allowlisted users, a private database quota and bounded payload/output sizes control access. No AI key is exposed to browser code. Session notes are shown in local reflection and excluded from online context. A namespace change remounts page content and prevents an old chat from publishing a response into another account.
+The chat uses a local deterministic provider by default. The optional online provider calls a Node API route; authenticated allowlisted users, a private database quota and bounded payload/output sizes control access. No AI key is exposed to browser code. Session notes remain local by default. An independent opt-in shares the five newest notes from the last seven days, capped at 500 characters each. A namespace change remounts page content and prevents an old chat from publishing a response into another account.
+
+## v4.1: complete the study loop
+
+No top-level collections, database tables, storage names or export version change. `lib/world/milestones.ts` defines validated optional `studyGoals[].extras.studyPlan` metadata (version 1, description, weeklyDays, stable milestone IDs/titles). Tasks carry `extras.milestoneId`; a started timer snapshots goal/task/milestone IDs and task title. Saved sessions keep that snapshot when tasks are later rescheduled or reassigned. Whole-goal conflicts use the existing three-way conflict preservation. Invalid optional metadata remains in the underlying extras payload; readers only render valid fields.
+
+New plan previews distribute tasks across reviewable milestones and commit atomically. Existing goals receive no generated stages or rewritten tasks during load. The goal editor changes metadata and targets; the task editor explicitly changes schedules/stage links, guards stale edits and blocks edits while that task's timer is active. Each saved completion stores `extras.completedOn`, so moving a completed task does not move its historical completion day. Old completions with no timestamp are labelled using their planned day.
+
+Goal weekly minutes now include only linked sessions, allocated across real midnight/week boundaries using the same allocation function as statistics. Other study on the same subject does not inflate that goal. The coach compares remaining goal minutes with approximate remaining study days; these are schedule suggestions, not proficiency estimates. Home uses the same goal and weekly calculations. Starting study enters focus mode; changing pages and exiting focus preserve the running timer. Notes can be opened during focus.
+
+Music preferences keep the old namespace key and volume/mute fields, adding defaultCategory, rememberLast and lastPlayed. A shared preference event keeps the settings screen and player aligned; playback changes only on a user action. Theme recommendations are metadata in `lib/music/catalog.ts`. New furniture stays in `world.extras.furniture`. No secret or personal notes are stored in these preference keys.
+
+Guest reset serializes with other store operations, requires no active timer, completes a full backup before a revision-checked write, retains account namespaces/backups and refuses stale writes. Migration now accepts the stored-document envelopes already produced by previous upgrade backups. The PWA settings indicator reads worker installation/update state; browser/device offline verification is still a separate deployment gate.

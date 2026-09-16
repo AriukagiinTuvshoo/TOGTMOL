@@ -210,6 +210,8 @@ export interface PeriodStats {
   studyDays: number;
   consistency: number;
   longestStreak: number;
+  currentStreak: number;
+  longestSession: number;
   sessionCount: number;
   topSubject: string | null;
   bestDay: string | null;

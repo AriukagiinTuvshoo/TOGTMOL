@@ -1,10 +1,19 @@
 import type { StudyData, StudyIndex } from "@/types/study";
 import { insights, suggestPlan } from "./provider";
 import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
-import { formatTime, shiftDate, weekStart } from "@/lib/calculations/dates";
+import {
+  formatTime,
+  shiftDate,
+  weekStart,
+  datesBetween,
+} from "@/lib/calculations/dates";
+import { coachInsights } from "./coach";
+import { goalDetails, milestoneProgress } from "@/lib/world/milestones";
+import { goalProgress } from "@/lib/world/progress";
 export interface ChatReply {
   text: string;
   action?: "plan" | "goals" | "timer";
+  planPrompt?: string;
 }
 export interface ChatContext {
   data: StudyData;
@@ -22,10 +31,24 @@ export function localReply(
   const q = message.toLocaleLowerCase(),
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
-  if (/зорилго|goal|план|төлөв|plan/.test(q))
+  if (/бодитой|хуваарь|амжих|realistic|pace/.test(q)) {
+    const review = coachInsights(data, index, today);
+    return {
+      text: review.length
+        ? review.map((i) => `${i.title}\n${i.body}`).join("\n\n")
+        : "Одоогоор хуваарьтай харьцуулах идэвхтэй зорилго, хэмжилт хангалтгүй байна. Өөртөө боломжтой өдрүүд, минутаа сонгоод эхэлье.",
+      action: "goals",
+    };
+  }
+  if (
+    /зорилго|goal|план|төлөв|plan|сурмаар|болмоор|want.*learn|want.*intermediate/.test(
+      q,
+    )
+  )
     return {
       text: "Зорилгоо хичээлтэй холбоод, өдөрт зарцуулах боломжтой минутаа сонгоё. Би жижиг алхмуудтай хуваарь санал болгоно. Та урьдчилж хараад засаж, хадгална.",
       action: "plan",
+      planPrompt: message.slice(0, 200),
     };
   if (/тэмдэглэл|reflection|юу сур|дүгнэ/.test(q)) {
     const start = weekStart(today),
@@ -35,6 +58,7 @@ export function localReply(
           (s) =>
             !s.deletedAt && s.date >= start && s.date <= end && s.note.trim(),
         )
+        .filter((s) => s.date <= today)
         .sort((a, b) => b.endEpoch - a.endEpoch)
         .slice(0, 5);
     return {
@@ -44,10 +68,31 @@ export function localReply(
       action: notes.length ? undefined : "timer",
     };
   }
-  if (/долоо|week|review|ахиц|стат/.test(q))
+  if (/долоо|week|review|ахиц|стат/.test(q)) {
+    const currentWeek = periodStats(
+      index,
+      datesBetween(weekStart(today), today).length,
+      today,
+    );
+    const distribution = [...currentWeek.bySubject]
+      .filter(([, seconds]) => seconds > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(
+        ([id, seconds]) =>
+          `${index.subjects.get(id)?.name ?? "Хичээл"}: ${formatTime(seconds)}`,
+      )
+      .join("\n");
+    const completed = data.tasks.filter(
+      (t) =>
+        !t.deletedAt &&
+        t.completed &&
+        String(t.extras.completedOn ?? t.date) >= weekStart(today) &&
+        String(t.extras.completedOn ?? t.date) <= today,
+    ).length;
     return {
-      text: `Энэ долоо хоногт ${formatTime(w.seconds)}, ${w.studyDays} өдөр суралцжээ.\n${data.goals.weeklyHours} цагийн зорилгын ${Math.min(100, Math.round((w.seconds / (data.goals.weeklyHours * 3600)) * 100))}% байна.\n\n${w.change === null ? "Өмнөх долоо хоногийн харьцуулах хугацаанд хэмжилт алга." : `Өмнөх долоо хоногийн ижил өдрүүдээс ${Math.abs(w.change).toFixed(0)}% ${w.change >= 0 ? "их" : "бага"}.`}\nӨдөр бүр ижил байх албагүй. Дараагийн жижиг алхмаа өөрийн боломжид тааруулаарай.`,
+      text: `Энэ долоо хоногт ${formatTime(w.seconds)}, ${w.studyDays} өдөр суралцжээ.\n${data.goals.weeklyHours} цагийн зорилгын ${Math.min(100, Math.round((w.seconds / (data.goals.weeklyHours * 3600)) * 100))}% байна.\n\n${distribution}\n${completed} алхам биелсэн · Нэг хичээл дунджаар ${formatTime(currentWeek.averageSession)}.\n\n${w.change === null ? "Өмнөх долоо хоногийн харьцуулах хугацаанд хэмжилт алга." : `Өмнөх долоо хоногийн ижил өдрүүдээс ${Math.abs(w.change).toFixed(0)}% ${w.change >= 0 ? "их" : "бага"}.`}\nӨдөр бүр ижил байх албагүй. Дараагийн жижиг алхмаа өөрийн боломжид тааруулаарай.`,
     };
+  }
   if (/юу хийх|recommend|санал|дараа|today/.test(q)) {
     const plans = suggestPlan(data, index, today, 25);
     return {
@@ -108,6 +153,29 @@ export function aiContext(
         title: g.title,
         weeklyMinutes: g.weeklyMinutes,
         endsOn: g.endsOn,
+        weeklyDays: goalDetails(g).weeklyDays,
+        measuredMinutes: Math.round(goalProgress(data, g, today).seconds / 60),
+        milestones: milestoneProgress(data, g, today)
+          .slice(0, 6)
+          .map((m) => ({
+            title: m.title.slice(0, 80),
+            completed: m.completed,
+            tasks: m.tasks.length,
+          })),
+      })),
+    completedTasks: data.tasks
+      .filter(
+        (t) =>
+          !t.deletedAt &&
+          t.completed &&
+          String(t.extras.completedOn ?? t.date) >= shiftDate(today, -6) &&
+          String(t.extras.completedOn ?? t.date) <= today,
+      )
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, 10)
+      .map((t) => ({
+        title: t.title.slice(0, 100),
+        date: t.extras.completedOn ?? t.date,
       })),
     notes: includeNotes
       ? data.sessions
@@ -118,13 +186,15 @@ export function aiContext(
               s.date >= shiftDate(today, -6) &&
               s.date <= today,
           )
-          .slice(-10)
+          .sort((a, b) => b.endEpoch - a.endEpoch)
+          .slice(0, 5)
           .map((s) => ({ date: s.date, note: s.note.slice(0, 500) }))
       : [],
   };
 }
 export function createAIChatProvider(
   token: () => Promise<string | null>,
+  includeNotes = false,
 ): ChatProvider {
   return {
     kind: "ai",
@@ -134,18 +204,39 @@ export function createAIChatProvider(
         throw Error(
           "Онлайн AI ашиглахын тулд эхлээд бүртгэлээрээ нэвтэрнэ үү.",
         );
+      const contextData = aiContext(context, includeNotes);
+      // Keep UTF-8 bytes below the server limit even with long multilingual names.
+      const payload = () => JSON.stringify({ message, context: contextData });
+      for (const list of [
+        contextData.subjects,
+        contextData.goals,
+        contextData.completedTasks,
+        contextData.notes,
+      ])
+        while (
+          new TextEncoder().encode(payload()).length > 23500 &&
+          list.length
+        )
+          list.pop();
       const response = await fetch("/api/togi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ message, context: aiContext(context, false) }),
+        body: payload(),
         signal: AbortSignal.timeout(35000),
       });
       const result = await response.json();
       if (!response.ok) throw Error(result.error ?? "AI түр холбогдсонгүй.");
-      return { text: result.text };
+      return {
+        text: result.text,
+        ...(/зорилго|goal|төлөв|plan|want.*learn|want.*intermediate/i.test(
+          message,
+        )
+          ? { action: "plan" as const, planPrompt: message.slice(0, 200) }
+          : {}),
+      };
     },
   };
 }

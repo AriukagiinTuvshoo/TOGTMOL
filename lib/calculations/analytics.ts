@@ -7,6 +7,7 @@ import type {
 } from "@/types/study";
 import {
   dateKey,
+  currentStreak,
   datesBetween,
   longestStreak,
   shiftDate,
@@ -29,7 +30,7 @@ function getDay(map: Map<string, DailySummary>, date: string) {
   }
   return day;
 }
-function allocations(
+export function sessionAllocations(
   session: StudySession,
 ): { date: string; hour: number; seconds: number }[] {
   const spans = [...session.segments].sort((a, b) => a.start - b.start),
@@ -95,7 +96,7 @@ export function buildIndex(data: StudyData, today = dateKey()): StudyIndex {
       bySubject.set(session.subjectId, list);
     }
     list.push(session);
-    for (const part of allocations(session)) {
+    for (const part of sessionAllocations(session)) {
       if (part.date > today) continue;
       for (const d of [
         getDay(days, part.date),
@@ -173,6 +174,11 @@ export function periodStats(
     longestStreak: longestStreak(
       days.filter((d) => d.subjects.size).map((d) => d.date),
     ),
+    currentStreak: currentStreak(new Set([...map.keys()]), today),
+    longestSession: index.sessions.reduce(
+      (max, s) => (sessions.has(s.id) ? Math.max(max, s.durationSec) : max),
+      0,
+    ),
     sessionCount: sessions.size,
     topSubject: top?.[1] > 0 ? top[0] : null,
     bestDay,
@@ -211,13 +217,5 @@ export function weeklyReport(index: StudyIndex, today = dateKey()) {
 }
 export function intensity(day: DailySummary | undefined) {
   const m = (day?.seconds ?? 0) / 60;
-  return m > 120
-    ? 4
-    : m > 60
-      ? 3
-      : m > 30
-        ? 2
-        : m > 0 || day?.subjects.size
-          ? 1
-          : 0;
+  return m > 60 ? 4 : m > 40 ? 3 : m > 20 ? 2 : m > 0 ? 1 : 0;
 }

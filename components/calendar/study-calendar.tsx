@@ -42,7 +42,7 @@ export function StudyCalendar({
     ds ? (
       <button
         key={ds}
-        className={`heat-cell level-${intensity(map?.get(ds))} ${selected === ds ? "selected" : ""} ${ds === today ? "today" : ""}`}
+        className={`heat-cell level-${intensity(map?.get(ds))} ${map?.get(ds)?.subjects.size && !map?.get(ds)?.seconds ? "manual-only" : ""} ${selected === ds ? "selected" : ""} ${ds === today ? "today" : ""}`}
         disabled={ds > today}
         onClick={() => setSelected(ds)}
         title={`${ds}: ${formatTime(map?.get(ds)?.seconds ?? 0)}, ${map?.get(ds)?.subjects.size ?? 0} хичээл`}
@@ -142,7 +142,8 @@ export function StudyCalendar({
             <span key={n} className={`legend-cell level-${n}`} />
           ))}
           <span>Их</span>
-          <small>0 · ≤30 · ≤60 · ≤120 · 120+ минут</small>
+          <small>0 · ≤20 · ≤40 · ≤60 · 60+ минут</small>
+          <small>Цэгтэй нүд: хугацаа хэмжээгүй өдрийн тэмдэглэл</small>
         </div>
       </section>
       <section className="card">
@@ -151,6 +152,45 @@ export function StudyCalendar({
           subtitle={`${formatTime(day?.seconds ?? 0)} · ${day?.subjects.size ?? 0} хичээл`}
         />
         <SessionList sessions={daySessions} />
+        <div className="calendar-tasks">
+          <h3>Биелсэн алхмууд</h3>
+          {data.tasks
+            .filter(
+              (t) =>
+                !t.deletedAt &&
+                t.completed &&
+                (!actualSubject || t.subjectId === actualSubject) &&
+                (parseDate(t.extras.completedOn)
+                  ? t.extras.completedOn === selected
+                  : t.date === selected),
+            )
+            .map((t) => (
+              <div className="calendar-task" key={t.id}>
+                <span aria-hidden="true">✓</span>
+                <div>
+                  <strong>{t.title}</strong>
+                  <small>
+                    {index.subjects.get(t.subjectId)?.name} · {t.minutes}м
+                    төлөвлөсөн
+                    {!parseDate(t.extras.completedOn)
+                      ? " · хуучин бүртгэлийн төлөвлөсөн өдрөөр"
+                      : ""}
+                  </small>
+                </div>
+              </div>
+            ))}
+          {!data.tasks.some(
+            (t) =>
+              !t.deletedAt &&
+              t.completed &&
+              (!actualSubject || t.subjectId === actualSubject) &&
+              (parseDate(t.extras.completedOn)
+                ? t.extras.completedOn === selected
+                : t.date === selected),
+          ) && (
+            <p className="tiny muted">Энэ өдөр биелсэн алхам бүртгэгдээгүй.</p>
+          )}
+        </div>
         <div className="manual-marks">
           <h3>Суралцсан гэж тэмдэглэх</h3>
           <p className="tiny muted">

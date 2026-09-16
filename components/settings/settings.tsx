@@ -12,6 +12,7 @@ import { downloadJson, Modal, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
 import { AccountPanel } from "./account-panel";
 import { InstallButton } from "./pwa";
+import { MusicSettings } from "./music-settings";
 export function Settings() {
   const { data, store, run, navigate } = useStudy(),
     { namespace } = useStoreState();
@@ -44,7 +45,14 @@ export function Settings() {
               </button>
             ))}
           </div>
+          <button
+            className="text-button settings-link"
+            onClick={() => navigate("room")}
+          >
+            Өрөөний загвар, хамтрагчаа сонгох <Icon name="arrow" size={16} />
+          </button>
         </section>
+        <MusicSettings />
         <section className="card">
           <SectionTitle title="Timer-ийн хэмнэл" />
           <form
@@ -221,6 +229,8 @@ function DataSettings() {
     [trash, setTrash] = useState(false),
     [busy, setBusy] = useState(false),
     [conflictId, setConflictId] = useState("");
+  const [clearing, setClearing] = useState(false),
+    [confirmation, setConfirmation] = useState("");
   const unresolved = data.conflicts.filter((c) => !c.resolvedAt),
     conflict = unresolved.find((c) => c.id === conflictId),
     preview = incoming ? mergeData(data, incoming.data) : null;
@@ -314,6 +324,14 @@ function DataSettings() {
             Өөр браузер, домэйн эсвэл төхөөрөмж рүү шилжихээс өмнө JSON нөөцөө
             татна уу. Браузерын өгөгдлийг цэвэрлэхэд локал түүх арилна.
           </p>
+          {namespace === "guest" && (
+            <button
+              className="text-button danger-text"
+              onClick={() => setClearing(true)}
+            >
+              Локал түүхийг цэвэрлэх
+            </button>
+          )}
         </div>
       </section>
       {trash && (
@@ -362,6 +380,66 @@ function DataSettings() {
             </div>
           ))}
         </section>
+      )}
+      {clearing && (
+        <Modal
+          title="Локал түүхийг цэвэрлэх"
+          onClose={() => !busy && setClearing(false)}
+        >
+          <form
+            className="form-stack"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (confirmation !== "ЦЭВЭРЛЭХ") return;
+              setBusy(true);
+              if (
+                await run(
+                  () => store.clearGuestData(),
+                  "Локал түүхийг нөөцлөөд цэвэрлэлээ.",
+                )
+              ) {
+                setClearing(false);
+                setConfirmation("");
+              }
+              setBusy(false);
+            }}
+          >
+            <p>
+              Энэ төхөөрөмжийн локал хичээл, төлөвлөгөө, хугацаа, тохиргоог
+              хоосолно. Эхлээд автоматаар нөөц үүсгэнэ. Бүртгэлийн үүлэн
+              өгөгдөлд үйлчлэхгүй.
+            </p>
+            <button
+              type="button"
+              className="button"
+              onClick={() =>
+                downloadJson(
+                  store.exportData(),
+                  `togtmol-before-clear-${dateKey()}.json`,
+                )
+              }
+            >
+              Өөртөө JSON нөөц татах
+            </button>
+            <label>
+              Баталгаажуулахын тулд ЦЭВЭРЛЭХ гэж бичнэ үү
+              <input
+                value={confirmation}
+                onChange={(e) => setConfirmation(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+            <button
+              className="button"
+              disabled={busy || confirmation !== "ЦЭВЭРЛЭХ"}
+            >
+              Нөөцлөөд цэвэрлэх
+            </button>
+            <p className="tiny muted">
+              Дараа нь «Хадгалсан нөөцүүдийг харах» хэсгээс сэргээж болно.
+            </p>
+          </form>
+        </Modal>
       )}
       {incoming && preview && (
         <Modal title="Нөөц нэгтгэх" onClose={() => !busy && setIncoming(null)}>

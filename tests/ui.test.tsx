@@ -74,10 +74,12 @@ describe("interactive local workflow", () => {
     now += 30000;
     fireEvent.click(screen.getByRole("button", { name: "Resume" }));
     await screen.findByRole("button", { name: "Pause" });
+    fireEvent.click(screen.getByRole("button", { name: "Тэмдэглэл бичих" }));
     fireEvent.change(screen.getByLabelText("Юу сурсан бэ?"), {
       target: { value: "Рекурс ойлголоо" },
     });
     // Navigation before the debounce flush must retain the exact note.
+    fireEvent.keyDown(window, { key: "Escape" });
     fireEvent.click(within(nav).getByRole("button", { name: "Миний өрөө" }));
     fireEvent.click(
       within(
@@ -91,7 +93,7 @@ describe("interactive local workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
     await screen.findByRole("button", { name: "Save result" });
     fireEvent.click(screen.getByRole("button", { name: "Save result" }));
-    await screen.findByText("Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа.");
+    await screen.findByText(/Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа./);
     const repo = new Repository(indexedDB, localStorage),
       saved = await repo.load("guest");
     expect(saved?.data.sessions).toHaveLength(1);
@@ -314,4 +316,110 @@ it("uses the official YouTube API without autoplay and pauses before minimizing"
   expect(pause).toHaveBeenCalled();
   expect(screen.queryByTitle("YouTube")).not.toBeInTheDocument();
   delete window.YT;
+});
+
+it("edits a daily task and reports its actual completion day in the calendar", async () => {
+  const { fixture } = await import("./fixtures");
+  const { dateKey } = await import("@/lib/calculations/dates");
+  const { actions } = await import("@/lib/persistence/actions");
+  const day = dateKey(),
+    repo = new Repository(indexedDB, localStorage);
+  const data = actions.addTask({
+    subjectId: "math",
+    date: day,
+    minutes: 25,
+    title: "Жишээ бодох",
+    startTime: null,
+  })(fixture());
+  await repo.save("guest", data, 0);
+  render(<AppShell />);
+  await screen.findByRole("button", { name: "Жишээ бодох засах" });
+  fireEvent.click(screen.getByRole("button", { name: "Жишээ бодох засах" }));
+  fireEvent.change(screen.getByLabelText("Юу хийх вэ?"), {
+    target: { value: "Гурван жишээ" },
+  });
+  fireEvent.change(screen.getByLabelText("Минут", { exact: true }), {
+    target: { value: "35" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Алхам хадгалах" }));
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+  );
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "Гурван жишээ биелсэн" }),
+  );
+  await waitFor(async () =>
+    expect((await repo.load("guest"))?.data.tasks[0].extras.completedOn).toBe(
+      day,
+    ),
+  );
+  fireEvent.click(
+    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+      "button",
+      { name: "Календарь" },
+    ),
+  );
+  expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
+  expect(screen.getByText("Гурван жишээ")).toBeVisible();
+  expect(screen.getByText(/35м төлөвлөсөн/)).toBeVisible();
+  await repo.close();
+});
+
+it("shares music preferences with the persistent player and restores the chosen category without autoplay", async () => {
+  const audio = vi.fn();
+  vi.stubGlobal("AudioContext", audio);
+  localStorage.setItem(
+    "togtmol:music:guest",
+    JSON.stringify({ volume: 0.65, muted: false }),
+  );
+  render(<AppShell />);
+  await screen.findByText("Миний төлөвлөгөө");
+  fireEvent.click(
+    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+      "button",
+      { name: "Тохиргоо" },
+    ),
+  );
+  fireEvent.change(screen.getByLabelText("Үндсэн хөгжмийн ангилал"), {
+    target: { value: "night" },
+  });
+  fireEvent.click(screen.getByLabelText("Сүүлд тоглуулсан аяыг санах"));
+  fireEvent.change(screen.getByLabelText("Дууны түвшин", { exact: true }), {
+    target: { value: "0.25" },
+  });
+  expect(screen.getByLabelText(/Дууны түвшин · 25%/)).toHaveValue("0.25");
+  expect(
+    JSON.parse(localStorage.getItem("togtmol:music:guest")!),
+  ).toMatchObject({
+    volume: 0.25,
+    defaultCategory: "night",
+    rememberLast: false,
+  });
+  cleanup();
+  render(<AppShell />);
+  await screen.findByText("Миний төлөвлөгөө");
+  expect(screen.getByText("Night study")).toBeVisible();
+  expect(audio).not.toHaveBeenCalled();
+  expect(document.querySelector('script[src*="youtube"]')).toBeNull();
+});
+
+it("falls back to a labelled local reply when online AI has no configured account", async () => {
+  render(<AppShell />);
+  await screen.findByText("Миний төлөвлөгөө");
+  fireEvent.click(
+    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+      "button",
+      { name: "Суралцах туслах" },
+    ),
+  );
+  await screen.findByLabelText("Онлайн AI ашиглах");
+  fireEvent.click(screen.getByLabelText("Онлайн AI ашиглах"));
+  expect(screen.getByLabelText(/Сүүлийн 7 өдрийн 5 хүртэл/)).not.toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "Зөвшөөрч асаах" }));
+  fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
+  expect(await screen.findByText("Тоги · Local")).toBeVisible();
+  expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked();
+  expect(
+    within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
+  ).toBeVisible();
 });

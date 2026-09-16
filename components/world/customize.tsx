@@ -11,6 +11,11 @@ import {
   DESK_ITEMS,
 } from "@/lib/world/config";
 import { companionProgress } from "@/lib/world/progress";
+import {
+  roomFurniture,
+  updateFurniture,
+  type Furniture,
+} from "@/lib/world/furniture";
 import type { WorldSettings } from "@/types/study";
 import { RoomScene } from "./room-scene";
 import { CompanionAvatar } from "./companion";
@@ -19,6 +24,15 @@ export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
+  const furniture = roomFurniture(world);
+  const furnish = (patch: Partial<Furniture>) =>
+    run(() =>
+      store.mutate((d) =>
+        actions.settings({ world: updateFurniture(d.settings.world, patch) })(
+          d,
+        ),
+      ),
+    );
   const update = (patch: Partial<WorldSettings>) =>
     run(() =>
       store.mutate((d) =>
@@ -104,6 +118,58 @@ export function CustomizeRoom() {
                 </label>
               ))}
             </fieldset>
+            <div className="form-grid furniture-options">
+              <label>
+                Ширээ
+                <select
+                  value={furniture.desk}
+                  onChange={(e) =>
+                    furnish({ desk: e.target.value as Furniture["desk"] })
+                  }
+                >
+                  <option value="oak">Цайвар мод</option>
+                  <option value="white">Цагаан</option>
+                  <option value="walnut">Бараан мод</option>
+                </select>
+              </label>
+              <label>
+                Сандал
+                <select
+                  value={furniture.chair}
+                  onChange={(e) =>
+                    furnish({ chair: e.target.value as Furniture["chair"] })
+                  }
+                >
+                  <option value="linen">Маалинган</option>
+                  <option value="sage">Ногоон</option>
+                  <option value="rose">Бүдэг ягаан</option>
+                </select>
+              </label>
+              <label>
+                Ханын зураг
+                <select
+                  value={furniture.poster}
+                  onChange={(e) =>
+                    furnish({ poster: e.target.value as Furniture["poster"] })
+                  }
+                >
+                  <option value="landscape">Байгаль</option>
+                  <option value="none">Зураггүй</option>
+                  <option value="botanical" disabled={progress.level < 2}>
+                    Ургамлын зураг · 2-р түвшин
+                  </option>
+                </select>
+              </label>
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={furniture.bookshelf}
+                  disabled={progress.level < 3 && !furniture.bookshelf}
+                  onChange={(e) => furnish({ bookshelf: e.target.checked })}
+                />
+                Номын тавиур · 3-р түвшин
+              </label>
+            </div>
           </section>
           <section className="card">
             <h2>Тогигийн төрх</h2>

@@ -13,7 +13,13 @@ export function PwaManager() {
   const { data, setNotice } = useStudy();
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production")
-      void navigator.serviceWorker.register("/sw.js").catch(() => {});
+      void navigator.serviceWorker
+        .register("/sw.js")
+        .catch(() =>
+          setNotice(
+            "Интернэтгүй ажиллах хувилбарыг бэлтгэж чадсангүй. Холболттой үед дахин нээнэ үү.",
+          ),
+        );
     const handler = (e: Event) => {
       e.preventDefault();
       promptEvent = e as InstallEvent;
@@ -21,7 +27,7 @@ export function PwaManager() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [setNotice]);
   useEffect(() => {
     const settings = data.settings;
     if (!settings.notifications || !settings.reminderTime) return;
@@ -72,10 +78,78 @@ export function InstallButton() {
         <Icon name="download" />
         {available ? "Апп суулгах" : "Нүүр дэлгэцэд нэмэх"}
       </button>
-      <p className="tiny muted">
-        Эхний удаа интернэттэй нээнэ. Апп бэлэн болсон хойно хичээл, timer,
-        тайлан offline ажиллана. Шинэ хувилбарыг бүх цонхыг хааж нээхэд ачаална.
-      </p>
+      <OfflineReadiness />
     </>
+  );
+}
+
+function OfflineReadiness() {
+  const [state, setState] = useState(
+    "Интернэтгүй ажиллах бэлтгэлийг шалгаж байна…",
+  );
+  useEffect(() => {
+    let disposed = false;
+    const workers = new Map<ServiceWorker, () => void>();
+    let registration: ServiceWorkerRegistration | undefined;
+    const inspect = () => {
+      if (disposed || !registration) return;
+      setState(
+        registration.waiting
+          ? "Шинэ хувилбар бэлэн. Нээлттэй цонхуудаа хааж дахин нээхэд шинэчлэгдэнэ."
+          : registration.active
+            ? "Үндсэн аппын интернэтгүй ажиллах файлууд бэлэн. YouTube, онлайн AI болон синк хийхэд интернет хэрэгтэй."
+            : "Интернэтгүй ажиллах файлуудыг бэлтгэж байна…",
+      );
+      for (const worker of [registration.installing, registration.waiting])
+        if (worker && !workers.has(worker)) {
+          const changed = () => inspect();
+          workers.set(worker, changed);
+          worker.addEventListener("statechange", changed);
+        }
+    };
+    const check = async () => {
+      if (process.env.NODE_ENV !== "production") {
+        if (!disposed)
+          setState(
+            "Интернэтгүй ажиллах хувилбар нь байршуулсан аппад бэлтгэгдэнэ.",
+          );
+        return;
+      }
+      if (!("serviceWorker" in navigator)) {
+        if (!disposed)
+          setState(
+            "Энэ браузерт интернэтгүй ажиллах боломж дэмжигдээгүй байна.",
+          );
+        return;
+      }
+      try {
+        registration = await navigator.serviceWorker.getRegistration();
+        if (disposed) return;
+        if (!registration) {
+          setState(
+            "Интернэтгүй ажиллах хувилбар одоогоор бэлэн болоогүй. Холболттой үед дахин нээнэ үү.",
+          );
+          return;
+        }
+        registration.addEventListener("updatefound", inspect);
+        inspect();
+      } catch {
+        if (!disposed)
+          setState("Интернэтгүй ажиллах бэлтгэлийг баталгаажуулж чадсангүй.");
+      }
+    };
+    void check();
+    return () => {
+      disposed = true;
+      registration?.removeEventListener("updatefound", inspect);
+      workers.forEach((fn, worker) =>
+        worker.removeEventListener("statechange", fn),
+      );
+    };
+  }, []);
+  return (
+    <p className="tiny muted" role="status">
+      {state}
+    </p>
   );
 }
