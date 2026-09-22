@@ -88,6 +88,19 @@ it("counts 10 through 1 once per second and Stop silences the rest of this count
   expect(sounds.playTimerCountdown).toHaveBeenCalledTimes(7);
 });
 
+it("auto-completes from the deadline timeout without requiring another render", async () => {
+  vi.useFakeTimers();
+  now = NOW + 60000;
+  render(<TimerWatch />);
+  await act(async () => {
+    vi.advanceTimersByTime(60);
+    await Promise.resolve();
+  });
+  expect(data.activeTimer?.status).toBe("review");
+  expect(sounds.notifyUser).toHaveBeenCalledOnce();
+  vi.useRealTimers();
+});
+
 it("finishes once, displays Stop first, and stops audio when dismissed", async () => {
   now = NOW + 60000;
   const view = render(<TimerWatch />);
