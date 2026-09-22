@@ -13,6 +13,7 @@ import { buildIndex } from "@/lib/calculations/analytics";
 import { ACHIEVEMENTS } from "@/lib/calculations/achievements";
 import { dayBoundary } from "@/lib/preferences";
 import { enableSound } from "@/lib/notifications";
+import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { dateKey, studyDate } from "@/lib/calculations/dates";
 import type { StudyData, StudyIndex, View } from "@/types/study";
 type ContextValue = {
@@ -86,12 +87,35 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     };
   }, [settings.sound]);
   useEffect(() => {
-    document.documentElement.dataset.design = state.data.settings.world.design;
-    const theme = state.data.settings.theme,
+    const design = state.data.settings.world.design,
+      roomTheme = ROOM_THEMES[design],
+      root = document.documentElement,
+      theme = state.data.settings.theme,
       m = window.matchMedia("(prefers-color-scheme: dark)");
+    root.dataset.design = design;
     const apply = () => {
-      document.documentElement.dataset.theme =
-        theme === "system" ? (m.matches ? "dark" : "light") : theme;
+      const mode = theme === "system" ? (m.matches ? "dark" : "light");
+      const tokens = roomTheme.ui[mode];
+      root.dataset.theme = mode;
+      root.style.colorScheme = mode;
+      root.style.setProperty("--bg", tokens.bg);
+      root.style.setProperty("--surface", tokens.surface);
+      root.style.setProperty("--surface-muted", tokens.surfaceMuted);
+      root.style.setProperty("--text", tokens.text);
+      root.style.setProperty("--muted", tokens.muted);
+      root.style.setProperty("--border", tokens.border);
+      root.style.setProperty("--moss", tokens.accent);
+      root.style.setProperty("--moss-soft", tokens.accentSoft);
+      root.style.setProperty("--hero", tokens.hero);
+      root.style.setProperty("--yellow", "yellow" in tokens ? tokens.yellow : "#e8c890");
+      root.style.setProperty("--yellow-soft", tokens.yellowSoft);
+      root.style.setProperty("--world-radius", "radius" in tokens && tokens.radius ? tokens.radius : roomTheme.ui.light.radius);
+      root.style.setProperty("--world-button", "buttonRadius" in tokens && tokens.buttonRadius ? tokens.buttonRadius : roomTheme.ui.light.buttonRadius);
+      root.style.setProperty("--world-shadow", "shadow" in tokens && tokens.shadow ? tokens.shadow : roomTheme.ui.light.shadow);
+      root.style.setProperty("--world-display-font", roomTheme.fontFamily);
+      root.style.setProperty("--room-body-background-image", roomTheme.bodyBackgroundImage ?? "none");
+      root.style.setProperty("--room-body-background-size", roomTheme.bodyBackgroundSize ?? "auto");
+      root.style.setProperty("--danger", "danger" in tokens && tokens.danger ? tokens.danger : "#eca6a0");
     };
     apply();
     m.addEventListener("change", apply);
