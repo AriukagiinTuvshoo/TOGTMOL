@@ -4,7 +4,7 @@ import "./world.css";
 import "./knowledge.css";
 import "./neon.css";
 export const metadata: Metadata = {
-  title: "Тогтмол v5 — Бондооктой хамт суралцъя",
+  title: "Тогтмол v6 — Бондооктой хамт суралцъя",
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",
