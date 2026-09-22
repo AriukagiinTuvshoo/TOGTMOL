@@ -31,8 +31,6 @@ export function Subjects() {
       { id: "school10", name: "10 жилийн сургууль", icon: "calendar" },
       { id: "other", name: "Бусад", icon: "more" },
     ],
-    categoryName = (id: string) =>
-      categories.find((c) => c.id === id)?.name ?? "Бусад",
     categorized = list.filter(
       (s) => category === "all" || (s.extras.subjectCategory ?? "other") === category,
     );
