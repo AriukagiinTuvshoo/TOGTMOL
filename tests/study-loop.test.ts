@@ -339,7 +339,7 @@ describe("useful, factual feedback", () => {
       muted: true,
       defaultCategory: "theme",
     });
-    expect(initialMusicSelection(old, "night", [])).toBe("ambient:night");
+    expect(initialMusicSelection(old, "night", [])).toBe("ambient:rain");
     expect(
       initialMusicSelection({ ...old, lastPlayed: "unknown" }, "forest", []),
     ).toBe("ambient:nature");
