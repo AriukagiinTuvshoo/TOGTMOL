@@ -128,6 +128,59 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           </button>
         </section>
       )}
+      <section className="home-stat-grid" aria-label="Өнөөдрийн товч мэдээлэл">
+        <article className="home-stat-card">
+          <span className="home-stat-icon">🔥</span>
+          <div>
+            <small>DAY STREAK</small>
+            <strong>
+              {streak} <em>өдөр</em>
+            </strong>
+            <p>{streak ? "Хэмнэлээ үргэлжлүүл" : "Өнөөдөр эхэл"}</p>
+          </div>
+        </article>
+        <article className="home-stat-card">
+          <span className="home-stat-icon">✦</span>
+          <div>
+            <small>LEVEL</small>
+            <strong>Lv. {progress.level}</strong>
+            <p>{progress.intoLevel}/100 XP</p>
+          </div>
+        </article>
+        <article className="home-stat-card">
+          <span className="home-stat-icon">XP</span>
+          <div>
+            <small>XP</small>
+            <strong>{progress.xp}</strong>
+            <p>Өнөөдөр +{progress.todayXP} XP</p>
+          </div>
+        </article>
+        <article className="home-stat-card home-stat-goal">
+          <span
+            className="home-stat-ring"
+            style={
+              {
+                "--goal":
+                  (daily > 0
+                    ? Math.min(100, (todaySeconds / (daily * 60)) * 100)
+                    : 0) + "%",
+              } as React.CSSProperties
+            }
+          >
+            <b>
+              {daily > 0
+                ? Math.round(Math.min(100, (todaySeconds / (daily * 60)) * 100))
+                : 0}
+              %
+            </b>
+          </span>
+          <div>
+            <small>DAILY GOAL</small>
+            <strong>{formatTime(todaySeconds)}</strong>
+            <p>{daily} мин target</p>
+          </div>
+        </article>
+      </section>
       <section className="room-stage" aria-label="Study Room">
         <div className="room-art">
           <RoomScene world={world} state={state} />

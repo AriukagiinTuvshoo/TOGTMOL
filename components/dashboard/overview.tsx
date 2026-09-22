@@ -15,11 +15,25 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "@/components/statistics/charts";
 import { DailyPlan } from "./daily-plan";
 import { Insights } from "@/components/assistant/insights";
+import { companionProgress } from "@/lib/world/progress";
 export function Overview() {
   const { data, index, today, navigate } = useStudy(),
     week = weeklyReport(index, today),
     subjects = data.subjects.filter((s) => !s.deletedAt && !s.archived),
-    streak = currentStreak(new Set(index.sortedDates), today);
+    streak = currentStreak(new Set(index.sortedDates), today),
+    progress = companionProgress(data, today),
+    dailyTargetMinutes =
+      data.goals.dailyMinutes ??
+      Math.max(
+        1,
+        Math.round(
+          (data.goals.weeklyHours * 60) / Math.max(1, data.goals.weeklyDays),
+        ),
+      ),
+    dailyGoalPercent = Math.min(
+      100,
+      (periodStats(index, 1, today).seconds / (dailyTargetMinutes * 60)) * 100,
+    );
   const weeklyStats = periodStats(
     index,
     datesBetween(weekStart(today), today).length,
@@ -31,11 +45,14 @@ export function Overview() {
         <div>
           <div className="eyebrow">ТӨГС БИШ. ТОГТМОЛ.</div>
           <h1>
-            Өнөөдөр нэг
+            Жижиг алхам.
             <br />
-            <em>жижиг алхам.</em>
+            <em>Том мөрөөдөл.</em>
           </h1>
-          <p>Хэдэн минут ч байсан — өөртөө зориулсан ахиц.</p>
+          <p>
+            Өдөр бүр бага багаар. Өнөөдрийн ахиц чинь маргаашийн үр дүнг
+            бүтээнэ.
+          </p>
           <button
             className="button yellow large"
             onClick={() => navigate("timer")}
@@ -55,42 +72,58 @@ export function Overview() {
       </section>
       <div className="metrics four">
         <Metric
-          label="Өнөөдрийн хугацаа"
-          value={formatTime(index.days.get(today)?.seconds ?? 0)}
-          icon="clock"
-          foot={
-            index.days.get(today)?.subjects.size
-              ? "Өнөөдрийн алхмаа хийлээ"
-              : "Эхлэхэд оройтоогүй"
-          }
-        />
-        <Metric
-          label="Одоогийн дараалал"
+          label="Day Streak"
           value={
             <>
-              {streak}
-              <small>өдөр</small>
+              <span className="metric-emoji">🔥</span> {streak}
+              <small> өдөр</small>
             </>
           }
           icon="leaf"
-          foot="Дахин эхлэх боломж үргэлж бий"
+          foot={
+            streak ? "Хэмнэлээ үргэлжлүүлээрэй" : "Өнөөдөр эхлэхэд оройтоогүй"
+          }
         />
         <Metric
-          label="Энэ долоо хоног"
-          value={formatTime(week.seconds)}
-          icon="chart"
-          foot={`${week.studyDays} өдөр суралцсан`}
-        />
-        <Metric
-          label="Нийт суралцсан өдөр"
+          label="Level"
           value={
             <>
-              {index.days.size}
-              <small>өдөр</small>
+              <span className="metric-emoji">✦</span> {progress.level}
             </>
           }
-          icon="calendar"
-          foot={`${subjects.length} идэвхтэй хичээл`}
+          icon="award"
+          foot={progress.intoLevel + "/100 XP энэ түвшинд"}
+        />
+        <Metric
+          label="XP"
+          value={
+            <>
+              {progress.xp}
+              <small> XP</small>
+            </>
+          }
+          icon="spark"
+          foot={
+            progress.todayXP
+              ? "Өнөөдөр +" + progress.todayXP + " XP"
+              : "Жижиг алхам = XP"
+          }
+        />
+        <Metric
+          label="Daily Goal"
+          value={
+            <>
+              {Math.round(dailyGoalPercent)}
+              <small>%</small>
+            </>
+          }
+          icon="chart"
+          foot={
+            formatTime(index.days.get(today)?.seconds ?? 0) +
+            " / " +
+            dailyTargetMinutes +
+            "м"
+          }
         />
       </div>
       <div className="dashboard-columns">

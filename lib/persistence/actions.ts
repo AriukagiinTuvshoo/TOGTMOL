@@ -1,6 +1,6 @@
 import { uid } from "@/lib/constants";
 import { dayBoundary } from "@/lib/preferences";
-import { dateKey, parseDate, studyDate } from "@/lib/calculations/dates";
+import { parseDate, studyDate } from "@/lib/calculations/dates";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
@@ -65,15 +65,26 @@ export const actions = {
       };
     },
   editSubject:
-    (id: string, patch: Pick<Subject, "name" | "color" | "archived"> & { extras?: Record<string, unknown> }) =>
+    (
+      id: string,
+      patch: Pick<Subject, "name" | "color" | "archived"> & {
+        extras?: Record<string, unknown>;
+      },
+    ) =>
     (data: StudyData): StudyData => {
       subject(data, id);
-      if (
-        !patch.name.trim() ||
-        patch.name.length > 100 ||
-        !/^#[a-f0-9]{6}$/i.test(patch.color)
-      )
+      const clean = patch.name.trim();
+      if (!clean || clean.length > 100 || !/^#[a-f0-9]{6}$/i.test(patch.color))
         throw Error("Нэр болон өнгөө шалгана уу.");
+      if (
+        data.subjects.some(
+          (s) =>
+            s.id !== id &&
+            !s.deletedAt &&
+            s.name.trim().toLocaleLowerCase() === clean.toLocaleLowerCase(),
+        )
+      )
+        throw Error("Ийм нэртэй хичээл байна.");
       return {
         ...data,
         subjects: data.subjects.map((s) =>
@@ -82,7 +93,7 @@ export const actions = {
                 ...s,
                 ...patch,
                 extras: patch.extras ?? s.extras,
-                name: patch.name.trim(),
+                name: clean,
                 updatedAt: Date.now(),
               }
             : s,
@@ -127,7 +138,8 @@ export const actions = {
     (data: StudyData): StudyData => {
       subject(data, id);
       validDate(date);
-      if (date > dateKey())
+      const today = studyDate(new Date(), dayBoundary(data.settings));
+      if (date > today)
         throw Error("Ирээдүйн өдрийг суралцсан гэж тэмдэглэх боломжгүй.");
       const matches = data.entries.filter(
           (e) => e.subjectId === id && e.date === date,
@@ -169,6 +181,7 @@ export const actions = {
         (!Number.isFinite(minutes) || !minutes || minutes < 1 || minutes > 240)
       )
         throw Error("Хугацаа 1–240 минут байна.");
+      const now = Date.now();
       return {
         ...data,
         activeTimer: {
@@ -177,10 +190,10 @@ export const actions = {
             mode,
             mode === "stopwatch" ? "focus" : phase,
             minutes,
-            Date.now(),
+            now,
             taskId,
           ),
-          date: studyDate(new Date(Date.now()), dayBoundary(data.settings)),
+          date: studyDate(new Date(now), dayBoundary(data.settings)),
           extras: taskId
             ? {
                 taskId,
@@ -209,19 +222,45 @@ export const actions = {
         ? { ...data, activeTimer: resume(data.activeTimer, Date.now()) }
         : data,
   finish:
-    () =>
+    (completedAt?: number) =>
     (data: StudyData): StudyData => {
       const timer = data.activeTimer;
-      if (!timer || timer.status === "review") return data;
-      const now = Date.now();
+      if (!timer) return data;
+      const now = Number.isFinite(completedAt)
+        ? Number(completedAt)
+        : Date.now();
+
+      // A review timer can survive a reload before its final Save action.
+      // Materialize its session here as well, but stay idempotent by timer id.
+      if (timer.status === "review") {
+        if (timer.phase !== "focus" || timer.accumulatedMs <= 0) return data;
+        const session = sessionFromTimer(timer, timer.note, now);
+        const exists = data.sessions.some((s) => s.id === session.id);
+        return {
+          ...data,
+          sessions: exists
+            ? data.sessions.map((s) =>
+                s.id === session.id
+                  ? {
+                      ...s,
+                      note: session.note,
+                      durationSec: session.durationSec,
+                      endEpoch: session.endEpoch,
+                      updatedAt: now,
+                      segments: session.segments,
+                      extras: session.extras,
+                    }
+                  : s,
+              )
+            : [...data.sessions, session],
+        };
+      }
+
       const reviewed = review(timer, now);
       if (reviewed.phase !== "focus" || reviewed.accumulatedMs <= 0)
         return { ...data, activeTimer: reviewed };
-      const session = sessionFromTimer(
-        reviewed,
-        reviewed.note,
-        now,
-      );
+
+      const session = sessionFromTimer(reviewed, reviewed.note, now);
       const exists = data.sessions.some((s) => s.id === session.id);
       return {
         ...data,
@@ -229,7 +268,14 @@ export const actions = {
         sessions: exists
           ? data.sessions.map((s) =>
               s.id === session.id
-                ? { ...s, durationSec: session.durationSec, endEpoch: session.endEpoch, updatedAt: now }
+                ? {
+                    ...s,
+                    durationSec: session.durationSec,
+                    endEpoch: session.endEpoch,
+                    updatedAt: now,
+                    segments: session.segments,
+                    extras: session.extras,
+                  }
                 : s,
             )
           : [...data.sessions, session],
@@ -307,7 +353,7 @@ export const actions = {
         throw Error("Энэ бичлэг өөрчлөгдсөн байна. Дахин нээгээд засна уу.");
       validDate(patch.date);
       if (
-        patch.date > dateKey() ||
+        patch.date > studyDate(new Date(), dayBoundary(data.settings)) ||
         !Number.isFinite(patch.durationSec) ||
         patch.durationSec < 5 ||
         patch.durationSec > 86400 * 366
@@ -444,8 +490,8 @@ export const actions = {
           ...data.tasks,
           {
             ...record("task", Date.now()),
-            goalId: null,
             ...fields,
+            goalId: task.goalId ?? null,
             title: task.title.trim().slice(0, 200),
             completed: false,
             extras: milestoneId ? { milestoneId } : {},

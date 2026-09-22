@@ -92,8 +92,12 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       roomTheme = ROOM_THEMES[design],
       root = document.documentElement,
       theme = state.data.settings.theme,
+      uiThemeRaw = state.data.settings.extras.uiTheme,
+      uiTheme =
+        uiThemeRaw === "cyber" || uiThemeRaw === "calm" ? uiThemeRaw : "aurora",
       m = window.matchMedia("(prefers-color-scheme: dark)");
     root.dataset.design = design;
+    root.dataset.uiTheme = uiTheme;
     const apply = () => {
       const mode = theme === "system" ? (m.matches ? "dark" : "light") : theme;
       const tokens = roomTheme.ui[mode];
@@ -108,20 +112,51 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       root.style.setProperty("--moss", tokens.accent);
       root.style.setProperty("--moss-soft", tokens.accentSoft);
       root.style.setProperty("--hero", tokens.hero);
-      root.style.setProperty("--yellow", "yellow" in tokens ? tokens.yellow : "#e8c890");
+      root.style.setProperty(
+        "--yellow",
+        "yellow" in tokens ? tokens.yellow : "#e8c890",
+      );
       root.style.setProperty("--yellow-soft", tokens.yellowSoft);
-      root.style.setProperty("--world-radius", "radius" in tokens && tokens.radius ? tokens.radius : roomTheme.ui.light.radius);
-      root.style.setProperty("--world-button", "buttonRadius" in tokens && tokens.buttonRadius ? tokens.buttonRadius : roomTheme.ui.light.buttonRadius);
-      root.style.setProperty("--world-shadow", "shadow" in tokens && tokens.shadow ? tokens.shadow : roomTheme.ui.light.shadow);
+      root.style.setProperty(
+        "--world-radius",
+        "radius" in tokens && tokens.radius
+          ? tokens.radius
+          : roomTheme.ui.light.radius,
+      );
+      root.style.setProperty(
+        "--world-button",
+        "buttonRadius" in tokens && tokens.buttonRadius
+          ? tokens.buttonRadius
+          : roomTheme.ui.light.buttonRadius,
+      );
+      root.style.setProperty(
+        "--world-shadow",
+        "shadow" in tokens && tokens.shadow
+          ? tokens.shadow
+          : roomTheme.ui.light.shadow,
+      );
       root.style.setProperty("--world-display-font", roomTheme.fontFamily);
-      root.style.setProperty("--room-body-background-image", roomTheme.bodyBackgroundImage ?? "none");
-      root.style.setProperty("--room-body-background-size", roomTheme.bodyBackgroundSize ?? "auto");
-      root.style.setProperty("--danger", "danger" in tokens && tokens.danger ? tokens.danger : "#eca6a0");
+      root.style.setProperty(
+        "--room-body-background-image",
+        roomTheme.bodyBackgroundImage ?? "none",
+      );
+      root.style.setProperty(
+        "--room-body-background-size",
+        roomTheme.bodyBackgroundSize ?? "auto",
+      );
+      root.style.setProperty(
+        "--danger",
+        "danger" in tokens && tokens.danger ? tokens.danger : "#eca6a0",
+      );
     };
     apply();
     m.addEventListener("change", apply);
     return () => m.removeEventListener("change", apply);
-  }, [state.data.settings.theme, state.data.settings.world.design]);
+  }, [
+    state.data.settings.theme,
+    state.data.settings.world.design,
+    state.data.settings.extras.uiTheme,
+  ]);
   useEffect(() => {
     if (!notice) return;
     const id = setTimeout(
@@ -129,7 +164,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
         setNotice("");
         setUndo(null);
       },
-      undo ? 15000 : 5000,
+      undo ? 15000 : 12000,
     );
     return () => clearTimeout(id);
   }, [notice, undo]);
@@ -248,11 +283,14 @@ export function useStoreState() {
 }
 export function useClock(active = true) {
   const [now, setNow] = useState(() => Date.now());
-  const second = useRef(Math.floor(Date.now() / 1000));
+  const second = useRef(0);
   useEffect(() => {
     if (!active) return;
     let frame = 0;
     const tick = () => {
+      // A fired RAF handle must not stay truthy after the callback returns.
+      // Otherwise a hidden tab can resume with no new animation frame scheduled.
+      frame = 0;
       const value = Date.now();
       const nextSecond = Math.floor(value / 1000);
       if (nextSecond !== second.current) {

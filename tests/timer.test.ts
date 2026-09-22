@@ -71,6 +71,7 @@ describe("timer lifecycle", () => {
   });
   it("records a partially stopped focus session immediately for statistics", () => {
     const d = fixture();
+    d.sessions = [];
     d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
     vi.spyOn(Date, "now").mockReturnValue(NOW + 2300);
     const stopped = actions.finish()(d);
@@ -82,6 +83,7 @@ describe("timer lifecycle", () => {
 
   it("updates the already-recorded session when the review note is saved", () => {
     const d = fixture();
+    d.sessions = [];
     d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
     d.activeTimer = {
       ...d.activeTimer,
@@ -108,7 +110,7 @@ describe("timer lifecycle", () => {
       actions.start("math", "stopwatch", "focus", null)(d),
     ).toThrow();
     expect(() =>
-      sessionFromTimer(review(d.activeTimer!, NOW + 4000), "", NOW),
+      sessionFromTimer(review(d.activeTimer!, NOW), "", NOW),
     ).toThrow();
   });
   it("exports a paused snapshot without changing the live timer", () => {

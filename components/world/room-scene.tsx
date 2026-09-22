@@ -17,9 +17,14 @@ export function RoomScene({
     theme = ROOM_THEMES[world.design],
     p = theme.palette,
     bg = world.background,
-    dark = world.atmosphere === "night" || bg === "night" || theme.decorations.space,
-    rain = theme.decorations.rain || world.atmosphere === "rain" || bg === "rain",
-    snow = theme.decorations.snow || world.atmosphere === "snow" || bg === "hokkaido",
+    dark =
+      world.atmosphere === "night" || bg === "night" || theme.decorations.space,
+    rain =
+      theme.decorations.rain || world.atmosphere === "rain" || bg === "rain",
+    snow =
+      theme.decorations.snow ||
+      world.atmosphere === "snow" ||
+      bg === "hokkaido",
     japan = bg === "japanese" || bg === "hokkaido" || theme.decorations.sakura,
     trees = theme.decorations.windowTrees,
     sky = dark
