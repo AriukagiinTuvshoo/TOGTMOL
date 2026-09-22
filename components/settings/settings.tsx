@@ -164,17 +164,22 @@ export function Settings() {
               Дуусахаас өмнө анхааруулах
               <select
                 value={warningSeconds}
-                onChange={(e) =>
-                  run(() =>
-                    store.mutate(
+                onChange={(e) => {
+                  const seconds = Number(e.target.value);
+                  void run(async () => {
+                    // Selecting a warning is an explicit user gesture, so
+                    // activate Web Audio here as well as when Start is pressed.
+                    if (seconds > 0) await enableSound();
+                    await store.mutate(
                       actions.settings({
+                        sound: seconds > 0 ? true : data.settings.sound,
                         extras: {
                           ...data.settings.extras,
-                          timerWarningSeconds: Number(e.target.value),
+                          timerWarningSeconds: seconds,
                         },
                       }),
-                    ),
-                  )
+                    );
+                  });
                 }
               >
                 <option value={0}>Унтраах</option>
