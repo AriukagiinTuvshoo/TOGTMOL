@@ -33,8 +33,20 @@ function isAudioFile(file: File) {
   return file.type.startsWith("audio/") || AUDIO_EXTENSIONS.test(file.name);
 }
 
-function sourceTrack(source: MusicSource | undefined, fallback = "Хөгжим") {
-  if (!source) return { title: fallback, artist: "Тогтмол", videoId: null, url: "" };
+function sourceTrack(
+  source: MusicSource | undefined,
+  fallback = "Хөгжим",
+  selection = "",
+) {
+  if (!source) {
+    const ambient = AMBIENTS.find((a) => `ambient:${a.id}` === selection);
+    return {
+      title: ambient?.name ?? fallback,
+      artist: ambient ? "Тогтмол · Study Sounds" : "Тогтмол",
+      videoId: null,
+      url: "",
+    };
+  }
   if (source.kind === "audio") {
     return {
       title: source.title,
@@ -79,7 +91,7 @@ function useMusicController() {
         playback: "stopped",
         position: 0,
         playlistIndex: 0,
-        track: sourceTrack(source),
+        track: sourceTrack(source, "Хөгжим", selection),
       }
     );
   });
