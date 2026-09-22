@@ -359,12 +359,21 @@ export function DataSettings() {
   };
   return (
     <>
-      <section className="card">
-        <SectionTitle
-          title="Өгөгдөл ба нөөц"
-          subtitle={`${data.sessions.filter((s) => !s.deletedAt).length} хичээл · ${data.subjects.filter((s) => !s.deletedAt).length} сэдэв`}
-        />
-        <div className="form-stack">
+      <section className="card data-center">
+        <div className="data-center-head">
+          <div>
+            <span className="eyebrow">DATA CENTER</span>
+            <h2>Өгөгдөл ба нөөц</h2>
+            <p>Өгөгдлөө татах, нэгтгэх, сэргээх болон цэвэрлэх үйлдлийг эндээс удирдана.</p>
+          </div>
+          <span className="data-scope-chip">{namespace === "guest" ? "Локал горим" : "Бүртгэлийн горим"}</span>
+        </div>
+        <div className="data-metrics">
+          <div><span>Хэмжилт</span><strong>{data.sessions.filter((s) => !s.deletedAt).length}</strong></div>
+          <div><span>Хичээл</span><strong>{data.subjects.filter((s) => !s.deletedAt).length}</strong></div>
+          <div><span>Мэдлэг</span><strong>{data.knowledge.filter((r) => !r.deletedAt).length}</strong></div>
+        </div>
+        <div className="form-stack data-actions">
           <button
             className="button"
             onClick={() =>
@@ -387,14 +396,15 @@ export function DataSettings() {
             />
           </label>
           <button
-            className="text-button"
+            className="button"
             onClick={() =>
               run(async () =>
                 setBackups(await store.repository.backups(namespace)),
               )
             }
           >
-            Хадгалсан нөөцүүдийг харах
+            <Icon name="archive" />
+            Нөөцүүдийг харах
           </button>
           <button className="text-button" onClick={() => setTrash((v) => !v)}>
             <Icon name="trash" size={17} />
@@ -434,10 +444,13 @@ export function DataSettings() {
               ))}
             </div>
           )}
-          <p className="tiny muted">
-            Өөр браузер, домэйн эсвэл төхөөрөмж рүү шилжихээс өмнө JSON нөөцөө
-            татна уу. Браузерын өгөгдлийг цэвэрлэхэд локал түүх арилна.
-          </p>
+          <div className="data-note">
+            <Icon name="info" size={16} />
+            <p>
+              Өөр төхөөрөмж рүү шилжихийн өмнө бүрэн JSON нөөц татна уу.
+              Локал өгөгдлийг цэвэрлэхэд энэ төхөөрөмжийн хадгалалт арилна.
+            </p>
+          </div>
           {namespace === "guest" && (
             <button
               className="text-button danger-text"
@@ -449,11 +462,14 @@ export function DataSettings() {
         </div>
       </section>
       {trash && (
-        <section className="card">
-          <SectionTitle
-            title="Хогийн сав"
-            subtitle="Сэргээх хүртэл статистикт тооцохгүй."
-          />
+        <section className="card data-trash">
+          <div className="privacy-section-head">
+            <div>
+              <span className="eyebrow">RECOVERY</span>
+              <h2>Хогийн сав</h2>
+              <p>Устгасан бичлэгүүдийг эндээс буцаан сэргээж болно.</p>
+            </div>
+          </div>
           {(["subjects", "sessions", "tasks"] as const).map((collection) => (
             <div className="trash-group" key={collection}>
               <h3>
@@ -489,7 +505,7 @@ export function DataSettings() {
                   </div>
                 ))}
               {!data[collection].some((r) => r.deletedAt) && (
-                <p className="tiny muted">Хоосон</p>
+                <div className="data-empty">Одоогоор устгасан бичлэг алга.</div>
               )}
             </div>
           ))}
