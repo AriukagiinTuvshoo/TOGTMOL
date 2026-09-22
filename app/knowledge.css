@@ -749,14 +749,36 @@ body {
   opacity: 0.8;
   animation: buddy-glow 3s ease-in-out infinite;
 }
-.animated-buddy img {
+.animated-buddy-avatar {
   position: relative;
   width: 92px;
   height: 92px;
-  object-fit: contain;
-  image-rendering: auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--moss) 36%, transparent);
+  background:
+    radial-gradient(circle at 35% 28%, #ffffff22, transparent 30%),
+    linear-gradient(145deg, color-mix(in srgb, var(--moss) 30%, var(--surface)), color-mix(in srgb, var(--yellow) 18%, var(--surface)));
+  box-shadow:
+    0 14px 30px #1b2a1b22,
+    0 0 34px color-mix(in srgb, var(--moss) 18%, transparent),
+    inset 0 1px 0 #ffffff1f;
   animation: buddy-float 3.2s ease-in-out infinite;
-  filter: drop-shadow(0 8px 12px #1b2a1b18);
+}
+.animated-buddy-avatar::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  border: 1px solid #ffffff18;
+}
+.animated-buddy-avatar span {
+  position: relative;
+  z-index: 1;
+  font-size: 50px;
+  line-height: 1;
+  filter: drop-shadow(0 7px 10px #00000018);
 }
 .animated-buddy-bubble {
   position: relative;
@@ -802,7 +824,7 @@ body {
     left: 38%;
     width: 96px;
   }
-  .animated-buddy img {
+  .animated-buddy-avatar {
     width: 78px;
     height: 78px;
   }
@@ -825,7 +847,7 @@ body {
     margin: -8px 0 -2px;
     order: -1;
   }
-  .knowledge-hero > .animated-buddy img {
+  .knowledge-hero > .animated-buddy-avatar {
     width: 74px;
     height: 74px;
   }
@@ -834,7 +856,7 @@ body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .animated-buddy img,
+  .animated-buddy-avatar,
   .animated-buddy-glow {
     animation: none;
   }
