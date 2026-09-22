@@ -414,6 +414,13 @@ it("shares music preferences with the persistent player and restores the chosen 
     defaultCategory: "rain",
     rememberLast: false,
   });
+  await waitFor(async () =>
+    expect((await new Repository().load("guest"))?.data.settings.extras.musicPreferences).toMatchObject({
+      defaultCategory: "rain",
+      rememberLast: false,
+      volume: 0.25,
+    }),
+  );
   cleanup();
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
