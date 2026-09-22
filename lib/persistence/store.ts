@@ -153,10 +153,7 @@ export class StudyStore {
   }
   private async backupDaily() {
     const namespace = this.state.namespace,
-      day = studyDate(
-        new Date(),
-        dayBoundary(this.state.data.settings),
-      );
+      day = studyDate(new Date(), dayBoundary(this.state.data.settings));
     if (this.backupDays.get(namespace) === day) return;
     const key = `auto-backup:${namespace}`;
     if ((await this.repository.metadata<string>(key)) !== day) {

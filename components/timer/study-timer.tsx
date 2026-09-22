@@ -586,9 +586,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() =>
-              setNotePanel({ timerId: tId, open: !showNote })
-            }
+            onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}

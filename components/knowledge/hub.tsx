@@ -150,24 +150,47 @@ export function KnowledgeHub() {
           </button>
         </div>
       </section>
-      <section className="knowledge-command-center" aria-label="Мэдлэгийн сангийн удирдлага">
+      <section
+        className="knowledge-command-center"
+        aria-label="Мэдлэгийн сангийн удирдлага"
+      >
         <div className="knowledge-command-copy">
           <span className="eyebrow">МЭДЛЭГИЙН САН</span>
           <h3>Юу хийх вэ?</h3>
           <p>Шинэ зүйл нэмэх, давтах эсвэл өмнөх мэдлэгээ олох.</p>
         </div>
-        <div className="knowledge-actions" role="group" aria-label="Мэдлэг нэмэх">
-          <button className="button primary" onClick={() => setEditor({ kind: "note" })}>
+        <div
+          className="knowledge-actions"
+          role="group"
+          aria-label="Мэдлэг нэмэх"
+        >
+          <button
+            className="button primary"
+            onClick={() => setEditor({ kind: "note" })}
+          >
             <Icon name="plus" size={16} /> Тэмдэглэл
           </button>
-          <button className="button" onClick={() => setEditor({ kind: "deck" })}>
+          <button
+            className="button"
+            onClick={() => setEditor({ kind: "deck" })}
+          >
             <Icon name="plus" size={16} /> Картын багц
           </button>
           <button className="button" onClick={() => setGenerator(true)}>
             <Icon name="spark" size={16} /> Бондоок
           </button>
-          <button className="text-button" onClick={() => setEditor({ kind: "quiz" })}>Сорил нэмэх</button>
-          <button className="text-button" onClick={() => setEditor({ kind: "link" })}>Холбоос нэмэх</button>
+          <button
+            className="text-button"
+            onClick={() => setEditor({ kind: "quiz" })}
+          >
+            Сорил нэмэх
+          </button>
+          <button
+            className="text-button"
+            onClick={() => setEditor({ kind: "link" })}
+          >
+            Холбоос нэмэх
+          </button>
         </div>
       </section>
       <nav className="knowledge-tabs" aria-label="Мэдлэгийн төрөл">
@@ -210,9 +233,28 @@ export function KnowledgeHub() {
       {showFilters && (
         <div className="knowledge-filters">
           <SubjectSelect all value={subject} onChange={setSubject} />
-          <input aria-label="Шошгоор шүүх" placeholder="Шошго" value={tag} onChange={(e) => setTag(e.target.value)} />
-          <label>Эхлэх өдөр<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-          <label>Дуусах өдөр<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <input
+            aria-label="Шошгоор шүүх"
+            placeholder="Шошго"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+          />
+          <label>
+            Эхлэх өдөр
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+          </label>
+          <label>
+            Дуусах өдөр
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </label>
         </div>
       )}
       {tab === "session" ? (
