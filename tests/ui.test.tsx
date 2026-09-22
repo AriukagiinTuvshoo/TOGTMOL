@@ -91,8 +91,9 @@ describe("interactive local workflow", () => {
     );
     now += 15000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    await screen.findByRole("button", { name: "Save result" });
-    fireEvent.click(screen.getByRole("button", { name: "Save result" }));
+    const saveButton = await screen.findByRole("button", { name: "Save result" });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    fireEvent.click(saveButton);
     await waitFor(async () => {
       const checkRepo = new Repository(indexedDB, localStorage);
       const check = await checkRepo.load("guest");
