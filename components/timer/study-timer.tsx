@@ -13,16 +13,47 @@ import {
   clearTimerDraft,
 } from "@/lib/persistence/timer-draft";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { notifyUser } from "@/lib/notifications";
+import { notifyUser, playTimerWarning } from "@/lib/notifications";
 
 export function TimerWatch() {
   const { data, store, run, navigate, setNotice } = useStudy(),
     t = data.activeTimer,
     now = useClock(Boolean(t?.running)),
-    finishing = useRef(false);
+    finishing = useRef(false),
+    warningTriggered = useRef(false);
   const wakeStatus = useWakeLock(
     Boolean(t?.running && data.settings.extras.wakeLock),
   );
+  useEffect(() => {
+    if (!t?.running || t.targetMs === null || t.status !== "active") return;
+    const remainingMs = Math.max(0, t.targetMs - elapsed(t, now));
+    const raw = data.settings.extras.timerWarningSeconds;
+    const warningSeconds =
+      raw === 10 || raw === 30 || raw === 60 ? raw : 0;
+    const warningMs = warningSeconds * 1000;
+    if (
+      warningMs > 0 &&
+      remainingMs > 0 &&
+      remainingMs <= warningMs &&
+      !warningTriggered.current
+    ) {
+      warningTriggered.current = true;
+      playTimerWarning(data.settings);
+    }
+  }, [t, now, data.settings]);
+
+  useEffect(() => {
+    if (!t || t.targetMs === null || t.status !== "active") {
+      warningTriggered.current = false;
+      return;
+    }
+    const raw = data.settings.extras.timerWarningSeconds;
+    const warningSeconds =
+      raw === 10 || raw === 30 || raw === 60 ? raw : 0;
+    if (elapsed(t, now) < Math.max(0, t.targetMs - warningSeconds * 1000))
+      warningTriggered.current = false;
+  }, [t, now, data.settings]);
+
   useEffect(() => {
     if (
       t?.running &&
