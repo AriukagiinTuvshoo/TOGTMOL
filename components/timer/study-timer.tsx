@@ -76,7 +76,7 @@ export function TimerWatch() {
     void playTimerCountdown(data.settings, countdown);
   }, [countdown, t, data.settings, mutedTimer]);
   const wakeStatus = useWakeLock(
-    Boolean(t?.running && data.settings.extras.wakeLock),
+    Boolean(t?.running && data.settings.extras.wakeLock !== false),
   );
 
   useEffect(() => {
