@@ -27,18 +27,11 @@ export const TIMER_DESIGNS = [
 // 10→1 uses a soft rising pentatonic line: the closer to zero,
 // the brighter the pitch. This is intentionally not an alarm-like beep.
 const COUNTDOWN_NOTES = [
-  523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98,
-  1760,
+  523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760,
 ] as const;
 
 export const COMPLETION_NOTES = [
-  523.25,
-  659.25,
-  783.99,
-  1046.5,
-  1318.51,
-  1567.98,
-  2093,
+  523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98, 2093,
 ] as const;
 
 export function countdownFrequency(second: number): number {

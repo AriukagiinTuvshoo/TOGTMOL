@@ -59,7 +59,8 @@ export function TimerSoundSettings() {
         </select>
       </label>
       <p className="tiny muted">
-        Дуусах дуу нэг удаа тоглоно. Эцсийн мөчид зөөлөн, гэгээлэг аялгуугаар дуусгана.
+        Дуусах дуу нэг удаа тоглоно. Эцсийн мөчид зөөлөн, гэгээлэг аялгуугаар
+        дуусгана.
       </p>
       <label>
         Дуусах дохионы түвшин · {Math.round(completionVolume(settings) * 100)}%

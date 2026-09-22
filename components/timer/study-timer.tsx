@@ -122,25 +122,28 @@ export function TimerWatch() {
   // drift or count "missed" seconds.
   useEffect(() => {
     if (!t?.running || t.status !== "active" || t.targetMs === null) return;
+
+    const timerId = t.id;
     const remaining = Math.max(0, t.targetMs - elapsed(t, Date.now()));
-    if (remaining <= 0) {
-      void completeTimer(t.id);
-      return;
-    }
     const timeout = window.setTimeout(
-      () => void completeTimer(t.id),
-      Math.min(remaining + 60, 2147483647),
+      () => void completeTimer(timerId),
+      Math.min(Math.max(0, remaining) + 60, 2147483647),
     );
+
     return () => window.clearTimeout(timeout);
-  }, [
-    t?.id,
-    t?.running,
-    t?.status,
-    t?.runningSince,
-    t?.accumulatedMs,
-    t?.targetMs,
-    completeTimer,
-  ]);
+  }, [t, completeTimer]);
+
+  // Redundant deadline guard: if the clock jumps directly to/past the target
+  // (for example after a throttled/background tab), queue completion without
+  // synchronously mutating React state from the effect body.
+  useEffect(() => {
+    if (!t?.running || t.status !== "active" || t.targetMs === null) return;
+    if (elapsed(t, now) < t.targetMs) return;
+
+    const timerId = t.id;
+    const timeout = window.setTimeout(() => void completeTimer(timerId), 0);
+    return () => window.clearTimeout(timeout);
+  }, [t, now, completeTimer]);
 
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
@@ -184,16 +187,6 @@ export function TimerWatch() {
     if (elapsed(t, now) < Math.max(0, t.targetMs - warningSeconds * 1000))
       warningTriggered.current = false;
   }, [t, now, data.settings]);
-
-  useEffect(() => {
-    if (
-      t?.running &&
-      t.targetMs !== null &&
-      elapsed(t, now) >= t.targetMs &&
-      t.status === "active"
-    )
-      void completeTimer(t.id);
-  }, [t, now, completeTimer]);
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
@@ -254,6 +247,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     { busy } = useStoreState(),
     t = data.activeTimer,
     now = useClock(Boolean(t?.running));
+  const tId = t?.id;
   const [subjectId, setSubjectId] = useState(
     t?.subjectId ??
       data.subjects.find((s) => !s.deletedAt && !s.archived)?.id ??
@@ -265,9 +259,20 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [complete, setComplete] = useState(true),
-    [showNote, setShowNote] = useState(false);
-  const tId = t?.id;
+    [completionChoice, setCompletionChoice] = useState<{
+      timerId: string | undefined;
+      checked: boolean;
+    }>({ timerId: undefined, checked: true }),
+    [notePanel, setNotePanel] = useState<{
+      timerId: string | undefined;
+      open: boolean;
+    }>({ timerId: undefined, open: false });
+  // These UI choices are scoped to the active timer. A different timer ID
+  // naturally falls back to the default without synchronously setting state in an effect.
+  const complete =
+    completionChoice.timerId === tId ? completionChoice.checked : true;
+  const showNote = notePanel.timerId === tId ? notePanel.open : false;
+
   useEffect(() => {
     if (!tId) return;
     const id = setTimeout(() => {
@@ -523,11 +528,20 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 className="button"
                 disabled={busy}
                 onClick={() =>
-                  run(() =>
-                    store.mutate(
-                      t.running ? actions.pause() : actions.resume(),
-                    ),
-                  )
+                  run(() => {
+                    const current = store.getSnapshot().data.activeTimer;
+                    const deadlineReached =
+                      current?.running &&
+                      current.targetMs !== null &&
+                      elapsed(current, Date.now()) >= current.targetMs;
+                    return store.mutate(
+                      deadlineReached
+                        ? actions.finish()
+                        : t.running
+                          ? actions.pause()
+                          : actions.resume(),
+                    );
+                  })
                 }
               >
                 <Icon name={t.running ? "pause" : "play"} />
@@ -572,7 +586,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() => setShowNote(!showNote)}
+            onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
@@ -611,7 +625,12 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 <input
                   type="checkbox"
                   checked={complete}
-                  onChange={(e) => setComplete(e.target.checked)}
+                  onChange={(e) =>
+                    setCompletionChoice({
+                      timerId: tId,
+                      checked: e.target.checked,
+                    })
+                  }
                 />
                 Хадгалаад төлөвлөгөөг биелсэнд тооцох
               </label>
