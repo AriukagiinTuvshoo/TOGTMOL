@@ -47,6 +47,28 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     window.addEventListener("keydown", exit);
     return () => window.removeEventListener("keydown", exit);
   }, [focus, navigate]);
+
+  if (focus)
+    return (
+      <div className="focus-timer-screen" aria-label="Focus mode">
+        <div className="focus-timer-brand">тогтмол · FOCUS</div>
+        <button
+          className="focus-exit-button"
+          onClick={() => navigate("overview")}
+          aria-label="Focus-оос гарах"
+        >
+          <Icon name="close" size={18} />
+          Гарах
+        </button>
+        <div className="focus-timer-stage">
+          <StudyTimer
+            key={`focus:${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+            compact
+          />
+        </div>
+        <p className="focus-hint">Esc · Focus-оос гарах</p>
+      </div>
+    );
   return (
     <div className={`study-world ${focus ? "focus-world" : ""}`}>
       <div className="world-heading">
