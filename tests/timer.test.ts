@@ -72,6 +72,7 @@ describe("timer lifecycle", () => {
   it("records a partially stopped focus session immediately for statistics", () => {
     const d = fixture();
     d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
+    vi.spyOn(Date, "now").mockReturnValue(NOW + 2300);
     const stopped = actions.finish()(d);
     expect(stopped.activeTimer?.status).toBe("review");
     expect(stopped.sessions).toHaveLength(1);
