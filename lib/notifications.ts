@@ -22,17 +22,38 @@ export function notifyUser(
         gain = audioContext.createGain();
       oscillator.connect(gain);
       gain.connect(audioContext.destination);
-      oscillator.frequency.value = 660;
-      gain.gain.setValueAtTime(
-        Math.max(0.0001, completionVolume(settings) * 0.16),
-        audioContext.currentTime,
-      );
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        audioContext.currentTime + 0.4,
-      );
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.4);
+      // Богино нэг beep биш, сэрүүлэг шиг давтагдсан хоёр өнгийн дохио.
+      // Browser зөвшөөрсөн үед timer дуусмагц анхаарал татахуйц сонсогдоно.
+      const now = audioContext.currentTime;
+      const volume = Math.max(0.0001, completionVolume(settings) * 0.22);
+      const tones = [
+        [880, 0.0, 0.28],
+        [660, 0.32, 0.28],
+        [880, 0.64, 0.28],
+        [660, 0.96, 0.28],
+      ] as const;
+
+      for (const [frequency, offset, duration] of tones) {
+        const tone = audioContext.createOscillator();
+        const toneGain = audioContext.createGain();
+        tone.type = "sine";
+        tone.frequency.value = frequency;
+        tone.connect(toneGain);
+        toneGain.connect(audioContext.destination);
+        toneGain.gain.setValueAtTime(0.0001, now + offset);
+        toneGain.gain.linearRampToValueAtTime(volume, now + offset + 0.025);
+        toneGain.gain.setValueAtTime(volume, now + offset + duration - 0.05);
+        toneGain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          now + offset + duration,
+        );
+        tone.start(now + offset);
+        tone.stop(now + offset + duration);
+        tone.onended = () => {
+          tone.disconnect();
+          toneGain.disconnect();
+        };
+      }
       oscillator.onended = () => {
         oscillator.disconnect();
         gain.disconnect();
