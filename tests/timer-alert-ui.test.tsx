@@ -152,6 +152,18 @@ it("skips missed ticks after suspension and resets countdown for another timer",
   expect(sounds.playTimerCountdown).toHaveBeenLastCalledWith(data.settings, 10);
 });
 
+it("finishes a countdown when Pause is clicked after its deadline", async () => {
+  now = NOW + 60000;
+  const view = render(<StudyTimer />);
+  await act(async () => {});
+  fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+  await act(async () => {});
+  expect(data.activeTimer?.status).toBe("review");
+  expect(data.sessions).toHaveLength(1);
+  expect(data.sessions[0].durationSec).toBe(60);
+  view.unmount();
+});
+
 it("pausing stops countdown audio and warning dialog; stopwatch has no countdown", () => {
   now = NOW + 50000;
   const view = render(<TimerWatch />);
