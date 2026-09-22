@@ -24,10 +24,10 @@ export function StudyPreferences() {
       <label className="check-label">
         <input
           type="checkbox"
-          checked={data.settings.extras.wakeLock === true}
+          checked={data.settings.extras.wakeLock !== false}
           onChange={(e) => void update("wakeLock", e.target.checked)}
         />
-        Хичээллэх үед дэлгэцийг сэрүүн байлгах
+        Timer ажиллаж байх үед дэлгэцийг сэрүүн байлгах
       </label>
       <p className="tiny muted">
         Браузер зөвшөөрсөн үед ажиллана. Цонх далдрах, цэнэг бага байх үед
