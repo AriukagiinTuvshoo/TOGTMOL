@@ -16,6 +16,7 @@ import { flexibleStreak } from "@/lib/calculations/dates";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
 import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
 import { ACCESSORIES } from "@/lib/world/config";
+import { knowledgeIndex } from "@/lib/knowledge/index";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
 export function StudyRoom({ focus = false }: { focus?: boolean }) {
@@ -25,6 +26,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
   const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
+  const reviewCount = knowledgeIndex(data.knowledge, today).reviewQueue.length;
   const todaySeconds = index.days.get(today)?.seconds ?? 0,
     daily =
       data.goals.dailyMinutes ??
@@ -80,6 +82,30 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           )}
         </div>
       </div>
+      {!focus && (
+        <section className="home-primary-cta" aria-label="Өнөөдрийн гол үйлдэл">
+          <div>
+            <span className="eyebrow">ӨНӨӨДРИЙН ХАМГИЙН ЧУХАЛ АЛХАМ</span>
+            <h2>
+              {reviewCount
+                ? "Өнөөдрийн " + reviewCount + " карт давт"
+                : "Шинэ хичээл эхлүүл"}
+            </h2>
+            <p>
+              {reviewCount
+                ? "Өмнө сурсан зүйлээ одоо нэг богино давтлагаар бататгаарай."
+                : "Өнөөдрийн жижиг алхмаа эхлүүлээд хэмнэлээ бий болгоорой."}
+            </p>
+          </div>
+          <button
+            className="button primary large"
+            onClick={() => navigate(reviewCount ? "knowledge" : "timer")}
+          >
+            <Icon name={reviewCount ? "book" : "play"} size={18} />
+            {reviewCount ? "Давтлага эхлүүлэх" : "Хичээл эхлүүлэх"}
+          </button>
+        </section>
+      )}
       <section className="room-stage" aria-label="Study Room">
         <div className="room-art">
           <RoomScene world={world} state={state} />
