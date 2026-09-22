@@ -129,53 +129,14 @@ export function PrivacyCenter() {
               }, "Бүрэн нөөц үүсгэлээ.")
             }
           >
+            <Icon name="download" size={17} />
             Бүрэн нөөц татах
-          </button>
-          <button
-            className="button"
-            disabled={!ai || busy}
-            onClick={() =>
-              void run(
-                () =>
-                  store.mutate((d) => ({
-                    ...d,
-                    settings: {
-                      ...d.settings,
-                      updatedAt: Date.now(),
-                      extras: {
-                        ...d.settings.extras,
-                        aiEnabled: false,
-                        aiIncludeNotes: false,
-                      },
-                    },
-                  })),
-                "Онлайн Бондоокийн зөвшөөрлийг унтраалаа.",
-              )
-            }
-          >
-            AI боловсруулалтыг унтраах
-          </button>
-          <button
-            className="button"
-            disabled={!account.syncEnabled || working}
-            onClick={() =>
-              void run(account.disableSync, "Үүлэн синк унтраалаа.")
-            }
-          >
-            Үүлэн синк унтраах
-          </button>
-          <button
-            className="button"
-            disabled={account.syncEnabled || !account.user || working}
-            onClick={() => void run(() => account.connect(false))}
-          >
-            Үүлэн синк асаах
           </button>
         </div>
         <p className="tiny muted">
-          Онлайн Бондоокт асуултад шаардлагатай товч мэдээлэл л очно. Тэмдэглэл,
-          зургийг тусдаа зөвшөөрлөөр илгээнэ. Унтраах нь өмнө илгээсэн
-          мэдээллийг үйлчилгээ үзүүлэгчээс буцаан татах үйлдэл биш.
+          Нөөц файл нь энэ төхөөрөмж дээрх одоогийн өгөгдлийг бүхэлд нь JSON
+          хэлбэрээр хадгална. Бусад төхөөрөмж рүү шилжихдээ энэ файлыг ашиглаж
+          болно.
         </p>
         {!account.user && (
           <button className="text-button" onClick={() => navigate("settings")}>
@@ -250,13 +211,18 @@ export function PrivacyCenter() {
       </section>
       <DataSettings />
       {namespace.startsWith("account:") && (
-        <section className="card">
-          <h2>Энэ төхөөрөмжийн бүртгэлийн түүх</h2>
-          <p>
-            Үүлэн синкийг унтрааж, локал эх өгөгдлийн нөөц үүсгэсний дараа энэ
-            төхөөрөмжийн үндсэн хуулбарыг цэвэрлэнэ. Үүлэн түүх, бусад бүртгэл
-            болон сэргээх нөөцүүд үлдэнэ.
-          </p>
+        <section className="card danger-zone">
+          <div className="privacy-section-head">
+            <div>
+              <span className="eyebrow">THIS DEVICE</span>
+              <h2>Энэ төхөөрөмжийн локал өгөгдөл</h2>
+              <p>
+                Энэ төхөөрөмж дээр хадгалагдсан хуулбарыг цэвэрлэнэ. Үүлэн
+                түүх болон бусад бүртгэл устахгүй.
+              </p>
+            </div>
+            <span className="privacy-chip danger">АНХААР</span>
+          </div>
           <button
             className="button danger-text"
             disabled={working || busy}
@@ -305,14 +271,15 @@ export function PrivacyCenter() {
         <div className="privacy-section-head">
           <div>
             <span className="eyebrow">REMOTE DATA</span>
-            <h2>Үүлэн өгөгдлийг цэвэрлэх</h2>
-            <p>Зөвхөн нэвтэрсэн бүртгэлийн үүлэн суралцах түүхийг устгана.</p>
+            <h2>Үүлэн суралцах түүхийг цэвэрлэх</h2>
+            <p>Зөвхөн энэ бүртгэлийн үүлэнд хадгалсан суралцах түүхэд үйлчилнэ.</p>
           </div>
-          <span className="privacy-chip danger">БУЦААХ БОЛОМЖГҮЙ</span>
+          <span className="privacy-chip danger">УСТГАЛТ</span>
         </div>
         <p>
-          Энэ үйлдэл нь үүлэн түүхийг цэвэрлэж, бүртгэлийг устгахгүй. Устгалтын
-          өмнө нөөц үүсгэх боломжгүй бол үйлдлийг эхлүүлэхгүй.
+          Хичээл, хэмжилт, тэмдэглэл, зураг, карт, сорил, зорилго болон үүлэн
+          тохиргоо устна. Бүртгэл өөрөө устахгүй. Нөөц үүсгэх боломжгүй бол
+          устгал эхлэхгүй.
         </p>
         <button
           className="button danger-text"
