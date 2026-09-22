@@ -267,7 +267,7 @@ export function CustomizeRoom() {
                   ...world,
                   design: d.id,
                   background: d.background,
-                  companion: d.id,
+                  companion: d.companion,
                   atmosphere: d.atmosphere,
                 }}
               />
