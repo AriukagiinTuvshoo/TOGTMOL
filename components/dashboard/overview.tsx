@@ -31,11 +31,11 @@ export function Overview() {
         <div>
           <div className="eyebrow">ТӨГС БИШ. ТОГТМОЛ.</div>
           <h1>
-            Өнөөдөр нэг
+            Жижиг алхам.
             <br />
-            <em>жижиг алхам.</em>
+            <em>Том мөрөөдөл.</em>
           </h1>
-          <p>Хэдэн минут ч байсан — өөртөө зориулсан ахиц.</p>
+          <p>Өдөр бүр бага багаар. Өнөөдрийн ахиц чинь маргаашийн үр дүнг бүтээнэ.</p>
           <button
             className="button yellow large"
             onClick={() => navigate("timer")}
