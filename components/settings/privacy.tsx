@@ -37,14 +37,31 @@ export function PrivacyCenter() {
   const ai = data.settings.extras.aiEnabled === true;
   return (
     <div className="privacy-page">
-      <section className="card">
-        <span className="eyebrow">ХУВИЙН ОРОН ЗАЙ</span>
-        <h2>Таны мэдлэг. Таны мэдэлд.</h2>
-        <p>
-          Нийтийн профайл үүсгэхгүй. Үүлэн хадгалалт болон онлайн Бондоокийг та
-          өөрөө асаана.
-        </p>
-        <dl className="detail-list">
+      <section className="privacy-overview">
+        <div className="privacy-header card">
+          <div>
+            <span className="eyebrow">PRIVACY · DATA</span>
+            <h1>Таны өгөгдөл. Таны хяналт.</h1>
+            <p>
+              Өгөгдөл хаана хадгалагдаж байгаа, юу синк хийгдэж байгаа болон
+              нөөцөө хэрхэн удирдахыг нэг дороос харна.
+            </p>
+          </div>
+          <div className="privacy-status-orb" aria-hidden="true">
+            <span>LOCKED</span>
+            <strong>∞</strong>
+            <small>Өөрийн өгөгдөл</small>
+          </div>
+        </div>
+        <section className="card privacy-status-card">
+          <div className="privacy-section-head">
+            <div>
+              <span className="eyebrow">DATA STATUS</span>
+              <h2>Одоогийн хадгалалтын төлөв</h2>
+            </div>
+            <span className={account.syncEnabled ? "privacy-chip on" : "privacy-chip"}>{account.syncEnabled ? "СИНК АСААЛТТАЙ" : "ЛОКАЛ ГОРИМ"}</span>
+          </div>
+          <dl className="detail-list privacy-details">
           <div>
             <dt>Энд хадгалагдаж буй зүйл</dt>
             <dd>
@@ -88,7 +105,7 @@ export function PrivacyCenter() {
             </dd>
           </div>
         </dl>
-        <div className="button-row">
+        <div className="button-row privacy-actions">
           <button
             className="button primary"
             disabled={busy || working}
@@ -112,7 +129,7 @@ export function PrivacyCenter() {
               }, "Бүрэн нөөц үүсгэлээ.")
             }
           >
-            Бүх өгөгдлөө татах
+            Бүрэн нөөц татах
           </button>
           <button
             className="button"
@@ -160,31 +177,76 @@ export function PrivacyCenter() {
           зургийг тусдаа зөвшөөрлөөр илгээнэ. Унтраах нь өмнө илгээсэн
           мэдээллийг үйлчилгээ үзүүлэгчээс буцаан татах үйлдэл биш.
         </p>
-        <label className="check-label">
-          <input
-            type="checkbox"
-            checked={data.settings.extras.backupReminder === true}
-            onChange={(e) => {
-              const enabled = e.target.checked;
-              void run(() =>
-                store.mutate((d) => ({
-                  ...d,
-                  settings: {
-                    ...d.settings,
-                    updatedAt: Date.now(),
-                    extras: { ...d.settings.extras, backupReminder: enabled },
-                  },
-                })),
-              );
-            }}
-          />
-          14 хоног нөөц татаагүй бол сануулах
-        </label>
         {!account.user && (
           <button className="text-button" onClick={() => navigate("settings")}>
             Бүртгэл, холболтын тохиргоо →
           </button>
         )}
+      </section>
+      <section className="card privacy-action-card">
+        <div className="privacy-section-head">
+          <div>
+            <span className="eyebrow">CONTROL CENTER</span>
+            <h2>Зөвшөөрөл ба нөөц</h2>
+            <p>Онлайн үйлчилгээ болон локал өгөгдлөө тусад нь удирдана.</p>
+          </div>
+        </div>
+        <div className="privacy-action-grid">
+          <article>
+            <span className="privacy-action-icon">◈</span>
+            <div>
+              <strong>AI боловсруулалт</strong>
+              <p>{ai ? "Онлайн Бондоок ашиглах зөвшөөрөл асаалттай." : "Онлайн Бондоокт зөвшөөрөл өгөөгүй."}</p>
+            </div>
+            <button className="button small" disabled={!ai || busy} onClick={() => void run(() => store.mutate((d) => ({
+              ...d,
+              settings: {
+                ...d.settings,
+                updatedAt: Date.now(),
+                extras: { ...d.settings.extras, aiEnabled: false, aiIncludeNotes: false },
+              },
+            })), "Онлайн Бондоокийн зөвшөөрлийг унтраалаа.")}>
+              {ai ? "Унтраах" : "Унтраалттай"}
+            </button>
+          </article>
+          <article>
+            <span className="privacy-action-icon">☁</span>
+            <div>
+              <strong>Үүлэн синк</strong>
+              <p>{account.syncEnabled ? "Энэ бүртгэлтэй автоматаар синк хийнэ." : "Энэ төхөөрөмж локал өгөгдөл ашиглаж байна."}</p>
+            </div>
+            {account.syncEnabled ? (
+              <button className="button small" disabled={busy || working} onClick={() => void run(account.disableSync, "Үүлэн синк унтраалаа.")}>Унтраах</button>
+            ) : (
+              <button className="button small" disabled={!account.user || busy || working} onClick={() => void run(() => account.connect(false))}>Асаах</button>
+            )}
+          </article>
+          <article>
+            <span className="privacy-action-icon">↥</span>
+            <div>
+              <strong>Автомат нөөцийн сануулга</strong>
+              <p>{data.settings.extras.backupReminder === true ? "14 хоног тутам нөөц сануулна." : "Нөөцийн сануулга унтраалттай."}</p>
+            </div>
+            <label className="switch-control">
+              <input
+                type="checkbox"
+                checked={data.settings.extras.backupReminder === true}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  void run(() => store.mutate((d) => ({
+                    ...d,
+                    settings: {
+                      ...d.settings,
+                      updatedAt: Date.now(),
+                      extras: { ...d.settings.extras, backupReminder: enabled },
+                    },
+                  })));
+                }}
+              />
+              <span aria-hidden="true" />
+            </label>
+          </article>
+        </div>
       </section>
       <DataSettings />
       {namespace.startsWith("account:") && (
@@ -239,12 +301,18 @@ export function PrivacyCenter() {
           </div>
         </Modal>
       )}
-      <section className="card">
-        <SectionTitle title="Үүлэн өгөгдлийг цэвэрлэх" />
+      <section className="card danger-zone">
+        <div className="privacy-section-head">
+          <div>
+            <span className="eyebrow">REMOTE DATA</span>
+            <h2>Үүлэн өгөгдлийг цэвэрлэх</h2>
+            <p>Зөвхөн нэвтэрсэн бүртгэлийн үүлэн суралцах түүхийг устгана.</p>
+          </div>
+          <span className="privacy-chip danger">БУЦААХ БОЛОМЖГҮЙ</span>
+        </div>
         <p>
-          Зөвхөн нэвтэрсэн бүртгэлийн суралцах түүхийг үүлнээс устгана. Өмнө нь
-          энэ төхөөрөмжид нөөц үүсгэж, синкийг зогсооно. Бүртгэл болон
-          төхөөрөмжийн түүх үлдэнэ.
+          Энэ үйлдэл нь үүлэн түүхийг цэвэрлэж, бүртгэлийг устгахгүй. Устгалтын
+          өмнө нөөц үүсгэх боломжгүй бол үйлдлийг эхлүүлэхгүй.
         </p>
         <button
           className="button danger-text"
