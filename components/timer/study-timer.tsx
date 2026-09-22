@@ -250,6 +250,13 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     [showNote, setShowNote] = useState(false);
   const tId = t?.id;
   useEffect(() => {
+    // A new timer starts with the task-completion checkbox enabled by default.
+    // Keep the user's choice while the same timer is paused/resumed or reviewed.
+    setComplete(true);
+    setShowNote(false);
+  }, [tId]);
+
+  useEffect(() => {
     if (!tId) return;
     const id = setTimeout(() => {
       if (note !== store.getSnapshot().data.activeTimer?.note)
