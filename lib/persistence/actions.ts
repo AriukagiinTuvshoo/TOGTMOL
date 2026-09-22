@@ -68,12 +68,22 @@ export const actions = {
     (id: string, patch: Pick<Subject, "name" | "color" | "archived"> & { extras?: Record<string, unknown> }) =>
     (data: StudyData): StudyData => {
       subject(data, id);
+      const clean = patch.name.trim();
       if (
-        !patch.name.trim() ||
-        patch.name.length > 100 ||
+        !clean ||
+        clean.length > 100 ||
         !/^#[a-f0-9]{6}$/i.test(patch.color)
       )
         throw Error("Нэр болон өнгөө шалгана уу.");
+      if (
+        data.subjects.some(
+          (s) =>
+            s.id !== id &&
+            !s.deletedAt &&
+            s.name.trim().toLocaleLowerCase() === clean.toLocaleLowerCase(),
+        )
+      )
+        throw Error("Ийм нэртэй хичээл байна.");
       return {
         ...data,
         subjects: data.subjects.map((s) =>
@@ -82,7 +92,7 @@ export const actions = {
                 ...s,
                 ...patch,
                 extras: patch.extras ?? s.extras,
-                name: patch.name.trim(),
+                name: clean,
                 updatedAt: Date.now(),
               }
             : s,
@@ -127,7 +137,8 @@ export const actions = {
     (data: StudyData): StudyData => {
       subject(data, id);
       validDate(date);
-      if (date > dateKey())
+      const today = studyDate(new Date(), dayBoundary(data.settings));
+      if (date > today)
         throw Error("Ирээдүйн өдрийг суралцсан гэж тэмдэглэх боломжгүй.");
       const matches = data.entries.filter(
           (e) => e.subjectId === id && e.date === date,
@@ -307,7 +318,7 @@ export const actions = {
         throw Error("Энэ бичлэг өөрчлөгдсөн байна. Дахин нээгээд засна уу.");
       validDate(patch.date);
       if (
-        patch.date > dateKey() ||
+        patch.date > studyDate(new Date(), dayBoundary(data.settings)) ||
         !Number.isFinite(patch.durationSec) ||
         patch.durationSec < 5 ||
         patch.durationSec > 86400 * 366
@@ -444,8 +455,8 @@ export const actions = {
           ...data.tasks,
           {
             ...record("task", Date.now()),
-            goalId: null,
             ...fields,
+            goalId: task.goalId ?? null,
             title: task.title.trim().slice(0, 200),
             completed: false,
             extras: milestoneId ? { milestoneId } : {},
