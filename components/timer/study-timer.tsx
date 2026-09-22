@@ -140,14 +140,11 @@ export function TimerWatch() {
     // If the tab/render was resumed exactly at or after the deadline,
     // complete immediately. The deadline is deterministic, so this also
     // handles suspended/background tabs without depending on another render.
-    if (remaining <= 0) {
-      void completeTimer(timerId, deadline);
-      return;
-    }
-
     const timeout = window.setTimeout(
       () => void completeTimer(timerId, deadline),
-      Math.min(remaining + 60, 2147483647),
+      remaining <= 0
+        ? 0
+        : Math.min(remaining + 60, 2147483647),
     );
 
     return () => window.clearTimeout(timeout);
