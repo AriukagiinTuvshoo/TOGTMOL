@@ -242,20 +242,20 @@ describe("study world integration", () => {
     expect(document.querySelector('script[src*="youtube"]')).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Хөгжим нээх" }));
     expect(
-      await screen.findByRole("button", { name: /Rainy window/ }),
+      await screen.findByRole("button", { name: /RainТайван борооны чимээ/ }),
     ).toBeVisible();
     const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
     fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
     expect(screen.getByRole("complementary", { name: "Study music" })).toBe(
       player,
     );
-    expect(screen.getByRole("button", { name: /Rainy window/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /RainТайван борооны чимээ/ })).toBeVisible();
     fireEvent.change(
-      screen.getByRole("textbox", { name: "YouTube video эсвэл playlist" }),
-      { target: { value: "https://evil.example/video" } },
+      screen.getByRole("textbox", { name: "Аудио эсвэл YouTube холбоос" }),
+      { target: { value: "javascript:alert(1)" } },
     );
-    fireEvent.click(within(player).getByRole("button", { name: "Нэмэх" }));
-    expect(await screen.findByText(/Зөвхөн YouTube-ийн/)).toBeVisible();
+    fireEvent.click(within(player).getByRole("button", { name: "Хадгалах" }));
+    expect(await screen.findByText(/Аудио холбоос буруу байна/)).toBeVisible();
     expect(document.querySelector('script[src*="youtube"]')).toBeNull();
     expect(audio).not.toHaveBeenCalled();
   });
@@ -308,13 +308,13 @@ it("uses the official YouTube API without autoplay and retains it when minimizin
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(screen.getByRole("button", { name: "Хөгжим нээх" }));
   fireEvent.change(
-    screen.getByRole("textbox", { name: "YouTube video эсвэл playlist" }),
+    screen.getByRole("textbox", { name: "Аудио эсвэл YouTube холбоос" }),
     { target: { value: "https://www.youtube.com/watch?v=abcdefghijk" } },
   );
   fireEvent.click(
     within(
       screen.getByRole("complementary", { name: "Study music" }),
-    ).getByRole("button", { name: "Нэмэх" }),
+    ).getByRole("button", { name: "Хадгалах" }),
   );
   await screen.findByTitle("YouTube");
   await waitFor(() => expect(optionsSeen).toHaveLength(1));
@@ -400,7 +400,7 @@ it("shares music preferences with the persistent player and restores the chosen 
     ),
   );
   fireEvent.change(screen.getByLabelText("Үндсэн хөгжмийн ангилал"), {
-    target: { value: "night" },
+    target: { value: "rain" },
   });
   fireEvent.click(screen.getByLabelText("Сүүлд тоглуулсан аяыг санах"));
   fireEvent.change(screen.getByLabelText("Дууны түвшин", { exact: true }), {
@@ -411,14 +411,14 @@ it("shares music preferences with the persistent player and restores the chosen 
     JSON.parse(localStorage.getItem("togtmol:music:guest")!),
   ).toMatchObject({
     volume: 0.25,
-    defaultCategory: "night",
+    defaultCategory: "rain",
     rememberLast: false,
   });
   cleanup();
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   expect(
-    screen.getByText("Night study", { selector: ".music-title strong" }),
+    screen.getByText("Rain", { selector: ".music-title strong" }),
   ).toBeVisible();
   expect(audio).not.toHaveBeenCalled();
   expect(document.querySelector('script[src*="youtube"]')).toBeNull();
