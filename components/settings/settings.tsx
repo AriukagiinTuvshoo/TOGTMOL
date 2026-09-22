@@ -403,7 +403,7 @@ export function DataSettings() {
               )
             }
           >
-            <Icon name="archive" />
+            <Icon name="download" />
             Нөөцүүдийг харах
           </button>
           <button className="text-button" onClick={() => setTrash((v) => !v)}>
