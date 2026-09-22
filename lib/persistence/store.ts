@@ -1,4 +1,6 @@
 import { readMusicPreference } from "@/lib/music/preferences";
+import { dayBoundary } from "@/lib/preferences";
+import { studyDate } from "@/lib/calculations/dates";
 import { readTimerDraft } from "./timer-draft";
 import { emptyData } from "@/lib/constants";
 import { buildIndex } from "@/lib/calculations/analytics";
@@ -151,7 +153,10 @@ export class StudyStore {
   }
   private async backupDaily() {
     const namespace = this.state.namespace,
-      day = new Date().toISOString().slice(0, 10);
+      day = studyDate(
+        new Date(),
+        dayBoundary(this.state.data.settings),
+      );
     if (this.backupDays.get(namespace) === day) return;
     const key = `auto-backup:${namespace}`;
     if ((await this.repository.metadata<string>(key)) !== day) {
