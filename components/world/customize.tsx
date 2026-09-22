@@ -20,6 +20,7 @@ import type { WorldSettings } from "@/types/study";
 import { RoomScene } from "./room-scene";
 import { CompanionAvatar } from "./companion";
 import { SectionTitle } from "@/components/ui/common";
+import { Icon } from "@/components/ui/icon";
 export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
     world = data.settings.world;

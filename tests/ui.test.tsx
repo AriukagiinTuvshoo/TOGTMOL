@@ -139,6 +139,9 @@ describe("study world integration", () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
     fireEvent.click(screen.getByRole("button", { name: "Өрөөгөө өөрчлөх" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Бусад өрөө (6)" }),
+    );
     const sakura = await screen.findByRole("button", { name: /Sakura/ });
     fireEvent.click(sakura);
     await waitFor(() =>
@@ -363,7 +366,11 @@ it("edits a daily task and reports its actual completion day in the calendar", a
     ),
   );
   expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
-  expect(screen.getByText("Гурван жишээ")).toBeVisible();
+  expect(
+    within(screen.getByText("Биелсэн алхмууд").parentElement!).getByText(
+      "Гурван жишээ",
+    ),
+  ).toBeVisible();
   expect(screen.getByText(/35м төлөвлөсөн/)).toBeVisible();
   await repo.close();
 });

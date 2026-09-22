@@ -15,10 +15,15 @@ import {
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import {
   enableSound,
+  playTimerCountdown,
   notifyTimerWarning,
   notifyUser,
   stopTimerAlertSound,
 } from "@/lib/notifications";
+
+import { countdownSecond, timerDesign } from "@/lib/timer-alerts";
+import { TimerAlert } from "./timer-alert";
+import "./timer.css";
 
 export function TimerWatch() {
   const { data, store, run, navigate, setNotice } = useStudy(),
@@ -26,8 +31,50 @@ export function TimerWatch() {
     now = useClock(Boolean(t?.running)),
     finishing = useRef(false),
     warningTriggered = useRef(false);
-  const [alert, setAlert] = useState<"warning" | "complete" | null>(null);
+  const [alertState, setAlert] = useState<{
+    kind: "warning" | "complete";
+    timerId: string;
+    runningSince: number | null;
+  } | null>(null);
+  const alert =
+    alertState?.timerId === t?.id &&
+    (alertState?.kind === "complete"
+      ? t?.status === "review"
+      : t?.running && alertState?.runningSince === t.runningSince)
+      ? alertState?.kind
+      : null;
   const [warningText, setWarningText] = useState("");
+  const [mutedTimer, setMutedTimer] = useState<string | null>(null);
+  const lastCountdown = useRef<string | null>(null);
+  const seconds =
+    t?.running && t.status === "active" && t.targetMs !== null
+      ? countdownSecond(t.targetMs - elapsed(t, now))
+      : null;
+  const countdown =
+    data.settings.extras.timerCountdown !== false ? seconds : null;
+  useEffect(() => {
+    warningTriggered.current = false;
+    lastCountdown.current = null;
+    return stopTimerAlertSound;
+  }, [t?.id]);
+  useEffect(() => {
+    if (!t || (t.status === "active" && !t.running)) {
+      stopTimerAlertSound();
+      lastCountdown.current = null;
+    }
+  }, [t]);
+  useEffect(() => {
+    if (alert !== "warning") return;
+    const id = window.setTimeout(() => setAlert(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [alert]);
+  useEffect(() => {
+    if (countdown === null || !t || mutedTimer === t.id) return;
+    const tick = `${t.id}:${countdown}`;
+    if (lastCountdown.current === tick) return;
+    lastCountdown.current = tick;
+    void playTimerCountdown(data.settings, countdown);
+  }, [countdown, t, data.settings, mutedTimer]);
   const wakeStatus = useWakeLock(
     Boolean(t?.running && data.settings.extras.wakeLock),
   );
@@ -36,8 +83,7 @@ export function TimerWatch() {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
     const remainingMs = Math.max(0, t.targetMs - elapsed(t, now));
     const raw = data.settings.extras.timerWarningSeconds;
-    const warningSeconds =
-      raw === 10 || raw === 30 || raw === 60 ? raw : 0;
+    const warningSeconds = raw === 10 || raw === 30 || raw === 60 ? raw : 0;
     const warningMs = warningSeconds * 1000;
     if (
       warningMs > 0 &&
@@ -51,10 +97,11 @@ export function TimerWatch() {
           ? "1 минут үлдлээ!"
           : `${warningSeconds} секунд үлдлээ!`;
       setWarningText(label);
-      setAlert("warning");
-      window.setTimeout(() => {
-        setAlert((current) => (current === "warning" ? null : current));
-      }, 6000);
+      setAlert({
+        kind: "warning",
+        timerId: t.id,
+        runningSince: t.runningSince,
+      });
       void notifyTimerWarning(
         label,
         data.settings,
@@ -69,8 +116,7 @@ export function TimerWatch() {
       return;
     }
     const raw = data.settings.extras.timerWarningSeconds;
-    const warningSeconds =
-      raw === 10 || raw === 30 || raw === 60 ? raw : 0;
+    const warningSeconds = raw === 10 || raw === 30 || raw === 60 ? raw : 0;
     if (elapsed(t, now) < Math.max(0, t.targetMs - warningSeconds * 1000))
       warningTriggered.current = false;
   }, [t, now, data.settings]);
@@ -86,13 +132,17 @@ export function TimerWatch() {
       finishing.current = true;
       void run(() => store.mutate(actions.finish())).then((ok) => {
         finishing.current = false;
-        if (ok) {
+        if (ok && store.getSnapshot().data.activeTimer?.id === t.id) {
           const message =
             t.phase === "focus"
               ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
               : "Амралт дууслаа.";
           setNotice(message);
-          setAlert("complete");
+          setAlert({
+            kind: "complete",
+            timerId: t.id,
+            runningSince: t.runningSince,
+          });
           void notifyUser(message, data.settings, `togtmol-timer-${t.id}`);
         }
       });
@@ -101,11 +151,7 @@ export function TimerWatch() {
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
-    setAlert(null);
-  };
-
-  const closeAlert = () => {
-    stopTimerAlertSound();
+    if (t) setMutedTimer(t.id);
     setAlert(null);
   };
 
@@ -114,56 +160,35 @@ export function TimerWatch() {
   return (
     <>
       {alert && (
-        <div
-          className={`timer-alert-layer timer-alert-${alert}`}
-          role="alertdialog"
-          aria-modal="true"
-          aria-live="assertive"
+        <TimerAlert
+          complete={alert === "complete"}
+          message={
+            countdown !== null ? `${countdown} секунд үлдлээ!` : warningText
+          }
+          onStop={stopAlertSound}
+          onReview={() => {
+            stopAlertSound();
+            navigate("focus");
+          }}
+        />
+      )}
+      {countdown !== null && !alert && (
+        <aside
+          className="timer-countdown-banner"
+          aria-label="Сүүлийн 10 секунд"
         >
-          <div className="timer-alert-backdrop" aria-hidden="true" />
-          <section className="timer-alert-card">
-            <div className="timer-alert-icon" aria-hidden="true">
-              {alert === "complete" ? "⏰" : "⚠"}
-            </div>
-            <p className="timer-alert-kicker">
-              {alert === "complete" ? "TIMER ДУУССАН" : "АНХААРУУЛГА"}
-            </p>
-            <h2>
-              {alert === "complete" ? "Хугацаа дууслаа!" : warningText}
-            </h2>
-            <p>
-              {alert === "complete"
-                ? "Таны timer зогслоо. Үр дүнгээ хадгалж болно."
-                : "Хэдхэн минутын дараа timer дуусна."}
-            </p>
-            <div className="timer-alert-actions">
-              {alert === "complete" ? (
-                <>
-                  <button
-                    className="button primary large"
-                    onClick={() => {
-                      stopAlertSound();
-                      navigate("focus");
-                    }}
-                  >
-                    Үр дүнгээ харах
-                  </button>
-                  <button
-                    type="button"
-                    className="button large timer-alert-stop"
-                    onClick={stopAlertSound}
-                  >
-                    🔇 Дууг зогсоох
-                  </button>
-                </>
-              ) : (
-                <button className="button large" onClick={closeAlert}>
-                  Ойлголоо
-                </button>
-              )}
-            </div>
-          </section>
-        </div>
+          <output aria-live="polite" aria-atomic="true">
+            {countdown} секунд үлдлээ
+          </output>
+          <button
+            type="button"
+            className="button small"
+            onClick={stopAlertSound}
+            disabled={mutedTimer === t.id}
+          >
+            {mutedTimer === t.id ? "Дуу зогссон" : "🔇 Тооллын дууг зогсоох"}
+          </button>
+        </aside>
       )}
       <button
         title={wakeStatus}
@@ -253,7 +278,9 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
   };
   return (
     <div className={`timer-layout ${compact ? "timer-compact" : ""}`}>
-      <section className="card timer-card">
+      <section
+        className={`card timer-card timer-design-${timerDesign(data.settings)}`}
+      >
         <div className="eyebrow">
           <span className="live-dot" /> ӨӨРТӨӨ ЗОРИУЛСАН ЦАГ
         </div>
@@ -356,10 +383,10 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           </div>
         )}
         <div
-          className="timer-orbit"
+          className={`timer-orbit ${t?.running && remaining !== null && countdownSecond(remaining) !== null && data.settings.extras.timerCountdown !== false ? "timer-final-seconds" : ""}`}
           style={
             {
-              "--progress": `${t?.targetMs ? (ms / t.targetMs) * 100 : 0}%`,
+              "--progress": `${t?.targetMs ? Math.min(100, (ms / t.targetMs) * 100) : 0}%`,
             } as React.CSSProperties
           }
         >
@@ -376,7 +403,13 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           </span>
           <output className="timer-digits" aria-label="Хугацаа">
             {clock(
-              t ? (remaining ?? ms) : mode === "pomodoro" ? minutes * 60000 : 0,
+              t
+                ? remaining === null
+                  ? ms
+                  : Math.ceil(remaining / 1000) * 1000
+                : mode === "pomodoro"
+                  ? minutes * 60000
+                  : 0,
             )}
           </output>
           <span className="timer-status">

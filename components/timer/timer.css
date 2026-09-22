@@ -1,0 +1,160 @@
+.timer-sound-settings {
+  min-width: 0;
+}
+.timer-sound-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.timer-sound-settings select {
+  width: 100%;
+}
+.timer-design-preview {
+  --progress: 35%;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+.timer-design-preview .timer-orbit {
+  width: 180px;
+  height: 180px;
+  min-height: 0;
+  margin: 0;
+}
+.timer-design-preview .timer-digits {
+  font-size: 36px;
+}
+.timer-card.timer-design-digital .timer-orbit,
+.timer-design-preview.timer-design-digital .timer-orbit {
+  border-radius: 20px;
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 210px;
+  width: min(100%, 430px);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: inset 0 -5px 0 var(--yellow);
+}
+.timer-design-digital .timer-orbit::before,
+.timer-design-minimal .timer-orbit::before,
+.timer-design-digital .timer-orbit::after,
+.timer-design-minimal .timer-orbit::after {
+  display: none;
+}
+.timer-design-digital .timer-digits {
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.timer-card.timer-design-minimal .timer-orbit,
+.timer-design-preview.timer-design-minimal .timer-orbit {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  aspect-ratio: auto;
+  min-height: 210px;
+  height: auto;
+  width: 100%;
+}
+.timer-design-minimal .timer-digits {
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.timer-design-preview.timer-design-digital .timer-orbit,
+.timer-design-preview.timer-card.timer-design-minimal .timer-orbit,
+.timer-design-preview.timer-design-minimal .timer-orbit {
+  min-height: 120px;
+  padding: 20px;
+}
+.timer-card .timer-final-seconds .timer-digits {
+  color: var(--danger);
+}
+.timer-countdown-banner {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border: 2px solid var(--yellow);
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 8px 28px #0003;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+}
+.timer-countdown-banner output {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.timer-alert-dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.timer-alert-dialog::backdrop {
+  background: #101711cc;
+  backdrop-filter: blur(6px);
+}
+.timer-alert-dialog .timer-alert-card {
+  width: min(520px, calc(100vw - 24px));
+  box-sizing: border-box;
+  animation: none;
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+.timer-alert-dialog .timer-alert-stop {
+  color: var(--text);
+  border-color: var(--yellow);
+  min-height: 56px;
+  font-size: 17px;
+}
+.timer-alert-dialog .timer-alert-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.timer-alert-dialog .timer-alert-actions .button {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .timer-sound-buttons {
+    grid-template-columns: 1fr;
+  }
+  .timer-countdown-banner {
+    gap: 8px;
+    flex-direction: column;
+  }
+  .timer-countdown-banner output {
+    font-size: 20px;
+  }
+  .timer-alert-dialog .timer-alert-card {
+    padding: 24px 18px;
+  }
+  .timer-card.timer-design-digital .timer-digits {
+    font-size: clamp(32px, 12vw, 64px);
+  }
+}
+
+.timer-compact .timer-card.timer-design-ring .timer-orbit {
+  width: min(210px, 90%);
+  height: auto;
+  aspect-ratio: 1;
+  margin: 24px auto;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+.timer-compact .timer-card.timer-design-ring .timer-orbit::before,
+.timer-compact .timer-card.timer-design-ring .timer-orbit::after {
+  display: block;
+}

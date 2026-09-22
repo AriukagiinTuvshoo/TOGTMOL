@@ -1,7 +1,7 @@
 "use client";
 import { useStudy } from "@/hooks/use-study";
-import { dayBoundary, completionVolume } from "@/lib/preferences";
-import { enableSound, playTimerComplete } from "@/lib/notifications";
+import { dayBoundary } from "@/lib/preferences";
+import { TimerSoundSettings } from "./timer-sound-settings";
 export function StudyPreferences() {
   const { data, store, run } = useStudy();
   const update = (key: string, value: unknown) =>
@@ -33,38 +33,7 @@ export function StudyPreferences() {
         Браузер зөвшөөрсөн үед ажиллана. Цонх далдрах, цэнэг бага байх үед
         төхөөрөмж цуцалж болно.
       </p>
-      <label>
-        Дуусах дохионы түвшин
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.05}
-          value={completionVolume(data.settings)}
-          onChange={(e) =>
-            void update("completionVolume", Number(e.target.value))
-          }
-        />
-      </label>
-      <button
-        className="button"
-        onClick={() =>
-          void run(async () => {
-            await enableSound();
-            await playTimerComplete({
-              ...data.settings,
-              sound: true,
-              notifications: false,
-            });
-          })
-        }
-      >
-        Дуусах хүчтэй дохиог турших
-      </button>
-      <p className="tiny muted">
-        Энэ тест нь timer дуусах үеийн чанга дохио, vibration боломжтой бол
-        vibration, гарчгийн анхааруулгыг шалгана.
-      </p>
+      <TimerSoundSettings />
       <label>
         Суралцах өдөр эхлэх цаг
         <select

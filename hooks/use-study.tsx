@@ -94,7 +94,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       m = window.matchMedia("(prefers-color-scheme: dark)");
     root.dataset.design = design;
     const apply = () => {
-      const mode = theme === "system" ? (m.matches ? "dark" : "light");
+      const mode = theme === "system" ? (m.matches ? "dark" : "light") : theme;
       const tokens = roomTheme.ui[mode];
       root.dataset.theme = mode;
       root.style.colorScheme = mode;
