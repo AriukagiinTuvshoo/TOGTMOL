@@ -4,6 +4,7 @@ export interface MusicProvider {
   requiresVisiblePlayer: boolean;
   play(): Promise<void>;
   pause(): Promise<void>;
+  stop(): Promise<void>;
   setVolume(volume: number, muted: boolean): void;
   next?(): void;
   previous?(): void;

@@ -6,6 +6,8 @@ export class AmbientPlayer {
   private gain: GainNode;
   private source: AudioBufferSourceNode | null = null;
   private current: string | null = null;
+  private command = 0;
+  private wanted = false;
   constructor() {
     this.context = new AudioContext();
     this.gain = this.context.createGain();
@@ -20,7 +22,14 @@ export class AmbientPlayer {
     );
   }
   async play(id: AmbientId) {
+    const command = ++this.command;
+    this.wanted = true;
     await this.context.resume();
+    if (command !== this.command) {
+      if (!this.wanted && this.context.state !== "closed")
+        await this.context.suspend();
+      return;
+    }
     if (this.context.state !== "running")
       throw Error("Дууг эхлүүлэхийн тулд Play-г дахин дараарай.");
     if (this.current === id && this.source) return;
@@ -105,12 +114,27 @@ export class AmbientPlayer {
     this.current = id;
   }
   async pause() {
+    this.command++;
+    this.wanted = false;
+    await this.context.suspend();
+  }
+  async stop() {
+    this.command++;
+    this.wanted = false;
+    this.source?.stop();
+    this.source?.disconnect();
+    this.source = null;
+    this.current = null;
     await this.context.suspend();
   }
   close() {
+    this.command++;
+    this.wanted = false;
     this.source?.stop();
     this.source?.disconnect();
-    void this.context.close();
+    this.source = null;
+    this.current = null;
+    void this.context.close().catch(() => {});
   }
 }
 
@@ -123,6 +147,7 @@ export function ambientProvider(
     requiresVisiblePlayer: false,
     play: () => player.play(id),
     pause: () => player.pause(),
+    stop: () => player.stop(),
     setVolume: (value, muted) => player.volume(muted ? 0 : value),
   };
 }

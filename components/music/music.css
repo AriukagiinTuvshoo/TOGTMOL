@@ -1,0 +1,210 @@
+/* Only the music dock and the space needed to keep content reachable. */
+.app-shell .music-player.music-dock {
+  left: auto;
+  right: 20px;
+  bottom: 16px;
+  width: min(420px, calc(100vw - 260px));
+  max-width: none;
+  transform: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.app-shell .music-player.music-dock.music-expanded {
+  width: min(790px, calc(100vw - 260px));
+}
+.music-dock.music-player [hidden] {
+  display: none !important;
+}
+.music-dock.music-player .music-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 12px;
+}
+.music-dock.music-player .music-title {
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+}
+.music-dock.music-player .music-title strong,
+.music-dock.music-player .music-title small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.music-dock.music-player .music-title > span:last-child {
+  flex: 1;
+}
+.music-dock.music-player .music-disc {
+  display: flex;
+  width: 30px;
+  height: 30px;
+}
+.music-dock.music-player .music-controls {
+  width: 100%;
+  gap: 5px;
+  justify-content: space-between;
+}
+.music-dock.music-player .music-controls .icon-button {
+  min-width: 36px;
+  min-height: 40px;
+  flex-shrink: 0;
+}
+.music-dock.music-player .music-volume {
+  display: block;
+  min-width: 48px;
+  width: 76px;
+  flex: 1;
+  max-width: 150px;
+  height: 36px;
+}
+.music-dock.music-player .music-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.music-dock.music-player.music-expanded .music-body {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 1fr);
+  border-top: 1px solid var(--border);
+}
+.music-dock.music-player.music-expanded {
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+}
+.music-dock.music-player.music-expanded .music-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+.music-dock.music-player .music-library {
+  min-width: 0;
+  padding: 16px;
+  max-height: min(56dvh, 500px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.music-dock.music-player .music-preview {
+  min-width: 0;
+  padding: 0;
+  gap: 0;
+  order: initial;
+  align-self: start;
+}
+.music-dock.music-player .music-preview > .soundscape-art {
+  margin-top: 20px;
+}
+.music-dock.music-player .music-preview > p,
+.music-dock.music-player .music-preview > h3 {
+  padding: 0 12px;
+}
+.music-dock.music-player .music-details {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.music-dock.music-player .youtube-embed,
+.music-dock.music-player .youtube-embed iframe {
+  width: 100%;
+  min-width: 200px;
+  height: 220px;
+  min-height: 200px;
+  max-width: none;
+  border: 0;
+}
+.music-dock.music-player:not(.music-expanded) .youtube-embed,
+.music-dock.music-player:not(.music-expanded) .youtube-embed iframe {
+  height: 200px;
+}
+.music-dock.music-player .music-error {
+  margin: 0;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.music-dock.music-player .music-error button {
+  margin-left: 8px;
+}
+.music-dock.music-player.music-failed {
+  padding: 12px;
+}
+.app-shell:has(.music-dock) .app-main {
+  padding-bottom: calc(var(--music-dock-height, 112px) + 32px);
+}
+.app-shell:has(.music-dock[data-kind="youtube"]) {
+  --music-dock-height: 320px;
+}
+.app-shell:has(.music-dock) .toast-region {
+  bottom: calc(var(--music-dock-height, 112px) + 32px);
+}
+@media (max-width: 768px) {
+  .app-shell .music-player.music-dock,
+  .app-shell .music-player.music-dock.music-expanded {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    transform: none;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+  .app-shell.is-focus .music-player.music-dock {
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .music-dock.music-player .music-controls .icon-button {
+    min-width: 40px;
+    min-height: 44px;
+    padding: 6px;
+  }
+  .music-dock.music-player .music-step {
+    display: none;
+  }
+  .music-dock.music-player .music-volume {
+    height: 44px;
+    max-width: none;
+  }
+  .music-dock.music-player.music-expanded .music-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .music-dock.music-player .music-preview {
+    grid-row: 1;
+  }
+  .music-dock.music-player .youtube-embed,
+  .music-dock.music-player .youtube-embed iframe {
+    height: 200px;
+  }
+  .music-dock.music-player .music-library {
+    max-height: max(90px, calc(100dvh - 490px));
+    padding: 12px;
+  }
+  .music-dock.music-player .music-details {
+    padding: 4px 12px;
+  }
+  .music-dock.music-player .music-details p {
+    margin: 6px 0;
+  }
+  .music-dock.music-player .mobile-music-steps {
+    display: flex;
+  }
+  .app-shell:has(.music-dock) .app-main {
+    padding-bottom: calc(
+      var(--music-dock-height, 112px) + 108px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+  .app-shell.is-focus:has(.music-dock) .app-main {
+    padding-bottom: calc(var(--music-dock-height, 112px) + 24px);
+  }
+  .app-shell:has(.music-dock) .toast-region {
+    bottom: calc(
+      var(--music-dock-height, 112px) + 92px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+@media (max-width: 380px) {
+  .music-dock.music-player .music-bar {
+    padding: 8px;
+  }
+  .music-dock.music-player .music-controls {
+    gap: 2px;
+  }
+  .music-dock.music-player .music-title strong {
+    font-size: 11px;
+  }
+}

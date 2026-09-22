@@ -7,15 +7,11 @@ import { SectionTitle } from "@/components/ui/common";
 
 export function MusicSettings() {
   const { store, data } = useStudy();
-  const [preference, update] = useMusicPreference(
+  const [preference, update, error] = useMusicPreference(
     store.getSnapshot().namespace,
   );
   const change = (patch: Partial<MusicPreferences>) => {
-    try {
-      update(patch);
-    } catch (e) {
-      store.reportError(e);
-    }
+    void update(patch);
   };
   const last =
     AMBIENTS.find((a) => `ambient:${a.id}` === preference.lastPlayed)?.name ??
@@ -28,6 +24,11 @@ export function MusicSettings() {
         title="Хөгжим"
         subtitle="Өөрт тохирсон ая, чимээгээ сонгоорой."
       />
+      {error && (
+        <p role="status" className="music-error">
+          {error}
+        </p>
+      )}
       <div className="form-stack">
         <label>
           Үндсэн хөгжмийн ангилал

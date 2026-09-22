@@ -249,7 +249,7 @@ describe("study world integration", () => {
   });
 });
 
-it("uses the official YouTube API without autoplay and pauses before minimizing", async () => {
+it("uses the official YouTube API without autoplay and retains it when minimizing", async () => {
   const play = vi.fn(),
     pause = vi.fn(),
     destroy = vi.fn(),
@@ -275,6 +275,9 @@ it("uses the official YouTube API without autoplay and pauses before minimizing"
     pauseVideo() {
       pause();
       state?.(2);
+    }
+    stopVideo() {
+      state?.(0);
     }
     setVolume() {}
     mute() {}
@@ -312,9 +315,9 @@ it("uses the official YouTube API without autoplay and pauses before minimizing"
   fireEvent.click(screen.getByRole("button", { name: "Хөгжим тоглуулах" }));
   await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
   fireEvent.click(screen.getByRole("button", { name: "Хөгжим багасгах" }));
-  await waitFor(() => expect(destroy).toHaveBeenCalledTimes(1));
-  expect(pause).toHaveBeenCalled();
-  expect(screen.queryByTitle("YouTube")).not.toBeInTheDocument();
+  expect(destroy).not.toHaveBeenCalled();
+  expect(pause).not.toHaveBeenCalled();
+  expect(screen.getByTitle("YouTube")).toBeVisible();
   delete window.YT;
 });
 
@@ -398,7 +401,9 @@ it("shares music preferences with the persistent player and restores the chosen 
   cleanup();
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
-  expect(screen.getByText("Night study")).toBeVisible();
+  expect(
+    screen.getByText("Night study", { selector: ".music-title strong" }),
+  ).toBeVisible();
   expect(audio).not.toHaveBeenCalled();
   expect(document.querySelector('script[src*="youtube"]')).toBeNull();
 });

@@ -6,29 +6,42 @@ import {
   type YTPlayer,
 } from "@/lib/music/youtube-player";
 import type { YouTubeSource } from "@/lib/music/youtube";
+import type { MusicSession } from "@/lib/music/preferences";
 export function YouTubeEmbed({
   source,
+  resume,
   onReady,
   onState,
   onError,
 }: {
   source: YouTubeSource;
+  resume?: Pick<MusicSession, "position" | "playlistIndex">;
   onReady: (player: YTPlayer | null) => void;
   onState: (state: number) => void;
   onError: (message: string) => void;
 }) {
   const { kind, youtubeId } = source;
-  const host = useRef<HTMLDivElement>(null),
-    callbacks = useRef({ onReady, onState, onError });
+  const host = useRef<HTMLDivElement>(null);
+  const callbacks = useRef({ onReady, onState, onError, resume });
   useEffect(() => {
-    callbacks.current = { onReady, onState, onError };
-  }, [onReady, onState, onError]);
+    callbacks.current = { onReady, onState, onError, resume };
+  }, [onReady, onState, onError, resume]);
   useEffect(() => {
     let disposed = false,
       player: YTPlayer | undefined;
-    let observer: IntersectionObserver | undefined;
+    const container = host.current;
+    if (!container) return;
     const element = document.createElement("div");
-    host.current!.append(element);
+    container.append(element);
+    const report = (message: string) => {
+      if (!disposed) {
+        try {
+          callbacks.current.onError(message);
+        } catch {
+          /* Isolate asynchronous callbacks. */
+        }
+      }
+    };
     void loadYouTube()
       .then((api) => {
         if (disposed) return;
@@ -38,54 +51,47 @@ export function YouTubeEmbed({
           { kind, youtubeId },
           {
             ready: (p) => {
-              if (disposed) {
-                try {
-                  p.destroy();
-                } catch {}
-                return;
-              }
-              callbacks.current.onReady(p);
-              if (typeof IntersectionObserver !== "undefined" && host.current) {
-                observer = new IntersectionObserver(
-                  (entries) => {
-                    if (entries.some((entry) => !entry.isIntersecting))
-                      try {
-                        p.pauseVideo();
-                      } catch {
-                        if (!disposed)
-                          callbacks.current.onError(
-                            "Тоглуулагчийг дахин ачаална уу.",
-                          );
-                      }
-                  },
-                  { threshold: 0.1 },
-                );
-                observer.observe(host.current);
+              if (disposed) return;
+              try {
+                callbacks.current.onReady(p);
+              } catch {
+                report("YouTube удирдлагыг дахин ачаална уу.");
               }
             },
             state: (s) => {
-              if (!disposed) callbacks.current.onState(s);
+              if (!disposed) {
+                try {
+                  callbacks.current.onState(s);
+                } catch {
+                  report("YouTube төлөвийг уншиж чадсангүй.");
+                }
+              }
             },
-            error: (m) => {
-              if (!disposed) callbacks.current.onError(m);
-            },
+            error: report,
           },
+          callbacks.current.resume,
         );
       })
-      .catch((e) => {
-        if (!disposed)
-          callbacks.current.onError(String(e instanceof Error ? e.message : e));
-      });
+      .catch(() =>
+        report(
+          "YouTube-г ачаалж чадсангүй. Интернетээ шалгаад дахин оролдоно уу.",
+        ),
+      );
+    // Only a source change, explicit retry or app/account exit destroys the iframe.
+    // Minimize, navigation, intersection and page visibility are not dependencies.
     return () => {
       disposed = true;
-      observer?.disconnect();
-      callbacks.current.onReady(null);
+      try {
+        callbacks.current.onReady(null);
+      } catch {
+        /* Already detached. */
+      }
       try {
         player?.destroy();
       } catch {
-        /* YouTube may have removed its iframe before cleanup. */
+        /* YouTube may already have removed the iframe. */
       }
-      element.remove();
+      container.replaceChildren();
     };
   }, [kind, youtubeId]);
   return (

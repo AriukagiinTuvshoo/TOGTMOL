@@ -25,7 +25,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("media failure isolation", () => {
-  it("clears a detached YouTube player during repeated minimize/unmount and ignores late callbacks", async () => {
+  it("clears a detached YouTube player during repeated app unmount and ignores late callbacks", async () => {
     youtube.load.mockResolvedValue({});
     const destroyed = vi.fn(() => {
       throw Error("detached iframe");

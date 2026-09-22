@@ -107,10 +107,13 @@ export class StudyStore {
       if (doc && doc.revision > this.state.revision) this.publish({ ...doc });
     });
   }
-  mutate(transform: (data: StudyData) => StudyData): Promise<void> {
+  mutate(
+    transform: (data: StudyData) => StudyData,
+    options: { reportError?: boolean; reportBusy?: boolean } = {},
+  ): Promise<void> {
     return this.serialize(async () => {
       if (!this.state.ready) throw Error("Өгөгдөл ачаалж дуусаагүй байна.");
-      this.publish({ busy: true });
+      if (options.reportBusy !== false) this.publish({ busy: true });
       try {
         const old = this.state.data;
         let next = transform(old);
@@ -129,17 +132,20 @@ export class StudyStore {
           next,
           this.state.revision,
         );
-        this.publish({ ...document, error: null });
+        this.publish({
+          ...document,
+          ...(options.reportError !== false ? { error: null } : {}),
+        });
         this.channel?.postMessage(this.state.namespace);
       } catch (error) {
         if (error instanceof RevisionError) {
           const doc = await this.repository.load(this.state.namespace);
           if (doc) this.publish({ ...doc });
         }
-        this.reportError(error);
+        if (options.reportError !== false) this.reportError(error);
         throw error;
       } finally {
-        this.publish({ busy: false });
+        if (options.reportBusy !== false) this.publish({ busy: false });
       }
     });
   }
