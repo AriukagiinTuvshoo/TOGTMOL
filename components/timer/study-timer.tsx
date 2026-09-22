@@ -26,6 +26,7 @@ export function TimerWatch() {
   const wakeStatus = useWakeLock(
     Boolean(t?.running && data.settings.extras.wakeLock),
   );
+
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
     const remainingMs = Math.max(0, t.targetMs - elapsed(t, now));
@@ -49,7 +50,11 @@ export function TimerWatch() {
       window.setTimeout(() => {
         setAlert((current) => (current === "warning" ? null : current));
       }, 6000);
-      void notifyTimerWarning(label, data.settings, `togtmol-timer-warning-${t.id}`);
+      void notifyTimerWarning(
+        label,
+        data.settings,
+        `togtmol-timer-warning-${t.id}`,
+      );
     }
   }, [t, now, data.settings]);
 
@@ -77,21 +82,18 @@ export function TimerWatch() {
       void run(() => store.mutate(actions.finish())).then((ok) => {
         finishing.current = false;
         if (ok) {
-          setNotice(
-            t.phase === "focus"
-              ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
-              : "Амралт дууслаа.",
-          );
           const message =
             t.phase === "focus"
               ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
               : "Амралт дууслаа.";
+          setNotice(message);
           setAlert("complete");
           void notifyUser(message, data.settings, `togtmol-timer-${t.id}`);
         }
       });
     }
   }, [t, now, store, run, data.settings, setNotice]);
+
   const closeAlert = () => {
     try {
       if (typeof navigator !== "undefined" && "vibrate" in navigator)
@@ -101,10 +103,16 @@ export function TimerWatch() {
   };
 
   if (!t) return null;
+
   return (
     <>
       {alert && (
-        <div className={`timer-alert-layer timer-alert-${alert}`} role="alertdialog" aria-modal="true" aria-live="assertive">
+        <div
+          className={`timer-alert-layer timer-alert-${alert}`}
+          role="alertdialog"
+          aria-modal="true"
+          aria-live="assertive"
+        >
           <div className="timer-alert-backdrop" aria-hidden="true" />
           <section className="timer-alert-card">
             <div className="timer-alert-icon" aria-hidden="true">
@@ -139,7 +147,10 @@ export function TimerWatch() {
               )}
             </div>
             {alert === "complete" && (
-              <button className="text-button timer-alert-dismiss" onClick={closeAlert}>
+              <button
+                className="text-button timer-alert-dismiss"
+                onClick={closeAlert}
+              >
                 Дууны дохиог хаах
               </button>
             )}
@@ -147,16 +158,16 @@ export function TimerWatch() {
         </div>
       )}
       <button
-    <button
-      title={wakeStatus}
-      className="active-timer-chip"
-      onClick={() => navigate("focus")}
-    >
-      <span className={t.running ? "live-dot" : ""} />
-      <Icon name={t.status === "review" ? "check" : "clock"} size={16} />
-      {t.status === "review" ? "Үр дүнгээ хадгалах" : clock(elapsed(t, now))}
-      <Icon name="arrow" size={16} />
-    </button>
+        title={wakeStatus}
+        className="active-timer-chip"
+        onClick={() => navigate("focus")}
+      >
+        <span className={t.running ? "live-dot" : ""} />
+        <Icon name={t.status === "review" ? "check" : "clock"} size={16} />
+        {t.status === "review" ? "Үр дүнгээ хадгалах" : clock(elapsed(t, now))}
+        <Icon name="arrow" size={16} />
+      </button>
+    </>
   );
 }
 export function StudyTimer({ compact = false }: { compact?: boolean }) {
