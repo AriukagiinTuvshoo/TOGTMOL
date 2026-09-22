@@ -17,9 +17,22 @@ export function elapsed(timer: ActiveTimer, now: number): number {
   return timer.targetMs === null ? value : Math.min(value, timer.targetMs);
 }
 function effectiveEnd(t: ActiveTimer, now: number) {
-  return t.running && t.runningSince !== null && t.targetMs !== null
-    ? Math.min(now, t.runningSince + Math.max(0, t.targetMs - t.accumulatedMs))
-    : now;
+  if (t.running && t.runningSince !== null && t.targetMs !== null)
+    return Math.min(
+      now,
+      t.runningSince + Math.max(0, t.targetMs - t.accumulatedMs),
+    );
+  if (t.running && t.runningSince !== null) return now;
+
+  // Once a timer is paused, Finish should describe the last actual study
+  // moment, not the wall-clock time spent away from the app.
+  const lastSegmentEnd = t.segments.reduce(
+    (end, segment) => Math.max(end, segment.end),
+    0,
+  );
+  return lastSegmentEnd > 0
+    ? lastSegmentEnd
+    : Math.max(t.sessionStartedAt, t.sessionStartedAt + t.accumulatedMs);
 }
 function appendSpan(t: ActiveTimer, now: number): Span[] {
   const end = effectiveEnd(t, now);
