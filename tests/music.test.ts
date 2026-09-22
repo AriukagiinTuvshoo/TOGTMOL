@@ -196,14 +196,15 @@ describe("music persistence and cancellation", () => {
   });
 });
 
-
 describe("native audio library", () => {
   it("validates remote audio URLs without allowing executable schemes", () => {
     expect(parseAudioURL("https://cdn.example.com/music/study.mp3")).toBe(
       "https://cdn.example.com/music/study.mp3",
     );
     expect(() => parseAudioURL("javascript:alert(1)")).toThrow();
-    expect(() => parseAudioURL("https://user:pass@example.com/song.mp3")).toThrow();
+    expect(() =>
+      parseAudioURL("https://user:pass@example.com/song.mp3"),
+    ).toThrow();
   });
 
   it("stores uploaded audio blobs separately from study JSON", async () => {
@@ -242,7 +243,9 @@ describe("native audio library", () => {
     await repo.clearMusicBlobs("guest");
     expect(await repo.loadMusicBlob("guest", "musicblob_test123")).toBeNull();
     expect(await repo.loadMusicBlob("guest", "musicblob_test456")).toBeNull();
-    expect(await repo.loadMusicBlob("other", "musicblob_test789")).not.toBeNull();
+    expect(
+      await repo.loadMusicBlob("other", "musicblob_test789"),
+    ).not.toBeNull();
     await repo.close();
   });
 });

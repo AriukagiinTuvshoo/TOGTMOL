@@ -321,7 +321,9 @@ describe("persistent music dock", () => {
     expect(dock()).toHaveAttribute("data-open", "false");
     expect(dock()).toHaveAttribute("data-playback", "paused");
     expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(within(dock()).getByRole("button", { name: "Хөгжим тоглуулах" })).toBeVisible();
+    expect(
+      within(dock()).getByRole("button", { name: "Хөгжим тоглуулах" }),
+    ).toBeVisible();
   });
   it("does not pause on visibility/intersection changes or a mobile-size resize", async () => {
     const observe = vi.fn();

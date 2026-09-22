@@ -60,7 +60,9 @@ function sourceTrack(
       title: source.title,
       artist: "YouTube",
       videoId: source.kind === "video" ? source.youtubeId : null,
-      url: youtubeURL(source as { kind: "video" | "playlist"; youtubeId: string }),
+      url: youtubeURL(
+        source as { kind: "video" | "playlist"; youtubeId: string },
+      ),
     };
   }
   return { title: fallback, artist: "Хөгжим", videoId: null, url: "" };
@@ -126,9 +128,7 @@ function useMusicController() {
   const { volume, muted } = preference;
 
   const currentSources = () =>
-    store
-      .getSnapshot()
-      .data.musicSources.filter((s) => !s.deletedAt);
+    store.getSnapshot().data.musicSources.filter((s) => !s.deletedAt);
 
   const commit = (patch: Partial<MusicSession>) => {
     if (!mounted.current || store.getSnapshot().namespace !== namespace) return;
@@ -158,9 +158,11 @@ function useMusicController() {
     const element = new Audio();
     element.preload = "metadata";
     try {
-      const audioSession = (navigator as Navigator & {
-        audioSession?: { type: string };
-      }).audioSession;
+      const audioSession = (
+        navigator as Navigator & {
+          audioSession?: { type: string };
+        }
+      ).audioSession;
       if (audioSession) audioSession.type = "playback";
     } catch {
       /* Audio Session is optional. */
@@ -295,7 +297,10 @@ function useMusicController() {
       ...(kind === "stop" ? { position: 0 } : {}),
     });
     try {
-      if (nativeSourceId.current === latest.current.selection && nativeAudio.current) {
+      if (
+        nativeSourceId.current === latest.current.selection &&
+        nativeAudio.current
+      ) {
         if (kind === "stop") nativeAudio.current.currentTime = 0;
         nativeAudio.current.pause();
         return;
@@ -608,7 +613,9 @@ function useMusicController() {
       return;
     }
     if (store.repository.fallback) {
-      fail("Төхөөрөмжийн аудио файл хадгалахад IndexedDB дэмждэг браузер хэрэгтэй.");
+      fail(
+        "Төхөөрөмжийн аудио файл хадгалахад IndexedDB дэмждэг браузер хэрэгтэй.",
+      );
       return;
     }
     const key = uid("musicblob");
@@ -676,7 +683,10 @@ function useMusicController() {
         { reportError: false, reportBusy: false },
       );
       if (target?.kind === "audio" && target.audioStorageKey)
-        await store.repository.deleteMusicBlob(namespace, target.audioStorageKey);
+        await store.repository.deleteMusicBlob(
+          namespace,
+          target.audioStorageKey,
+        );
       if (!mounted.current || store.getSnapshot().namespace !== namespace)
         return;
       if (latest.current.selection === id) select("ambient:lofi", false);

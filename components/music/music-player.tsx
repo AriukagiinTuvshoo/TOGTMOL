@@ -18,7 +18,9 @@ const YouTubeEmbed = dynamic(
   },
 );
 
-function isYouTubeSource(source: MusicSource): source is MusicSource & { kind: "video" | "playlist"; youtubeId: string } {
+function isYouTubeSource(
+  source: MusicSource,
+): source is MusicSource & { kind: "video" | "playlist"; youtubeId: string } {
   return source.kind === "video" || source.kind === "playlist";
 }
 
@@ -200,7 +202,9 @@ export function MusicPlayer() {
                 Цөөн, хэрэгтэй аялгуу. Өөрийн дуугаа бас хадгалж болно.
               </p>
             </div>
-            <span className="music-count">{sources.length + AMBIENTS.length}</span>
+            <span className="music-count">
+              {sources.length + AMBIENTS.length}
+            </span>
           </div>
 
           <div className="ambient-options">
@@ -247,7 +251,9 @@ export function MusicPlayer() {
                   <Icon name="upload" size={16} /> Аудио файл
                 </span>
               </label>
-              <span className="tiny muted">80 MB хүртэл · төхөөрөмж дээр хадгална</span>
+              <span className="tiny muted">
+                80 MB хүртэл · төхөөрөмж дээр хадгална
+              </span>
             </div>
 
             <form
@@ -294,7 +300,10 @@ export function MusicPlayer() {
                       aria-pressed={selected === s.id}
                       onClick={() => select(s.id)}
                     >
-                      <Icon name={s.kind === "audio" ? "music" : "cloud"} size={16} />
+                      <Icon
+                        name={s.kind === "audio" ? "music" : "cloud"}
+                        size={16}
+                      />
                       <span>
                         <strong>{s.title}</strong>
                         <small>{sourceKind(s)}</small>
@@ -343,7 +352,12 @@ export function MusicPlayer() {
               {activated ? (
                 <YouTubeEmbed
                   key={`${source.id}:${attempt}`}
-                  source={source as MusicSource & { kind: "video" | "playlist"; youtubeId: string }}
+                  source={
+                    source as MusicSource & {
+                      kind: "video" | "playlist";
+                      youtubeId: string;
+                    }
+                  }
                   resume={session}
                   onReady={onReady}
                   onState={onState}
@@ -358,8 +372,8 @@ export function MusicPlayer() {
                 <div className="music-details">
                   <p className="tiny muted">
                     YouTube-ийн playback нь браузер, төхөөрөмжөөс хамаарна.
-                    Background/lock-screen control нь native audio шиг тогтвортой
-                    биш байж болно.
+                    Background/lock-screen control нь native audio шиг
+                    тогтвортой биш байж болно.
                   </p>
                   <a
                     href={session.track.url || youtubeURL(source)}
@@ -382,7 +396,9 @@ export function MusicPlayer() {
               <div>
                 <span className="eyebrow">STUDY SOUNDS</span>
                 <h3>{name}</h3>
-                <p className="muted">Нэг жижиг алхамдаа анхаарлаа төвлөрүүлээрэй.</p>
+                <p className="muted">
+                  Нэг жижиг алхамдаа анхаарлаа төвлөрүүлээрэй.
+                </p>
               </div>
             </div>
           )}

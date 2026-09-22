@@ -249,7 +249,9 @@ describe("study world integration", () => {
     expect(screen.getByRole("complementary", { name: "Study music" })).toBe(
       player,
     );
-    expect(screen.getByRole("button", { name: /RainТайван борооны чимээ/ })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /RainТайван борооны чимээ/ }),
+    ).toBeVisible();
     fireEvent.change(
       screen.getByRole("textbox", { name: "Аудио эсвэл YouTube холбоос" }),
       { target: { value: "javascript:alert(1)" } },
@@ -415,7 +417,10 @@ it("shares music preferences with the persistent player and restores the chosen 
     rememberLast: false,
   });
   await waitFor(async () =>
-    expect((await new Repository().load("guest"))?.data.settings.extras.musicPreferences).toMatchObject({
+    expect(
+      (await new Repository().load("guest"))?.data.settings.extras
+        .musicPreferences,
+    ).toMatchObject({
       defaultCategory: "rain",
       rememberLast: false,
       volume: 0.25,

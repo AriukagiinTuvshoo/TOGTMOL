@@ -291,7 +291,11 @@ export class Repository {
       )
       .sort((a, b) => b.createdAt - a.createdAt);
   }
-  async saveMusicBlob(namespace: string, key: string, blob: Blob): Promise<void> {
+  async saveMusicBlob(
+    namespace: string,
+    key: string,
+    blob: Blob,
+  ): Promise<void> {
     if (this.fallback)
       throw Error("Төхөөрөмжийн аудио файл хадгалахад IndexedDB шаардлагатай.");
     const db = await this.db(),
@@ -333,11 +337,7 @@ export class Repository {
       const cursor = cursorRequest.result;
       if (!cursor) return;
       const key = cursor.key;
-      if (
-        Array.isArray(key) &&
-        key.length === 2 &&
-        key[0] === namespace
-      )
+      if (Array.isArray(key) && key.length === 2 && key[0] === namespace)
         cursor.delete();
       cursor.continue();
     };
