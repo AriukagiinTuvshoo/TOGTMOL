@@ -1,0 +1,19 @@
+name: Temporary prettier preview
+on:
+  push:
+    paths:
+      - ".github/workflows/tmp-prettier.yml"
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write app/globals.css components/timer/study-timer.tsx lib/notifications.ts
+      - run: git diff -- app/globals.css components/timer/study-timer.tsx lib/notifications.ts
