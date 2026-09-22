@@ -85,15 +85,7 @@ describe("timer lifecycle", () => {
     const d = fixture();
     d.sessions = [];
     d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
-    d.activeTimer = {
-      ...d.activeTimer,
-      accumulatedMs: 30000,
-      running: false,
-      runningSince: null,
-      status: "review",
-      finishedAt: NOW + 30000,
-      segments: [{ start: NOW, end: NOW + 30000 }],
-    };
+    vi.spyOn(Date, "now").mockReturnValue(NOW + 30000);
     const recorded = actions.finish()(d);
     const before = recorded.sessions[0];
     const saved = actions.saveTimer("тайлбар", false)(recorded);
