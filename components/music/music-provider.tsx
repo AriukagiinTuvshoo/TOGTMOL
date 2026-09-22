@@ -43,12 +43,15 @@ function sourceTrack(source: MusicSource | undefined, fallback = "Хөгжим")
       url: source.audioUrl ?? "",
     };
   }
-  return {
-    title: source.title,
-    artist: "YouTube",
-    videoId: source.kind === "video" ? source.youtubeId : null,
-    url: youtubeURL(source),
-  };
+  if (source.kind === "video" || source.kind === "playlist") {
+    return {
+      title: source.title,
+      artist: "YouTube",
+      videoId: source.kind === "video" ? source.youtubeId : null,
+      url: youtubeURL(source),
+    };
+  }
+  return { title: fallback, artist: "Хөгжим", videoId: null, url: "" };
 }
 
 function useMusicController() {
@@ -142,7 +145,6 @@ function useMusicController() {
     if (nativeAudio.current) return nativeAudio.current;
     const element = new Audio();
     element.preload = "metadata";
-    element.playsInline = true;
     try {
       const audioSession = (navigator as Navigator & {
         audioSession?: { type: string };
