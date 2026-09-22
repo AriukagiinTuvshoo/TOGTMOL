@@ -1,7 +1,7 @@
 "use client";
 import { useStudy } from "@/hooks/use-study";
 import { dayBoundary, completionVolume } from "@/lib/preferences";
-import { enableSound, notifyUser } from "@/lib/notifications";
+import { enableSound, playTimerComplete } from "@/lib/notifications";
 export function StudyPreferences() {
   const { data, store, run } = useStudy();
   const update = (key: string, value: unknown) =>
@@ -51,7 +51,7 @@ export function StudyPreferences() {
         onClick={() =>
           void run(async () => {
             await enableSound();
-            notifyUser("Дууны дохио", {
+            await playTimerComplete({
               ...data.settings,
               sound: true,
               notifications: false,
@@ -59,8 +59,12 @@ export function StudyPreferences() {
           })
         }
       >
-        Дохиог сонсох
+        Дуусах хүчтэй дохиог турших
       </button>
+      <p className="tiny muted">
+        Энэ тест нь timer дуусах үеийн чанга дохио, vibration боломжтой бол
+        vibration, гарчгийн анхааруулгыг шалгана.
+      </p>
       <label>
         Суралцах өдөр эхлэх цаг
         <select
