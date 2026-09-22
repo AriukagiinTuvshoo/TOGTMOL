@@ -69,7 +69,7 @@ describe("original soundscape playback", () => {
     await provider.pause();
     expect(suspend).toHaveBeenCalled();
     await provider.play();
-    expect(started).toHaveBeenCalledTimes(AMBIENTS.length);
+    expect(started).toHaveBeenCalledTimes(AMBIENTS.length + 1);
     engine.close();
     expect(close).toHaveBeenCalled();
     expect(stopped).toHaveBeenCalledTimes(AMBIENTS.length);
