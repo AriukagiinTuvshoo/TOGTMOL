@@ -13,7 +13,11 @@ import {
   clearTimerDraft,
 } from "@/lib/persistence/timer-draft";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { enableSound, notifyTimerWarning, notifyUser } from "@/lib/notifications";
+import {
+  enableSound,
+  notifyTimerWarning,
+  notifyUser,
+} from "@/lib/notifications";
 
 export function TimerWatch() {
   const { data, store, run, navigate, setNotice } = useStudy(),
