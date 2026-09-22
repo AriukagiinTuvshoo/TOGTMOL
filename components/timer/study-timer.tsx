@@ -13,7 +13,7 @@ import {
   clearTimerDraft,
 } from "@/lib/persistence/timer-draft";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { notifyUser, playTimerWarning } from "@/lib/notifications";
+import { enableSound, notifyUser, playTimerWarning } from "@/lib/notifications";
 
 export function TimerWatch() {
   const { data, store, run, navigate, setNotice } = useStudy(),
@@ -146,6 +146,13 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         ? Math.max(0, t.targetMs - ms)
         : null;
   const start = async () => {
+    // Prime Web Audio from the user's Start click. Browsers can block
+    // programmatic audio unless the AudioContext was activated by a gesture.
+    try {
+      await enableSound();
+    } catch {
+      // Timer must still start even when audio is unavailable.
+    }
     if (
       await run(() =>
         store.mutate(
