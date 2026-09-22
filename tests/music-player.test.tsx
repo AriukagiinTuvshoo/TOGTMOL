@@ -176,7 +176,10 @@ async function load() {
   return players.at(-1)!;
 }
 async function start() {
-  click("Хөгжим тоглуулах");
+  const playButton = within(dock()).queryByRole("button", {
+    name: "Хөгжим тоглуулах",
+  });
+  if (playButton) fireEvent.click(playButton);
   await waitFor(() =>
     expect(dock()).toHaveAttribute("data-playback", "playing"),
   );
@@ -436,7 +439,7 @@ describe("persistent music dock", () => {
     expect(await screen.findByText(/YouTube-г ачаалж чадсангүй/)).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     window.YT = { Player };
-    click("Дахин ачаалах");
+    click("Дахин оролдох");
     await screen.findByTitle("Test YouTube");
     await start();
     expect(players).toHaveLength(1);
