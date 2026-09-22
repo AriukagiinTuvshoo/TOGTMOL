@@ -44,6 +44,9 @@ export function StudyCalendar({
   }, [range, month, today]);
   const day = map?.get(selected),
     daySessions = index.sessions.filter((s) => day?.sessions.has(s.id));
+  const selectedMinutes = Math.round((day?.seconds ?? 0) / 60);
+  const dayMood = selectedMinutes >= 60 ? "🏆" : selectedMinutes >= 30 ? "🔥" : selectedMinutes > 0 ? "🌱" : "🌿";
+  const dayMoodText = selectedMinutes >= 60 ? "Өнөөдрийн хүчтэй ахиц!" : selectedMinutes >= 30 ? "Гоё төвлөрчээ!" : selectedMinutes > 0 ? "Жижиг ахиц ч ахиц." : "Эндээс дахин эхэлж болно.";
   const cell = (ds: string | null, i: number) =>
     ds ? (
       <button
@@ -86,11 +89,21 @@ export function StudyCalendar({
   );
   return (
     <div className="stack">
-      <section className="card">
-        <SectionTitle
-          title="Таны тогтмол байдал"
-          subtitle="Нүд бүр нэг өдөр. Жижиг ахиц бүр энд үлдэнэ."
-        />
+      <section className="card calendar-main-card">
+        <div className="calendar-smart-head">
+          <div>
+            <span className="eyebrow">📅 YOUR STUDY RHYTHM</span>
+            <h2>Таны суралцах хэмнэл</h2>
+            <p>Өдөр бүрийн цаг, хичээл, жижиг ахицыг нэг дороос хараарай.</p>
+          </div>
+          <div className="calendar-smart-buddy" aria-hidden="true">🤖✨</div>
+        </div>
+        <div className="calendar-summary-strip">
+          <div><span>🌱</span><strong>{dayMood}</strong><small>{dayMoodText}</small></div>
+          <div><span>⏱️</span><strong>{formatTime(day?.seconds ?? 0)}</strong><small>сонгосон өдөр</small></div>
+          <div><span>📚</span><strong>{day?.subjects.size ?? 0}</strong><small>хичээл</small></div>
+          <div><span>✨</span><strong>{daySessions.length}</strong><small>session</small></div>
+        </div>
         <div className="filter-row">
           <div className="segmented">
             {([30, 90, 365, "month"] as const).map((n) => (
@@ -109,7 +122,9 @@ export function StudyCalendar({
         </div>
         {range === "month" ? (
           <>
-            <label className="month-picker">
+            <div className="calendar-month-head">
+              <button className="icon-button bordered" aria-label="Өмнөх сар" onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() - 1); setMonth(dateKey(d).slice(0, 7)); } }}>‹</button>
+              <label className="month-picker">
               Сар
               <input
                 type="month"
@@ -118,6 +133,8 @@ export function StudyCalendar({
                 max={today.slice(0, 7)}
               />
             </label>
+            <button className="icon-button bordered" aria-label="Дараагийн сар" disabled={month >= today.slice(0, 7)} onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() + 1); setMonth(dateKey(d).slice(0, 7)); } }}>›</button>
+            </div>
             <div className="monthly-calendar">
               {SHORT_DAYS.map((s) => (
                 <span key={s} className="weekday">
