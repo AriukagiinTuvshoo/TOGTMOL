@@ -1,81 +1,65 @@
-# Architecture and upgrade decisions
+# Тогтмол v5: архитектур
 
-## Before v3
+## Үндсэн бүтэц
 
-v2 is a single HTML document with inline CSS and an imperative JavaScript application. Its persisted document lives at `tracker-data`; it uses host `window.storage` when available and a browser fallback. It already contains subjects, manual day entries, measured sessions, goals, achievements, import/export and an active timer. Its exact source is retained in `legacy/togtmol-v2.html`.
+| Байрлал                                  | Үүрэг                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------- |
+| `app/`                                   | Next.js эхлэл, мета мэдээлэл, суулгах manifest, алдааны дэлгэц, загварууд       |
+| `types/study.ts`, `types/knowledge.ts`   | schema 5 баримт, хугацаа, мэдлэгийн долоон төрөл                                |
+| `hooks/use-study.tsx`                    | Гадаад хадгалалтын subscription, navigation, индекс, буцаах үйлдэл              |
+| `lib/persistence/`                       | IndexedDB, revision, эх нөөц, шилжилт, хадгалах дараалал                        |
+| `lib/migration/`                         | Хуучин схем унших, баталгаажуулах, unknown/quarantine, гурван талын нэгтгэл     |
+| `lib/knowledge/`                         | Тэмдэглэл, зураг, карт, SM-2, сорил, хайлт, статистик                           |
+| `components/knowledge/`                  | Мэдлэгийн сан, засварлах цонх, давтлага, сорил, карт бэлтгэх                    |
+| `lib/assistant/`                         | Бондоокийн локал дүгнэлт, ярилцлага, серверийн AI холболт, санал баталгаажуулах |
+| `components/music/`, `lib/music/`        | Байнгын provider, жижиг тоглуулагч, процедурын ая, албан ёсны YouTube           |
+| `lib/world/`, `components/world/`        | Өрөө, Бондоок, ахиц, урамшуулал, зорилгын үе шат                                |
+| `hooks/use-account.tsx`, `lib/supabase/` | Бүртгэл тусгаарлах, синк, хуучин төхөөрөмжийн устгалын хамгаалалт               |
+| `supabase/migrations/`                   | Гурван дараалсан SQL өөрчлөлт, RLS, atomic RPC                                  |
+| `scripts/`, `tests/`                     | Интернэтгүй ажиллах файлууд, зураг үүсгэх, автомат шалгалтууд                   |
 
-The upgrade addresses repeated history scans, tightly coupled DOM/storage code, missing session editing, missing planning and account isolation, and the absence of an installable application shell. The original v2 data contract remains readable.
+## Хадгалалтын урсгал
 
-## Module boundaries
+Интерфейс → `StudyStore.mutate` → цуваа үйлдэл → нөөцийн шаардлага → revision шалгасан IndexedDB гүйлгээ → амжилттай snapshot нийтлэх. Хадгалалт бүтэлгүйтэхэд амжилтын мэдэгдэл гаргахгүй. Өөр цонхны шинэ revision-ийг BroadcastChannel/focus-оор уншина.
 
-| Location                | Responsibility                                                            |
-| ----------------------- | ------------------------------------------------------------------------- |
-| `app/`                  | Next App Router entry, metadata, manifest, responsive CSS, error boundary |
-| `components/`           | Screen components and reusable accessible controls                        |
-| `hooks/use-study.tsx`   | External store subscription, indexed statistics, navigation, theme        |
-| `hooks/use-account.tsx` | Optional auth lifecycle, account selection, sync scheduling               |
-| `types/study.ts`        | Explicit v4 document, entity, timer and analytics types                   |
-| `lib/calculations/`     | Pure timer, local date, statistics and achievement calculations           |
-| `lib/migration/`        | Validation, backward migration, three-way merge, conflict resolution      |
-| `lib/persistence/`      | IndexedDB transactions, source backups, mutations, note recovery journal  |
-| `lib/supabase/`         | Public client, real RPC adapter, account-bound sync engine                |
-| `lib/assistant/`        | Deterministic insights and future AI provider contract                    |
-| `scripts/`              | Build-specific offline asset manifest and service worker template         |
-| `supabase/migrations/`  | Versioned PostgreSQL schema, policies and transaction functions           |
-| `tests/`                | Unit, repository, database, sync, component and worker regression tests   |
+Guest ба `account:<UUID>` тусдаа namespace. Баримтын хөнгөн хэсэг `documents`, мэдлэгийн мөрүүд `[namespace,id]` түлхүүртэй `knowledge` store-д. Нэг гүйлгээнд хоёуланг өөрчилнө. Өөрчлөгдөөгүй карт/зураг дахин бичигдэхгүй. `backups` болон `metadata` тусдаа. Зургийг жижигсгэж JPEG болгон, EXIF-ийг canvas дахин дүрслэх замаар хасна; portable export-д зурагтайгаа орно. Тусдаа blob сервер эсвэл нийтэд нээлттэй зургийн bucket үүсгээгүй.
 
-## Local persistence
+Storage getter өөрөө `SecurityError` шидэж болохыг хамгаалсан. IndexedDB боломжгүй үед localStorage + Web Locks хэрэглэнэ; аюулгүй serialization байхгүй бол бичихээс татгалзана. Байгаа IndexedDB-ийн алдааг хоосон fallback-аар нуухгүй. [Шилжилт](MIGRATION.md).
 
-IndexedDB `togtmol-v3` has `documents`, `backups`, and `metadata` stores. Each document has a monotonic revision. A read/write transaction checks the expected revision and writes the entire next document atomically. Conflicting tabs reload the committed version and explicitly ask the user to retry the action. BroadcastChannel and window focus refresh synchronize the visible local state.
+## Хугацаа, календарь, давтлага
 
-Mutations are serialized and published after persistence succeeds. Timer ticks never rewrite the document; time is derived from epoch timestamps. The note field uses a small synchronous localStorage recovery journal because navigation can precede a debounced IndexedDB save. Export includes that latest draft. Quota and storage errors remain visible rather than being reported as successful saves.
+Таймер анхны мөч, идэвхтэй хэсгүүд, түр зогсолт, одоогийн эхлэлийг хадгална. Дэлгэцийн tick өгөгдөл бичихгүй. Төгсгөхөд review, хадгалахад нэг тогтвортой ID-тай session үүснэ. Амралт суралцсан минутад орохгүй. Хугацааг цагийн хэсгүүдэд хувааж, төхөөрөмжийн цагийн бүс болон 0–23 цагийн суралцах өдрийн эхлэлийн сонголтоор тооцно. Хуучин/гараар огноо сонгосон бичлэг огноогоо хадгална.
 
-The fallback when IndexedDB is unavailable uses localStorage plus Web Locks; without a serialization mechanism it refuses unsafe writes. An inaccessible existing IndexedDB is not silently replaced with an empty fallback store.
+Хичээлийн индекс subject/session/entry identity, суралцах өдөр, эхлэх цагаар memoized. Хөгжмийн түвшин өөрчлөхөд хичээлийн индекс дахин үүсэхгүй. Глобал хайлтын индекс зөвхөн цонх нь нээлттэй үед үүснэ. Мэдлэгийн сан 36 бичлэгээр, багц 100 картаар, нэг давтлага 200 картаар хязгаарлагдана; дараагийн хэсгийг хэрэглэгч нээнэ. 100,000 картын индекс/хайлтыг тестээр хэмжсэн, том зургийн бүрэн сан/үүлэн upload-д ижил амлалт өгөхгүй.
 
-## Time and statistics
+SM-2: эхний интервал 1 өдөр, дараагийнх 6, цааш өмнөх интервал × ease-ийг дээш бүхэлчилнэ. Ease 2.5-аас эхэлж 1.3-аас буурахгүй. 0–2 үнэлгээ дарааллыг дахин эхлүүлнэ; 0–3 нь тухайн давтлагын төгсгөлд дахин гарна. Нэг суралцах өдрийн давтан оролдлого дараагийн олон өдрийн шат руу үсрэхгүй. Түүх бүр өмнөх/дараах хуваарьтай, давхар ID-тай submit дахин нэмэгдэхгүй.
 
-Each timer stores its immutable initial start, accumulated active milliseconds, current running start and completed active segments. Pause intervals are excluded. Finishing persists a review before any session is created. Save converts focus time into one stable session ID. The five-second minimum matches the existing product's intent. Breaks do not become sessions.
+Сорилын үр дүн асуултын snapshot-тай. Богино хариултад Unicode, том/жижиг үсэг, илүү зайг нэгтгэж яг тааруулна; утга ойролцоо эсэхийг дүгнэхгүй. Буруу хариултаас карт үүсгэх нь тусдаа хэрэглэгчийн үйлдэл.
 
-Valid new segments are allocated across actual local calendar days and hours, including midnight and local timezone transitions. Legacy sessions without segments remain attributed to their saved date. Sessions with estimated start times contribute to total duration but are excluded from productive-hour conclusions. Changing recorded duration/date preserves original timing in `extras.originalTiming`.
+## Бондоок ба зөвшөөрөл
 
-The history index is memoized by subject/session/entry array identity and current local date. It contains day and subject/day maps, per-subject sessions, hourly totals and sorted history. UI timer ticks are isolated from the index. Lists show a bounded number of rows with an explicit “load more” action. At 10,000 sessions indexing is linear plus sorting; no cell scans the full session list.
+Бондоок нь кодоор зурсан зургаан SVG төрх, долоон төлөвтэй. Бүх одоогийн нэршил Бондоок. Өрөө/чимэглэл бодит хэмжсэн ахицаас урамшуулал авна; чагт, амралтын өдөр нь минут нэмэхгүй. 100 карт, эхний зорилгын биелэлтийн амжилт нэмж, өмнөх амжилтуудыг хадгална.
 
-## Account and cloud ownership
+Локал дүгнэлт дүрэм ба бодит өгөгдөл ашиглана. Онлайн AI тусдаа серверийн route-тай: `/api/bondook`, `/cards`, `/plan`. Supabase token, серверийн UUID allowlist, хэрэглэгч тус бүрийн өдөрт 20 хүсэлтийн quota шаардана. Түлхүүр зөвхөн серверт. Ерөнхий асуултад холбоогүй түүх илгээхгүй; хувийн дүгнэлтэд хязгаартай тоон мэдээлэл; тэмдэглэл/зурагт тусдаа зөвшөөрөл.
 
-Guest data stays in `guest`. Each authenticated user has `account:<user UUID>`. Sign-in does not itself merge guest data. The settings screen reads remote counts, then lets the user open account data alone or include guest history. Exact pre-merge backups stay on the device. Logging out retains account data in its separate cache.
+Моделийн structured output-ийг код дахин баталгаажуулна. Үүссэн карт/төлөвлөгөө зөвхөн засварлах цонхонд гарна; хадгалах үйлдэлгүйгээр хэрэглэгчийн бичлэг өөрчлөхгүй. Моделд бичих хэрэгсэл өгөхгүй. Ярилцлага локал баримтад хадгалагдаж, идэвхжүүлсэн үүлэн синк болон JSON нөөцөд орно. OpenAI хүсэлт `store:false`; сервер raw алдаа, түлхүүр, токен лог/хариунд задруулахгүй.
 
-Postgres RLS is the authorization boundary. Every relation uses `user_id`, explicit authenticated grants and owner checks. Parent references include both user ID and subject ID. Both RPCs also require `expected_user_id`, so a changed access token cannot redirect an in-flight sync into a different account.
+Хуучин `/api/togi`, `TOGI_AI_ALLOWED_USER_IDS`, `consume_togi_request`, `private.togi_usage` нийцлийн зорилгоор үлдсэн. UI-д хуучин нэр хэрэглэхгүй.
 
-`SyncEngine` pulls a remote snapshot, merges against the last acknowledged common ancestor, preserves conflicts, commits locally and uploads against the remote revision. The server locks the user's revision row and commits all relations in one transaction. A stale write is rejected; retry pulls and merges again. Network failures leave the local document intact. Active timers are device-local and omitted from cloud payloads.
+## Хөгжим, тусгаарлагдсан алдаа
 
-Records use tombstones for deletion. Import and cloud merges retain unknown fields and conflict versions. Same-name subject aliases remain as deleted relational rows so repeated cloud round trips are stable. Equivalent manual day marks use sets in analytics, preserving original source identifiers without inflating totals.
+`MusicProvider` нь дэлгэцүүдийн гадна, namespace бүрд нэг удаа байна. Ая үүсгэх хөдөлгүүр хэрэглэгч Play дарахад ачаалагдана. Багасгасан самбарын үед процедурын ая үргэлжилнэ. YouTube зөвхөн албан ёсны харагдах player ашиглана; багасгах, цонх далдлах, player дэлгэцээс гарахад pause хийнэ. Эвдэрсэн/салсан iframe-д үлдсэн adapter, late callback, destroy/volume/pause алдаа үндсэн апп руу тархахгүй.
 
-## PWA and future extensions
+Өрөө, таймер, хөгжмийн самбар, мэдлэг, календарь, статистик, Бондоок болон өгөгдлийн төв тусдаа boundary-тай. Рендерийн алдааг тухайн хэсгээс дахин оролдоно; асинхрон хадгалалт, AI, медиа алдааг үйлдэл дотор нь барина. Ерөнхий startup boundary сэргээх дэлгэцтэй.
 
-The postbuild script enumerates all immutable Next assets and computes a build identifier. Installation caches those assets and the public shell before offline is available. A changed worker waits for old tabs to close. Supabase requests, auth callbacks, token-bearing URLs and authorization headers are never cached.
+## Үүлэн хамгаалалт
 
-The local assistant makes no AI request and explicitly avoids inferring knowledge proficiency from time spent. An optional authenticated server-backed provider implements the chat interface with explicit opt-in data sharing and server-held credentials.
+RLS, authenticated grants болон `user_id` нь серверийн хамгаалалтын зааг. Subject foreign key нь хэрэглэгчийн ID-г давхар агуулна. RPC токены эзэмшигч ба `expected_user_id`-г, бичихэд locked revision-ийг шалгана. Синк гурван талын нэгтгэл хийж, сүлжээ тасрахад локал өөрчлөлтийг үлдээнэ. Идэвхтэй таймер төхөөрөмж бүрд тусдаа.
 
-Cloud synchronization currently exchanges complete snapshots. This is straightforward to audit at the requested 10,000-session scale; substantially larger histories should move to per-record dirty queues and paginated pull, with the same revision/conflict semantics. This is a documented future optimization, not a claim that incremental sync already exists.
+Үүлэн цэвэрлэгээ owner/revision баталгаажуулалттай. Өсөн нэмэгдэх reset epoch хуучин төхөөрөмжөөс өгөгдөл автоматаар буцааж байршихаас сэргийлнэ. Синк унтраалттай бол pull/upload эхлэхгүй. Бүртгэл солих, сэргээх, импортын явцад namespace-г дахин шалгана.
 
-## v4 study world
+## PWA ба төхөөрөмж
 
-The existing shell, timer, repository, analytics and account layers remain. The home surface now uses `components/world/study-room.tsx`; the full timer is reused with a compact presentation. Focus mode hides navigation and exits without changing timer state. Room art and six original companions are resolution-independent SVG components; CSS animations respect reduced motion. `lib/world/config.ts` defines five themes and validated room preferences. Design-specific CSS changes shapes, surfaces and typography as well as palette.
+Build бүрд үндсэн HTML/immutable assets-ийн cache үүсгэнэ. Auth, API, Supabase, токентой болон гаднын хүсэлт cache-д орохгүй. Шинэ worker нээлттэй таймерыг хүчээр дахин ачаалахгүй. Суулгах/шинэчлэгдэх бэлэн байдлыг тохиргоонд харуулна.
 
-`lib/world/planner.ts` generates reviewable, editable schedules from bounded local input. Committing a plan creates the goal and tasks in one store mutation. A task-started timer snapshots task/goal IDs, and the saved session carries them into progress calculations. Task checkmarks do not create study time. Daily XP is computed from unedited, measured sessions with spans, capped at 60/day, and manual marks cannot award it.
-
-`MusicProvider` is the playback contract. Browser soundscapes and official YouTube player adapters implement it. The persistent player lives outside view content; namespace changes dispose audio. Music volume/mute preferences are small device-local preferences, while saved YouTube sources sync as record entities. Heavy sound generation, YouTube code, room customization, statistics and the assistant are loaded only when needed.
-
-The chat uses a local deterministic provider by default. The optional online provider calls a Node API route; authenticated allowlisted users, a private database quota and bounded payload/output sizes control access. No AI key is exposed to browser code. Session notes remain local by default. An independent opt-in shares the five newest notes from the last seven days, capped at 500 characters each. A namespace change remounts page content and prevents an old chat from publishing a response into another account.
-
-## v4.1: complete the study loop
-
-No top-level collections, database tables, storage names or export version change. `lib/world/milestones.ts` defines validated optional `studyGoals[].extras.studyPlan` metadata (version 1, description, weeklyDays, stable milestone IDs/titles). Tasks carry `extras.milestoneId`; a started timer snapshots goal/task/milestone IDs and task title. Saved sessions keep that snapshot when tasks are later rescheduled or reassigned. Whole-goal conflicts use the existing three-way conflict preservation. Invalid optional metadata remains in the underlying extras payload; readers only render valid fields.
-
-New plan previews distribute tasks across reviewable milestones and commit atomically. Existing goals receive no generated stages or rewritten tasks during load. The goal editor changes metadata and targets; the task editor explicitly changes schedules/stage links, guards stale edits and blocks edits while that task's timer is active. Each saved completion stores `extras.completedOn`, so moving a completed task does not move its historical completion day. Old completions with no timestamp are labelled using their planned day.
-
-Goal weekly minutes now include only linked sessions, allocated across real midnight/week boundaries using the same allocation function as statistics. Other study on the same subject does not inflate that goal. The coach compares remaining goal minutes with approximate remaining study days; these are schedule suggestions, not proficiency estimates. Home uses the same goal and weekly calculations. Starting study enters focus mode; changing pages and exiting focus preserve the running timer. Notes can be opened during focus.
-
-Music preferences keep the old namespace key and volume/mute fields, adding defaultCategory, rememberLast and lastPlayed. A shared preference event keeps the settings screen and player aligned; playback changes only on a user action. Theme recommendations are metadata in `lib/music/catalog.ts`. New furniture stays in `world.extras.furniture`. No secret or personal notes are stored in these preference keys.
-
-Guest reset serializes with other store operations, requires no active timer, completes a full backup before a revision-checked write, retains account namespaces/backups and refuses stale writes. Migration now accepts the stored-document envelopes already produced by previous upgrade backups. The PWA settings indicator reads worker installation/update state; browser/device offline verification is still a separate deployment gate.
+Wake Lock нь боломжтой, харагдаж буй хуудсанд л хүсэлт гаргана. Дуу нь хэрэглэгчийн харилцан үйлдлээр бэлтгэгдэнэ. Өдрийн сануулга namespace бүрд нэг удаагийн atomic claim-тай. Хаалттай апп, OS түгжээний мэдэгдэл, background аудиог батлахгүй.

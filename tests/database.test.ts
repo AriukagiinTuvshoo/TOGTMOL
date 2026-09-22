@@ -2,6 +2,7 @@ import { beforeAll, afterAll, describe, it, expect } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync, readdirSync } from "node:fs";
 import { fixture } from "./fixtures";
+import { knowledgeFixture } from "./knowledge-fixtures";
 const A = "11111111-1111-4111-8111-111111111111",
   B = "22222222-2222-4222-8222-222222222222";
 let db: PGlite;
@@ -53,7 +54,7 @@ describe("Postgres schema, transactions and row-level security", () => {
     const r = await db.query<{ relname: string; relrowsecurity: boolean }>(
       "select relname,relrowsecurity from pg_class join pg_namespace n on n.oid=relnamespace where n.nspname='public' and relkind='r'",
     );
-    expect(r.rows).toHaveLength(9);
+    expect(r.rows).toHaveLength(10);
     expect(r.rows.every((r) => r.relrowsecurity)).toBe(true);
   });
   it("prevents a second user from reading the first user records", async () => {
@@ -68,6 +69,7 @@ describe("Postgres schema, transactions and row-level security", () => {
       "study_profiles",
       "study_goals",
       "music_sources",
+      "knowledge_records",
     ])
       expect(
         (await db.query(`select * from public.${table}`)).rows,
@@ -293,5 +295,115 @@ describe("v4 cloud extensions", () => {
         )
       ).rows[0].allowed,
     ).toBe(true);
+  });
+});
+
+describe("v5 knowledge and cloud erasure", () => {
+  it("round-trips every knowledge record including private image data with owner isolation", async () => {
+    await asUser(A);
+    const current = await db.query<{ value: { revision: number } }>(
+      "select public.pull_study_data($1) as value",
+      [A],
+    );
+    const data = knowledgeFixture();
+    await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
+      A,
+      current.rows[0].value.revision,
+      JSON.stringify(data),
+    ]);
+    const result = await db.query<{ value: { data: typeof data } }>(
+      "select public.pull_study_data($1) as value",
+      [A],
+    );
+    expect(result.rows[0].value.data.schemaVersion).toBe(5);
+    expect(result.rows[0].value.data.knowledge).toEqual(
+      [...data.knowledge].sort((a, b) => a.id.localeCompare(b.id)),
+    );
+    await asUser(B);
+    expect(
+      (await db.query("select * from public.knowledge_records")).rows,
+    ).toHaveLength(0);
+    await expect(
+      db.query(
+        "insert into public.knowledge_records(user_id,id,payload) values($1,$2,$3::jsonb)",
+        [A, data.knowledge[0].id, JSON.stringify(data.knowledge[0])],
+      ),
+    ).rejects.toThrow(/row-level security/i);
+    await db.exec("reset role;set role anon");
+    await expect(
+      db.query("select * from public.knowledge_records"),
+    ).rejects.toThrow(/permission denied/i);
+    await expect(
+      db.query("select public.delete_cloud_study_data($1,0)", [A]),
+    ).rejects.toThrow(/permission denied/i);
+  });
+  it("requires matching identity and revision for erasure, keeps other users, and rejects stale reuploads", async () => {
+    await asUser(A);
+    const before = await db.query<{ value: { revision: number } }>(
+      "select public.pull_study_data($1) as value",
+      [A],
+    );
+    const revision = before.rows[0].value.revision;
+    await expect(
+      db.query("select public.delete_cloud_study_data($1,$2)", [B, revision]),
+    ).rejects.toThrow("Account changed");
+    await expect(
+      db.query("select public.delete_cloud_study_data($1,$2)", [
+        A,
+        revision - 1,
+      ]),
+    ).rejects.toThrow("Cloud revision changed");
+    expect(
+      (await db.query("select * from public.knowledge_records")).rows,
+    ).toHaveLength(5);
+    const deleted = await db.query<{
+      value: { revision: number; resetAt: number };
+    }>("select public.delete_cloud_study_data($1,$2) as value", [A, revision]);
+    expect(deleted.rows[0].value.revision).toBe(revision + 1);
+    for (const table of [
+      "subjects",
+      "study_sessions",
+      "study_entries",
+      "daily_tasks",
+      "study_goals",
+      "music_sources",
+      "knowledge_records",
+      "goals",
+      "achievements",
+    ])
+      expect(
+        (await db.query(`select * from public.${table}`)).rows,
+      ).toHaveLength(0);
+    await expect(
+      db.query("select public.push_study_data($1,$2,$3::jsonb)", [
+        A,
+        revision + 1,
+        JSON.stringify(knowledgeFixture()),
+      ]),
+    ).rejects.toThrow("Cloud reset requires explicit consent");
+    // Even v4, which doesn't know the reset epoch or knowledge table, cannot restore old rows.
+    await expect(
+      db.query("select public.push_study_data($1,$2,$3::jsonb)", [
+        A,
+        revision + 1,
+        JSON.stringify({ ...fixture(), schemaVersion: 4 }),
+      ]),
+    ).rejects.toThrow("Unsupported schema");
+    const acknowledged = knowledgeFixture();
+    acknowledged.extras.cloudResetAt = deleted.rows[0].value.resetAt;
+    await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
+      A,
+      revision + 1,
+      JSON.stringify(acknowledged),
+    ]);
+    expect(
+      (await db.query("select * from public.knowledge_records")).rows,
+    ).toHaveLength(5);
+    await asUser(B);
+    expect(
+      (await db.query("select * from public.subjects")).rows.length,
+    ).toBeGreaterThan(0);
+    await db.exec("reset role");
+    expect((await db.query("select * from auth.users")).rows).toHaveLength(2);
   });
 });

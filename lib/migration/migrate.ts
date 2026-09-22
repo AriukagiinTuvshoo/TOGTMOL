@@ -1,5 +1,6 @@
 import { normalizeWorld } from "@/lib/world/config";
 import { validYouTubeSource } from "@/lib/music/youtube";
+import { parseKnowledge } from "@/lib/knowledge/validation";
 import { emptyData, PALETTE } from "@/lib/constants";
 import { dateKey, parseDate } from "@/lib/calculations/dates";
 import {
@@ -123,11 +124,12 @@ export function migrate(input: unknown): StudyData {
   if (!isObject(input)) throw Error("Нөөц файлын бүтэц танигдсангүй.");
   const raw =
     (input.format === "togtmol-backup" ||
+      input.app === "togtmol" ||
       (Number.isSafeInteger(input.revision) && Number(input.revision) >= 1)) &&
     isObject(input.data)
       ? input.data
       : input;
-  if (finite(raw.schemaVersion) > 4)
+  if (finite(raw.schemaVersion) > 5)
     throw Error("Энэ нөөц шинэ хувилбарт зориулагдсан байна.");
   if (
     !Array.isArray(raw.subjects) &&
@@ -262,6 +264,7 @@ export function migrate(input: unknown): StudyData {
       youtubeId: String(m.youtubeId),
     };
   });
+  data.knowledge = records(data, raw, "knowledge", parseKnowledge);
   if (isObject(raw.goals)) {
     const g = raw.goals;
     data.goals = {
@@ -351,6 +354,7 @@ export function migrate(input: unknown): StudyData {
             "tasks",
             "studyGoals",
             "musicSources",
+            "knowledge",
             "goals",
             "settings",
           ].includes(String(c.collection)),
@@ -373,6 +377,7 @@ export function migrate(input: unknown): StudyData {
       "tasks",
       "studyGoals",
       "musicSources",
+      "knowledge",
       "goals",
       "settings",
       "achievementsUnlocked",
@@ -388,9 +393,10 @@ export function migrate(input: unknown): StudyData {
     ...data.sessions,
     ...data.tasks,
     ...data.studyGoals,
+    ...data.knowledge.filter((r) => r.subjectId !== null),
     ...(data.activeTimer ? [data.activeTimer] : []),
   ].map((s) => s.subjectId))
-    if (!ids.has(id)) {
+    if (id && !ids.has(id)) {
       data.subjects.push({
         id,
         name: "Өмнөх хичээл",
@@ -411,6 +417,7 @@ export function migrate(input: unknown): StudyData {
     "tasks",
     "studyGoals",
     "musicSources",
+    "knowledge",
   ] as const) {
     const seen = new Set<string>();
     data[collection].forEach((r, i) => {

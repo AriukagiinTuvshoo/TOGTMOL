@@ -23,7 +23,8 @@ export const SHORT_DAYS = ["Да", "Мя", "Лх", "Пү", "Ба", "Бя", "Ня
 export const uid = (prefix: string) => `${prefix}_${crypto.randomUUID()}`;
 export function emptyData(): StudyData {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
+    knowledge: [],
     subjects: [],
     entries: [],
     sessions: [],

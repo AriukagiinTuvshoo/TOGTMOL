@@ -1,4 +1,7 @@
 "use client";
+import { dayBoundary } from "@/lib/preferences";
+import { studyDate } from "@/lib/calculations/dates";
+import { StoredImage } from "@/components/ui/stored-image";
 import { useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -20,9 +23,12 @@ export function StudyCalendar({
 }: {
   subjectId?: string;
 }) {
-  const { index, today, data, store, run } = useStudy(),
+  const { index, today, data, store, run, selectedRecord, navigate } =
+      useStudy(),
     [range, setRange] = useState<"month" | 30 | 90 | 365>(90),
-    [selected, setSelected] = useState(today),
+    [selected, setSelected] = useState(
+      data.sessions.find((s) => s.id === selectedRecord)?.date ?? today,
+    ),
     [subjectId, setSubject] = useState(fixedSubject ?? ""),
     [month, setMonth] = useState(today.slice(0, 7));
   const actualSubject = fixedSubject ?? subjectId,
@@ -67,6 +73,17 @@ export function StudyCalendar({
     range === "month" && dates.length
       ? (parseDate(dates[0])!.getDay() + 6) % 7
       : 0;
+  const dayKnowledge = data.knowledge.filter(
+    (r) =>
+      !r.deletedAt &&
+      (!actualSubject || r.subjectId === actualSubject) &&
+      (r.kind === "note" || r.kind === "attempt"
+        ? r.date === selected
+        : r.kind === "review"
+          ? studyDate(new Date(r.reviewedAt), dayBoundary(data.settings)) ===
+            selected
+          : false),
+  );
   return (
     <div className="stack">
       <section className="card">
@@ -230,6 +247,28 @@ export function StudyCalendar({
           </div>
         </div>
       </section>
+      {dayKnowledge.length > 0 && (
+        <section className="card">
+          <h2>Энэ өдрийн мэдлэг</h2>
+          <div className="calendar-knowledge">
+            {dayKnowledge.slice(0, 40).map((r) => (
+              <button key={r.id} onClick={() => navigate("knowledge", r.id)}>
+                {r.kind === "note" && r.image && (
+                  <StoredImage src={r.image} alt={r.title} loading="lazy" />
+                )}
+                <strong>{r.title}</strong>
+                <small>
+                  {r.kind === "review"
+                    ? `Карт давтсан · ${r.grade}/5`
+                    : r.kind === "attempt"
+                      ? `Сорил · ${r.score}/${r.total}`
+                      : "Тэмдэглэл"}
+                </small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

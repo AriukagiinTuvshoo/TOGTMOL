@@ -1,3 +1,4 @@
+import { mergeMessages } from "@/lib/assistant/history";
 import type {
   MergeCollection,
   MergeConflict,
@@ -57,6 +58,8 @@ export function mergeData(
     remote.studyGoals,
   ])
     for (const r of list) r.subjectId = aliases.get(r.subjectId) ?? r.subjectId;
+  for (const r of remote.knowledge)
+    if (r.subjectId) r.subjectId = aliases.get(r.subjectId) ?? r.subjectId;
   const recordConflict = (
     collection: MergeCollection,
     id: string,
@@ -144,6 +147,12 @@ export function mergeData(
       base?.musicSources,
       "musicSources",
     ),
+    knowledge: mergeRecords(
+      local.knowledge,
+      remote.knowledge,
+      base?.knowledge,
+      "knowledge",
+    ),
     goals: decide(local.goals, remote.goals, base?.goals, "goals", "goals"),
     settings: decide(
       local.settings,
@@ -168,6 +177,11 @@ export function mergeData(
     conflicts: [],
     extras: { ...remote.extras, ...local.extras },
   };
+  if (local.extras.bondookMessages || remote.extras.bondookMessages)
+    merged.extras.bondookMessages = mergeMessages(
+      local.extras.bondookMessages,
+      remote.extras.bondookMessages,
+    );
   // Keep all source IDs (including equivalent manual marks) for stable cloud round trips.
   // Analytics uses subject/date sets; toggling a day updates every equivalent mark.
   if (

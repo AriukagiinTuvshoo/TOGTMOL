@@ -1,6 +1,26 @@
 export const pad = (n: number) => String(n).padStart(2, "0");
 export const dateKey = (d = new Date()) =>
   `${String(d.getFullYear()).padStart(4, "0")}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export function studyDate(d = new Date(), boundary = 0) {
+  const date = dateKey(d);
+  return d.getHours() < boundary ? shiftDate(date, -1) : date;
+}
+export function flexibleStreak(dates: Set<string>, today: string, grace = 1) {
+  let current = today,
+    studied = 0,
+    used = 0;
+  const oldest = [...dates].sort()[0];
+  if (!oldest) return { studied: 0, recoveryDays: 0 };
+  while (current >= oldest) {
+    if (dates.has(current)) studied++;
+    else if (current !== today) {
+      if (used >= grace) break;
+      used++;
+    }
+    current = shiftDate(current, -1);
+  }
+  return { studied, recoveryDays: used };
+}
 export function parseDate(ds: unknown): Date | null {
   if (typeof ds !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return null;
   const [y, m, d] = ds.split("-").map(Number);

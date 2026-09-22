@@ -56,11 +56,21 @@ function canonical(data: StudyData) {
     tasks: [...d.tasks].sort((a, b) => a.id.localeCompare(b.id)),
     studyGoals: [...d.studyGoals].sort((a, b) => a.id.localeCompare(b.id)),
     musicSources: [...d.musicSources].sort((a, b) => a.id.localeCompare(b.id)),
+    knowledge: [...d.knowledge].sort((a, b) => a.id.localeCompare(b.id)),
     conflicts: [...d.conflicts].sort((a, b) => a.id.localeCompare(b.id)),
   });
 }
 export class SyncEngine {
   private running: Promise<void> | null = null;
+  private cancelled = false;
+  cancel() {
+    this.cancelled = true;
+  }
+  async idle() {
+    try {
+      await this.running;
+    } catch {}
+  }
   constructor(
     private store: StudyStore,
     private adapter: CloudAdapter,
@@ -76,15 +86,47 @@ export class SyncEngine {
   private async perform() {
     const namespace = `account:${this.userId}`,
       check = () => {
+        if (this.cancelled) throw Error("Үүлэн синк зогссон.");
         if (this.store.getSnapshot().namespace !== namespace)
           throw Error("Бүртгэл өөрчлөгдсөн тул sync зогслоо.");
       };
+    check();
+    if (
+      (await this.store.repository.metadata<boolean>(
+        `account-enabled:${this.userId}`,
+      )) === false
+    )
+      throw Error("Үүлэн синк унтраалттай байна.");
     check();
     const baseline = await this.store.repository.metadata<CloudSnapshot>(
         `cloud:${this.userId}`,
       ),
       remote = await this.adapter.pull(this.userId);
     check();
+    const resetAt = Number(remote.data.extras.cloudResetAt) || 0;
+    const consent = await this.store.repository.metadata<number>(
+      `cloud-reset-consent:${this.userId}`,
+    );
+    check();
+    const local = this.store.getSnapshot().data;
+    if (
+      resetAt > Number(local.extras.cloudResetAt ?? 0) &&
+      (local.subjects.length ||
+        local.sessions.length ||
+        local.knowledge.length ||
+        local.entries.length ||
+        local.tasks.length ||
+        local.studyGoals.length ||
+        local.musicSources.length ||
+        Object.keys(local.achievementsUnlocked).length ||
+        local.settings.updatedAt > 0 ||
+        local.goals.updatedAt > 0 ||
+        Object.keys(local.extras).some((key) => key !== "cloudResetAt")) &&
+      consent !== resetAt
+    )
+      throw Error(
+        "Энэ бүртгэлийн үүлэн өгөгдлийг цэвэрлэсэн байна. Локал түүхийг хадгалсан. Дахин холбохдоо хуучин түүхээ байршуулах эсэхээ сонгоно уу.",
+      );
     await this.store.mutate((local) => {
       check();
       const merged = {
@@ -95,8 +137,16 @@ export class SyncEngine {
         ),
         activeTimer: local.activeTimer,
       };
+      if (resetAt) merged.extras = { ...merged.extras, cloudResetAt: resetAt };
       return canonical(local) === canonical(merged) ? local : merged;
     });
+    check();
+    if (
+      (await this.store.repository.metadata<boolean>(
+        `account-enabled:${this.userId}`,
+      )) === false
+    )
+      throw Error("Үүлэн синк унтраалттай байна.");
     check();
     const upload = cloudData(this.store.getSnapshot().data);
     const revision =

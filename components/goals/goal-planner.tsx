@@ -1,5 +1,7 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getSupabase } from "@/lib/supabase/client";
+import { parsePlanProposal } from "@/lib/assistant/plan";
 import { useStudy } from "@/hooks/use-study";
 import {
   commitPlan,
@@ -65,7 +67,7 @@ export function GoalPlanner() {
             </p>
           </div>
           <button className="button" onClick={() => setAdding(true)}>
-            Тогитой төлөвлөх <Icon name="arrow" />
+            Бондооктой төлөвлөх <Icon name="arrow" />
           </button>
         </div>
       )}
@@ -284,13 +286,90 @@ export function PlanWizard({
     ),
     [preview, setPreview] = useState<PlanPreview | null>(null),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [onlineProposal, setOnlineProposal] = useState(false);
+  const pending = useRef<AbortController | null>(null);
+  useEffect(() => () => pending.current?.abort(), []);
+  const propose = async () => {
+    if (!onlineProposal) {
+      setInput(inferPlan(text, data, today));
+      setPreview(null);
+      setError("");
+      return;
+    }
+    const namespace = store.getSnapshot().namespace,
+      controller = new AbortController();
+    pending.current?.abort();
+    pending.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 35000);
+    setBusy(true);
+    setError("");
+    try {
+      const client = getSupabase(),
+        session = client ? (await client.auth.getSession()).data.session : null;
+      if (
+        !session ||
+        namespace !== `account:${session.user.id}` ||
+        store.getSnapshot().namespace !== namespace
+      )
+        throw Error("Онлайн санал авахын тулд бүртгэлээрээ нэвтэрнэ үү.");
+      const draft = input ?? inferPlan(text, data, today);
+      await store.mutate((d) => {
+        if (store.getSnapshot().namespace !== namespace)
+          throw Error("Бүртгэл өөрчлөгдсөн.");
+        return {
+          ...d,
+          settings: {
+            ...d.settings,
+            updatedAt: Date.now(),
+            extras: { ...d.settings.extras, aiEnabled: true },
+          },
+        };
+      });
+      const response = await fetch("/api/bondook/plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          message: text,
+          context: {
+            today,
+            subject: data.subjects.find((s) => s.id === draft.subjectId)?.name,
+            availableWeeks: draft.weeks,
+            daysPerWeek: draft.daysPerWeek,
+            minutesPerDay: draft.minutesPerDay,
+          },
+        }),
+        signal: controller.signal,
+      });
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error ?? "AI түр холбогдсонгүй.");
+      const proposal = parsePlanProposal(result.plan);
+      if (
+        !controller.signal.aborted &&
+        store.getSnapshot().namespace === namespace
+      ) {
+        setInput({ ...draft, ...proposal });
+        setPreview(null);
+      }
+    } catch (error) {
+      if (store.getSnapshot().namespace === namespace)
+        setError(
+          error instanceof Error ? error.message : "Санал гаргаж чадсангүй.",
+        );
+    } finally {
+      clearTimeout(timeout);
+      setBusy(false);
+    }
+  };
   const patch = (p: Partial<PlanInput>) => {
     setInput((i) => (i ? { ...i, ...p } : i));
     setPreview(null);
   };
   return (
-    <Modal title="Тогитой төлөвлөх" onClose={onClose}>
+    <Modal title="Бондооктой төлөвлөх" onClose={onClose}>
       {!data.subjects.some((s) => !s.deletedAt) ? (
         <div className="form-stack">
           <p>Эхлээд суралцах хичээлээ нэмье.</p>
@@ -321,18 +400,27 @@ export function PlanWizard({
           </label>
           <button
             className="button"
-            disabled={!text.trim()}
-            onClick={() => {
-              setInput(inferPlan(text, data, today));
-              setPreview(null);
-              setError("");
-            }}
+            disabled={!text.trim() || busy}
+            onClick={() => void propose()}
           >
-            Алхмуудын санал гаргах
+            {busy ? "Санал бэлдэж байна…" : "Алхмуудын санал гаргах"}
           </button>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={onlineProposal}
+              disabled={busy}
+              onChange={(e) => setOnlineProposal(e.target.checked)}
+            />
+            Энэ зорилго, хичээлийн нэр, боломжит цагаа онлайн AI-д илгээж санал
+            авах
+          </label>
           <p className="tiny muted">
-            Тоги хичээлийн нэр, хугацаанд тулгуурлан хуваарь санал болгоно. Үе
-            шатны агуулгыг өөрийн түвшин, сурах материалаар тохируулаарай.
+            {onlineProposal
+              ? "Гарсан AI саналыг доороос хянаж засаарай. Хадгалах хүртэл төлөвлөгөөнд нэмэхгүй. "
+              : "Төхөөрөмж дээрх загвараар санал гаргана. "}
+            Бондоок хичээлийн нэр, хугацаанд тулгуурлан хуваарь санал болгоно.
+            Үе шатны агуулгыг өөрийн түвшин, сурах материалаар тохируулаарай.
           </p>
           {input && (
             <>

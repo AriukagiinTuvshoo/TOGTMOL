@@ -1,4 +1,5 @@
 "use client";
+import { StudyPreferences } from "./study-preferences";
 import { useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -211,13 +212,17 @@ export function Settings() {
         </section>
       </div>
       <div className="stack">
+        <StudyPreferences />
+        <button className="button" onClick={() => navigate("privacy")}>
+          Нууцлал ба өгөгдлийн төв →
+        </button>
         <AccountPanel />
         <DataSettings key={namespace} />
       </div>
     </div>
   );
 }
-function DataSettings() {
+export function DataSettings() {
   const { data, store, run } = useStudy(),
     { namespace } = useStoreState(),
     [incoming, setIncoming] = useState<{
@@ -237,7 +242,8 @@ function DataSettings() {
   const inputFile = async (file: File | undefined) => {
     if (!file) return;
     await run(async () => {
-      if (file.size > 50 * 1024 * 1024) throw Error("Файл 50 MB-аас их байна.");
+      if (file.size > 100 * 1024 * 1024)
+        throw Error("Файл 100 MB-аас их байна.");
       const raw = await file.text(),
         parsed = migrate(JSON.parse(raw));
       setIncoming({ raw, data: parsed, name: file.name });

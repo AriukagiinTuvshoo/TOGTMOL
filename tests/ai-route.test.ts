@@ -4,6 +4,9 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({ auth: { getUser: fake.getUser }, rpc: fake.rpc }),
 }));
 import { POST } from "@/app/api/togi/route";
+import { POST as CARDS } from "@/app/api/bondook/cards/route";
+import { POST as PLAN } from "@/app/api/bondook/plan/route";
+import { SAMPLE_IMAGE } from "./knowledge-fixtures";
 const payload = { message: "Долоо хоног", context: { weeklyMinutes: 25 } };
 const req = (value: unknown = payload, token = true) =>
   new Request("http://localhost/api/togi", {
@@ -45,6 +48,106 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 describe("optional server-only AI", () => {
+  it("validates structured cards and sends an image only when present in the explicit request", async () => {
+    vi.stubEnv("BONDOOK_AI_ALLOWED_USER_IDS", "user-a");
+    vi.mocked(fetch).mockImplementation(async () =>
+      Response.json({
+        output: [
+          {
+            type: "message",
+            content: [
+              {
+                type: "output_text",
+                text: JSON.stringify({ cards: [{ front: "2+2?", back: "4" }] }),
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    const response = await CARDS(req({ text: "2+2=4", count: 2 }));
+    expect(await response.json()).toEqual({
+      cards: [{ front: "2+2?", back: "4" }],
+      kind: "ai",
+    });
+    let payload = JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string);
+    expect(payload.text.format).toMatchObject({
+      type: "json_schema",
+      strict: true,
+    });
+    expect(payload.input[0].content).toHaveLength(1);
+    expect(payload.instructions).toContain("Bondook");
+    await CARDS(req({ text: "", count: 1, image: SAMPLE_IMAGE }));
+    payload = JSON.parse(vi.mocked(fetch).mock.calls[1][1]!.body as string);
+    expect(payload.input[0].content[1]).toMatchObject({
+      type: "input_image",
+      image_url: SAMPLE_IMAGE,
+    });
+    expect(payload.store).toBe(false);
+  });
+  it("rejects unsupported images, invalid counts and malformed model output without returning secrets", async () => {
+    expect((await CARDS(req({ text: "Text", count: 20 }))).status).toBe(400);
+    expect(
+      (
+        await CARDS(
+          req({
+            text: "Text",
+            count: 1,
+            image: "https://private.example/image",
+          }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(fake.rpc).not.toHaveBeenCalled();
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({
+        output: [
+          {
+            type: "message",
+            content: [
+              {
+                type: "output_text",
+                text: '{"cards":[{"front":"x","back":""}]}',
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    expect((await CARDS(req({ text: "Text", count: 1 }))).status).toBe(502);
+  });
+  it("returns a validated editable plan and exposes no write tools to the model", async () => {
+    const plan = {
+      title: "Алгебр",
+      description: "Санал",
+      weeks: 2,
+      daysPerWeek: 4,
+      minutesPerDay: 20,
+      milestoneTitles: ["Тэгшитгэл", "Давтах"],
+    };
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: JSON.stringify(plan) }],
+          },
+        ],
+      }),
+    );
+    expect(
+      await (
+        await PLAN(
+          req({ message: "Алгебр давтъя", context: { minutesPerDay: 20 } }),
+        )
+      ).json(),
+    ).toEqual({ plan, kind: "ai" });
+    const payload = JSON.parse(
+      vi.mocked(fetch).mock.calls[0][1]!.body as string,
+    );
+    expect(payload.tools).toBeUndefined();
+    expect(payload.text.format.name).toBe("study_plan");
+  });
   it("stays local when unconfigured and never calls a paid provider", async () => {
     vi.stubEnv("OPENAI_API_KEY", "");
     const response = await POST(req());
@@ -78,7 +181,7 @@ describe("optional server-only AI", () => {
     expect(JSON.parse(options!.body as string)).toMatchObject({
       model: "test-model",
       store: false,
-      max_output_tokens: 800,
+      max_output_tokens: 1200,
     });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(fake.rpc).toHaveBeenCalledWith("consume_togi_request", {

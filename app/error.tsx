@@ -1,5 +1,12 @@
 "use client";
-export default function ErrorPage({ reset }: { reset: () => void }) {
+import { RecoveryPanel } from "@/components/settings/recovery";
+export default function ErrorPage({
+  reset,
+  retry,
+}: {
+  reset?: () => void;
+  retry?: () => void;
+}) {
   return (
     <main className="fatal-error">
       <h1>Аппыг нээхэд алдаа гарлаа</h1>
@@ -7,9 +14,11 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
         Хадгалсан өгөгдлийг өөрчлөөгүй. Браузерын хадгалалтын зөвшөөрлийг
         шалгаад дахин оролдоно уу.
       </p>
-      <button className="button primary" onClick={reset}>
-        Дахин оролдох
-      </button>
+      <RecoveryPanel
+        onRecovered={() =>
+          (retry ?? reset ?? (() => window.location.reload()))()
+        }
+      />
     </main>
   );
 }

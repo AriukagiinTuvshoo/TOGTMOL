@@ -1,3 +1,4 @@
+import { dayBoundary } from "@/lib/preferences";
 import type {
   DailySummary,
   PeriodStats,
@@ -7,6 +8,7 @@ import type {
 } from "@/types/study";
 import {
   dateKey,
+  studyDate,
   currentStreak,
   datesBetween,
   longestStreak,
@@ -32,6 +34,7 @@ function getDay(map: Map<string, DailySummary>, date: string) {
 }
 export function sessionAllocations(
   session: StudySession,
+  boundary = 0,
 ): { date: string; hour: number; seconds: number }[] {
   const spans = [...session.segments].sort((a, b) => a.start - b.start),
     sum = spans.reduce((n, s) => n + (s.end - s.start) / 1000, 0);
@@ -63,7 +66,7 @@ export function sessionAllocations(
       next.setMinutes(60, 0, 0);
       const end = Math.min(span.end, Math.max(cursor + 1, next.getTime()));
       result.push({
-        date: dateKey(d),
+        date: studyDate(d, boundary),
         hour: d.getHours(),
         seconds: ((end - cursor) / 1000) * (session.durationSec / sum),
       });
@@ -72,7 +75,11 @@ export function sessionAllocations(
   }
   return result;
 }
-export function buildIndex(data: StudyData, today = dateKey()): StudyIndex {
+export function buildIndex(
+  data: StudyData,
+  today = studyDate(new Date(), dayBoundary(data.settings)),
+  boundary = dayBoundary(data.settings),
+): StudyIndex {
   const days = new Map<string, DailySummary>(),
     subjectDays = new Map<string, Map<string, DailySummary>>(),
     bySubject = new Map<string, StudySession[]>(),
@@ -87,7 +94,15 @@ export function buildIndex(data: StudyData, today = dateKey()): StudyIndex {
     return getDay(map, ds);
   };
   const sessions = data.sessions
-    .filter((s) => !s.deletedAt && s.durationSec > 0 && s.date <= today)
+    .filter(
+      (s) =>
+        !s.deletedAt &&
+        s.durationSec > 0 &&
+        (s.date <= today ||
+          (boundary > 0 &&
+            s.segments.length > 0 &&
+            s.date === shiftDate(today, 1))),
+    )
     .sort((a, b) => b.startEpoch - a.startEpoch || b.id.localeCompare(a.id));
   for (const session of sessions) {
     let list = bySubject.get(session.subjectId);
@@ -96,7 +111,7 @@ export function buildIndex(data: StudyData, today = dateKey()): StudyIndex {
       bySubject.set(session.subjectId, list);
     }
     list.push(session);
-    for (const part of sessionAllocations(session)) {
+    for (const part of sessionAllocations(session, boundary)) {
       if (part.date > today) continue;
       for (const d of [
         getDay(days, part.date),

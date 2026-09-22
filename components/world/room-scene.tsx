@@ -4,6 +4,41 @@ import type { CompanionState } from "@/lib/world/progress";
 import { CompanionArt } from "./companion";
 import { roomFurniture } from "@/lib/world/furniture";
 const palette = {
+  rainy: {
+    wall: "#e6e3dc",
+    floor: "#b7aaa0",
+    wood: "#887f78",
+    sky: "#acbfc6",
+    accent: "#64858c",
+  },
+  space: {
+    wall: "#202844",
+    floor: "#333652",
+    wood: "#645d80",
+    sky: "#111c38",
+    accent: "#b6acf0",
+  },
+  cabin: {
+    wall: "#eee2cc",
+    floor: "#ccb697",
+    wood: "#a78766",
+    sky: "#d5e2e4",
+    accent: "#8a745d",
+  },
+  library: {
+    wall: "#e8e1d0",
+    floor: "#ceba9a",
+    wood: "#8f7259",
+    sky: "#edd6b1",
+    accent: "#7a8162",
+  },
+  ocean: {
+    wall: "#e2efec",
+    floor: "#c9deda",
+    wood: "#9bb8b3",
+    sky: "#c1e2e8",
+    accent: "#5796a4",
+  },
   cozy: {
     wall: "#f3e8d5",
     floor: "#e5d1b5",
@@ -83,7 +118,7 @@ export function RoomScene({
       viewBox="0 0 760 430"
       className={`room-scene ${mini ? "room-mini" : ""}`}
       role="img"
-      aria-label={`${mini ? "" : "Тоги суралцаж буй "}өрөө`}
+      aria-label={`${mini ? "" : "Бондоок суралцаж буй "}өрөө`}
       style={{ "--companion-accent": p.accent } as React.CSSProperties}
     >
       <defs>
@@ -98,6 +133,13 @@ export function RoomScene({
         </clipPath>
       </defs>
       <rect width="760" height="430" rx="30" fill={p.wall} />
+      {world.design === "cabin" && (
+        <g stroke={p.wood} opacity=".2">
+          {[38, 82, 126, 170, 214, 258, 302].map((y) => (
+            <path key={y} d={`M0 ${y}H760`} />
+          ))}
+        </g>
+      )}
       {bg !== "minimal" && (
         <g stroke={p.wood} strokeWidth="1" opacity=".16">
           {[30, 90, 150, 610, 670, 730].map((x) => (
@@ -142,6 +184,33 @@ export function RoomScene({
           d="M193 272Q281 198 379 251Q492 205 586 260V290H193Z"
           fill={dark ? "#364b55" : "#92aa93"}
         />
+        {bg === "ocean" && (
+          <g>
+            <path d="M215 186H567V289H215Z" fill="#85bac4" />
+            <path
+              d="M215 213Q258 197 299 215T384 215T470 215T567 213M216 240Q260 224 305 240T391 240T480 240T567 240"
+              stroke="#d5eeeb"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              d="M219 274Q319 249 405 271T565 270V291H215Z"
+              fill="#ebddbf"
+            />
+          </g>
+        )}
+        {world.design === "cabin" && (
+          <g>
+            <path
+              d="M211 245L298 111 364 197 424 93 578 257V289H211Z"
+              fill="#91a7a0"
+            />
+            <path
+              d="M298 111L272 151 298 145 318 158ZM424 93L392 142 421 132 450 146Z"
+              fill="#f7f5ea"
+            />
+          </g>
+        )}
         {trees && (
           <g fill={dark ? "#344c4d" : "#7e987d"}>
             {[239, 279, 509, 548].map((x, i) => (
@@ -153,7 +222,7 @@ export function RoomScene({
             ))}
           </g>
         )}
-        {japan && (
+        {japan && world.design !== "cabin" && (
           <g stroke="#8f7a70" fill="#edb9bf">
             <path
               d="M228 201Q272 143 304 117Q299 79 339 56M286 137L259 111M304 117L353 110"

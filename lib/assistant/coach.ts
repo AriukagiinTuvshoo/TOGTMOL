@@ -5,6 +5,8 @@ import { goalProgress } from "@/lib/world/progress";
 import { periodStats } from "@/lib/calculations/analytics";
 import type { Insight } from "./provider";
 import { isObject } from "@/lib/migration/values";
+import { knowledgeStatistics } from "@/lib/knowledge/statistics";
+import { shiftDate } from "@/lib/calculations/dates";
 
 export function coachInsights(
   data: StudyData,
@@ -47,6 +49,19 @@ export function coachInsights(
       body: `${next.title} · ${next.minutes} минут. ${next.date < today ? "Өмнөх өдрийн алхмыг өнөөдөр үргэлжлүүлж эсвэл өдрийг нь сольж болно." : "Өнөөдрийн төлөвлөгөөнөөсөө шууд эхлээрэй."}`,
     });
   const recent = periodStats(index, 14, today);
+  const practice = knowledgeStatistics(data, shiftDate(today, -6), today);
+  if (practice.reviews >= 3)
+    result.push({
+      id: "recall",
+      title: "Эргэн санах дадал",
+      body: `Сүүлийн 7 өдөр ${practice.uniqueReviewed} өөр картаа ${practice.reviews} удаа давтжээ. ${practice.recall}% нь санасан гэсэн өөрийн үнэлгээтэй. Эргэлзсэн картаа дахин хараад, өөр үгээр тайлбарлаж үзээрэй.`,
+    });
+  if (recent.sessionCount >= 3 && recent.bestHour !== null)
+    result.push({
+      id: "rhythm",
+      title: "Танд тогтсон суралцах цаг",
+      body: `Сүүлийн 14 хоногийн хэмжсэн хугацаа ${String(recent.bestHour).padStart(2, "0")}:00 цаг орчимд хамгийн их байна. Дараагийн жижиг алхмаа энэ цагт төлөвлөж үзэж болно. Энэ нь зөвхөн хугацааны ажиглалт юм.`,
+    });
   if (recent.sessionCount >= 3 && recent.averageSession > 90 * 60)
     result.push({
       id: "rest",

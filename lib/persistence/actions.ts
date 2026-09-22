@@ -1,5 +1,6 @@
 import { uid } from "@/lib/constants";
-import { dateKey, parseDate } from "@/lib/calculations/dates";
+import { dayBoundary } from "@/lib/preferences";
+import { dateKey, parseDate, studyDate } from "@/lib/calculations/dates";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
@@ -172,6 +173,7 @@ export const actions = {
             Date.now(),
             taskId,
           ),
+          date: studyDate(new Date(Date.now()), dayBoundary(data.settings)),
           extras: taskId
             ? {
                 taskId,
@@ -239,7 +241,10 @@ export const actions = {
                     updatedAt: now,
                     extras: {
                       ...t.extras,
-                      completedOn: dateKey(new Date(now)),
+                      completedOn: studyDate(
+                        new Date(now),
+                        dayBoundary(data.settings),
+                      ),
                     },
                   }
                 : t,
@@ -420,7 +425,9 @@ export const actions = {
                 updatedAt: now,
                 extras: {
                   ...t.extras,
-                  completedOn: t.completed ? null : dateKey(new Date(now)),
+                  completedOn: t.completed
+                    ? null
+                    : studyDate(new Date(now), dayBoundary(data.settings)),
                 },
               }
             : t,

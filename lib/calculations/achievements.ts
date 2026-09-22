@@ -1,7 +1,20 @@
 import type { StudyData, StudyIndex } from "@/types/study";
 import { dateKey, longestStreak } from "./dates";
 import { weeklyReport } from "./analytics";
+import { goalProgress } from "@/lib/world/progress";
 export const ACHIEVEMENTS = [
+  {
+    id: "cards_100",
+    name: "Зуун ойлголт",
+    description: "100 карт бэлдсэн",
+    icon: "book",
+  },
+  {
+    id: "first_goal",
+    name: "Зорилгын эхний биелэлт",
+    description: "Эхний зорилгын хэмжсэн хугацаандаа хүрсэн",
+    icon: "target",
+  },
   {
     id: "sessions_10",
     name: "Арван жижиг алхам",
@@ -120,6 +133,15 @@ export function unlock(
     best = longestStreak(index.sortedDates),
     w = weeklyReport(index, today);
   const tests: Record<string, boolean> = {
+    cards_100:
+      data.knowledge.filter((r) => r.kind === "card" && !r.deletedAt).length >=
+      100,
+    first_goal: data.studyGoals.some(
+      (g) =>
+        !g.deletedAt &&
+        g.targetMinutes > 0 &&
+        goalProgress(data, g, today).seconds >= g.targetMinutes * 60,
+    ),
     sessions_10: index.sessions.length >= 10,
     early_bird: index.sessions.some(
       (s) =>

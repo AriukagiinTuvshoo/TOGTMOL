@@ -11,7 +11,7 @@ describe("durable storage", () => {
       repo = new Repository(new IDBFactory(), storage);
     storage.setItem("tracker-data", raw);
     const d = await repo.initialize("guest");
-    expect(d.data.schemaVersion).toBe(4);
+    expect(d.data.schemaVersion).toBe(5);
     expect(storage.getItem("tracker-data")).toBe(raw);
     expect((await repo.backups("guest"))[0].raw).toBe(raw);
     await repo.close();
@@ -94,7 +94,13 @@ describe("durable storage", () => {
     await store.initialize();
     await store.importData(JSON.stringify(fixture()));
     expect(store.getSnapshot().data.sessions).toHaveLength(1);
-    expect(await repo.backups("guest")).toHaveLength(2);
+    expect((await repo.backups("guest")).map((b) => b.label)).toEqual(
+      expect.arrayContaining([
+        "Импортолсон эх файл",
+        "Импортын өмнөх нөөц",
+        "Өдрийн автомат нөөц",
+      ]),
+    );
     store.destroy();
   });
 });

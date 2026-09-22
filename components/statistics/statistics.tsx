@@ -7,13 +7,15 @@ import {
   formatTime,
   weekStart,
   datesBetween,
+  shiftDate,
 } from "@/lib/calculations/dates";
 import { Metric, SectionTitle, SubjectSelect } from "@/components/ui/common";
 import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
+import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 export function Statistics() {
-  const { index, today } = useStudy(),
+  const { data, index, today } = useStudy(),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -35,6 +37,20 @@ export function Statistics() {
     [index, period, today, subject],
   );
   const groups = new Map<string, number>();
+  const knowledge = knowledgeStatistics(
+    data,
+    period === "all"
+      ? "0000-01-01"
+      : period === "today"
+        ? today
+        : period === "week"
+          ? weekStart(today)
+          : period === "month"
+            ? `${today.slice(0, 7)}-01`
+            : shiftDate(today, 1 - period),
+    today,
+    subject,
+  );
   for (const d of stats.days) {
     const key =
       stats.days.length > 90
@@ -72,6 +88,37 @@ export function Statistics() {
         </div>
         <SubjectSelect all value={subject} onChange={setSubject} />
       </div>
+      <section className="card" aria-label="Мэдлэгийн ахиц">
+        <SectionTitle
+          title="Эргэн санасан мэдлэг"
+          subtitle="Сонгосон хугацаанд үлдээсэн тэмдэглэл, давтлага, сорил"
+        />
+        <div className="knowledge-stats">
+          <div>
+            Тэмдэглэл<strong>{knowledge.notes}</strong>
+          </div>
+          <div>
+            Шинэ карт<strong>{knowledge.cards}</strong>
+          </div>
+          <div>
+            Давтлага<strong>{knowledge.reviews}</strong>
+            <small>{knowledge.uniqueReviewed} өөр карт</small>
+          </div>
+          <div>
+            Сорил<strong>{knowledge.attempts}</strong>
+            <small>
+              {knowledge.quizAccuracy === null
+                ? "Хариулт алга"
+                : `${knowledge.quizAccuracy}% зөв хариулт`}
+            </small>
+          </div>
+        </div>
+        <p className="tiny muted">
+          {knowledge.recall === null
+            ? "Картаа давтсаны дараа өөрийн үнэлгээг энд харж болно."
+            : `Картын давтлагын ${knowledge.recall}%-д хариултаа санасан гэж үнэлсэн. Энэ нь өөрийн үнэлгээ бөгөөд чадварын шалгалт биш.`}
+        </p>
+      </section>
       <div className="metrics four">
         <Metric label="Нийт хугацаа" value={formatTime(stats.seconds)} />
         <Metric

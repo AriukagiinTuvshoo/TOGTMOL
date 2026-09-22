@@ -55,6 +55,46 @@ export const DESIGNS: {
     companion: "rabbit",
     atmosphere: "day",
   },
+  {
+    id: "rainy",
+    name: "Rainy Café",
+    description: "Борооны хэмнэл · хотын цонх · цайны ширээ",
+    background: "cafe",
+    companion: "cat",
+    atmosphere: "rain",
+  },
+  {
+    id: "space",
+    name: "Space Study",
+    description: "Оддын орбит · гүн хөх · сансрын ажиглалт",
+    background: "space",
+    companion: "penguin",
+    atmosphere: "night",
+  },
+  {
+    id: "cabin",
+    name: "Mountain Cabin",
+    description: "Цаст уул · модон байшин · дулаахан гэрэл",
+    background: "hokkaido",
+    companion: "bear",
+    atmosphere: "snow",
+  },
+  {
+    id: "library",
+    name: "Quiet Library",
+    description: "Номын тавиур · хүрэн мод · унших булан",
+    background: "library",
+    companion: "fox",
+    atmosphere: "evening",
+  },
+  {
+    id: "ocean",
+    name: "Ocean Calm",
+    description: "Далайн давалгаа · цагаан ширээ · цэлгэр хөх",
+    background: "ocean",
+    companion: "dog",
+    atmosphere: "day",
+  },
 ];
 export const COMPANIONS: { id: Companion; name: string }[] = [
   { id: "fox", name: "Үнэг" },
@@ -75,6 +115,7 @@ export const BACKGROUNDS: { id: Background; name: string }[] = [
   { id: "space", name: "Сансар" },
   { id: "japanese", name: "Япон өрөө" },
   { id: "hokkaido", name: "Хоккайдо" },
+  { id: "ocean", name: "Далайн эрэг" },
 ];
 export const ATMOSPHERES: { id: Atmosphere; name: string }[] = [
   { id: "day", name: "Өдөр" },

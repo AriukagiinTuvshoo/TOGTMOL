@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
-import { dateKey, timeLabel } from "@/lib/calculations/dates";
+import { dateKey, studyDate, timeLabel } from "@/lib/calculations/dates";
+import { reminderMessage } from "@/lib/reminders";
+import { dayBoundary } from "@/lib/preferences";
 import { notifyUser } from "@/lib/notifications";
 import { Icon } from "@/components/ui/icon";
 interface InstallEvent extends Event {
@@ -10,7 +12,7 @@ interface InstallEvent extends Event {
 }
 let promptEvent: InstallEvent | null = null;
 export function PwaManager() {
-  const { data, setNotice } = useStudy();
+  const { data, store, setNotice } = useStudy();
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production")
       void navigator.serviceWorker
@@ -29,25 +31,63 @@ export function PwaManager() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, [setNotice]);
   useEffect(() => {
-    const settings = data.settings;
-    if (!settings.notifications || !settings.reminderTime) return;
-    const tick = () => {
-      const now = new Date(),
-        key = `togtmol:reminded:${dateKey(now)}`;
+    let disposed = false,
+      pending = false;
+    const tick = async () => {
+      if (pending || disposed || document.hidden) return;
+      pending = true;
       try {
+        const snapshot = store.getSnapshot();
+        if (!snapshot.ready) return;
+        const settings = snapshot.data.settings,
+          now = new Date(),
+          day = dateKey(now),
+          namespace = snapshot.namespace;
         if (
-          timeLabel(now.getTime()) === settings.reminderTime &&
-          !localStorage.getItem(key)
+          settings.notifications &&
+          settings.reminderTime &&
+          timeLabel(now.getTime()) >= settings.reminderTime &&
+          (await store.repository.claimOnce(`reminded:${namespace}`, day))
         ) {
-          localStorage.setItem(key, "1");
-          notifyUser("Өнөөдөр нэг жижиг алхам хийх үү?", settings);
-          setNotice("Өөртөө хэдэн минут зориулах цаг боллоо.");
+          if (disposed || store.getSnapshot().namespace !== namespace) return;
+          const message = reminderMessage(
+            snapshot.data,
+            studyDate(now, dayBoundary(settings)),
+          );
+          notifyUser(message, settings, `togtmol:${namespace}:${day}`);
+          setNotice(message);
         }
-      } catch {}
+        if (settings.extras.backupReminder === true) {
+          const exported =
+            (await store.repository.metadata<number>(
+              `last-export:${namespace}`,
+            )) ?? 0;
+          if (
+            now.getTime() - exported >= 14 * 86400000 &&
+            (await store.repository.claimOnce(
+              `backup-reminder:${namespace}`,
+              day,
+            ))
+          ) {
+            if (!disposed && store.getSnapshot().namespace === namespace)
+              setNotice(
+                "Өгөгдлийнхөө зөөврийн нөөцийг татаж авах уу? Нууцлал ба өгөгдөл хэсгээс JSON нөөцөө аваарай.",
+              );
+          }
+        }
+      } catch {
+        /* Optional reminders must never interrupt local work. */
+      } finally {
+        pending = false;
+      }
     };
-    const id = setInterval(tick, 15000);
-    return () => clearInterval(id);
-  }, [data.settings, setNotice]);
+    void tick();
+    const id = setInterval(() => void tick(), 15000);
+    return () => {
+      disposed = true;
+      clearInterval(id);
+    };
+  }, [store, data.settings, setNotice]);
   return null;
 }
 export function InstallButton() {

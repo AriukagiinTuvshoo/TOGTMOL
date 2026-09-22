@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useStudy } from "@/hooks/use-study";
 import { AMBIENTS, THEME_MUSIC, type AmbientId } from "@/lib/music/catalog";
 import type { AmbientPlayer } from "@/lib/music/ambient";
 import { parseYouTube, youtubeURL } from "@/lib/music/youtube";
 import type { YTPlayer } from "@/lib/music/youtube-player";
-import type { MusicProvider } from "@/lib/music/provider";
+import type { MusicProvider as MusicAdapter } from "@/lib/music/provider";
 import { uid } from "@/lib/constants";
 import { Icon } from "@/components/ui/icon";
 import { useMusicPreference } from "@/hooks/use-music-preference";
@@ -18,7 +18,7 @@ const YouTubeEmbed = dynamic(
   () => import("./youtube-embed").then((m) => m.YouTubeEmbed),
   { ssr: false, loading: () => <p>Бичлэгийг ачаалж байна…</p> },
 );
-export function MusicPlayer() {
+function useMusicController() {
   const { data, store, run } = useStudy(),
     namespace = store.getSnapshot().namespace;
   const [preference, updatePreference] = useMusicPreference(namespace);
@@ -46,8 +46,8 @@ export function MusicPlayer() {
     [ready, setReady] = useState(false),
     [attempt, setAttempt] = useState(0);
   const ambient = useRef<AmbientPlayer | null>(null),
-    youtube = useRef<YTPlayer | null>(null),
-    provider = useRef<MusicProvider | null>(null),
+    youtubeRef = useRef<YTPlayer | null>(null),
+    providerRef = useRef<MusicAdapter | null>(null),
     disposed = useRef(false),
     generation = useRef(0);
   const sources = data.musicSources.filter((s) => !s.deletedAt),
@@ -67,32 +67,62 @@ export function MusicPlayer() {
     generation.current++;
     return () => {
       disposed.current = true;
-      ambient.current?.close();
+      try {
+        ambient.current?.close();
+      } catch {}
       ambient.current = null;
-      youtube.current?.pauseVideo();
+      try {
+        youtubeRef.current?.pauseVideo();
+      } catch {}
+      youtubeRef.current = null;
+      providerRef.current = null;
     };
   }, [namespace]);
   useEffect(() => {
-    provider.current?.setVolume(volume, muted);
-    if (youtube.current) {
-      youtube.current.setVolume(volume * 100);
-      if (muted) youtube.current.mute();
-      else youtube.current.unMute();
+    try {
+      providerRef.current?.setVolume(volume, muted);
+      if (youtubeRef.current) {
+        youtubeRef.current.setVolume(volume * 100);
+        if (muted) youtubeRef.current.mute();
+        else youtubeRef.current.unMute();
+      }
+    } catch {
+      const task = setTimeout(
+        () => setError("Тоглуулагчтай холболт тасарсан. Дахин ачаалж болно."),
+        0,
+      );
+      return () => clearTimeout(task);
     }
   }, [volume, muted, namespace, ready]);
   useEffect(() => {
     const hidden = () => {
       if (document.hidden) {
-        youtube.current?.pauseVideo();
+        try {
+          youtubeRef.current?.pauseVideo();
+        } catch {
+          /* The embed may already be detached. */
+        }
         if (!isAmbient) setPlaying(false);
       }
     };
     document.addEventListener("visibilitychange", hidden);
     return () => document.removeEventListener("visibilitychange", hidden);
   }, [isAmbient]);
+  const pausePlayer = () => {
+    try {
+      const result = providerRef.current?.pause();
+      if (result)
+        void result.catch(() => {
+          if (!disposed.current)
+            setError("Хөгжим түр зогссон. Дахин ачаалж болно.");
+        });
+    } catch {
+      if (!disposed.current) setError("Хөгжмийг дахин ачаална уу.");
+    }
+  };
   const stop = () => {
     generation.current++;
-    void provider.current?.pause();
+    pausePlayer();
     setPlaying(false);
   };
   const select = (id: string) => {
@@ -102,8 +132,8 @@ export function MusicPlayer() {
     setReady(false);
   };
   const minimize = () => {
-    if (provider.current?.requiresVisiblePlayer) {
-      void provider.current.pause();
+    if (providerRef.current?.requiresVisiblePlayer) {
+      pausePlayer();
       setPlaying(false);
     }
     setOpen(false);
@@ -119,11 +149,15 @@ export function MusicPlayer() {
         setOpen(true);
         return;
       }
-      if (!youtube.current) {
+      if (!youtubeRef.current) {
         setError("Бичлэгийг ачаалж дуустал хүлээнэ үү.");
         return;
       }
-      await provider.current?.play();
+      try {
+        await providerRef.current?.play();
+      } catch {
+        setError("YouTube-г дахин нээгээд оролдоно уу.");
+      }
       return;
     }
     const token = ++generation.current;
@@ -135,7 +169,7 @@ export function MusicPlayer() {
       const engine = ambient.current ?? new AmbientPlayer();
       ambient.current = engine;
       const adapter = ambientProvider(engine, selected.slice(8) as AmbientId);
-      provider.current = adapter;
+      providerRef.current = adapter;
       adapter.setVolume(volume, muted);
       await adapter.play();
       if (!disposed.current && generation.current === token) {
@@ -150,9 +184,13 @@ export function MusicPlayer() {
     }
   };
   const next = (direction: number) => {
-    if (source?.kind === "playlist" && youtube.current) {
-      if (direction > 0) provider.current?.next?.();
-      else provider.current?.previous?.();
+    if (source?.kind === "playlist" && youtubeRef.current) {
+      try {
+        if (direction > 0) providerRef.current?.next?.();
+        else providerRef.current?.previous?.();
+      } catch {
+        setError("Тоглуулагчийг дахин ачаална уу.");
+      }
       return;
     }
     const options = [
@@ -204,6 +242,89 @@ export function MusicPlayer() {
       setTitle("");
     }
   };
+  return {
+    data,
+    store,
+    run,
+    volume,
+    muted,
+    savePreference,
+    open,
+    setOpen,
+    playing,
+    setPlaying,
+    error,
+    setError,
+    url,
+    setUrl,
+    title,
+    setTitle,
+    busy,
+    setReady,
+    attempt,
+    setAttempt,
+    youtubeRef,
+    providerRef,
+    disposed,
+    sources,
+    selected,
+    source,
+    isAmbient,
+    name,
+    select,
+    minimize,
+    toggle,
+    next,
+    add,
+  };
+}
+const MusicContext = createContext<ReturnType<
+  typeof useMusicController
+> | null>(null);
+export function MusicProvider({ children }: { children: React.ReactNode }) {
+  const controller = useMusicController();
+  return (
+    <MusicContext.Provider value={controller}>{children}</MusicContext.Provider>
+  );
+}
+export function MusicPlayer() {
+  const context = useContext(MusicContext);
+  if (!context) throw Error("MusicProvider шаардлагатай.");
+  const {
+    data,
+    store,
+    run,
+    volume,
+    muted,
+    savePreference,
+    open,
+    setOpen,
+    playing,
+    setPlaying,
+    error,
+    setError,
+    url,
+    setUrl,
+    title,
+    setTitle,
+    busy,
+    setReady,
+    attempt,
+    setAttempt,
+    youtubeRef,
+    providerRef,
+    disposed,
+    sources,
+    selected,
+    source,
+    isAmbient,
+    name,
+    select,
+    minimize,
+    toggle,
+    next,
+    add,
+  } = context;
   return (
     <aside
       className={`music-player ${open ? "music-expanded" : ""}`}
@@ -409,15 +530,24 @@ export function MusicPlayer() {
                   key={`${source.id}:${attempt}`}
                   source={source}
                   onReady={(p) => {
-                    youtube.current = p;
+                    youtubeRef.current = p;
+                    if (!p && providerRef.current?.kind === "youtube")
+                      providerRef.current = null;
                     if (p) {
-                      void import("@/lib/music/youtube-player").then(
-                        ({ youtubeProvider }) => {
-                          if (youtube.current !== p || disposed.current) return;
-                          provider.current = youtubeProvider(p);
-                          provider.current.setVolume(volume, muted);
-                        },
-                      );
+                      void import("@/lib/music/youtube-player")
+                        .then(({ youtubeProvider }) => {
+                          if (youtubeRef.current !== p || disposed.current)
+                            return;
+                          providerRef.current = youtubeProvider(p);
+                          try {
+                            providerRef.current.setVolume(volume, muted);
+                          } catch {
+                            setError("YouTube бэлэн болоогүй байна.");
+                          }
+                        })
+                        .catch(() =>
+                          setError("YouTube удирдлагыг ачаалж чадсангүй."),
+                        );
                     }
                     setReady(Boolean(p));
                     if (!p) setPlaying(false);

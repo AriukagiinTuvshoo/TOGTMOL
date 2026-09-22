@@ -160,6 +160,11 @@ export function CompanionArt({
           <path d="M90 130L106 130 102 157 87 153Z" />
         </g>
       )}
+      <g className="bondook-badge" strokeWidth="1.3">
+        <circle cx="76" cy="130" r="7" fill="#efd39a" />
+        <path d="M72 126H76Q81 126 79 129Q83 133 76 134H72Z" fill="none" />
+        <path d="M74 126V134" fill="none" />
+      </g>
       {world.accessory === "leaf" && (
         <g fill="#819b72">
           <path d="M91 34Q82 7 109 17Q108 34 91 34Z" />
@@ -236,7 +241,7 @@ export function CompanionAvatar({
       viewBox="-25 -25 190 210"
       className="companion-avatar"
       role="img"
-      aria-label="Тоги хамтрагч"
+      aria-label={`Бондоок · ${world.companion} · ${state}`}
     >
       <CompanionArt world={world} state={state} />
     </svg>

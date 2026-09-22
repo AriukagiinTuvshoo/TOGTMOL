@@ -531,28 +531,28 @@ input[type="checkbox"] {
 .companion-idle,
 .companion-paused,
 .companion-welcome {
-  animation: togi-breathe 5s ease-in-out infinite;
+  animation: bondook-breathe 5s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center bottom;
 }
 .companion-studying .companion-hand {
-  animation: togi-write 2.5s ease-in-out infinite;
+  animation: bondook-write 2.5s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 .companion-happy .companion-tail,
 .companion-celebrating .companion-tail {
-  animation: togi-wag 2.2s ease-in-out infinite;
+  animation: bondook-wag 2.2s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: left bottom;
 }
 .companion-celebrating {
-  animation: togi-breathe 2.5s ease-in-out infinite;
+  animation: bondook-breathe 2.5s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center bottom;
 }
 .tea-steam {
-  animation: togi-steam 4s ease-in-out infinite;
+  animation: bondook-steam 4s ease-in-out infinite;
 }
 .room-rain {
   animation: room-rain 2.5s linear infinite;
@@ -560,22 +560,22 @@ input[type="checkbox"] {
 .room-snow {
   animation: room-rain 8s ease-in-out infinite;
 }
-@keyframes togi-breathe {
+@keyframes bondook-breathe {
   50% {
     transform: translateY(-2px) scaleY(1.01);
   }
 }
-@keyframes togi-write {
+@keyframes bondook-write {
   50% {
     transform: translate(1px, 2px) rotate(-8deg);
   }
 }
-@keyframes togi-wag {
+@keyframes bondook-wag {
   50% {
     transform: rotate(5deg);
   }
 }
-@keyframes togi-steam {
+@keyframes bondook-steam {
   50% {
     opacity: 0.2;
     transform: translateY(-3px);
@@ -809,7 +809,7 @@ input[type="checkbox"] {
   overflow-wrap: anywhere;
   text-align: left;
 }
-.togi-chat {
+.bondook-chat {
   max-width: 768px;
   margin: 0 auto;
   width: 100%;
@@ -1479,9 +1479,9 @@ details.card[open] > summary {
 .companion-eyes {
   transform-box: fill-box;
   transform-origin: center;
-  animation: togi-blink 9s linear infinite;
+  animation: bondook-blink 9s linear infinite;
 }
-@keyframes togi-blink {
+@keyframes bondook-blink {
   0%,
   46%,
   49%,

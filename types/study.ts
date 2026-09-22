@@ -1,3 +1,4 @@
+import type { KnowledgeRecord } from "./knowledge";
 export type Theme = "system" | "light" | "dark";
 export type TimerMode = "stopwatch" | "pomodoro";
 export type TimerPhase = "focus" | "shortBreak" | "longBreak";
@@ -12,7 +13,11 @@ export type View =
   | "settings"
   | "assistant"
   | "room"
-  | "focus";
+  | "focus"
+  | "knowledge"
+  | "privacy";
+export type KnowledgeView =
+  "all" | "note" | "image" | "deck" | "quiz" | "link" | "session" | "trash";
 export type Extras = Record<string, unknown>;
 export interface RecordBase {
   id: string;
@@ -56,7 +61,17 @@ export interface DailyTask extends RecordBase {
   startTime: string | null;
   goalId: string | null;
 }
-export type DesignTheme = "cozy" | "minimal" | "night" | "forest" | "sakura";
+export type DesignTheme =
+  | "cozy"
+  | "minimal"
+  | "night"
+  | "forest"
+  | "sakura"
+  | "rainy"
+  | "space"
+  | "cabin"
+  | "library"
+  | "ocean";
 export type Companion = "cat" | "fox" | "bear" | "rabbit" | "penguin" | "dog";
 export type Background =
   | "cozy"
@@ -68,7 +83,8 @@ export type Background =
   | "minimal"
   | "space"
   | "japanese"
-  | "hokkaido";
+  | "hokkaido"
+  | "ocean";
 export type Atmosphere = "day" | "evening" | "night" | "rain" | "snow";
 export type DeskItem =
   "laptop" | "books" | "notebook" | "coffee" | "tea" | "plant" | "lamp";
@@ -150,6 +166,7 @@ export type MergeCollection =
   | "tasks"
   | "studyGoals"
   | "musicSources"
+  | "knowledge"
   | "goals"
   | "settings";
 export interface MergeConflict {
@@ -161,7 +178,8 @@ export interface MergeConflict {
   resolvedAt: number | null;
 }
 export interface StudyData {
-  schemaVersion: 4;
+  schemaVersion: 5;
+  knowledge: KnowledgeRecord[];
   subjects: Subject[];
   entries: Entry[];
   sessions: StudySession[];
@@ -177,12 +195,13 @@ export interface StudyData {
   extras: Extras;
 }
 export interface StoredDocument {
+  knowledgeSeparated?: boolean;
   revision: number;
   data: StudyData;
 }
 export interface ExportEnvelope {
   format: "togtmol-backup";
-  version: 4;
+  version: 5;
   exportedAt: string;
   data: StudyData;
 }

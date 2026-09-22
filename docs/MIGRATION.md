@@ -1,53 +1,62 @@
-# v2 / v3 → v4 migration and recovery
+# v2 / v3 / v4 → v5: шилжилт ба сэргээх
 
-## Guarantees
+## Юуг хадгалдаг вэ?
 
-1. The original `tracker-data` value is left untouched.
-2. An exact source backup must succeed before the first migrated document is saved.
-3. Parsing failure does not create an empty successful migration.
-4. Numeric IDs become equivalent text IDs. Existing string IDs remain unchanged.
-5. Session seconds, notes, recorded timestamps, goals and achievement dates are retained.
-6. Unknown properties are carried in `extras`; malformed rows go to `quarantine` with their original value and reason.
-7. Re-importing an identical session ID is idempotent. Conflicting values retain both versions.
-8. Two active timers cannot become one silently. The local timer is retained; a second imported timer is saved in quarantine for explicit recovery.
+Анхны `tracker-data` утгыг хөндөхгүй. Өмнөх хувилбарын ID, хичээл, хэмжсэн секунд, эхэлсэн/дууссан мөч, тэмдэглэл, зорилго, үе шат, биелэлт, тохиргоо, амжилт, идэвхтэй таймерыг хадгална. Танигдаагүй талбарууд `extras`, буруу мөрүүд эх утга ба шалтгаантайгаа `quarantine` хэсэгт үлдэнэ.
 
-## First load on the same origin
+v5 нь `knowledge` цуглуулга нэмнэ: тэмдэглэл, багц, карт, давтлагын түүх, сорил, сорилын үр дүн, холбоос. Зураг тэмдэглэлдээ, давтлагын өмнөх/дараах хуваарь түүхэндээ хадгалагдана. Бондоокийн ярилцлага `extras.bondookMessages`, зөвшөөрөл ба шинэ сонголтууд `settings.extras` дотор байна. Хөгжмийн хуучин жижиг тохиргоог уншиж, шинэ экспортод багтаана.
 
-The repository checks for an existing document first. If none exists, it reads the host storage when present, then the local v2 key. An outstanding `tracker-data:pending:v2` journal is recovered only when its base matches the source. Mismatched journal payloads are separately backed up for manual recovery. The exact source and recovery journal are preserved before migration.
+## Дотоод хадгалалтын шинэчлэлт
 
-A v4 installation on a different origin cannot read the previous origin's storage. Export JSON in v2, then import it in v4. Opening two different filesystem copies is also not a reliable way to share browser storage.
+IndexedDB нэр `togtmol-v3`, localStorage prefix `togtmol:v3:`, бүртгэлийн namespace болон BroadcastChannel хэвээр. Ижил браузер, домэйн, порт дээр байгаа хуучин өгөгдлийг үргэлжлүүлэн олно.
 
-## Backups and imports
+IndexedDB-ийн дотоод хувилбар **2**. Өмнөх `documents`, `backups`, `metadata` дээр `knowledge` store нэмнэ. Түлхүүр нь `[namespace, id]`, namespace индексээр уншина. Баримт ба өөрчлөгдсөн мэдлэгийн мөрүүд нэг гүйлгээнд, ижил revision шалгалтаар бичигдэнэ. Зурагтай бүх санг дууны түвшин өөрчлөх бүрд дахин бичихгүй. Бүрэн snapshot-оос эхний хадгалалт хийх болон онцгой сэргээх урсгалыг тусад нь шалгасан.
 
-The import screen previews source session count, merged count, quarantined records and conflicts. It saves the incoming bytes and a snapshot of the current document before merging. Settings exposes backup downloads and **merge restore**. Restore is additive/conflict-aware; it does not silently replace all current work with an old snapshot.
+Өмнөх схемийг илрүүлэхэд бүтэн эх envelope-ийг нөөцөлж, дараа нь баталгаажуулсан schema 5 баримтыг бичнэ. Нөөц эсвэл хадгалалт бүтэлгүйтвэл эх баримтыг солихгүй. Өөр цонх түрүүлж бичсэн бол шинэ revision-ийг уншина. IndexedDB уншигдахгүй байхад хоосон localStorage руу чимээгүй шилжихгүй.
 
-Exports have `format: "togtmol-backup"`, `version: 4`, `exportedAt`, and `data`. The live timer is exported as a paused snapshot so moving an old file later does not accumulate unattended time. Exporting does not pause the on-screen timer.
+Хуучин v2 pending journal зөвхөн эх утга таарсан үед сэргээгдэнэ; зөрсөн эхүүд тусдаа нөөцлөгдөнө. Эвдэрсэн JSON-ийг хоосон, амжилттай импорт гэж үзэхгүй.
 
-## Deletion and restoration
+## Нөөц, экспорт, импорт
 
-Session, subject and task deletion sets `deletedAt`; stale devices cannot silently resurrect an older active copy. Trash restoration sets a new timestamp. Restoring a subject also restores children deleted in the same operation, leaving previously deleted children in trash. Restoring an individual session or task restores an archived parent when needed.
+Өдөрт эхний өөрчлөлтийн өмнө автомат нөөц үүсгэнэ. Шилжүүлэлт, импорт, устгаж цэвэрлэх, гараар бүрэн экспорт хийхэд мөн нөөцөлнө. Нөөцүүдийг автоматаар устгахгүй. Хадгалалтын багтаамж дуусвал алдаа гарч, үндсэн баримтыг амжилттай хадгалсан гэж тайлагнахгүй.
 
-## Recovery procedure
+```json
+{
+  "app": "togtmol",
+  "format": "togtmol-backup",
+  "version": 5,
+  "exportedAt": "ISO timestamp",
+  "data": { "schemaVersion": 5 }
+}
+```
 
-1. Keep the v2 HTML, original JSON export and any downloaded recovery files.
-2. If initial loading fails, use **Эх өгөгдлөө татах**; do not clear browser storage.
-3. Import a known-good file in a working v4 instance and review the preview.
-4. Check `quarantine` for records needing repair. Correct only a copy of that file, retaining the original.
-5. Resolve conflicts in Settings; the alternative versions remain recorded for audit.
-6. Export the final merged document to a separate file.
+Бодит `data` нь бүх цуглуулга, зураг, тохиргоо, ярилцлагыг агуулна. Экспорт дахь таймерыг түр зогссон snapshot болгоно; дэлгэц дээр ажиллаж буй таймерыг зогсоохгүй. Энэ нь хуучин файлыг хожим импортлоход эзгүй өнгөрсөн хугацаа нэмэгдэхээс сэргийлнэ.
 
-Local backups share the browser's storage quota and are not off-device protection. No automatic deletion of old backups is performed in this version.
+Тохиргооны импорт/нөөц сэргээх нь **нэгтгэх** ажиллагаа. Ижил ID дахин импортлогдоход давхардахгүй. Зөрчил бүр хоёр хувилбартайгаа үлдэнэ. Бүртгэл солигдвол эхэлсэн импортыг өөр namespace руу үргэлжлүүлэхгүй. Файлын хэмжээ 100 MB хүртэл; том зурагтай сангийн бүрэн дамжуулалтыг бүх төхөөрөмжид туршаагүй.
 
-## Upgrading an installed v3
+## Ачаалал бүтэлгүйтсэн үед
 
-The database name, storage prefix, note-journal keys, namespaces and BroadcastChannel stay unchanged intentionally. `Repository.load` validates and normalizes the old document, backs up the **entire stored envelope**, then performs a revision-checked v4 write. Backup failure stops the write; a concurrent winner is reloaded. A subsequent read does not create another upgrade backup. The localStorage fallback retains the exact source string in the upgrade backup.
+1. **Эх өгөгдлөө татах** товчоор эх bytes-ээ тусдаа файлд авна.
+2. Хадгалалт түр хаагдсан бол бусад хуучин цонхыг хаагаад **Дахин оролдох**.
+3. **Нөөцөөс сэргээх** эсвэл өөрийн JSON файлыг сонгоно. Танигдсан бүтцийн нөөцийг л сэргээнэ.
+4. Сэргээх цонхны ажиллагаа үндсэн хуулбарыг **солих** тул баталгаажуулалттай. Одоогийн эх ба сонгосон нөөцийг эхлээд дахин нөөцөлж, revision өөрчлөгдөөгүйг шалгана.
+5. Бүртгэлийн хуулбарыг сэргээхэд синк унтарна. Үүлтэй дахин холбохыг хэрэглэгч өөрөө шийднэ.
+6. Шинээр эхлэх бол `ЦЭВЭРЛЭХ` гэж бичнэ. Нөөц үүсэхгүй бол цэвэрлэхгүй. Энэ нь тухайн төхөөрөмжийн үндсэн хуулбарыг цэвэрлэнэ; сэргээх нөөц үлдэнэ.
 
-v4 adds `studyGoals`, `musicSources`, task `goalId`, and `settings.world`. Session/timer task and goal associations use retained extras. Existing sessions, manual marks, IDs, notes, original timestamps, achievements and active timer values remain intact. New collections participate in the same three-way merge and conflict resolver; duplicate subject alias remapping also covers study goals. Old cloud baselines are normalized before merging.
+Үндсэн аппын сэргээх дэлгэц алдаа гарсан бүртгэлийг онилно. Гаднах ерөнхий алдааны дэлгэцийн анхдагч сэргээх бай нь guest буюу төхөөрөмжийн локал горим юм.
 
-Apply the additive v4 SQL migration before deploying a v4 cloud client. Both RPCs then use schema 4. Old v3 uploads fail instead of overwriting v4 preferences or new collections. Do not roll back the client alone against an upgraded database; restore a reviewed backup in an isolated environment if a rollback is needed.
+## Устгал, буцаах, үүлэн цэвэрлэгээ
 
-## v4 → v4.1
+Энгийн устгал `deletedAt` тэмдэглэгээ ашиглана. Буцаах товч 15 секунд харагдана; хугацаа өнгөрсөн ч хогийн савнаас сэргээж болно. Багц устгахад карт ба түүхийг физик байдлаар устгахгүй, тухайн багцын карт давтлагад орохгүй.
 
-The schema/export version remains 4. Milestones, completion dates and furniture use the existing `extras` extension points; no eager rewrite or new database migration is performed. Previous goal/task/session IDs, active timers and unknown fields remain intact. Existing goals gain stages only when the user edits them; editing a goal never regenerates its schedule.
+Локал хуулбарыг цэвэрлэхэд эхлээд нөөцөлж, идэвхтэй таймер болон revision-ийг шалгана. Бүртгэлийн локал хуулбарт синк унтарсан байх ёстой. Бусад бүртгэл болон нөөцүүд үлдэнэ.
 
-The reader also accepts `{ revision, data }` envelopes generated by earlier automatic upgrade backups. In Settings, open saved backups and choose merge/restore as usual. Guest-only clear first stores a full recoverable backup and then checks the document revision; failed backups and revision conflicts abort the reset. It never clears account data or the backups themselves. Browser-wide storage deletion still removes local backups, so export a JSON copy when moving devices or clearing browser storage.
+Үүлэн цэвэрлэгээнд синкийг зогсоож, үүлний тухайн snapshot-ийг төхөөрөмжид нөөцөлж, эзэмшигч + revision-ээр баталгаажсан RPC дуудна. Хэрэглэгчийн хичээлийн хүснэгтүүд хоосорч, auth бүртгэл болон хамгийн бага revision/`cloudResetAt` тэмдэглэгээ үлдэнэ. Хуучин төхөөрөмжийг нээхэд тухайн устгалын мөчийг зөвшөөрөлгүй давахгүй. Хэрэглэгч дахин холбож зөвшөөрвөл локал түүхийг буцааж байршуулж болно. Өөр төхөөрөмжийн локал хуулбаруудыг алсаас устгах ажиллагаа биш.
+
+## Сервер болон буцаах хувилбар
+
+`20260921155351_knowledge_world_v5.sql`-ийг одоогийн v4 SQL-ийн дараа хэрэглэнэ. Шинэ хувийн `knowledge_records` хүснэгт, schema 5 RPC, эзэмшигчийн устгах дүрмүүд нэмэгдэнэ. Хуучин үйлчлүүлэгч шинэ өгөгдлийг дарж бичихгүйн тулд schema 3/4 upload татгалзана.
+
+Байршуулсан сангийн нөөцөө авч, SQL-ийг хэрэглэсний дараа v5 үйлчлүүлэгч байршуулна. Хуучин цонхуудаа хааж шинэ хувилбар нээнэ. Зөвхөн үйлчлүүлэгчийг v4 рүү буцаах нь v5 үүлэн сантай нийцэхгүй; буцаах шаардлагатай бол тусгаарласан орчинд нөөцөө сэргээж нягтална. Энэ ажлаар бодит Supabase санд migration ажиллуулаагүй.
+
+Локал нөөцүүд браузерын үндсэн өгөгдөлтэй ижил төхөөрөмжид байдаг. Браузерын бүх хадгалалтыг цэвэрлэхээс өмнө JSON нөөцөө гадна хадгална.

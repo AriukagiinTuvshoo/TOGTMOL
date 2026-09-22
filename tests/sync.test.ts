@@ -10,6 +10,7 @@ import { StudyStore } from "@/lib/persistence/store";
 import { Repository } from "@/lib/persistence/repository";
 import { emptyData } from "@/lib/constants";
 import { fixture, MemoryStorage, NOW } from "./fixtures";
+import { knowledgeFixture } from "./knowledge-fixtures";
 class Cloud implements CloudAdapter {
   snapshot: CloudSnapshot = { revision: 0, data: emptyData() };
   pushes = 0;
@@ -44,6 +45,48 @@ async function setup() {
   return { store, cloud, engine };
 }
 describe("sync engine", () => {
+  it("preserves local knowledge after remote deletion until explicit reset consent", async () => {
+    const { store, cloud, engine } = await setup();
+    await store.mutate(() => knowledgeFixture());
+    cloud.snapshot = {
+      revision: 4,
+      data: { ...emptyData(), extras: { cloudResetAt: NOW } },
+    };
+    await expect(engine.sync()).rejects.toThrow(/цэвэрлэсэн/);
+    expect(store.getSnapshot().data.knowledge).toHaveLength(5);
+    expect(cloud.pushes).toBe(0);
+    await store.repository.setMetadata("cloud-reset-consent:a", NOW);
+    await engine.sync();
+    expect(cloud.snapshot.data.knowledge).toHaveLength(5);
+    expect(cloud.snapshot.data.extras.cloudResetAt).toBe(NOW);
+    store.destroy();
+  });
+  it("cancels after a delayed pull and never uploads after sync is disabled", async () => {
+    const { store, cloud, engine } = await setup();
+    await store.mutate(() => knowledgeFixture());
+    const pull = cloud.pull.bind(cloud);
+    let release!: () => void, entered!: () => void;
+    const enteredPull = new Promise<void>((resolve) => (entered = resolve));
+    cloud.pull = async () => {
+      entered();
+      await new Promise<void>((resolve) => (release = resolve));
+      return pull();
+    };
+    const pending = engine.sync();
+    await enteredPull;
+    engine.cancel();
+    release();
+    await expect(pending).rejects.toThrow(/зогссон/);
+    await engine.idle();
+    expect(cloud.pushes).toBe(0);
+    cloud.pull = pull;
+    await store.repository.setMetadata("account-enabled:a", false);
+    await expect(new SyncEngine(store, cloud, "a").sync()).rejects.toThrow(
+      /унтраалттай/,
+    );
+    expect(cloud.pushes).toBe(0);
+    store.destroy();
+  });
   it("uploads, pulls, and does not repeatedly upload unchanged snapshots", async () => {
     const { store, cloud, engine } = await setup();
     await store.mutate(() => fixture());

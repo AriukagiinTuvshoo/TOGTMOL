@@ -112,7 +112,7 @@ describe("v2 compatibility and safe merges", () => {
   });
   it("rejects unknown and future schemas", () => {
     expect(() => migrate({ random: "value" })).toThrow();
-    expect(() => migrate({ ...fixture(), schemaVersion: 5 })).toThrow();
+    expect(() => migrate({ ...fixture(), schemaVersion: 6 })).toThrow();
   });
   it("preserves duplicate source records by recovering unique IDs", () => {
     const d = fixture();

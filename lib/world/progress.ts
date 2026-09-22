@@ -1,3 +1,4 @@
+import { dayBoundary } from "@/lib/preferences";
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
 import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
 import {
@@ -93,7 +94,7 @@ export function goalProgress(data: StudyData, goal: StudyGoal, today: string) {
   const weeklySeconds = linked.reduce(
     (n, session) =>
       n +
-      sessionAllocations(session)
+      sessionAllocations(session, dayBoundary(data.settings))
         .filter((d) => d.date >= start && d.date <= today)
         .reduce((sum, d) => sum + d.seconds, 0),
     0,

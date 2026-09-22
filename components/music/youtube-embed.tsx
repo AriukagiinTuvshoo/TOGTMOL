@@ -39,7 +39,9 @@ export function YouTubeEmbed({
           {
             ready: (p) => {
               if (disposed) {
-                p.destroy();
+                try {
+                  p.destroy();
+                } catch {}
                 return;
               }
               callbacks.current.onReady(p);
@@ -47,15 +49,26 @@ export function YouTubeEmbed({
                 observer = new IntersectionObserver(
                   (entries) => {
                     if (entries.some((entry) => !entry.isIntersecting))
-                      p.pauseVideo();
+                      try {
+                        p.pauseVideo();
+                      } catch {
+                        if (!disposed)
+                          callbacks.current.onError(
+                            "Тоглуулагчийг дахин ачаална уу.",
+                          );
+                      }
                   },
                   { threshold: 0.1 },
                 );
                 observer.observe(host.current);
               }
             },
-            state: (s) => callbacks.current.onState(s),
-            error: (m) => callbacks.current.onError(m),
+            state: (s) => {
+              if (!disposed) callbacks.current.onState(s);
+            },
+            error: (m) => {
+              if (!disposed) callbacks.current.onError(m);
+            },
           },
         );
       })
@@ -67,7 +80,11 @@ export function YouTubeEmbed({
       disposed = true;
       observer?.disconnect();
       callbacks.current.onReady(null);
-      player?.destroy();
+      try {
+        player?.destroy();
+      } catch {
+        /* YouTube may have removed its iframe before cleanup. */
+      }
       element.remove();
     };
   }, [kind, youtubeId]);

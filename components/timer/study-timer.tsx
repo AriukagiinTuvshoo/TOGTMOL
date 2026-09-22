@@ -12,13 +12,17 @@ import {
   writeTimerDraft,
   clearTimerDraft,
 } from "@/lib/persistence/timer-draft";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 import { notifyUser } from "@/lib/notifications";
 
 export function TimerWatch() {
-  const { data, store, run, navigate } = useStudy(),
+  const { data, store, run, navigate, setNotice } = useStudy(),
     t = data.activeTimer,
     now = useClock(Boolean(t?.running)),
     finishing = useRef(false);
+  const wakeStatus = useWakeLock(
+    Boolean(t?.running && data.settings.extras.wakeLock),
+  );
   useEffect(() => {
     if (
       t?.running &&
@@ -30,19 +34,30 @@ export function TimerWatch() {
       finishing.current = true;
       void run(() => store.mutate(actions.finish())).then((ok) => {
         finishing.current = false;
-        if (ok)
+        if (ok) {
+          setNotice(
+            t.phase === "focus"
+              ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
+              : "Амралт дууслаа.",
+          );
           notifyUser(
             t.phase === "focus"
               ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
               : "Амралт дууслаа.",
             data.settings,
+            `togtmol-timer-${t.id}`,
           );
+        }
       });
     }
-  }, [t, now, store, run, data.settings]);
+  }, [t, now, store, run, data.settings, setNotice]);
   if (!t) return null;
   return (
-    <button className="active-timer-chip" onClick={() => navigate("focus")}>
+    <button
+      title={wakeStatus}
+      className="active-timer-chip"
+      onClick={() => navigate("focus")}
+    >
       <span className={t.running ? "live-dot" : ""} />
       <Icon name={t.status === "review" ? "check" : "clock"} size={16} />
       {t.status === "review" ? "Үр дүнгээ хадгалах" : clock(elapsed(t, now))}

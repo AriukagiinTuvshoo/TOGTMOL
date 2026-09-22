@@ -1,3 +1,5 @@
+import { knowledgeStatistics } from "@/lib/knowledge/statistics";
+import { knowledgeIndex } from "@/lib/knowledge/index";
 import type { StudyData, StudyIndex } from "@/types/study";
 import { insights, suggestPlan } from "./provider";
 import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
@@ -12,7 +14,7 @@ import { goalDetails, milestoneProgress } from "@/lib/world/milestones";
 import { goalProgress } from "@/lib/world/progress";
 export interface ChatReply {
   text: string;
-  action?: "plan" | "goals" | "timer";
+  action?: "plan" | "goals" | "timer" | "knowledge";
   planPrompt?: string;
 }
 export interface ChatContext {
@@ -31,6 +33,15 @@ export function localReply(
   const q = message.toLocaleLowerCase(),
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
+  if (/карт|flashcard|сорил|quiz/.test(q)) {
+    const practice = knowledgeIndex(data.knowledge, today),
+      cards = practice.cards,
+      due = practice.reviewQueue;
+    return {
+      text: `Мэдлэгийн санд ${cards.length} карт байна. Өнөөдөр ${due.length} картын давтлага бэлэн. Тэмдэглэлээс карт бэлдэхдээ эхлээд асуулт, хариултаа хянаж хадгална.`,
+      action: "knowledge",
+    };
+  }
   if (/бодитой|хуваарь|амжих|realistic|pace/.test(q)) {
     const review = coachInsights(data, index, today);
     return {
@@ -51,21 +62,12 @@ export function localReply(
       planPrompt: message.slice(0, 200),
     };
   if (/тэмдэглэл|reflection|юу сур|дүгнэ/.test(q)) {
-    const start = weekStart(today),
-      end = shiftDate(start, 6),
-      notes = data.sessions
-        .filter(
-          (s) =>
-            !s.deletedAt && s.date >= start && s.date <= end && s.note.trim(),
-        )
-        .filter((s) => s.date <= today)
-        .sort((a, b) => b.endEpoch - a.endEpoch)
-        .slice(0, 5);
+    const notes = recentNotes(data, today);
     return {
       text: notes.length
-        ? `Энэ долоо хоногийн таны ${notes.length} сүүлийн тэмдэглэл:\n\n${notes.map((s) => `${s.date} · ${index.subjects.get(s.subjectId)?.name ?? "Хичээл"}\n“${s.note.slice(0, 600)}${s.note.length > 600 ? "…" : ""}”`).join("\n\n")}\n\nДараагийн удаа юуг үргэлжлүүлэх вэ? Эдгээр нь таны өөрийн тэмдэглэл; ойлголтын түвшинг би хэмжээгүй.`
-        : "Энэ долоо хоногт хадгалсан тэмдэглэл алга. Дараагийн хичээлийнхээ төгсгөлд «Юу ойлгов? Юу үлдэв?» гэсэн хоёр өгүүлбэр үлдээгээрэй.",
-      action: notes.length ? undefined : "timer",
+        ? `Сүүлийн 7 өдрийн ${notes.length} тэмдэглэл:\n\n${notes.map((n) => `${n.date} · ${n.note.slice(0, 600)}`).join("\n\n")}\n\nДараагийн удаа юуг үргэлжлүүлэх вэ? Эдгээр нь таны тэмдэглэл; ойлголтын түвшинг би хэмжээгүй.`
+        : "Тэмдэглэл хараахан алга. Өнөөдөр ойлгосон нэг зүйлээ тэмдэглээд үлдээх үү?",
+      action: "knowledge",
     };
   }
   if (/долоо|week|review|ахиц|стат/.test(q)) {
@@ -104,11 +106,11 @@ export function localReply(
   }
   if (/ядар|амр|break|tired/.test(q))
     return {
-      text: "Жаахан завсарлахад болно. Ус ууж, нүдээ амраагаад, буцаж ирэхдээ хүсвэл жижиг алхмаар үргэлжлүүлээрэй. Тоги энд байна.",
+      text: "Жаахан завсарлахад болно. Ус ууж, нүдээ амраагаад, буцаж ирэхдээ хүсвэл жижиг алхмаар үргэлжлүүлээрэй. Бондоок энд байна.",
     };
   if (/сайн|hello|hi|мэнд/.test(q))
     return {
-      text: `Сайн уу, би Тоги. ${stats.sessionCount ? `Сүүлийн 7 өдөр ${stats.sessionCount} хичээл хадгалжээ.` : "Өнөөдрийн жижиг алхмаа хамт сонгоё."}\n\nОдоогоор local горимоор таны цаг, төлөвлөгөө, тэмдэглэлд тулгуурлан тусална. “Долоо хоногоо харъя”, “Юу хийх вэ?”, “Зорилго төлөвлөе” гэж бичээрэй.`,
+      text: `Сайн уу, би Бондоок. ${stats.sessionCount ? `Сүүлийн 7 өдөр ${stats.sessionCount} хичээл хадгалжээ.` : "Өнөөдрийн жижиг алхмаа хамт сонгоё."}\n\nОдоогоор local горимоор таны цаг, төлөвлөгөө, тэмдэглэлд тулгуурлан тусална. “Долоо хоногоо харъя”, “Юу хийх вэ?”, “Зорилго төлөвлөе” гэж бичээрэй.`,
     };
   return {
     text: `Би local горимд чөлөөт асуултыг AI шиг тайлбарлахгүй. Харин таны бодит түүхийг харуулж чадна:\n\n${insights(
@@ -126,6 +128,26 @@ export const localChatProvider: ChatProvider = {
   kind: "local",
   reply: async (message, context) => localReply(message, context),
 };
+function recentNotes(data: StudyData, today: string) {
+  return [
+    ...data.sessions
+      .filter((s) => !s.deletedAt && s.note.trim())
+      .map((s) => ({ date: s.date, note: s.note, stamp: s.endEpoch })),
+    ...data.knowledge
+      .filter(
+        (r): r is import("@/types/knowledge").StudyNote =>
+          r.kind === "note" && !r.deletedAt,
+      )
+      .map((r) => ({
+        date: r.date,
+        note: `${r.title}: ${r.body}`,
+        stamp: r.updatedAt,
+      })),
+  ]
+    .filter((n) => n.date >= shiftDate(today, -6) && n.date <= today)
+    .sort((a, b) => b.stamp - a.stamp)
+    .slice(0, 5);
+}
 export function aiContext(
   { data, index, today }: ChatContext,
   includeNotes: boolean,
@@ -177,18 +199,12 @@ export function aiContext(
         title: t.title.slice(0, 100),
         date: t.extras.completedOn ?? t.date,
       })),
+    practice: knowledgeStatistics(data, shiftDate(today, -6), today),
     notes: includeNotes
-      ? data.sessions
-          .filter(
-            (s) =>
-              !s.deletedAt &&
-              s.note &&
-              s.date >= shiftDate(today, -6) &&
-              s.date <= today,
-          )
-          .sort((a, b) => b.endEpoch - a.endEpoch)
-          .slice(0, 5)
-          .map((s) => ({ date: s.date, note: s.note.slice(0, 500) }))
+      ? recentNotes(data, today).map((n) => ({
+          date: n.date,
+          note: n.note.slice(0, 500),
+        }))
       : [],
   };
 }
@@ -206,7 +222,15 @@ export function createAIChatProvider(
         );
       const contextData = aiContext(context, includeNotes);
       // Keep UTF-8 bytes below the server limit even with long multilingual names.
-      const payload = () => JSON.stringify({ message, context: contextData });
+      const wantsPersonal =
+        /миний|надад|долоо|өнөөдөр|тэмдэглэл|ахиц|хуваарь|review|my |this week|today|pace/i.test(
+          message,
+        );
+      const payload = () =>
+        JSON.stringify({
+          message,
+          context: wantsPersonal ? contextData : { today: context.today },
+        });
       for (const list of [
         contextData.subjects,
         contextData.goals,
@@ -218,7 +242,7 @@ export function createAIChatProvider(
           list.length
         )
           list.pop();
-      const response = await fetch("/api/togi", {
+      const response = await fetch("/api/bondook", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

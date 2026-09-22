@@ -43,7 +43,7 @@ export function CustomizeRoom() {
     <div className="stack room-customizer">
       <SectionTitle
         title="Таны жижиг ертөнц"
-        subtitle="Өрөө, Тоги, гэрэл — өөртөө тухтайг сонгоорой."
+        subtitle="Өрөө, Бондоок, гэрэл — өөртөө тухтайг сонгоорой."
         action={
           <button
             className="button primary"
@@ -57,7 +57,7 @@ export function CustomizeRoom() {
         <div className="customizer-preview">
           <RoomScene world={world} />
           <p>
-            Тоги · Lv. {progress.level} · {progress.xp} XP
+            Бондоок · Lv. {progress.level} · {progress.xp} XP
           </p>
         </div>
         <div className="stack">
@@ -172,7 +172,7 @@ export function CustomizeRoom() {
             </div>
           </section>
           <section className="card">
-            <h2>Тогигийн төрх</h2>
+            <h2>Бондоокийн төрх</h2>
             <div className="companion-options">
               {COMPANIONS.map((c) => (
                 <button
@@ -243,7 +243,7 @@ export function CustomizeRoom() {
       <section className="card">
         <SectionTitle
           title="Таван өөр уур амьсгал"
-          subtitle="Theme солиход өрөө, Тоги, гэрэл болон хуудасны загвар хамт өөрчлөгдөнө."
+          subtitle="Theme солиход өрөө, Бондоок, гэрэл болон хуудасны загвар хамт өөрчлөгдөнө."
         />
         <div className="theme-gallery">
           {DESIGNS.map((d) => (

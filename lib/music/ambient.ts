@@ -39,6 +39,8 @@ export class AmbientPlayer {
       low = 0.985 * low + 0.015 * noise;
       slow = 0.999 * slow + 0.001 * noise;
       let v = 0;
+      if (id === "white") v = noise * 0.12;
+      if (id === "deep") v = low * 1.6 + slow * 2;
       if (id === "rain") v = low * 2.2 + noise * 0.045;
       if (id === "cafe")
         v =

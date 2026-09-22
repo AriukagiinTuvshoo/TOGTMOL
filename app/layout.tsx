@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./world.css";
+import "./knowledge.css";
 export const metadata: Metadata = {
-  title: "Тогтмол v4 — Your Little Study World",
+  title: "Тогтмол v5 — Бондооктой хамт суралцъя",
   description:
-    "Хичээлээ хэмжиж, ахицаа хараад, өөрийн хэмнэлээр суралц. Тогтмол байдал төгсөөс чухал.",
+    "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Тогтмол" },
   icons: { icon: "/icons/icon.svg", apple: "/icons/apple-touch-icon.png" },

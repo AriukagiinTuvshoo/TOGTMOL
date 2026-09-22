@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { CompanionAvatar } from "@/components/world/companion";
 import { PlanWizard } from "@/components/goals/goal-planner";
@@ -7,28 +7,76 @@ import { Assistant as LocalDetails } from "./insights";
 import {
   localChatProvider,
   createAIChatProvider,
-  type ChatReply,
 } from "@/lib/assistant/chat-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
-interface Message extends ChatReply {
-  id: number;
-  role: "user" | "assistant";
-  kind: "local" | "ai";
-}
-export function TogiChat() {
-  const { data, index, today, navigate, store } = useStudy(),
-    [messages, setMessages] = useState<Message[]>([]),
+import { readMessages, type BondookMessage } from "@/lib/assistant/history";
+import { uid } from "@/lib/constants";
+export function BondookChat() {
+  const { data, index, today, navigate, store, run } = useStudy(),
     [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
-    [online, setOnline] = useState(false),
+    [changingAI, setChangingAI] = useState(false),
+    [messageLimit, setMessageLimit] = useState(100),
     [consent, setConsent] = useState(false),
-    [includeNotes, setIncludeNotes] = useState(false),
+    [notesConsent, setNotesConsent] = useState(false),
     [error, setError] = useState(""),
     [plan, setPlan] = useState<string | null>(null),
     end = useRef<HTMLDivElement>(null),
     request = useRef(0),
     disposed = useRef(false);
+  const online = data.settings.extras.aiEnabled === true;
+  const includeNotes = data.settings.extras.aiIncludeNotes === true;
+  const messages = useMemo(
+    () => readMessages(data.extras.bondookMessages),
+    [data.extras.bondookMessages],
+  );
+  const setAI = async (enabled: boolean, notes = false) => {
+    const namespace = store.getSnapshot().namespace;
+    setChangingAI(true);
+    try {
+      return await run(() =>
+        store.mutate((d) => {
+          if (store.getSnapshot().namespace !== namespace)
+            throw Error("Бүртгэл өөрчлөгдсөн байна.");
+          return {
+            ...d,
+            settings: {
+              ...d.settings,
+              updatedAt: Date.now(),
+              extras: {
+                ...d.settings.extras,
+                aiEnabled: enabled,
+                aiIncludeNotes: enabled && notes,
+              },
+            },
+          };
+        }),
+      );
+    } finally {
+      setChangingAI(false);
+    }
+  };
+  const append = async (
+    message: Omit<BondookMessage, "id" | "createdAt">,
+    namespace: string,
+  ) =>
+    store.mutate((d) => {
+      if (store.getSnapshot().namespace !== namespace)
+        throw Error("Бүртгэл өөрчлөгдсөн байна.");
+      return {
+        ...d,
+        extras: {
+          ...d.extras,
+          bondookMessages: [
+            ...(Array.isArray(d.extras.bondookMessages)
+              ? d.extras.bondookMessages
+              : []),
+            { ...message, id: uid("message"), createdAt: Date.now() },
+          ],
+        },
+      };
+    });
   useEffect(() => {
     disposed.current = false;
     return () => {
@@ -39,20 +87,26 @@ export function TogiChat() {
     end.current?.scrollIntoView?.({ block: "nearest" });
   }, [messages]);
   const send = async (prompt: string) => {
-    if (busy || !prompt.trim()) return;
+    if (busy || changingAI || !prompt.trim()) return;
     setBusy(true);
     setError("");
     setText("");
     const kind = online ? "ai" : "local",
       token = ++request.current,
       namespace = store.getSnapshot().namespace;
-    setMessages((m) => [
-      ...m,
-      { id: token * 2, role: "user", text: prompt, kind },
-    ]);
     try {
+      await append(
+        {
+          role: "user",
+          text: prompt,
+          kind,
+        },
+        namespace,
+      );
       const provider = online
         ? createAIChatProvider(async () => {
+            if (store.getSnapshot().data.settings.extras.aiEnabled !== true)
+              throw Error("Онлайн AI зөвшөөрөл унтраалттай байна.");
             const client = await getSupabase();
             const session = client
               ? (await client.auth.getSession()).data.session
@@ -66,11 +120,19 @@ export function TogiChat() {
           }, includeNotes)
         : localChatProvider;
       const reply = await provider.reply(prompt, { data, index, today });
-      if (!disposed.current && request.current === token)
-        setMessages((m) => [
-          ...m,
-          { ...reply, id: token * 2 + 1, role: "assistant", kind },
-        ]);
+      if (
+        !disposed.current &&
+        request.current === token &&
+        store.getSnapshot().namespace === namespace
+      )
+        await append(
+          {
+            ...reply,
+            role: "assistant",
+            kind,
+          },
+          namespace,
+        );
     } catch (e) {
       if (
         !disposed.current &&
@@ -89,16 +151,15 @@ export function TogiChat() {
             request.current === token &&
             store.getSnapshot().namespace === namespace
           ) {
-            setMessages((m) => [
-              ...m,
+            await append(
               {
                 ...fallback,
-                id: token * 2 + 1,
                 role: "assistant",
                 kind: "local",
               },
-            ]);
-            setOnline(false);
+              namespace,
+            ).catch(store.reportError);
+            await setAI(false);
           }
         }
       }
@@ -108,16 +169,16 @@ export function TogiChat() {
   };
   return (
     <div className="stack">
-      <section className="togi-chat card">
+      <section className="bondook-chat card">
         <div className="chat-header">
           <CompanionAvatar world={data.settings.world} />
           <div>
-            <span className="eyebrow">YOUR STUDY COMPANION</span>
-            <h2>Сайн уу, би Тоги.</h2>
+            <span className="eyebrow">ТАНЫ СУРАЛЦАХ ХАМТРАГЧ</span>
+            <h2>Сайн уу, би Бондоок.</h2>
             <p>Нэг жижиг алхмыг хамт сонгоё.</p>
           </div>
           <span className="badge">
-            {online ? "ONLINE AI" : "LOCAL INSIGHTS"}
+            {online ? "ОНЛАЙН AI" : "ТӨХӨӨРӨМЖ ДЭЭР"}
           </span>
         </div>
         <div className="chat-options">
@@ -125,13 +186,12 @@ export function TogiChat() {
             <input
               type="checkbox"
               checked={online}
-              disabled={busy}
+              disabled={busy || changingAI}
               onChange={(e) => {
                 if (e.target.checked) {
                   setConsent(true);
                 } else {
-                  setOnline(false);
-                  setIncludeNotes(false);
+                  void setAI(false);
                 }
               }}
             />
@@ -147,8 +207,8 @@ export function TogiChat() {
               <input
                 type="checkbox"
                 checked={includeNotes}
-                disabled={busy}
-                onChange={(e) => setIncludeNotes(e.target.checked)}
+                disabled={busy || changingAI}
+                onChange={(e) => void setAI(true, e.target.checked)}
               />
               Сүүлийн 5 хүртэл тэмдэглэл хуваалцах
             </label>
@@ -164,8 +224,8 @@ export function TogiChat() {
             <label className="check-label">
               <input
                 type="checkbox"
-                checked={includeNotes}
-                onChange={(e) => setIncludeNotes(e.target.checked)}
+                checked={notesConsent}
+                onChange={(e) => setNotesConsent(e.target.checked)}
               />
               Сүүлийн 7 өдрийн 5 хүртэл тэмдэглэлийг хуваалцах (тус бүр эхний
               500 тэмдэгт)
@@ -174,7 +234,7 @@ export function TogiChat() {
               <button
                 className="button small primary"
                 onClick={() => {
-                  setOnline(true);
+                  void setAI(true, notesConsent);
                   setConsent(false);
                 }}
               >
@@ -184,7 +244,7 @@ export function TogiChat() {
                 className="button small"
                 onClick={() => setConsent(false)}
               >
-                Local хэвээр
+                Төхөөрөмж дээр ашиглах
               </button>
             </div>
           </div>
@@ -196,11 +256,12 @@ export function TogiChat() {
             "Өнөөдөр юу хийх вэ?",
             "Тэмдэглэлээ дүгнэе",
             "Хуваарь маань бодитой юу?",
+            "Картаа давтъя",
           ].map((q) => (
             <button
               className="button small"
               key={q}
-              disabled={busy}
+              disabled={busy || changingAI}
               onClick={() => send(q)}
             >
               {q}
@@ -210,7 +271,7 @@ export function TogiChat() {
         <div
           className="chat-messages"
           role="log"
-          aria-label="Тогитой ярилцлага"
+          aria-label="Бондооктой ярилцлага"
           aria-live="polite"
         >
           {!messages.length && (
@@ -223,12 +284,20 @@ export function TogiChat() {
               </p>
             </div>
           )}
-          {messages.map((m) => (
+          {messages.length > messageLimit && (
+            <button
+              className="button small"
+              onClick={() => setMessageLimit((v) => v + 100)}
+            >
+              Өмнөх зурвасууд
+            </button>
+          )}
+          {messages.slice(-messageLimit).map((m) => (
             <article key={m.id} className={`chat-message chat-${m.role}`}>
               <small>
                 {m.role === "user"
                   ? "Та"
-                  : `Тоги · ${m.kind === "local" ? "Local" : "AI"}`}
+                  : `Бондоок · ${m.kind === "local" ? "Local" : "AI"}`}
               </small>
               <p>{m.text}</p>
               {m.action && (
@@ -237,29 +306,37 @@ export function TogiChat() {
                   onClick={() =>
                     m.action === "plan"
                       ? setPlan(m.planPrompt ?? "")
-                      : navigate(m.action === "timer" ? "timer" : "goals")
+                      : navigate(
+                          m.action === "knowledge"
+                            ? "knowledge"
+                            : m.action === "timer"
+                              ? "timer"
+                              : "goals",
+                        )
                   }
                 >
                   {m.action === "plan"
                     ? "Төлөвлөгөө гаргах"
                     : m.action === "timer"
                       ? "Timer нээх"
-                      : "Зорилго нээх"}
+                      : m.action === "knowledge"
+                        ? "Мэдлэгийн сан"
+                        : "Зорилго нээх"}
                   <Icon name="arrow" size={16} />
                 </button>
               )}
             </article>
           ))}
-          {busy && <p className="muted">Тоги бодож байна…</p>}
+          {busy && <p className="muted">Бондоок бодож байна…</p>}
           <div ref={end} />
         </div>
         {error && (
           <div role="alert" className="ai-consent">
-            <p>{error} Тоги төхөөрөмж дээрх мэдээллээр хариуллаа.</p>
+            <p>{error}</p>
             <button
               className="text-button"
               onClick={() => {
-                setOnline(false);
+                void setAI(false);
                 setError("");
               }}
             >
@@ -275,17 +352,17 @@ export function TogiChat() {
           }}
         >
           <input
-            aria-label="Тогид бичих"
+            aria-label="Бондоокт бичих"
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={1500}
             placeholder="Жишээ: Энэ долоо хоног ямар байсан бэ?"
-            disabled={busy}
+            disabled={busy || changingAI}
           />
           <button
             className="button primary"
-            aria-label="Тогид илгээх"
-            disabled={busy || !text.trim()}
+            aria-label="Бондоокт илгээх"
+            disabled={busy || changingAI || !text.trim()}
           >
             <Icon name="arrow" />
           </button>
@@ -294,7 +371,7 @@ export function TogiChat() {
           {online
             ? "AI санал алдаатай байж болно. Хуваарийг та хянаж хадгална."
             : "Local туслах нь цаг, зорилго, тэмдэглэлд тулгуурласан дүрмээр хариулна."}{" "}
-          Ярилцлага энэ хуудсыг хаахад арилна.
+          Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана.
         </p>
       </section>
       <details className="card">

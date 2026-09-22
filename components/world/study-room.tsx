@@ -10,6 +10,9 @@ import { clock, currentStreak, formatTime } from "@/lib/calculations/dates";
 import { actions } from "@/lib/persistence/actions";
 import { RoomScene } from "./room-scene";
 import { StudyTimer } from "@/components/timer/study-timer";
+import { ModuleBoundary } from "@/components/ui/module-boundary";
+import { DailyKnowledge } from "@/components/dashboard/daily-knowledge";
+import { flexibleStreak } from "@/lib/calculations/dates";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
 import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
 import { ACCESSORIES } from "@/lib/world/config";
@@ -27,6 +30,11 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
       data.goals.dailyMinutes ??
       Math.round((data.goals.weeklyHours * 60) / data.goals.weeklyDays),
     streak = currentStreak(new Set(index.sortedDates), today);
+  const recovery = flexibleStreak(
+    new Set(index.sortedDates),
+    today,
+    Math.max(0, Math.min(2, Number(data.settings.extras.graceDays ?? 1))),
+  );
   const last = [...index.sessions].sort((a, b) => b.endEpoch - a.endEpoch)[0];
   useEffect(() => {
     if (!focus) return;
@@ -42,14 +50,14 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
       <div className="world-heading">
         <div>
           <span className="eyebrow">
-            {focus ? "FOCUS TIME" : "YOUR LITTLE STUDY WORLD"}
+            {focus ? "ТӨВЛӨРӨХ ЦАГ" : "МИНИЙ ТУХТАЙ ОРОН ЗАЙ"}
           </span>
           <h1>
             {focus
               ? "Яг одоо, нэг алхам."
               : greeting(new Date(now).getHours(), state)}
           </h1>
-          {!focus && <p>Тогитой хамт. Өөрийн хэмнэлээр.</p>}
+          {!focus && <p>Бондооктой хамт. Өөрийн хэмнэлээр.</p>}
         </div>
         <div className="button-row">
           {focus ? (
@@ -78,7 +86,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           <div className="companion-caption">
             <span className="live-dot" />
             <span>
-              Тоги ·{" "}
+              Бондоок ·{" "}
               {state === "studying"
                 ? "хамт суралцаж байна"
                 : state === "break"
@@ -121,9 +129,15 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
         </div>
         {!focus && (
           <div>
-            <span>Дараалал</span>
+            <span>{recovery.recoveryDays ? "Тогтмол хэмнэл" : "Дараалал"}</span>
             <strong>
-              {streak} <small>өдөр</small>
+              {recovery.recoveryDays ? recovery.studied : streak}{" "}
+              <small>өдөр</small>
+              {recovery.recoveryDays > 0 && (
+                <small className="recovery-label">
+                  {recovery.recoveryDays} амралтын өдөртэй
+                </small>
+              )}
             </strong>
           </div>
         )}
@@ -154,16 +168,19 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
         )}
       {!focus && (
         <>
+          <ModuleBoundary name="Өнөөдрийн мэдлэг">
+            <DailyKnowledge />
+          </ModuleBoundary>
           <WeeklyPulse />
           <div className="world-bottom">
             <DailyPlan />
             <section className="card world-journal">
               <div className="eyebrow">A LITTLE AT A TIME</div>
               <h2>Өчигдрөөс нэг алхам цааш.</h2>
-              <p>Тоги тантай хамт {progress.xp} XP цуглуулжээ.</p>
+              <p>Бондоок тантай хамт {progress.xp} XP цуглуулжээ.</p>
               <Progress
                 value={progress.intoLevel}
-                label="Тогигийн түвшний ахиц"
+                label="Бондоокийн түвшний ахиц"
               />
               <p className="tiny muted">
                 Дараагийн түвшин хүртэл {100 - progress.intoLevel} XP. Өдөрт 60
@@ -194,7 +211,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
                 className="text-button"
                 onClick={() => navigate("assistant")}
               >
-                Тогитой ярилцах <Icon name="arrow" size={16} />
+                Бондооктой ярилцах <Icon name="arrow" size={16} />
               </button>
             </section>
           </div>

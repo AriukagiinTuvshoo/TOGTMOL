@@ -5,9 +5,19 @@ import { StudyProvider, useStudy, useStoreState } from "@/hooks/use-study";
 import { AccountProvider, useAccount } from "@/hooks/use-account";
 import type { View } from "@/types/study";
 import { Icon } from "./ui/icon";
-import { downloadJson } from "./ui/common";
+import { ModuleBoundary } from "./ui/module-boundary";
+import { RecoveryPanel } from "./settings/recovery";
+import { GlobalSearch } from "./knowledge/search";
 import { StudyRoom } from "./world/study-room";
-import { MusicPlayer } from "./music/music-player";
+import { MusicPlayer, MusicProvider } from "./music/music-player";
+const KnowledgeHub = dynamic(
+  () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
+  { loading: () => <p role="status">Мэдлэгийн санг нээж байна…</p> },
+);
+const PrivacyCenter = dynamic(
+  () => import("./settings/privacy").then((m) => m.PrivacyCenter),
+  { loading: () => <p role="status">Нууцлалын тохиргоог нээж байна…</p> },
+);
 const CustomizeRoom = dynamic(() =>
   import("./world/customize").then((m) => m.CustomizeRoom),
 );
@@ -21,11 +31,12 @@ import { Goals } from "./goals/goals";
 import { Achievements } from "./achievements/achievements";
 import { Settings } from "./settings/settings";
 const Assistant = dynamic(() =>
-  import("./assistant/chat").then((m) => m.TogiChat),
+  import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
 const NAV: { view: View; label: string; icon: string }[] = [
   { view: "overview", label: "Миний өрөө", icon: "home" },
+  { view: "knowledge", label: "Миний мэдлэг", icon: "book" },
   { view: "calendar", label: "Календарь", icon: "calendar" },
   { view: "subjects", label: "Хичээлүүд", icon: "book" },
   { view: "statistics", label: "Статистик", icon: "chart" },
@@ -33,6 +44,7 @@ const NAV: { view: View; label: string; icon: string }[] = [
   { view: "achievements", label: "Амжилт", icon: "award" },
   { view: "assistant", label: "Суралцах туслах", icon: "spark" },
   { view: "room", label: "Өрөөний загвар", icon: "sun" },
+  { view: "privacy", label: "Нууцлал ба өгөгдөл", icon: "shield" },
   { view: "settings", label: "Тохиргоо", icon: "settings" },
 ];
 const titles: Record<View, string> = {
@@ -46,10 +58,13 @@ const titles: Record<View, string> = {
   assistant: "Суралцах туслах",
   settings: "Өөрийн хэмнэлээр",
   room: "Таны жижиг ертөнц",
-  focus: "Focus mode",
+  focus: "Төвлөрөх орон зай",
+  knowledge: "Миний мэдлэг",
+  privacy: "Нууцлал ба өгөгдөл",
 };
 function Shell() {
-  const { view, navigate, today, store, notice, run } = useStudy(),
+  const { view, navigate, today, store, notice, run, undo, selectedRecord } =
+      useStudy(),
     state = useStoreState(),
     { status, user } = useAccount(),
     [more, setMore] = useState(false);
@@ -68,7 +83,7 @@ function Shell() {
             <Icon name="leaf" size={24} />
           </span>
           <span>
-            тогтмол<span className="brand-version">STUDY WORLD · 04</span>
+            тогтмол<span className="brand-version">STUDY WORLD · 05</span>
           </span>
         </button>
         <div className="nav-caption">МИНИЙ ОРОН ЗАЙ</div>
@@ -126,6 +141,11 @@ function Shell() {
             </span>
           </div>
           <div className="topbar-right">
+            {state.ready && (
+              <ModuleBoundary name="Хайлт">
+                <GlobalSearch />
+              </ModuleBoundary>
+            )}
             <span className="save-status">
               <span className="status-dot" />
               {state.busy
@@ -167,65 +187,84 @@ function Shell() {
             </div>
           )}
           {!state.ready ? (
-            <section className="card loading-card">
-              <span className="brand-mark">
-                <Icon name="leaf" size={28} />
-              </span>
-              <h2>
-                {state.error
-                  ? "Өгөгдлөө эхлээд шалгая"
-                  : "Таны орон зайг нээж байна…"}
-              </h2>
-              <p className="muted">
-                {state.error
-                  ? "Эх өгөгдлийг өөрчлөхгүйгээр хадгалсан. Нөөцөө татаж аваад дахин оролдоно уу."
-                  : "Өмнөх алхмуудыг тань ачаалж байна."}
-              </p>
-              {state.error && (
-                <div className="button-row center">
-                  <button
-                    className="button"
-                    onClick={() =>
-                      run(async () =>
-                        downloadJson(
-                          await store.repository.rawDocument(state.namespace),
-                          "togtmol-raw-recovery.json",
-                        ),
-                      )
-                    }
-                  >
-                    Эх өгөгдлөө татах
-                  </button>
-                  <button
-                    className="button primary"
-                    onClick={() => store.initialize()}
-                  >
-                    Дахин оролдох
-                  </button>
-                </div>
-              )}
-            </section>
+            state.error ? (
+              <RecoveryPanel
+                repository={store.repository}
+                namespace={state.namespace}
+                onRecovered={() => store.switchNamespace(state.namespace)}
+              />
+            ) : (
+              <section className="card loading-card">
+                <span className="brand-mark">
+                  <Icon name="leaf" size={28} />
+                </span>
+                <h2>Таны орон зайг нээж байна…</h2>
+                <p>Өмнөх алхмуудыг тань ачаалж байна.</p>
+              </section>
+            )
           ) : (
             <Fragment key={state.namespace}>
-              {view === "overview" && <StudyRoom />}
-              {view === "timer" && (
-                <StudyTimer key={state.data.activeTimer?.id ?? "new-timer"} />
+              {view === "overview" && (
+                <ModuleBoundary name="Өнөөдрийн өрөө">
+                  <StudyRoom />
+                </ModuleBoundary>
               )}
-              {view === "room" && <CustomizeRoom />}
-              {view === "focus" && <StudyRoom focus />}
-              {view === "calendar" && <StudyCalendar />}
+              {view === "timer" && (
+                <ModuleBoundary name="Цаг хэмжигч">
+                  <StudyTimer key={state.data.activeTimer?.id ?? "new-timer"} />
+                </ModuleBoundary>
+              )}
+              {view === "room" && (
+                <ModuleBoundary name="Өрөөний загвар">
+                  <CustomizeRoom />
+                </ModuleBoundary>
+              )}
+              {view === "focus" && (
+                <ModuleBoundary name="Төвлөрөх өрөө">
+                  <StudyRoom focus />
+                </ModuleBoundary>
+              )}
+              {view === "knowledge" && (
+                <ModuleBoundary
+                  key={selectedRecord ?? "knowledge"}
+                  name="Мэдлэгийн сан"
+                >
+                  <KnowledgeHub />
+                </ModuleBoundary>
+              )}
+              {view === "privacy" && (
+                <ModuleBoundary name="Нууцлал">
+                  <PrivacyCenter />
+                </ModuleBoundary>
+              )}
+              {view === "calendar" && (
+                <ModuleBoundary
+                  key={selectedRecord ?? "calendar"}
+                  name="Календарь"
+                >
+                  <StudyCalendar />
+                </ModuleBoundary>
+              )}
               {view === "subjects" && <Subjects />}
-              {view === "statistics" && <Statistics />}
+              {view === "statistics" && (
+                <ModuleBoundary name="Статистик">
+                  <Statistics />
+                </ModuleBoundary>
+              )}
               {view === "goals" && <Goals />}
               {view === "achievements" && <Achievements />}
-              {view === "assistant" && <Assistant />}
+              {view === "assistant" && (
+                <ModuleBoundary name="Бондоок">
+                  <Assistant />
+                </ModuleBoundary>
+              )}
               {view === "settings" && <Settings />}
             </Fragment>
           )}
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
             <span>Өнөөдөр бага байсан ч ахиц.</span>
-            <span>Тогтмол v4.1</span>
+            <span>Тогтмол v5.0</span>
           </footer>
         </main>
       </div>
@@ -238,7 +277,7 @@ function Shell() {
           />
           <nav aria-label="Нэмэлт цэс">
             {NAV.filter(
-              (n) => !["overview", "calendar", "assistant"].includes(n.view),
+              (n) => !["overview", "knowledge", "assistant"].includes(n.view),
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
@@ -251,9 +290,9 @@ function Shell() {
       <nav className="mobile-nav" aria-label="Гар утасны цэс">
         {[
           { view: "overview", label: "Нүүр", icon: "home" },
-          { view: "calendar", label: "Календарь", icon: "calendar" },
-          { view: "timer", label: "Timer", icon: "play" },
-          { view: "assistant", label: "AI · Тоги", icon: "spark" },
+          { view: "knowledge", label: "Мэдлэг", icon: "book" },
+          { view: "timer", label: "Төвлөрөх", icon: "play" },
+          { view: "assistant", label: "Бондоок", icon: "spark" },
         ].map((n) => (
           <button
             key={n.view}
@@ -275,10 +314,21 @@ function Shell() {
           <div className="toast">
             <Icon name="check" size={19} />
             {notice}
+            {undo && (
+              <button className="text-button" onClick={() => void run(undo)}>
+                Буцаах
+              </button>
+            )}
           </div>
         )}
       </div>
-      {state.ready && <MusicPlayer key={state.namespace} />}
+      {state.ready && (
+        <ModuleBoundary key={state.namespace} name="Хөгжим">
+          <MusicProvider>
+            <MusicPlayer />
+          </MusicProvider>
+        </ModuleBoundary>
+      )}
       <PwaManager />
     </div>
   );

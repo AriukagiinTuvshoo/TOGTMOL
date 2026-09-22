@@ -321,9 +321,11 @@ describe("useful, factual feedback", () => {
       "hello",
       context,
     );
-    expect(JSON.parse(fetcher.mock.calls[0][1].body).context.notes).toEqual([]);
+    expect(
+      JSON.parse(fetcher.mock.calls[0][1].body).context.notes,
+    ).toBeUndefined();
     await createAIChatProvider(async () => "fake-token", true).reply(
-      "漢".repeat(1500),
+      "Миний тэмдэглэл: " + "漢".repeat(1480),
       context,
     );
     const body = fetcher.mock.calls[1][1].body;
@@ -382,7 +384,9 @@ describe("recoverable local reset and legacy backups", () => {
     await repo.save("account:a", fixture(), 0);
     await store.clearGuestData();
     expect(store.getSnapshot().data.tasks).toHaveLength(0);
-    const backups = await repo.backups("guest");
+    const backups = (await repo.backups("guest")).filter((b) =>
+      b.label.includes("цэвэрлэхийн"),
+    );
     expect(backups).toHaveLength(1);
     expect(migrate(JSON.parse(backups[0].raw)).studyGoals).toEqual(
       data.studyGoals,

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useStudy } from "./use-study";
 import {
   MUSIC_PREFERENCE_EVENT,
   musicPreferenceKey,
@@ -9,10 +10,32 @@ import {
 } from "@/lib/music/preferences";
 
 export function useMusicPreference(namespace: string) {
+  const { data, store } = useStudy();
   const [preference, setPreference] = useState(() =>
-    readMusicPreference(namespace),
+    data.settings.extras.musicPreferences
+      ? normalizeMusicPreference(data.settings.extras.musicPreferences)
+      : readMusicPreference(namespace),
   );
   const latest = useRef(preference);
+  useEffect(
+    () =>
+      store.subscribe(() => {
+        const snapshot = store.getSnapshot();
+        if (
+          snapshot.namespace !== namespace ||
+          !snapshot.data.settings.extras.musicPreferences
+        )
+          return;
+        const saved = normalizeMusicPreference(
+          snapshot.data.settings.extras.musicPreferences,
+        );
+        if (JSON.stringify(saved) !== JSON.stringify(latest.current)) {
+          latest.current = saved;
+          setPreference(saved);
+        }
+      }),
+    [store, namespace],
+  );
   useEffect(() => {
     const changed = (event: Event) => {
       if (
@@ -49,10 +72,21 @@ export function useMusicPreference(namespace: string) {
     try {
       localStorage.setItem(musicPreferenceKey(namespace), JSON.stringify(next));
     } catch {
-      throw Error(
-        "Хөгжмийн тохиргоог энэ төхөөрөмжид хадгалж чадсангүй. Тоглуулах боломжтой хэвээр.",
-      );
+      /* IndexedDB remains available when small browser storage is blocked. */
     }
+    void store
+      .mutate((d) => {
+        if (store.getSnapshot().namespace !== namespace) return d;
+        return {
+          ...d,
+          settings: {
+            ...d.settings,
+            updatedAt: Date.now(),
+            extras: { ...d.settings.extras, musicPreferences: next },
+          },
+        };
+      })
+      .catch(store.reportError);
   };
   return [preference, update] as const;
 }

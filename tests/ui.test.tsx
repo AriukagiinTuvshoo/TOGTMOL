@@ -64,7 +64,7 @@ describe("interactive local workflow", () => {
     fireEvent.click(
       within(
         screen.getByRole("navigation", { name: "Гар утасны цэс" }),
-      ).getByRole("button", { name: "Timer" }),
+      ).getByRole("button", { name: "Төвлөрөх" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Start study" }));
     await screen.findByRole("button", { name: "Pause" });
@@ -84,7 +84,7 @@ describe("interactive local workflow", () => {
     fireEvent.click(
       within(
         screen.getByRole("navigation", { name: "Гар утасны цэс" }),
-      ).getByRole("button", { name: "Timer" }),
+      ).getByRole("button", { name: "Төвлөрөх" }),
     );
     expect(screen.getByLabelText("Юу сурсан бэ?")).toHaveValue(
       "Рекурс ойлголоо",
@@ -416,9 +416,14 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   fireEvent.click(screen.getByLabelText("Онлайн AI ашиглах"));
   expect(screen.getByLabelText(/Сүүлийн 7 өдрийн 5 хүртэл/)).not.toBeChecked();
   fireEvent.click(screen.getByRole("button", { name: "Зөвшөөрч асаах" }));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Онлайн AI ашиглах")).toBeChecked(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
-  expect(await screen.findByText("Тоги · Local")).toBeVisible();
-  expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked();
+  expect(await screen.findByText("Бондоок · Local")).toBeVisible();
+  await waitFor(() =>
+    expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
+  );
   expect(
     within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();

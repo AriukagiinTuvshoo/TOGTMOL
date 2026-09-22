@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Тогтмол — Study World",
+    name: "Тогтмол — Бондоокийн суралцах өрөө",
     short_name: "Тогтмол",
-    description: "Нэг өдөр. Нэг жижиг алхам.",
+    description: "Бондооктой хамт. Нэг өдөр. Нэг жижиг алхам.",
     lang: "mn",
     start_url: "/",
     scope: "/",

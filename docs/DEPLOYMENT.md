@@ -17,7 +17,7 @@ The included GitHub Actions workflow runs the same gates on pushes and pull requ
 
 Use the intended development/staging project first. Obtain its Project URL and **publishable key** from the Supabase dashboard. Do not put a secret/service-role key in `NEXT_PUBLIC_*` variables.
 
-v4.1 reuses the v4 JSON payload and needs no additional SQL migration if both existing migrations are applied. Apply both versioned migrations, in filename order, in `supabase/migrations/`. For an existing v3 database apply only `20260915131805_study_world_v4.sql`. Apply them through the SQL editor of the selected project, or use the installed Supabase CLI. Inspect `supabase --help`, `supabase link --help` and `supabase db push --help` before your installed version's commands. Confirm the target project and inspect the migration before applying it. Do not use a production project to run tests.
+v5 uses schema 5. Apply all three versioned migrations in filename order in `supabase/migrations/`. For an existing v4 database, apply only `20260921155351_knowledge_world_v5.sql`; an existing v3 database needs both the v4 and v5 migrations. Back up the hosted data and deploy the v5 client after the additive SQL migration. Old clients cannot upload after this schema change. Apply them through the SQL editor of the selected project, or use the installed Supabase CLI. Inspect `supabase --help`, `supabase link --help` and `supabase db push --help` before your installed version's commands. Confirm the target project and inspect the migration before applying it. Do not use a production project to run tests.
 
 This schema is new. If the target project already has tables called `subjects`, `goals`, or the other included names, reconcile them in a separate migration first; do not drop existing tables.
 
@@ -51,25 +51,31 @@ Use two test accounts and two browser profiles/devices:
 - Sign in with Google; refresh the callback; test password recovery.
 - Create/edit/delete a session on one device, then sync the second. Make conflicting edits offline and choose the intended conflict version after reconnecting.
 - Start/pause/resume a timer, navigate away, close/reopen, finish/review/save. Confirm the original start and duration.
-- Check 320, 375, 390, 430, 768, 1024 and 1440 px layouts, keyboard focus, dialog Escape, long subject names and all five design themes plus light/dark preferences.
+- Check 320, 375, 390, 430, 768, 1024 and 1440 px layouts, keyboard focus, dialog Escape, long subject names and all ten design themes plus light/dark preferences.
 - Install the PWA; wait for the worker to finish installing; disable the network; navigate and save study data; reconnect and sync.
 - Deploy a second build while a timer is open. Confirm no forced reload, then close tabs and reopen to adopt the update.
 
 In Supabase, run security/performance advisors after applying the migration and investigate any project-specific findings. The delivered PGlite tests validate the schema's RLS and transaction semantics; they do not substitute for hosted configuration validation.
 
-## 5. Optional online Togi
+## 5. Optional online Bondook
 
-Local insights need no AI service. To enable the optional paid provider, configure **server-only** `OPENAI_API_KEY`, `OPENAI_MODEL` (a Responses API text model available to your account), and `TOGI_AI_ALLOWED_USER_IDS` (comma-separated allowed Supabase user UUIDs). All must be present. Never prefix them with `NEXT_PUBLIC_`. This release does not pick a paid model or provision credentials automatically.
+Local insights need no AI service. To enable the optional paid provider, configure **server-only** `OPENAI_API_KEY`, `OPENAI_MODEL` (a Responses API model available to your account; card images additionally require image input and structured-output support), and `BONDOOK_AI_ALLOWED_USER_IDS` (comma-separated allowed Supabase user UUIDs). All must be present. Never prefix them with `NEXT_PUBLIC_`. This release does not pick a paid model or provision credentials automatically.
 
-The `/api/togi` route verifies the user's Supabase access token, requires the server allowlist and consumes an atomic per-user 20/day UTC quota in `private.togi_usage` before calling the provider. Anonymous requests cannot spend provider credit. Failed upstream requests still count toward the daily cap. This quota does not replace the provider account's own spending limits.
+The `/api/bondook`, `/api/bondook/cards` and `/api/bondook/plan` routes verify the user's Supabase access token, require the server allowlist and consume an atomic per-user 20/day UTC quota in `private.togi_usage` before calling the provider. Anonymous requests cannot spend provider credit. Failed upstream requests still count toward the daily cap. This quota does not replace the provider account's own spending limits.
 
-Users explicitly enable online mode. The app sends their question and limited study totals, subject names and goal titles, with session notes excluded by default. A separate opt-in can include the five latest notes from the last seven days (up to 500 characters each). Responses use `store:false`; no conversation database is created. No provider response can mutate study records. The key, raw upstream errors, and auth token are never returned to the browser.
+Users explicitly enable online mode. The app sends their question and limited study totals, subject names and goal titles, with session notes excluded by default. A separate opt-in can include the five latest notes from the last seven days (up to 500 characters each). Responses use `store:false`. Chat messages are saved in the user’s local document and included in an enabled cloud sync and exports. General questions send no unrelated study history. Card generation sends only the selected text and separately opted-in image; plan generation sends the goal, selected subject and available time. Structured proposals are validated and shown for editing before a user commits any cards or plan. No provider response can mutate study records. The legacy `/api/togi`, allowlist environment name and quota RPC remain compatible with existing installations; all current UI uses Bondook. The key, raw upstream errors, and auth token are never returned to the browser.
 
 On the real deployment, test an allowed account, a denied account, no token, offline/error fallback, and a provider request. The delivered tests use fake credentials and a mocked provider; no paid request has been made.
 
-## 6. Music and YouTube
+## 6. Cloud erasure and stale devices
 
-Seven original browser soundscapes are included in the production assets and require no external music host. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. A visible official player with controls is retained across app views. Minimizing, hiding the tab or scrolling the player off-screen pauses playback. Do not add hidden YouTube audio, ad blocking or downloads.
+The Privacy screen requires a typed confirmation, disables sync, saves a local backup of the remote snapshot, then calls `delete_cloud_study_data` with the current user and cloud revision. The RPC removes that user’s study rows while retaining the auth account and a minimal revision/reset-epoch marker. Other devices must explicitly acknowledge that epoch before re-uploading old local history. Existing devices keep their local copies and backups; this is not a remote wipe of every device.
+
+Test this with two accounts and two devices. Also verify that disabling sync prevents subsequent uploads and that local/account recovery targets the correct namespace.
+
+## 7. Music and YouTube
+
+Nine original browser soundscapes are included in the production assets and require no external music host. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. A visible official player with controls is retained across app views. Minimizing, hiding the tab or scrolling the player off-screen pauses playback. Do not add hidden YouTube audio, ad blocking or downloads.
 
 Test a real video and playlist on the deployed origin, including autoplay blocking, unavailable/embedding-disabled videos, volume, previous/next and mobile tap behavior. Preserve `Referrer-Policy: strict-origin-when-cross-origin`; YouTube needs origin identification.
 
@@ -89,3 +95,8 @@ Test a real video and playlist on the deployed origin, including autoplay blocki
 - [YouTube developer policies](https://developers.google.com/youtube/terms/developer-policies)
 - [OpenAI Responses API](https://developers.openai.com/api/docs/guides/migrate-to-responses)
 - [OpenAI authentication](https://developers.openai.com/api/reference/overview/)
+
+- [SM-2 algorithm](https://super-memory.com/english/ol/sm2.htm)
+- [Screen Wake Lock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API)
+- [OpenAI image input](https://developers.openai.com/api/docs/guides/images-vision)
+- [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
