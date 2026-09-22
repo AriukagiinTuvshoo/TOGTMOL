@@ -30,6 +30,7 @@ vi.mock("@/lib/notifications", () => sounds);
 let data: StudyData;
 let now: number;
 const navigate = vi.fn();
+const setNotice = vi.fn();
 const store = {
   getSnapshot: () => ({ data, namespace: "local" }),
   mutate: async (transform: (d: StudyData) => StudyData) => {
@@ -46,7 +47,7 @@ vi.mock("@/hooks/use-study", () => ({
     store,
     run,
     navigate,
-    setNotice: vi.fn(),
+    setNotice,
     index: { subjects: new Map(data.subjects.map((s) => [s.id, s])) },
   }),
   useClock: () => now,
@@ -93,6 +94,7 @@ it("auto-completes from the deadline timeout without requiring another render", 
   vi.useFakeTimers();
   now = NOW + 60000;
   render(<TimerWatch />);
+  await act(async () => {});
   await act(async () => {
     await vi.advanceTimersByTimeAsync(60);
   });
@@ -104,6 +106,7 @@ it("finishes once, displays Stop first, and stops audio when dismissed", async (
   vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
+  await act(async () => {});
   await act(async () => {
     await vi.advanceTimersByTimeAsync(60);
   });
@@ -125,6 +128,7 @@ it("Escape and View result both silence the alert", async () => {
   vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
+  await act(async () => {});
   await act(async () => {
     await vi.advanceTimersByTimeAsync(60);
   });
@@ -161,6 +165,7 @@ it("skips missed ticks after suspension and resets countdown for another timer",
 
 it("finishes a countdown when Pause is clicked after its deadline", async () => {
   now = NOW + 60000;
+  data.sessions = [];
   const view = render(<StudyTimer />);
   await act(async () => {});
   fireEvent.click(screen.getByRole("button", { name: "Pause" }));
