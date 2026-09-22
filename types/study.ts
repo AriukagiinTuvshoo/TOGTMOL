@@ -110,8 +110,12 @@ export interface StudyGoal extends RecordBase {
 }
 export interface MusicSource extends RecordBase {
   title: string;
-  kind: "video" | "playlist";
+  kind: "video" | "playlist" | "audio";
   youtubeId: string;
+  audioUrl?: string;
+  audioStorageKey?: string;
+  mimeType?: string;
+  sizeBytes?: number;
 }
 export interface Goals {
   weeklyHours: number;
