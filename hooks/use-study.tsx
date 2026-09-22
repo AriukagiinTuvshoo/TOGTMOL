@@ -249,12 +249,29 @@ export function useClock(active = true) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return;
-    const tick = () => setNow(Date.now()),
-      id = setInterval(tick, 1000);
-    document.addEventListener("visibilitychange", tick);
+    let frame = 0;
+    const tick = () => {
+      setNow(Date.now());
+      if (document.visibilityState === "visible") {
+        frame = window.requestAnimationFrame(tick);
+      }
+    };
+    const refresh = () => {
+      setNow(Date.now());
+      if (document.visibilityState === "visible" && !frame)
+        frame = window.requestAnimationFrame(tick);
+    };
+    setNow(Date.now());
+    if (document.visibilityState === "visible")
+      frame = window.requestAnimationFrame(tick);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", refresh);
     return () => {
-      clearInterval(id);
-      document.removeEventListener("visibilitychange", tick);
+      if (frame) window.cancelAnimationFrame(frame);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", refresh);
     };
   }, [active]);
   return now;
