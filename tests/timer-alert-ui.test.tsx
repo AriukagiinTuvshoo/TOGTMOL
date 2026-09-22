@@ -101,7 +101,9 @@ it("auto-completes from the deadline timeout without requiring another render", 
 it("finishes once, displays Stop first, and stops audio when dismissed", async () => {
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  const dialog = await screen.findByRole("dialog", { name: "Хугацаа дууслаа!" });
+  const dialog = await screen.findByRole("dialog", {
+    name: "Хугацаа дууслаа!",
+  });
   expect(within(dialog).getAllByRole("button")[0]).toHaveTextContent(
     "Дууг зогсоох",
   );
@@ -220,14 +222,23 @@ it("resets task completion choice when a new timer starts", async () => {
 
   data.activeTimer = null;
   view.rerender(<StudyTimer />);
-  data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW + 1000, "task-1");
+  data.activeTimer = startTimer(
+    "math",
+    "pomodoro",
+    "focus",
+    1,
+    NOW + 1000,
+    "task-1",
+  );
   view.rerender(<StudyTimer />);
 
   await act(async () => {});
   expect(
-    (screen.getByRole("checkbox", {
-      name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
-    }) as HTMLInputElement).checked,
+    (
+      screen.getByRole("checkbox", {
+        name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
+      }) as HTMLInputElement
+    ).checked,
   ).toBe(true);
 });
 

@@ -65,15 +65,16 @@ export const actions = {
       };
     },
   editSubject:
-    (id: string, patch: Pick<Subject, "name" | "color" | "archived"> & { extras?: Record<string, unknown> }) =>
+    (
+      id: string,
+      patch: Pick<Subject, "name" | "color" | "archived"> & {
+        extras?: Record<string, unknown>;
+      },
+    ) =>
     (data: StudyData): StudyData => {
       subject(data, id);
       const clean = patch.name.trim();
-      if (
-        !clean ||
-        clean.length > 100 ||
-        !/^#[a-f0-9]{6}$/i.test(patch.color)
-      )
+      if (!clean || clean.length > 100 || !/^#[a-f0-9]{6}$/i.test(patch.color))
         throw Error("Нэр болон өнгөө шалгана уу.");
       if (
         data.subjects.some(
@@ -229,11 +230,7 @@ export const actions = {
       const reviewed = review(timer, now);
       if (reviewed.phase !== "focus" || reviewed.accumulatedMs <= 0)
         return { ...data, activeTimer: reviewed };
-      const session = sessionFromTimer(
-        reviewed,
-        reviewed.note,
-        now,
-      );
+      const session = sessionFromTimer(reviewed, reviewed.note, now);
       const exists = data.sessions.some((s) => s.id === session.id);
       return {
         ...data,
@@ -241,7 +238,12 @@ export const actions = {
         sessions: exists
           ? data.sessions.map((s) =>
               s.id === session.id
-                ? { ...s, durationSec: session.durationSec, endEpoch: session.endEpoch, updatedAt: now }
+                ? {
+                    ...s,
+                    durationSec: session.durationSec,
+                    endEpoch: session.endEpoch,
+                    updatedAt: now,
+                  }
                 : s,
             )
           : [...data.sessions, session],

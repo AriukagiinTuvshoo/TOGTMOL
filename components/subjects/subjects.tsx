@@ -12,12 +12,76 @@ import { SessionList } from "@/components/ui/session-list";
 import { StudyCalendar } from "@/components/calendar/study-calendar";
 import { BarChart } from "@/components/statistics/charts";
 const SUBJECT_CATEGORIES = [
-  { id: "it", name: "IT / Програмчлал", icon: "chart", tracks: [{ id: "software", name: "Програм хангамж хөгжүүлэгч" }, { id: "web", name: "Web Developer" }, { id: "data-ai", name: "Data / AI" }, { id: "cyber", name: "Cybersecurity" }, { id: "network", name: "Network / Infrastructure" }] },
-  { id: "business", name: "Бизнес / Эдийн засаг", icon: "target", tracks: [{ id: "business", name: "Бизнесийн удирдлага" }, { id: "accounting", name: "Нягтлан бодох бүртгэл" }, { id: "finance", name: "Санхүү / Банк" }, { id: "marketing", name: "Маркетинг" }] },
-  { id: "language", name: "Хэл", icon: "book", tracks: [{ id: "japanese", name: "Япон хэл" }, { id: "english", name: "Англи хэл" }, { id: "mongolian", name: "Монгол хэл" }] },
-  { id: "science", name: "Шинжлэх ухаан", icon: "spark", tracks: [{ id: "math", name: "Математик" }, { id: "physics", name: "Физик" }, { id: "chemistry", name: "Хими" }, { id: "biology", name: "Биологи" }] },
-  { id: "social", name: "Нийгэм / Хүмүүнлэг", icon: "user", tracks: [{ id: "history", name: "Түүх" }, { id: "geography", name: "Газарзүй" }, { id: "law", name: "Эрх зүй" }, { id: "psychology", name: "Сэтгэл судлал" }] },
-  { id: "school10", name: "10 жилийн сургууль", icon: "calendar", tracks: [{ id: "school-math", name: "Математик" }, { id: "school-mongolian", name: "Монгол хэл" }, { id: "school-english", name: "Англи хэл" }, { id: "school-physics", name: "Физик" }, { id: "school-chemistry", name: "Хими" }, { id: "school-biology", name: "Биологи" }, { id: "school-history", name: "Түүх" }, { id: "school-geography", name: "Газарзүй" }] },
+  {
+    id: "it",
+    name: "IT / Програмчлал",
+    icon: "chart",
+    tracks: [
+      { id: "software", name: "Програм хангамж хөгжүүлэгч" },
+      { id: "web", name: "Web Developer" },
+      { id: "data-ai", name: "Data / AI" },
+      { id: "cyber", name: "Cybersecurity" },
+      { id: "network", name: "Network / Infrastructure" },
+    ],
+  },
+  {
+    id: "business",
+    name: "Бизнес / Эдийн засаг",
+    icon: "target",
+    tracks: [
+      { id: "business", name: "Бизнесийн удирдлага" },
+      { id: "accounting", name: "Нягтлан бодох бүртгэл" },
+      { id: "finance", name: "Санхүү / Банк" },
+      { id: "marketing", name: "Маркетинг" },
+    ],
+  },
+  {
+    id: "language",
+    name: "Хэл",
+    icon: "book",
+    tracks: [
+      { id: "japanese", name: "Япон хэл" },
+      { id: "english", name: "Англи хэл" },
+      { id: "mongolian", name: "Монгол хэл" },
+    ],
+  },
+  {
+    id: "science",
+    name: "Шинжлэх ухаан",
+    icon: "spark",
+    tracks: [
+      { id: "math", name: "Математик" },
+      { id: "physics", name: "Физик" },
+      { id: "chemistry", name: "Хими" },
+      { id: "biology", name: "Биологи" },
+    ],
+  },
+  {
+    id: "social",
+    name: "Нийгэм / Хүмүүнлэг",
+    icon: "user",
+    tracks: [
+      { id: "history", name: "Түүх" },
+      { id: "geography", name: "Газарзүй" },
+      { id: "law", name: "Эрх зүй" },
+      { id: "psychology", name: "Сэтгэл судлал" },
+    ],
+  },
+  {
+    id: "school10",
+    name: "10 жилийн сургууль",
+    icon: "calendar",
+    tracks: [
+      { id: "school-math", name: "Математик" },
+      { id: "school-mongolian", name: "Монгол хэл" },
+      { id: "school-english", name: "Англи хэл" },
+      { id: "school-physics", name: "Физик" },
+      { id: "school-chemistry", name: "Хими" },
+      { id: "school-biology", name: "Биологи" },
+      { id: "school-history", name: "Түүх" },
+      { id: "school-geography", name: "Газарзүй" },
+    ],
+  },
   { id: "other", name: "Бусад", icon: "more", tracks: [] },
 ] as const;
 
@@ -32,12 +96,18 @@ export function Subjects() {
     list = data.subjects.filter(
       (s) => !s.deletedAt && (archived || !s.archived),
     ),
-    categories = [{ id: "all", name: "Бүгд", icon: "book", tracks: [] }, ...SUBJECT_CATEGORIES],
+    categories = [
+      { id: "all", name: "Бүгд", icon: "book", tracks: [] },
+      ...SUBJECT_CATEGORIES,
+    ],
     activeCategory = categories.find((c) => c.id === category) ?? categories[0],
     tracks = activeCategory?.tracks ?? [],
     categorized = list.filter((s) => {
-      const matchesCategory = category === "all" || (s.extras.subjectCategory ?? "other") === category;
-      const matchesTrack = track === "all" || (s.extras.subjectTrack ?? "") === track;
+      const matchesCategory =
+        category === "all" ||
+        (s.extras.subjectCategory ?? "other") === category;
+      const matchesTrack =
+        track === "all" || (s.extras.subjectTrack ?? "") === track;
       return matchesCategory && matchesTrack;
     });
   if (subject) {
@@ -167,7 +237,10 @@ export function Subjects() {
           <div>
             <span className="eyebrow">ХИЧЭЭЛИЙН СОНГОЛТ</span>
             <h1>Юу сурах вэ?</h1>
-            <p>Чиглэлээ сонгоход түүнтэй холбоотой хичээлүүдийг нэг дороос хараарай.</p>
+            <p>
+              Чиглэлээ сонгоход түүнтэй холбоотой хичээлүүдийг нэг дороос
+              хараарай.
+            </p>
           </div>
           <div className="subject-catalog-count">
             <strong>{categorized.length}</strong>
@@ -184,10 +257,18 @@ export function Subjects() {
                 key={c.id}
                 type="button"
                 className={`subject-category-card ${category === c.id ? "active" : ""}`}
-                onClick={() => { setCategory(c.id); setTrack("all"); }}
+                onClick={() => {
+                  setCategory(c.id);
+                  setTrack("all");
+                }}
               >
-                <span className="subject-category-icon"><Icon name={c.icon} size={20} /></span>
-                <span><strong>{c.name}</strong><small>{count} хичээл</small></span>
+                <span className="subject-category-icon">
+                  <Icon name={c.icon} size={20} />
+                </span>
+                <span>
+                  <strong>{c.name}</strong>
+                  <small>{count} хичээл</small>
+                </span>
                 <Icon name="chevron" size={16} />
               </button>
             );
@@ -195,75 +276,95 @@ export function Subjects() {
         </div>
         {category !== "all" && tracks.length > 0 && (
           <div className="subject-track-row">
-            <button type="button" className={`subject-track-chip ${track === "all" ? "active" : ""}`} onClick={() => setTrack("all")}>Бүх чиглэл</button>
+            <button
+              type="button"
+              className={`subject-track-chip ${track === "all" ? "active" : ""}`}
+              onClick={() => setTrack("all")}
+            >
+              Бүх чиглэл
+            </button>
             {tracks.map((t) => {
-              const count = list.filter((s) => (s.extras.subjectCategory ?? "other") === category && (s.extras.subjectTrack ?? "") === t.id).length;
-              return <button type="button" key={t.id} className={`subject-track-chip ${track === t.id ? "active" : ""}`} onClick={() => setTrack(t.id)}><strong>{t.name}</strong><small>{count} хичээл</small></button>;
+              const count = list.filter(
+                (s) =>
+                  (s.extras.subjectCategory ?? "other") === category &&
+                  (s.extras.subjectTrack ?? "") === t.id,
+              ).length;
+              return (
+                <button
+                  type="button"
+                  key={t.id}
+                  className={`subject-track-chip ${track === t.id ? "active" : ""}`}
+                  onClick={() => setTrack(t.id)}
+                >
+                  <strong>{t.name}</strong>
+                  <small>{count} хичээл</small>
+                </button>
+              );
             })}
           </div>
         )}
         {categorized.length ? (
           <div className="subjects-grid">
-          {categorized.map((s) => {
-            const stats = periodStats(index, 7, today, s.id),
-              sessions = index.bySubject.get(s.id) ?? [];
-            return (
-              <button
-                key={s.id}
-                className="card subject-card"
-                onClick={() => setSelected(s.id)}
-              >
-                <div className="subject-card-top">
-                  <span
-                    className="subject-square"
-                    style={{ background: s.color }}
-                  >
-                    <Icon name={s.icon} size={24} />
-                  </span>
-                  <Icon name="arrow" size={18} />
-                </div>
-                <h2>{s.name}</h2>
-                <span className="muted">
-                  {s.archived ? "Архив · " : ""}
-                  {sessions.length} хичээл ·{" "}
-                  {index.subjectDays.get(s.id)?.size ?? 0} өдөр
-                </span>
-                <div className="subject-card-bottom">
-                  <strong>{formatTime(stats.seconds)}</strong>
-                  <span>сүүлийн 7 өдөр</span>
-                </div>
-                <div className="mini-week">
-                  {stats.days.map((d) => (
+            {categorized.map((s) => {
+              const stats = periodStats(index, 7, today, s.id),
+                sessions = index.bySubject.get(s.id) ?? [];
+              return (
+                <button
+                  key={s.id}
+                  className="card subject-card"
+                  onClick={() => setSelected(s.id)}
+                >
+                  <div className="subject-card-top">
                     <span
-                      key={d.date}
-                      style={{
-                        background: d.subjects.size
-                          ? s.color
-                          : "var(--surface-muted)",
-                      }}
-                      title={`${d.date}: ${formatTime(d.seconds)}`}
-                    />
-                  ))}
-                </div>
-              </button>
-            );
-          })}
+                      className="subject-square"
+                      style={{ background: s.color }}
+                    >
+                      <Icon name={s.icon} size={24} />
+                    </span>
+                    <Icon name="arrow" size={18} />
+                  </div>
+                  <h2>{s.name}</h2>
+                  <span className="muted">
+                    {s.archived ? "Архив · " : ""}
+                    {sessions.length} хичээл ·{" "}
+                    {index.subjectDays.get(s.id)?.size ?? 0} өдөр
+                  </span>
+                  <div className="subject-card-bottom">
+                    <strong>{formatTime(stats.seconds)}</strong>
+                    <span>сүүлийн 7 өдөр</span>
+                  </div>
+                  <div className="mini-week">
+                    {stats.days.map((d) => (
+                      <span
+                        key={d.date}
+                        style={{
+                          background: d.subjects.size
+                            ? s.color
+                            : "var(--surface-muted)",
+                        }}
+                        title={`${d.date}: ${formatTime(d.seconds)}`}
+                      />
+                    ))}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <section className="card">
-          <Empty
-            title="Юу сурахыг хүсэж байна вэ?"
-            description="Хэл, математик, код… Өөрийн сонирхлыг энд нэмээрэй."
-            action={
-              <button
-                className="button primary"
-                onClick={() => setEditing("new")}
-              >
-                Анхны хичээлээ нэмэх
-              </button>
-            }
-          />
-        </section>
+            <Empty
+              title="Юу сурахыг хүсэж байна вэ?"
+              description="Хэл, математик, код… Өөрийн сонирхлыг энд нэмээрэй."
+              action={
+                <button
+                  className="button primary"
+                  onClick={() => setEditing("new")}
+                >
+                  Анхны хичээлээ нэмэх
+                </button>
+              }
+            />
+          </section>
         )}
       </section>
       {editing && (
@@ -287,14 +388,22 @@ function SubjectForm({
 }: {
   subject?: Subject;
   onClose: () => void;
-  categories: { id: string; name: string; tracks?: readonly { id: string; name: string }[] }[];
+  categories: {
+    id: string;
+    name: string;
+    tracks?: readonly { id: string; name: string }[];
+  }[];
   defaultCategory?: string;
   defaultTrack?: string;
 }) {
   const { data, store, run } = useStudy(),
     [name, setName] = useState(s?.name ?? ""),
-    [category, setCategory] = useState(String(s?.extras.subjectCategory ?? defaultCategory ?? "other")),
-    [track, setTrack] = useState(String(s?.extras.subjectTrack ?? defaultTrack ?? "")),
+    [category, setCategory] = useState(
+      String(s?.extras.subjectCategory ?? defaultCategory ?? "other"),
+    ),
+    [track, setTrack] = useState(
+      String(s?.extras.subjectTrack ?? defaultTrack ?? ""),
+    ),
     [color, setColor] = useState(
       s?.color ?? PALETTE[data.subjects.length % PALETTE.length],
     ),
@@ -318,7 +427,11 @@ function SubjectForm({
                         name,
                         color,
                         archived,
-                        extras: { ...s.extras, subjectCategory: category, subjectTrack: track || null },
+                        extras: {
+                          ...s.extras,
+                          subjectCategory: category,
+                          subjectTrack: track || null,
+                        },
                       })
                     : actions.addSubject(name, color, {
                         subjectCategory: category,
@@ -345,8 +458,18 @@ function SubjectForm({
         </label>
         <label>
           Ангилал
-          <select value={category} onChange={(e) => { setCategory(e.target.value); setTrack(""); }}>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setTrack("");
+            }}
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </label>
         {categoryTracks.length > 0 && (
@@ -354,7 +477,11 @@ function SubjectForm({
             Мэргэжил / чиглэл
             <select value={track} onChange={(e) => setTrack(e.target.value)}>
               <option value="">Ерөнхий / бусад</option>
-              {categoryTracks.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {categoryTracks.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
             </select>
           </label>
         )}
