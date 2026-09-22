@@ -1,6 +1,6 @@
 import { uid } from "@/lib/constants";
 import { dayBoundary } from "@/lib/preferences";
-import { dateKey, parseDate, studyDate } from "@/lib/calculations/dates";
+import { parseDate, studyDate } from "@/lib/calculations/dates";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
