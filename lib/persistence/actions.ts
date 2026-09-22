@@ -210,10 +210,31 @@ export const actions = {
         : data,
   finish:
     () =>
-    (data: StudyData): StudyData =>
-      data.activeTimer
-        ? { ...data, activeTimer: review(data.activeTimer, Date.now()) }
-        : data,
+    (data: StudyData): StudyData => {
+      const timer = data.activeTimer;
+      if (!timer || timer.status === "review") return data;
+      const now = Date.now();
+      const reviewed = review(timer, now);
+      if (reviewed.phase !== "focus" || reviewed.accumulatedMs <= 0)
+        return { ...data, activeTimer: reviewed };
+      const session = sessionFromTimer(
+        reviewed,
+        reviewed.note,
+        now,
+      );
+      const exists = data.sessions.some((s) => s.id === session.id);
+      return {
+        ...data,
+        activeTimer: reviewed,
+        sessions: exists
+          ? data.sessions.map((s) =>
+              s.id === session.id
+                ? { ...s, durationSec: session.durationSec, endEpoch: session.endEpoch, updatedAt: now }
+                : s,
+            )
+          : [...data.sessions, session],
+      };
+    },
   discard:
     () =>
     (data: StudyData): StudyData => ({ ...data, activeTimer: null }),
@@ -232,13 +253,27 @@ export const actions = {
       const timer = data.activeTimer;
       if (!timer) throw Error("Timer олдсонгүй.");
       const now = Date.now(),
-        session = sessionFromTimer(timer, note, now);
+        session = sessionFromTimer(timer, note, now),
+        hasExisting = data.sessions.some((s) => s.id === session.id),
+        sessions = hasExisting
+          ? data.sessions.map((s) =>
+              s.id === session.id
+                ? {
+                    ...s,
+                    note: session.note,
+                    durationSec: session.durationSec,
+                    endEpoch: session.endEpoch,
+                    updatedAt: now,
+                    segments: session.segments,
+                    extras: session.extras,
+                  }
+                : s,
+            )
+          : [...data.sessions, session];
       return {
         ...data,
         activeTimer: null,
-        sessions: data.sessions.some((s) => s.id === session.id)
-          ? data.sessions
-          : [...data.sessions, session],
+        sessions,
         tasks: completeTask
           ? data.tasks.map((t) =>
               t.id === timer.taskId && !t.deletedAt
