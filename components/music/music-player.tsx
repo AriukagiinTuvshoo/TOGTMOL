@@ -18,6 +18,10 @@ const YouTubeEmbed = dynamic(
   },
 );
 
+function isYouTubeSource(source: MusicSource): source is MusicSource & { kind: "video" | "playlist"; youtubeId: string } {
+  return source.kind === "video" || source.kind === "playlist";
+}
+
 function sourceKind(source: MusicSource) {
   if (source.kind === "audio")
     return source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос";
@@ -334,12 +338,12 @@ export function MusicPlayer() {
                 </p>
               </div>
             </div>
-          ) : source ? (
+          ) : source && isYouTubeSource(source) ? (
             <div className="music-youtube-runtime">
               {activated ? (
                 <YouTubeEmbed
                   key={`${source.id}:${attempt}`}
-                  source={source}
+                  source={source as MusicSource & { kind: "video" | "playlist"; youtubeId: string }}
                   resume={session}
                   onReady={onReady}
                   onState={onState}
