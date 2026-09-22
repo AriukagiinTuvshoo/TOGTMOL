@@ -10,7 +10,11 @@ let titleFlashTimer: number | null = null;
 
 function getAudioContextCtor(): typeof AudioContext | null {
   if (typeof window === "undefined") return null;
-  return window.AudioContext ?? (window as WebkitWindow).webkitAudioContext ?? null;
+  return (
+    window.AudioContext ??
+    (window as WebkitWindow).webkitAudioContext ??
+    null
+  );
 }
 
 export async function enableSound() {
