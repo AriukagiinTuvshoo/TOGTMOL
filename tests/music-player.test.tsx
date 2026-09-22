@@ -526,7 +526,7 @@ describe("persistent music dock", () => {
     await boot();
     click("Хөгжим нээх");
     fireEvent.click(
-      within(dock()).getByRole("button", { name: /Rainy window.*Борооны/ }),
+      within(dock()).getByRole("button", { name: /RainТайван борооны чимээ/ }),
     );
     await start();
     expect(local.play).toHaveBeenLastCalledWith("rain");
