@@ -1,0 +1,545 @@
+/* TOGTMOL v6 — Neon Night visual system.
+   Visual-only overrides: no new runtime dependency, no remote asset requirement. */
+
+:root:not([data-theme="light"]),
+:root[data-theme="dark"] {
+  --bg: #05091a !important;
+  --surface: rgba(10, 19, 43, 0.86) !important;
+  --surface-muted: rgba(18, 30, 60, 0.82) !important;
+  --text: #f5f7ff !important;
+  --muted: #9aa8c7 !important;
+  --border: rgba(109, 137, 204, 0.21) !important;
+  --moss: #8d5cff !important;
+  --moss-soft: rgba(141, 92, 255, 0.15) !important;
+  --yellow: #35d9ff !important;
+  --yellow-soft: rgba(53, 217, 255, 0.12) !important;
+  --hero: #080f2a !important;
+  --danger: #ff6f9f !important;
+  --shadow: 0 22px 80px rgba(0,0,0,.38) !important;
+}
+
+:root:not([data-theme="light"]) body,
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 7% 2%, rgba(115, 74, 255, .19), transparent 21%),
+    radial-gradient(circle at 94% 4%, rgba(26, 215, 255, .11), transparent 18%),
+    linear-gradient(180deg, #030713 0%, #061025 55%, #05091a 100%) !important;
+}
+
+:root:not([data-theme="light"]) .app-shell,
+:root[data-theme="dark"] .app-shell {
+  background:
+    radial-gradient(circle at 62% -5%, rgba(115, 82, 255, .07), transparent 28%),
+    radial-gradient(circle at 100% 58%, rgba(0, 215, 255, .05), transparent 23%);
+}
+
+/* App chrome */
+:root:not([data-theme="light"]) .sidebar,
+:root[data-theme="dark"] .sidebar {
+  background: rgba(4, 9, 22, .80) !important;
+  border-right-color: rgba(104, 131, 196, .16) !important;
+  backdrop-filter: blur(20px);
+}
+
+:root:not([data-theme="light"]) .brand,
+:root[data-theme="dark"] .brand {
+  color: #fff !important;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+
+:root:not([data-theme="light"]) .brand-version,
+:root[data-theme="dark"] .brand-version {
+  color: #7282ad !important;
+  letter-spacing: 1.8px !important;
+}
+
+:root:not([data-theme="light"]) .brand-mark,
+:root[data-theme="dark"] .brand-mark {
+  position: relative;
+  border-radius: 13px !important;
+  background: linear-gradient(135deg, #9d5dff 0%, #6c59ff 50%, #26d8ff 100%) !important;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 10px 32px rgba(104, 73, 255, .34) !important;
+  overflow: hidden;
+}
+
+:root:not([data-theme="light"]) .brand-mark svg,
+:root[data-theme="dark"] .brand-mark svg { display: none; }
+
+:root:not([data-theme="light"]) .brand-mark::before,
+:root[data-theme="dark"] .brand-mark::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  bottom: 9px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 16px solid #cbd4ff;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,.4));
+}
+
+:root:not([data-theme="light"]) .brand-mark::after,
+:root[data-theme="dark"] .brand-mark::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  bottom: 9px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 22px solid #63edff;
+  opacity: .9;
+}
+
+:root:not([data-theme="light"]) .sidebar nav button,
+:root[data-theme="dark"] .sidebar nav button {
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+:root:not([data-theme="light"]) .sidebar nav button:hover,
+:root[data-theme="dark"] .sidebar nav button:hover {
+  background: rgba(92, 112, 174, .10) !important;
+}
+
+:root:not([data-theme="light"]) .sidebar nav button.active,
+:root[data-theme="dark"] .sidebar nav button.active {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(131, 80, 255, .24), rgba(23, 208, 255, .08)) !important;
+  border-color: rgba(141, 92, 255, .34);
+  box-shadow: inset 3px 0 0 #8d5cff, 0 8px 25px rgba(77, 68, 165, .12);
+}
+
+:root:not([data-theme="light"]) .topbar,
+:root[data-theme="dark"] .topbar {
+  background: rgba(4, 9, 22, .54) !important;
+  border-bottom-color: rgba(109, 132, 195, .12) !important;
+  backdrop-filter: blur(16px);
+}
+
+:root:not([data-theme="light"]) .save-status,
+:root[data-theme="dark"] .save-status,
+:root:not([data-theme="light"]) .breadcrumbs,
+:root[data-theme="dark"] .breadcrumbs {
+  color: #8d9bbb !important;
+}
+
+:root:not([data-theme="light"]) .status-dot,
+:root[data-theme="dark"] .status-dot {
+  background: #32dfb6 !important;
+  box-shadow: 0 0 11px rgba(50,223,182,.72);
+}
+
+/* Surfaces */
+:root:not([data-theme="light"]) .card,
+:root[data-theme="dark"] .card,
+:root:not([data-theme="light"]) .metric,
+:root[data-theme="dark"] .metric,
+:root:not([data-theme="light"]) .home-primary-cta,
+:root[data-theme="dark"] .home-primary-cta,
+:root:not([data-theme="light"]) .room-stage,
+:root[data-theme="dark"] .room-stage,
+:root:not([data-theme="light"]) .daily-strip,
+:root[data-theme="dark"] .daily-strip {
+  background:
+    linear-gradient(150deg, rgba(16, 29, 61, .78), rgba(7, 14, 31, .90)) !important;
+  border-color: rgba(106, 132, 198, .17) !important;
+  box-shadow:
+    0 22px 72px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.03);
+  backdrop-filter: blur(14px);
+}
+
+:root:not([data-theme="light"]) .card:hover,
+:root[data-theme="dark"] .card:hover {
+  border-color: rgba(132, 102, 255, .28) !important;
+}
+
+:root:not([data-theme="light"]) .button,
+:root[data-theme="dark"] .button {
+  background: rgba(11, 20, 44, .68) !important;
+  border-color: rgba(110, 135, 200, .20) !important;
+}
+
+:root:not([data-theme="light"]) .button:hover:not(:disabled),
+:root[data-theme="dark"] .button:hover:not(:disabled) {
+  background: rgba(25, 38, 74, .84) !important;
+  border-color: rgba(133, 105, 255, .34) !important;
+}
+
+:root:not([data-theme="light"]) .button.primary,
+:root[data-theme="dark"] .button.primary {
+  color: #fff !important;
+  background: linear-gradient(100deg, #7142ff 0%, #9a59ff 45%, #26d6ff 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 36px rgba(102, 69, 255, .31);
+}
+
+:root:not([data-theme="light"]) .button.yellow,
+:root[data-theme="dark"] .button.yellow {
+  color: #061019 !important;
+  background: linear-gradient(100deg, #8a59ff 0%, #b45eff 45%, #2de0ff 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 38px rgba(105, 68, 255, .34);
+}
+
+:root:not([data-theme="light"]) .progress,
+:root[data-theme="dark"] .progress {
+  background: rgba(93, 113, 165, .15) !important;
+}
+
+:root:not([data-theme="light"]) .progress > span,
+:root[data-theme="dark"] .progress > span {
+  background: linear-gradient(90deg, #744bff, #48d8ff) !important;
+  box-shadow: 0 0 16px rgba(67, 208, 255, .24);
+}
+
+/* Hero: keeps existing data and actions, changes only presentation */
+:root:not([data-theme="light"]) .hero,
+:root[data-theme="dark"] .hero {
+  min-height: 345px;
+  padding: 40px 43px !important;
+  border-radius: 26px !important;
+  border-color: rgba(113, 128, 218, .24) !important;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(87, 68, 210, .42), transparent 28%),
+    radial-gradient(circle at 60% 100%, rgba(19, 195, 255, .13), transparent 34%),
+    linear-gradient(145deg, #080f2d 0%, #07162e 56%, #090d27 100%) !important;
+  box-shadow: 0 30px 90px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+:root:not([data-theme="light"]) .hero::before,
+:root[data-theme="dark"] .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 77% 19%, rgba(255,255,255,.85) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 40%, rgba(158,117,255,.78) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 91% 56%, rgba(68,221,255,.72) 0 1px, transparent 2px),
+    radial-gradient(circle at 46% 18%, rgba(255,255,255,.58) 0 1px, transparent 2px);
+  opacity: .74;
+  pointer-events: none;
+}
+
+:root:not([data-theme="light"]) .hero > div:first-child,
+:root[data-theme="dark"] .hero > div:first-child {
+  position: relative;
+  z-index: 2;
+  max-width: 56% !important;
+}
+
+:root:not([data-theme="light"]) .hero h1,
+:root[data-theme="dark"] .hero h1 {
+  font-size: clamp(40px, 5.2vw, 64px) !important;
+  font-weight: 730 !important;
+  letter-spacing: -2.3px !important;
+  line-height: .98 !important;
+}
+
+:root:not([data-theme="light"]) .hero h1 em,
+:root[data-theme="dark"] .hero h1 em {
+  color: transparent !important;
+  background: linear-gradient(90deg, #9d62ff 0%, #b85cff 48%, #42dbff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 34px rgba(125, 76, 255, .24);
+}
+
+:root:not([data-theme="light"]) .hero-growth,
+:root[data-theme="dark"] .hero-growth {
+  width: min(45%, 420px) !important;
+  height: 290px !important;
+  margin-right: 2px !important;
+}
+
+:root:not([data-theme="light"]) .hero-growth > svg,
+:root[data-theme="dark"] .hero-growth > svg { display:none; }
+
+:root:not([data-theme="light"]) .hero-growth > span,
+:root[data-theme="dark"] .hero-growth > span { display:none; }
+
+:root:not([data-theme="light"]) .growth-ring,
+:root[data-theme="dark"] .growth-ring {
+  border-color: rgba(104, 143, 230, .14) !important;
+}
+
+:root:not([data-theme="light"]) .growth-ring.one,
+:root[data-theme="dark"] .growth-ring.one { width: 210px !important; height: 210px !important; }
+:root:not([data-theme="light"]) .growth-ring.two,
+:root[data-theme="dark"] .growth-ring.two { width: 290px !important; height: 290px !important; }
+:root:not([data-theme="light"]) .growth-ring.three,
+:root[data-theme="dark"] .growth-ring.three { width: 365px !important; height: 365px !important; }
+
+/* CSS-built floating scene: no external image fetch */
+:root:not([data-theme="light"]) .hero-growth::before,
+:root[data-theme="dark"] .hero-growth::before {
+  content: "";
+  position: absolute;
+  right: 3%;
+  bottom: 12px;
+  width: min(370px, 96%);
+  height: 215px;
+  border-radius: 40px;
+  transform: rotate(6deg);
+  background:
+    linear-gradient(135deg, rgba(118, 80, 255, .78), rgba(9, 18, 47, .30)),
+    rgba(18, 29, 67, .68);
+  border: 1px solid rgba(117, 159, 255, .26);
+  box-shadow: 0 28px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(10px);
+}
+
+:root:not([data-theme="light"]) .hero-growth::after,
+:root[data-theme="dark"] .hero-growth::after {
+  content: "";
+  position: absolute;
+  right: 10%;
+  bottom: 26px;
+  width: 280px;
+  height: 175px;
+  background:
+    linear-gradient(143deg, transparent 35%, #7386ff 36% 49%, transparent 50%),
+    linear-gradient(36deg, transparent 41%, #32ddff 42% 54%, transparent 55%),
+    linear-gradient(150deg, transparent 47%, #c7d7ff 48% 50%, transparent 51%),
+    linear-gradient(165deg, #172550 0%, #30428e 56%, #102047 56%);
+  clip-path: polygon(0 100%, 0 63%, 23% 46%, 36% 62%, 55% 23%, 73% 54%, 100% 38%, 100% 100%);
+  filter: drop-shadow(0 16px 24px rgba(35, 51, 130, .35));
+}
+
+/* Dashboard hierarchy */
+:root:not([data-theme="light"]) .metric > strong,
+:root[data-theme="dark"] .metric > strong,
+:root:not([data-theme="light"]) .weekly-pulse .week-total strong,
+:root[data-theme="dark"] .weekly-pulse .week-total strong {
+  text-shadow: 0 0 26px rgba(79, 154, 255, .16);
+}
+
+:root:not([data-theme="light"]) .home-primary-cta,
+:root[data-theme="dark"] .home-primary-cta {
+  background:
+    radial-gradient(circle at 92% 0%, rgba(0, 206, 255, .08), transparent 25%),
+    linear-gradient(150deg, rgba(15, 28, 58, .84), rgba(7, 14, 31, .90)) !important;
+}
+
+:root:not([data-theme="light"]) .weekly-pulse .week-card,
+:root[data-theme="dark"] .weekly-pulse .week-card,
+:root:not([data-theme="light"]) .weekly-pulse .coach-card,
+:root[data-theme="dark"] .weekly-pulse .coach-card {
+  background:
+    linear-gradient(150deg, rgba(15, 28, 61, .78), rgba(7, 14, 32, .90)) !important;
+}
+
+:root:not([data-theme="light"]) .week-bar-track,
+:root[data-theme="dark"] .week-bar-track {
+  background: rgba(89, 105, 155, .12) !important;
+}
+
+:root:not([data-theme="light"]) .week-bar-track > span,
+:root[data-theme="dark"] .week-bar-track > span {
+  background: linear-gradient(180deg, #40dfff, #744bff) !important;
+  box-shadow: 0 0 18px rgba(80, 142, 255, .18);
+}
+
+:root:not([data-theme="light"]) .level-pill,
+:root[data-theme="dark"] .level-pill,
+:root:not([data-theme="light"]) .badge,
+:root[data-theme="dark"] .badge {
+  color: #c2b2ff !important;
+  background: rgba(123, 78, 255, .14) !important;
+  border-color: rgba(141, 92, 255, .22) !important;
+}
+
+/* Focus and timer */
+:root:not([data-theme="light"]) .timer-card,
+:root[data-theme="dark"] .timer-card,
+:root:not([data-theme="light"]) .timer-bar,
+:root[data-theme="dark"] .timer-bar {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(108, 75, 255, .18), transparent 26%),
+    linear-gradient(145deg, rgba(13, 25, 56, .90), rgba(5, 12, 28, .95)) !important;
+  border-color: rgba(116, 138, 213, .22) !important;
+}
+
+:root:not([data-theme="light"]) .timer-orbit,
+:root[data-theme="dark"] .timer-orbit {
+  border-color: #39dbff !important;
+  box-shadow:
+    0 0 0 10px rgba(141, 92, 255, .09),
+    0 0 0 24px rgba(141, 92, 255, .045),
+    0 0 60px rgba(33, 212, 255, .18) !important;
+}
+
+:root:not([data-theme="light"]) .focus-timer-screen,
+:root[data-theme="dark"] .focus-timer-screen {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(111, 76, 255, .17), transparent 36%),
+    radial-gradient(circle at 50% 85%, rgba(0, 214, 255, .08), transparent 28%),
+    #040816 !important;
+}
+
+/* Calendar / subjects / achievements */
+:root:not([data-theme="light"]) .calendar-week-day,
+:root[data-theme="dark"] .calendar-week-day,
+:root:not([data-theme="light"]) .calendar-event-chip,
+:root[data-theme="dark"] .calendar-event-chip,
+:root:not([data-theme="light"]) .calendar-day-agenda,
+:root[data-theme="dark"] .calendar-day-agenda,
+:root:not([data-theme="light"]) .calendar-timeline-row,
+:root[data-theme="dark"] .calendar-timeline-row,
+:root:not([data-theme="light"]) .subject-category-card,
+:root[data-theme="dark"] .subject-category-card,
+:root:not([data-theme="light"]) .subject-track-chip,
+:root[data-theme="dark"] .subject-track-chip,
+:root:not([data-theme="light"]) .subject-card,
+:root[data-theme="dark"] .subject-card,
+:root:not([data-theme="light"]) .achievement,
+:root[data-theme="dark"] .achievement {
+  background: rgba(8, 18, 40, .66) !important;
+  border-color: rgba(101, 128, 194, .16) !important;
+}
+
+:root:not([data-theme="light"]) .calendar-week-day.selected,
+:root[data-theme="dark"] .calendar-week-day.selected,
+:root:not([data-theme="light"]) .subject-category-card.active,
+:root[data-theme="dark"] .subject-category-card.active {
+  background: linear-gradient(145deg, rgba(118, 75, 255, .18), rgba(36, 207, 255, .07)) !important;
+  border-color: rgba(141, 92, 255, .44) !important;
+  box-shadow: 0 0 0 2px rgba(141, 92, 255, .08);
+}
+
+:root:not([data-theme="light"]) .heat-cell,
+:root[data-theme="dark"] .heat-cell {
+  background: rgba(52, 71, 111, .22) !important;
+}
+
+:root:not([data-theme="light"]) .heat-cell.on,
+:root[data-theme="dark"] .heat-cell.on {
+  background: linear-gradient(140deg, #7b4cff, #3ee1ff) !important;
+  box-shadow: 0 0 13px rgba(74, 186, 255, .18);
+}
+
+:root:not([data-theme="light"]) .achievement-icon,
+:root[data-theme="dark"] .achievement-icon {
+  background: linear-gradient(145deg, rgba(127, 82, 255, .28), rgba(34, 210, 255, .12)) !important;
+  border-color: rgba(116, 144, 216, .20) !important;
+}
+
+/* Inputs and modals */
+:root:not([data-theme="light"]) input,
+:root[data-theme="dark"] input,
+:root:not([data-theme="light"]) select,
+:root[data-theme="dark"] select,
+:root:not([data-theme="light"]) textarea,
+:root[data-theme="dark"] textarea {
+  background: rgba(6, 14, 31, .76) !important;
+  color: #f5f7ff !important;
+  border-color: rgba(109, 137, 204, .19) !important;
+}
+
+:root:not([data-theme="light"]) .modal-card,
+:root[data-theme="dark"] .modal-card,
+:root:not([data-theme="light"]) .modal,
+:root[data-theme="dark"] .modal {
+  background: rgba(8, 17, 37, .94) !important;
+  border-color: rgba(111, 136, 205, .22) !important;
+  box-shadow: 0 32px 110px rgba(0,0,0,.52);
+}
+
+:root:not([data-theme="light"]) .text-button,
+:root[data-theme="dark"] .text-button {
+  color: #aa8cff !important;
+}
+
+/* Avatars: keep user/profile data, modernize the frame */
+:root:not([data-theme="light"]) .avatar,
+:root[data-theme="dark"] .avatar {
+  background: linear-gradient(145deg, rgba(135, 89, 255, .24), rgba(37, 211, 255, .10)) !important;
+  border: 1px solid rgba(124, 144, 209, .22);
+  box-shadow: 0 0 0 3px rgba(141, 92, 255, .05), 0 8px 22px rgba(0,0,0,.20);
+}
+
+/* Music dock */
+:root:not([data-theme="light"]) .music-player,
+:root[data-theme="dark"] .music-player {
+  background: rgba(5, 12, 28, .86) !important;
+  border-color: rgba(108, 135, 203, .19) !important;
+  box-shadow: 0 18px 65px rgba(0,0,0,.36);
+  backdrop-filter: blur(18px);
+}
+
+@media (max-width: 1024px) {
+  :root:not([data-theme="light"]) .hero > div:first-child,
+  :root[data-theme="dark"] .hero > div:first-child { max-width: 62% !important; }
+}
+
+@media (max-width: 900px) {
+  :root:not([data-theme="light"]) .hero-growth,
+  :root[data-theme="dark"] .hero-growth { width: 42% !important; opacity: .84; }
+}
+
+@media (max-width: 620px) {
+  :root:not([data-theme="light"]) .hero,
+  :root[data-theme="dark"] .hero {
+    min-height: 315px;
+    padding: 28px 23px !important;
+  }
+  :root:not([data-theme="light"]) .hero > div:first-child,
+  :root[data-theme="dark"] .hero > div:first-child { max-width: 100% !important; }
+  :root:not([data-theme="light"]) .hero-growth,
+  :root[data-theme="dark"] .hero-growth {
+    position: absolute;
+    right: -30px;
+    bottom: 4px;
+    width: 62% !important;
+    height: 214px !important;
+    opacity: .43;
+  }
+  :root:not([data-theme="light"]) .hero h1,
+  :root[data-theme="dark"] .hero h1 {
+    font-size: 42px !important;
+    letter-spacing: -1.7px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  :root:not([data-theme="light"]) .hero h1,
+  :root[data-theme="dark"] .hero h1 { font-size: 35px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-theme="light"]) .card:hover,
+  :root[data-theme="dark"] .card:hover,
+  :root:not([data-theme="light"]) .subject-card:hover,
+  :root[data-theme="dark"] .subject-card:hover,
+  :root:not([data-theme="light"]) .achievement:hover,
+  :root[data-theme="dark"] .achievement:hover {
+    transform: none;
+  }
+}
+
+/* Light theme: subtle hints, while preserving existing light-mode behavior. */
+:root[data-theme="light"] .hero {
+  background:
+    radial-gradient(circle at 86% 14%, rgba(111, 76, 255, .16), transparent 23%),
+    radial-gradient(circle at 62% 100%, rgba(0, 190, 230, .10), transparent 30%),
+    linear-gradient(145deg, #f0efff 0%, #edf8ff 100%);
+}
+:root[data-theme="light"] .hero h1 em {
+  color: transparent;
+  background: linear-gradient(90deg, #6841d9, #8b45e9, #0ca9cc);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+:root[data-theme="light"] .button.primary,
+:root[data-theme="light"] .button.yellow {
+  background: linear-gradient(100deg, #744bde, #8f5ae9, #16b8d8);
+  color: #fff;
+}
+:root[data-theme="light"] .brand-mark {
+  background: linear-gradient(135deg, #8a5cff, #2bcdeb);
+}
