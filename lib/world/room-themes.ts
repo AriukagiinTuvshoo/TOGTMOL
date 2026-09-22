@@ -436,16 +436,16 @@ const palettes: Record<DesignTheme, RoomTheme["palette"]> = {
 };
 
 const music: Record<DesignTheme, AmbientId[]> = {
-  rainy: ["rain", "cafe", "piano"],
-  space: ["deep", "ambient", "night"],
+  rainy: ["rain", "piano", "nature"],
+  space: ["lofi", "piano", "rain"],
   cabin: ["piano", "nature", "lofi"],
-  library: ["deep", "piano", "white"],
-  ocean: ["ambient", "nature", "white"],
-  cozy: ["lofi", "cafe", "piano"],
-  forest: ["nature", "rain", "ambient"],
-  night: ["night", "rain", "ambient"],
+  library: ["piano", "lofi", "rain"],
+  ocean: ["nature", "rain", "lofi"],
+  cozy: ["lofi", "piano", "rain"],
+  forest: ["nature", "rain", "lofi"],
+  night: ["rain", "lofi", "piano"],
   sakura: ["piano", "nature", "rain"],
-  minimal: ["ambient", "piano", "rain"],
+  minimal: ["lofi", "piano", "rain"],
 };
 
 export const ROOM_THEMES: Record<DesignTheme, RoomTheme> = {
