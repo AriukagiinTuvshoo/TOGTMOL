@@ -317,7 +317,8 @@ describe("persistent music dock", () => {
     expect(restored.setVolume).toHaveBeenCalledWith(65);
     expect(dock()).toHaveAttribute("data-open", "false");
     expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(screen.getByText("Үргэлжлүүлэхэд Play дарна уу")).toBeVisible();
+    expect(dock()).toHaveAttribute("data-playback", "paused");
+    expect(within(dock()).getByRole("button", { name: "Хөгжим тоглуулах" })).toBeVisible();
   });
   it("does not pause on visibility/intersection changes or a mobile-size resize", async () => {
     const observe = vi.fn();
@@ -360,7 +361,7 @@ describe("persistent music dock", () => {
       screen.getByRole("heading", { name: "Миний хичээлүүд" }),
     ).toBeVisible();
     failConstruction = false;
-    click("Дахин ачаалах");
+    click("Дахин оролдох");
     await screen.findByTitle("Test YouTube");
     const player = players[0];
     await start();
