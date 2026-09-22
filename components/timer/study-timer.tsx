@@ -94,6 +94,7 @@ export function TimerWatch() {
         return;
       finishing.current = true;
       const phase = current.phase;
+      const runningSince = current.runningSince;
       const ok = await run(() => store.mutate(actions.finish()));
       finishing.current = false;
       if (!ok) return;
@@ -102,7 +103,16 @@ export function TimerWatch() {
           ? "Хичээл дууслаа. Хугацаа статистикт хадгалагдлаа."
           : "Амралт дууслаа.";
       setNotice(message);
-      void notifyUser(message, store.getSnapshot().data.settings, `togtmol-timer-${expectedId}`);
+      setAlert({
+        kind: "complete",
+        timerId: expectedId,
+        runningSince,
+      });
+      void notifyUser(
+        message,
+        store.getSnapshot().data.settings,
+        `togtmol-timer-${expectedId}`,
+      );
     },
     [run, setNotice, store],
   );
@@ -181,19 +191,9 @@ export function TimerWatch() {
       t.targetMs !== null &&
       elapsed(t, now) >= t.targetMs &&
       t.status === "active"
-    ) {
-      void completeTimer(t.id).then(() => {
-        const current = store.getSnapshot().data.activeTimer;
-        if (current?.id === t.id && current.status === "review") {
-          setAlert({
-            kind: "complete",
-            timerId: t.id,
-            runningSince: t.runningSince,
-          });
-        }
-      });
-    }
-  }, [t, now, completeTimer, store]);
+    )
+      void completeTimer(t.id);
+  }, [t, now, completeTimer]);
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
