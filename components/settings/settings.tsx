@@ -14,6 +14,12 @@ import { Icon } from "@/components/ui/icon";
 import { AccountPanel } from "./account-panel";
 import { InstallButton } from "./pwa";
 import { MusicSettings } from "./music-settings";
+
+const UI_THEMES = [
+  { id: "aurora", label: "Aurora", description: "Purple · Cyan · Glass", icon: "spark" },
+  { id: "cyber", label: "Cyber Night", description: "Indigo · Pink · Neon", icon: "moon" },
+  { id: "calm", label: "Calm Space", description: "Blue · Violet · Soft", icon: "leaf" },
+] as const;
 export function Settings() {
   const { data, store, run, navigate } = useStudy(),
     { namespace } = useStoreState();
@@ -50,6 +56,53 @@ export function Settings() {
                 {label}
               </button>
             ))}
+          </div>
+          <div className="ui-theme-picker" aria-label="Аппын өнгөний theme">
+            <div className="ui-theme-picker-head">
+              <div>
+                <span className="eyebrow">APP THEME</span>
+                <p>Интерфэйсийн өнгөний хэв маягаа сонгоно.</p>
+              </div>
+              <span className="ui-theme-current">v6</span>
+            </div>
+            <div className="ui-theme-grid">
+              {UI_THEMES.map((uiTheme) => {
+                const active =
+                  data.settings.extras.uiTheme === uiTheme.id ||
+                  (!data.settings.extras.uiTheme && uiTheme.id === "aurora");
+                return (
+                  <button
+                    key={uiTheme.id}
+                    type="button"
+                    className={active ? "ui-theme-card active" : "ui-theme-card"}
+                    aria-pressed={active}
+                    onClick={() =>
+                      void run(() =>
+                        store.mutate(
+                          actions.settings({
+                            extras: {
+                              ...data.settings.extras,
+                              uiTheme: uiTheme.id,
+                            },
+                          }),
+                        ),
+                      )
+                    }
+                  >
+                    <span className={"ui-theme-preview ui-theme-preview-" + uiTheme.id} aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <span className="ui-theme-copy">
+                      <strong>{uiTheme.label}</strong>
+                      <small>{uiTheme.description}</small>
+                    </span>
+                    <Icon name={uiTheme.icon} size={17} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <button
             className="text-button settings-link"
