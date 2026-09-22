@@ -58,7 +58,7 @@ describe("original soundscape playback", () => {
     for (const preset of AMBIENTS)
       await ambientProvider(engine, preset.id).play();
     expect(started).toHaveBeenCalledTimes(AMBIENTS.length);
-    expect(buffers).toHaveLength(9);
+    expect(buffers).toHaveLength(AMBIENTS.length);
     for (const samples of buffers) {
       expect(
         samples.every((v) => Number.isFinite(v) && Math.abs(v) <= 0.8),
