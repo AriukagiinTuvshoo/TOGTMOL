@@ -1,6 +1,6 @@
 import type { Settings } from "@/types/study";
 import { completionVolume } from "./preferences";
-import { timerChime } from "./timer-alerts";
+import { COMPLETION_NOTES, countdownFrequency, timerChime } from "./timer-alerts";
 
 type WebkitWindow = typeof window & {
   webkitAudioContext?: typeof AudioContext;
@@ -43,6 +43,7 @@ function scheduleTone(
   duration: number,
   volume: number,
   type: OscillatorType = "sine",
+  attack = 0.018,
 ) {
   if (!audioContext) return;
   const tone = audioContext.createOscillator();
@@ -52,7 +53,10 @@ function scheduleTone(
   tone.connect(gain);
   gain.connect(audioContext.destination);
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.linearRampToValueAtTime(volume, start + 0.018);
+  gain.gain.linearRampToValueAtTime(
+    volume,
+    start + Math.min(attack, duration / 3),
+  );
   gain.gain.setValueAtTime(volume, start + Math.max(0.025, duration - 0.06));
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
   activeTones.add({ tone, gain });
@@ -179,20 +183,28 @@ async function showBrowserNotification(
   }
 }
 
-export async function playTimerWarning(settings: Settings) {
+export async function playTimerWarning(settings: Settings, seconds = 10) {
   stopTimerAlertSound();
   const request = generation;
-  if (settings.extras.timerVibration !== false) safeVibrate([180, 90, 180]);
+  if (settings.extras.timerVibration !== false) safeVibrate([120, 70, 120]);
+  // When the final-10-second countdown is enabled, it owns every second.
+  // This prevents the warning melody and countdown ticks from overlapping.
+  if (
+    seconds <= 10 &&
+    seconds >= 1 &&
+    settings.extras.timerCountdown !== false
+  )
+    return;
   if (!settings.sound || completionVolume(settings) <= 0) return;
   try {
     await ensureAudioReady();
     if (request !== generation) return;
     const now = audioContext!.currentTime;
-    const volume = completionVolume(settings) * 0.25;
+    const volume = completionVolume(settings) * 0.18;
     const notes = timerChime(settings).notes;
-    scheduleTone(notes[0], now, 0.3, volume);
-    scheduleTone(notes[1], now + 0.34, 0.3, volume);
-    scheduleTone(notes[2], now + 0.68, 0.42, volume);
+    scheduleTone(notes[0], now, 0.24, volume, "sine", 0.03);
+    scheduleTone(notes[1], now + 0.27, 0.24, volume, "sine", 0.03);
+    scheduleTone(notes[2], now + 0.54, 0.34, volume, "sine", 0.03);
   } catch {
     /* Audio failure is local to the alert. */
   }
@@ -217,11 +229,15 @@ export async function playTimerCountdown(settings: Settings, second: number) {
       Date.now() > expires
     )
       return;
+    // A quiet, rounded "tick" whose pitch rises from 10 to 1.
+    // The user hears progress without an alarm-like buzz.
     scheduleTone(
-      second <= 3 ? 880 : 659.25,
+      countdownFrequency(second),
       audioContext!.currentTime,
-      0.12,
-      completionVolume(settings) * 0.15,
+      0.18,
+      completionVolume(settings) * 0.11,
+      "sine",
+      0.035,
     );
   } catch {
     /* Countdown remains visible if audio is unavailable. */
@@ -232,26 +248,44 @@ export async function playTimerComplete(settings: Settings, preview = false) {
   stopTimerAlertSound();
   const request = generation;
   if (settings.extras.timerVibration !== false)
-    safeVibrate([300, 90, 300, 90, 420, 140, 420]);
-  if (!preview) flashTitle("⏰ Хугацаа дууслаа!", 10);
+    safeVibrate([260, 80, 260, 80, 420]);
+  if (!preview) flashTitle("⏰ Хугацаа дууслаа!", 8);
   if (!settings.sound || completionVolume(settings) <= 0) return false;
   try {
     await ensureAudioReady();
     if (request !== generation) return false;
     const now = audioContext!.currentTime;
-    const volume = completionVolume(settings) * 0.4;
-    const notes = timerChime(settings).notes;
-    for (let repeat = 0; repeat < 3; repeat++) {
-      const base = now + repeat * 3.15;
-      notes.forEach((frequency, index) => {
-        scheduleTone(
-          frequency,
-          base + index * 0.43,
-          index === 4 ? 0.75 : 0.4,
-          volume,
-        );
-      });
-    }
+    const volume = completionVolume(settings) * 0.30;
+
+    // One original "finished!" phrase. It plays once instead of looping.
+    COMPLETION_NOTES.forEach((frequency, index) => {
+      scheduleTone(
+        frequency,
+        now + index * 0.19,
+        index === COMPLETION_NOTES.length - 1 ? 1.15 : 0.26,
+        volume,
+        "sine",
+        0.025,
+      );
+    });
+
+    // A soft final sparkle/chord gives the zero-second moment a warm finish.
+    scheduleTone(
+      1318.51,
+      now + 1.12,
+      0.78,
+      volume * 0.42,
+      "triangle",
+      0.04,
+    );
+    scheduleTone(
+      1567.98,
+      now + 1.12,
+      0.78,
+      volume * 0.30,
+      "triangle",
+      0.04,
+    );
     return true;
   } catch {
     /* Audio failure must not block timer completion or notification. */
