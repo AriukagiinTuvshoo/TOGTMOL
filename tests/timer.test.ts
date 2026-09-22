@@ -69,7 +69,38 @@ describe("timer lifecycle", () => {
     expect(saved.activeTimer).toBeNull();
     expect(saved.sessions[1].note).toBe("Result");
   });
-  it("rejects double start and sub-five-second sessions", () => {
+  it("records a partially stopped focus session immediately for statistics", () => {
+    const d = fixture();
+    d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
+    const stopped = actions.finish()(d);
+    expect(stopped.activeTimer?.status).toBe("review");
+    expect(stopped.sessions).toHaveLength(1);
+    expect(stopped.sessions[0].subjectId).toBe("math");
+    expect(stopped.sessions[0].durationSec).toBeGreaterThanOrEqual(1);
+  });
+
+  it("updates the already-recorded session when the review note is saved", () => {
+    const d = fixture();
+    d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
+    d.activeTimer = {
+      ...d.activeTimer,
+      accumulatedMs: 30000,
+      running: false,
+      runningSince: null,
+      status: "review",
+      finishedAt: NOW + 30000,
+      segments: [{ start: NOW, end: NOW + 30000 }],
+    };
+    const recorded = actions.finish()(d);
+    const before = recorded.sessions[0];
+    const saved = actions.saveTimer("тайлбар", false)(recorded);
+    expect(saved.sessions).toHaveLength(1);
+    expect(saved.sessions[0].id).toBe(before.id);
+    expect(saved.sessions[0].note).toBe("тайлбар");
+    expect(saved.sessions[0].durationSec).toBe(30);
+  });
+
+  it("rejects double start and sub-zero sessions", () => {
     const d = fixture();
     d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
     expect(() =>
