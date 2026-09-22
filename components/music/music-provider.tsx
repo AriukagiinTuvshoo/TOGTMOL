@@ -766,26 +766,10 @@ function useMusicController() {
     };
   }, []);
 
-  const nativePosition =
-    nativeSourceId.current === latest.current.selection &&
-    nativeAudio.current &&
-    Number.isFinite(nativeAudio.current.currentTime)
-      ? nativeAudio.current.currentTime
-      : session.position;
-  const nativeDuration =
-    nativeSourceId.current === latest.current.selection &&
-    nativeAudio.current &&
-    Number.isFinite(nativeAudio.current.duration) &&
-    nativeAudio.current.duration > 0
-      ? nativeAudio.current.duration
-      : undefined;
-
   useMusicMediaSession({
     title: session.track.title,
     artist: session.track.artist,
     playback,
-    position: nativePosition,
-    duration: nativeDuration,
     play: () => {
       void play();
     },
