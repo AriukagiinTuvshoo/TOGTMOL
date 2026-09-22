@@ -248,7 +248,7 @@ export function useStoreState() {
 }
 export function useClock(active = true) {
   const [now, setNow] = useState(() => Date.now());
-  const second = useRef(Math.floor(Date.now() / 1000));
+  const second = useRef(0);
   useEffect(() => {
     if (!active) return;
     let frame = 0;
