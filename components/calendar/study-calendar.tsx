@@ -18,6 +18,7 @@ import { intensity } from "@/lib/calculations/analytics";
 import { SHORT_DAYS } from "@/lib/constants";
 import { SectionTitle, SubjectSelect } from "@/components/ui/common";
 import { SessionList } from "@/components/ui/session-list";
+import { TaskForm } from "@/components/dashboard/task-form";
 export function StudyCalendar({
   subjectId: fixedSubject,
 }: {
@@ -31,7 +32,8 @@ export function StudyCalendar({
     ),
     [subjectId, setSubject] = useState(fixedSubject ?? ""),
     [month, setMonth] = useState(today.slice(0, 7)),
-    [calendarView, setCalendarView] = useState<"month" | "week" | "day" | "timeline">("month");
+    [calendarView, setCalendarView] = useState<"month" | "week" | "day" | "timeline">("month"),
+    [addingTask, setAddingTask] = useState(false);
   const actualSubject = fixedSubject ?? subjectId,
     map = actualSubject ? index.subjectDays.get(actualSubject) : index.days;
   const dates = useMemo(() => {
@@ -53,7 +55,6 @@ export function StudyCalendar({
       <button
         key={ds}
         className={`heat-cell level-${intensity(map?.get(ds))} ${map?.get(ds)?.subjects.size && !map?.get(ds)?.seconds ? "manual-only" : ""} ${selected === ds ? "selected" : ""} ${ds === today ? "today" : ""}`}
-        disabled={ds > today}
         onClick={() => setSelected(ds)}
         title={`${ds}: ${formatTime(map?.get(ds)?.seconds ?? 0)}, ${map?.get(ds)?.subjects.size ?? 0} хичээл`}
         aria-label={`${ds}, ${formatTime(map?.get(ds)?.seconds ?? 0)}, ${map?.get(ds)?.subjects.size ?? 0} хичээл`}
@@ -81,11 +82,7 @@ export function StudyCalendar({
   const selectedWeekStart = weekStart(selected);
   const selectedWeekDates = datesBetween(
     selectedWeekStart,
-    datesBetween(selectedWeekStart, today).length >= 7
-      ? datesBetween(selectedWeekStart, selectedWeekStart).length
-        ? dateKey(new Date((parseDate(selectedWeekStart)?.getTime() ?? 0) + 6 * 86400000))
-        : selectedWeekStart
-      : dateKey(new Date((parseDate(selectedWeekStart)?.getTime() ?? 0) + 6 * 86400000)),
+    dateKey(new Date((parseDate(selectedWeekStart)?.getTime() ?? 0) + 6 * 86400000)),
   );
   const scheduleSessions = index.sessions
     .filter((s) => !s.deletedAt && (!actualSubject || s.subjectId === actualSubject))
@@ -97,14 +94,14 @@ export function StudyCalendar({
     const d = new Date(selectedDateObj);
     d.setDate(d.getDate() + delta);
     const next = dateKey(d);
-    if (next <= today) setSelected(next);
+    setSelected(next);
   };
   const moveSelectedWeek = (delta: number) => {
     const d = parseDate(selectedWeekStart);
     if (!d) return;
     d.setDate(d.getDate() + delta * 7);
     const next = dateKey(d);
-    if (next <= today) setSelected(next);
+    setSelected(next);
   };
   const dayKnowledge = data.knowledge.filter(
     (r) =>
@@ -127,6 +124,10 @@ export function StudyCalendar({
             <p>Өдөр бүрийн цаг, хичээл, жижиг ахицыг нэг дороос хараарай.</p>
           </div>
           <div className="calendar-smart-buddy" aria-hidden="true">🤖✨</div>
+        </div>
+        <div className="calendar-quick-actions">
+          <button className="button primary small" onClick={() => setAddingTask(true)}>＋ Төлөвлөгөө нэмэх</button>
+          <button className="button small" onClick={() => { setCalendarView("day"); setSelected(today); }}>☀️ Өнөөдөр</button>
         </div>
         <div className="calendar-summary-strip">
           <div><span>🌱</span><strong>{dayMood}</strong><small>{dayMoodText}</small></div>
@@ -154,7 +155,7 @@ export function StudyCalendar({
             <div className="calendar-period-nav">
               <button className="icon-button bordered" onClick={() => moveSelectedWeek(-1)} aria-label="Өмнөх 7 хоног">‹</button>
               <strong>{selectedWeekStart} — {selectedWeekDates[6]}</strong>
-              <button className="icon-button bordered" onClick={() => moveSelectedWeek(1)} disabled={selectedWeekDates[6] >= today} aria-label="Дараагийн 7 хоног">›</button>
+              <button className="icon-button bordered" onClick={() => moveSelectedWeek(1)} aria-label="Дараагийн 7 хоног">›</button>
             </div>
             <div className="calendar-week-grid">
               {selectedWeekDates.map((ds) => {
@@ -174,7 +175,7 @@ export function StudyCalendar({
             <div className="calendar-period-nav">
               <button className="icon-button bordered" onClick={() => moveSelectedDay(-1)} aria-label="Өмнөх өдөр">‹</button>
               <strong>{dateLabel(selected, today)}</strong>
-              <button className="icon-button bordered" onClick={() => moveSelectedDay(1)} disabled={selected >= today} aria-label="Дараагийн өдөр">›</button>
+              <button className="icon-button bordered" onClick={() => moveSelectedDay(1)} aria-label="Дараагийн өдөр">›</button>
             </div>
             <div className="calendar-day-agenda">
               {selectedDaySessions.length ? selectedDaySessions.map((s) => {
@@ -305,6 +306,21 @@ export function StudyCalendar({
             <p className="tiny muted">Энэ өдөр биелсэн алхам бүртгэгдээгүй.</p>
           )}
         </div>
+        <div className="calendar-planned-tasks">
+          <div className="calendar-subsection-head">
+            <div><h3>📌 Энэ өдрийн төлөвлөгөө</h3><p>Цагтай алхмууд календарь дээр харагдана.</p></div>
+            <button className="button small" onClick={() => setAddingTask(true)}>＋ Нэмэх</button>
+          </div>
+          {data.tasks.filter((t) => !t.deletedAt && t.date === selected && (!actualSubject || t.subjectId === actualSubject)).sort((a,b) => (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99")).map((t) => (
+            <div className={`calendar-plan-row ${t.completed ? "completed" : ""}`} key={t.id}>
+              <span className="calendar-plan-time">{t.startTime ?? "—"}</span>
+              <span className="calendar-plan-icon">{index.subjects.get(t.subjectId)?.icon ?? "📚"}</span>
+              <div><strong>{t.title}</strong><small>{index.subjects.get(t.subjectId)?.name ?? "Хичээл"} · {t.minutes} минут</small></div>
+              <span>{t.completed ? "✓" : "○"}</span>
+            </div>
+          ))}
+          {!data.tasks.some((t) => !t.deletedAt && t.date === selected && (!actualSubject || t.subjectId === actualSubject)) && <p className="tiny muted">Энэ өдөр төлөвлөгөө алга. Нэг жижиг алхам нэмээрэй.</p>}
+        </div>
         <div className="manual-marks">
           <h3>Суралцсан гэж тэмдэглэх</h3>
           <p className="tiny muted">
@@ -344,6 +360,7 @@ export function StudyCalendar({
           </div>
         </div>
       </section>
+      {addingTask && <TaskForm date={selected} onClose={() => setAddingTask(false)} />}
       {dayKnowledge.length > 0 && (
         <section className="card">
           <h2>Энэ өдрийн мэдлэг</h2>
