@@ -3145,3 +3145,23 @@ main {
   .subject-track-row { display:grid; grid-template-columns:1fr 1fr; }
   .subject-track-chip { min-width:0; }
 }
+/* Calendar planning actions */
+.calendar-quick-actions { display:flex; justify-content:flex-end; gap:8px; margin:-8px 0 14px; }
+.calendar-quick-actions .button { white-space:nowrap; }
+.calendar-planned-tasks { margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+.calendar-subsection-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.calendar-subsection-head h3 { margin:0; font-size:14px; }
+.calendar-subsection-head p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+.calendar-plan-row { display:grid; grid-template-columns:54px 28px minmax(0,1fr) 24px; align-items:center; gap:10px; min-height:58px; padding:9px 10px; border:1px solid var(--border); border-radius:11px; background:var(--bg); margin-top:7px; }
+.calendar-plan-row.completed { opacity:.68; }
+.calendar-plan-time { color:var(--muted); font-size:10px; font-variant-numeric:tabular-nums; }
+.calendar-plan-icon { display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--moss-soft); }
+.calendar-plan-row > div { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.calendar-plan-row strong { font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-plan-row small { color:var(--muted); font-size:9px; }
+@media (max-width:620px) {
+  .calendar-quick-actions { justify-content:stretch; }
+  .calendar-quick-actions .button { flex:1; }
+  .calendar-subsection-head { align-items:flex-start; }
+  .calendar-plan-row { grid-template-columns:48px 28px minmax(0,1fr) 20px; gap:7px; }
+}
