@@ -2877,3 +2877,144 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Strong timer alerts */
+.timer-alert-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.timer-alert-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #101711cc;
+  backdrop-filter: blur(8px);
+}
+.timer-alert-card {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  padding: 34px 30px 28px;
+  border: 2px solid var(--yellow);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 30px 120px #00000066, 0 0 0 10px #edcf7422;
+  text-align: center;
+  animation: timer-alert-pop 0.32s ease-out both, timer-alert-pulse 1.25s ease-in-out infinite;
+}
+.timer-alert-warning .timer-alert-card {
+  border-color: var(--yellow);
+  box-shadow: 0 25px 90px #00000055, 0 0 0 8px #edcf7422;
+}
+.timer-alert-complete .timer-alert-card {
+  border-color: var(--danger);
+  box-shadow: 0 30px 120px #00000070, 0 0 0 12px #a5484326;
+  animation:
+    timer-alert-pop 0.32s ease-out both,
+    timer-alert-pulse-strong 0.9s ease-in-out infinite;
+}
+.timer-alert-icon {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 17px;
+  border-radius: 50%;
+  background: var(--yellow-soft);
+  font-size: 39px;
+  line-height: 1;
+}
+.timer-alert-complete .timer-alert-icon {
+  background: #a5484317;
+}
+.timer-alert-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.timer-alert-card h2 {
+  margin-top: 10px;
+  font-size: 34px;
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+.timer-alert-card > p:not(.timer-alert-kicker) {
+  margin: 12px auto 0;
+  max-width: 390px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.timer-alert-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.timer-alert-actions .button {
+  min-width: 190px;
+}
+.timer-alert-dismiss {
+  justify-content: center;
+  margin: 8px auto 0;
+}
+@keyframes timer-alert-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82) translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes timer-alert-pulse {
+  0%, 100% {
+    box-shadow: 0 25px 90px #00000055, 0 0 0 8px #edcf7422;
+  }
+  50% {
+    box-shadow: 0 25px 90px #00000055, 0 0 0 15px #edcf7444;
+  }
+}
+@keyframes timer-alert-pulse-strong {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 30px 120px #00000070, 0 0 0 12px #a5484326;
+  }
+  50% {
+    transform: scale(1.015);
+    box-shadow: 0 30px 120px #00000070, 0 0 0 20px #a5484344;
+  }
+}
+@media (max-width: 620px) {
+  .timer-alert-layer {
+    padding: 13px;
+  }
+  .timer-alert-card {
+    width: calc(100vw - 24px);
+    padding: 29px 21px 23px;
+    border-radius: 20px;
+  }
+  .timer-alert-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 34px;
+  }
+  .timer-alert-card h2 {
+    font-size: 29px;
+  }
+  .timer-alert-card > p:not(.timer-alert-kicker) {
+    font-size: 12px;
+  }
+  .timer-alert-actions .button {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timer-alert-card {
+    animation: none;
+  }
+}
