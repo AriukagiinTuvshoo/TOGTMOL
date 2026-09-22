@@ -253,6 +253,9 @@ export function useClock(active = true) {
     if (!active) return;
     let frame = 0;
     const tick = () => {
+      // A fired RAF handle must not stay truthy after the callback returns.
+      // Otherwise a hidden tab can resume with no new animation frame scheduled.
+      frame = 0;
       const value = Date.now();
       const nextSecond = Math.floor(value / 1000);
       if (nextSecond !== second.current) {
