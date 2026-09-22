@@ -40,7 +40,9 @@ const paths: Record<string, string> = {
   user: "M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM4 21v-2a8 8 0 0 1 16 0v2",
   refresh: "M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5m-4 8a8 8 0 0 0 14 3l3-3m0 5v-5h-5",
   bell: "M5 16v-5a7 7 0 0 1 14 0v5l2 2H3Zm4 5h6",
-  info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 7v7m0-10v.1",
+  info: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0-18Zm0 7v7m0-10v.1",
+  search: "m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z",
+  filter: "M4 5h16M7 12h10m-7 7h4",
 };
 export function Icon({
   name,
