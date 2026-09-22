@@ -68,6 +68,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -93,18 +94,19 @@ it("auto-completes from the deadline timeout without requiring another render", 
   now = NOW + 60000;
   render(<TimerWatch />);
   await act(async () => {
-    vi.advanceTimersByTime(60);
-    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(60);
   });
   expect(data.activeTimer?.status).toBe("review");
   expect(sounds.notifyUser).toHaveBeenCalledOnce();
-  vi.useRealTimers();
 });
 
 it("finishes once, displays Stop first, and stops audio when dismissed", async () => {
+  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {});
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60);
+  });
   view.rerender(<TimerWatch />);
   const dialog = screen.getByRole("dialog", { name: "Хугацаа дууслаа!" });
   expect(within(dialog).getAllByRole("button")[0]).toHaveTextContent(
@@ -120,9 +122,12 @@ it("finishes once, displays Stop first, and stops audio when dismissed", async (
 });
 
 it("Escape and View result both silence the alert", async () => {
+  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {});
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60);
+  });
   fireEvent(
     screen.getByRole("dialog"),
     new Event("cancel", { bubbles: true, cancelable: true }),
