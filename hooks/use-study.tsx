@@ -247,23 +247,28 @@ export function useStoreState() {
 }
 export function useClock(active = true) {
   const [now, setNow] = useState(() => Date.now());
+  const second = useRef(Math.floor(Date.now() / 1000));
   useEffect(() => {
     if (!active) return;
     let frame = 0;
     const tick = () => {
-      setNow(Date.now());
-      if (document.visibilityState === "visible") {
-        frame = window.requestAnimationFrame(tick);
+      const value = Date.now();
+      const nextSecond = Math.floor(value / 1000);
+      if (nextSecond !== second.current) {
+        second.current = nextSecond;
+        setNow(value);
       }
+      if (document.visibilityState === "visible")
+        frame = window.requestAnimationFrame(tick);
     };
     const refresh = () => {
-      setNow(Date.now());
+      const value = Date.now();
+      second.current = Math.floor(value / 1000);
+      setNow(value);
       if (document.visibilityState === "visible" && !frame)
         frame = window.requestAnimationFrame(tick);
     };
-    setNow(Date.now());
-    if (document.visibilityState === "visible")
-      frame = window.requestAnimationFrame(tick);
+    refresh();
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("focus", refresh);
     window.addEventListener("pageshow", refresh);
