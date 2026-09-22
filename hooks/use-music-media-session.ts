@@ -1,10 +1,13 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { PlaybackState } from "@/lib/music/preferences";
+
 export function useMusicMediaSession({
   title,
   artist,
   playback,
+  position,
+  duration,
   play,
   pause,
   stop,
@@ -14,6 +17,8 @@ export function useMusicMediaSession({
   title: string;
   artist: string;
   playback: PlaybackState;
+  position?: number;
+  duration?: number;
   play: () => void;
   pause: () => void;
   stop: () => void;
@@ -24,6 +29,7 @@ export function useMusicMediaSession({
   useEffect(() => {
     actions.current = { play, pause, stop, next, previous };
   }, [play, pause, stop, next, previous]);
+
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     const session = navigator.mediaSession;
@@ -53,6 +59,7 @@ export function useMusicMediaSession({
       } catch {}
     };
   }, []);
+
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     try {
@@ -64,8 +71,22 @@ export function useMusicMediaSession({
         });
       navigator.mediaSession.playbackState =
         playback === "stopped" ? "none" : playback;
+      if (
+        typeof navigator.mediaSession.setPositionState === "function" &&
+        Number.isFinite(duration) &&
+        Number(duration) > 0 &&
+        Number.isFinite(position) &&
+        Number(position) >= 0 &&
+        Number(position) <= Number(duration)
+      ) {
+        navigator.mediaSession.setPositionState({
+          duration: Number(duration),
+          playbackRate: 1,
+          position: Number(position),
+        });
+      }
     } catch {
       /* Media controls are optional; they never own the audio lifecycle. */
     }
-  }, [title, artist, playback]);
+  }, [title, artist, playback, position, duration]);
 }
