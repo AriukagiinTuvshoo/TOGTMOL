@@ -135,7 +135,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
         setNotice("");
         setUndo(null);
       },
-      undo ? 15000 : 5000,
+      undo ? 15000 : 12000,
     );
     return () => clearTimeout(id);
   }, [notice, undo]);
