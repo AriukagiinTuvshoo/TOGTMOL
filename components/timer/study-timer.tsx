@@ -516,11 +516,20 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 className="button"
                 disabled={busy}
                 onClick={() =>
-                  run(() =>
-                    store.mutate(
-                      t.running ? actions.pause() : actions.resume(),
-                    ),
-                  )
+                  run(() => {
+                    const current = store.getSnapshot().data.activeTimer;
+                    const deadlineReached =
+                      current?.running &&
+                      current.targetMs !== null &&
+                      elapsed(current, Date.now()) >= current.targetMs;
+                    return store.mutate(
+                      deadlineReached
+                        ? actions.finish()
+                        : t.running
+                          ? actions.pause()
+                          : actions.resume(),
+                    );
+                  })
                 }
               >
                 <Icon name={t.running ? "pause" : "play"} />
