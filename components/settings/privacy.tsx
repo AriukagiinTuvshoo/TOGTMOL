@@ -169,7 +169,7 @@ export function PrivacyCenter() {
                 extras: { ...d.settings.extras, aiEnabled: false, aiIncludeNotes: false },
               },
             })), "Онлайн Бондоокийн зөвшөөрлийг унтраалаа.")}>
-              {ai ? "Унтраах" : "Унтраалттай"}
+              AI боловсруулалтыг унтраах
             </button>
           </article>
           <article>
