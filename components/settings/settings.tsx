@@ -180,7 +180,7 @@ export function Settings() {
                       }),
                     );
                   });
-                }
+                }}
               >
                 <option value={0}>Унтраах</option>
                 <option value={60}>60 секундийн өмнө</option>
