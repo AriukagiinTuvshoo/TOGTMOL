@@ -3,78 +3,7 @@ import type { WorldSettings } from "@/types/study";
 import type { CompanionState } from "@/lib/world/progress";
 import { CompanionArt } from "./companion";
 import { roomFurniture } from "@/lib/world/furniture";
-const palette = {
-  rainy: {
-    wall: "#e6e3dc",
-    floor: "#b7aaa0",
-    wood: "#887f78",
-    sky: "#acbfc6",
-    accent: "#64858c",
-  },
-  space: {
-    wall: "#202844",
-    floor: "#333652",
-    wood: "#645d80",
-    sky: "#111c38",
-    accent: "#b6acf0",
-  },
-  cabin: {
-    wall: "#eee2cc",
-    floor: "#ccb697",
-    wood: "#a78766",
-    sky: "#d5e2e4",
-    accent: "#8a745d",
-  },
-  library: {
-    wall: "#e8e1d0",
-    floor: "#ceba9a",
-    wood: "#8f7259",
-    sky: "#edd6b1",
-    accent: "#7a8162",
-  },
-  ocean: {
-    wall: "#e2efec",
-    floor: "#c9deda",
-    wood: "#9bb8b3",
-    sky: "#c1e2e8",
-    accent: "#5796a4",
-  },
-  cozy: {
-    wall: "#f3e8d5",
-    floor: "#e5d1b5",
-    wood: "#c3a181",
-    sky: "#dbe4d2",
-    accent: "#819b7c",
-  },
-  minimal: {
-    wall: "#eeeae4",
-    floor: "#ddd9d2",
-    wood: "#b1ada5",
-    sky: "#d9e2e1",
-    accent: "#748786",
-  },
-  night: {
-    wall: "#252e43",
-    floor: "#30394e",
-    wood: "#655869",
-    sky: "#17233e",
-    accent: "#b5a2ce",
-  },
-  forest: {
-    wall: "#e2e8d7",
-    floor: "#c9d5b8",
-    wood: "#92a183",
-    sky: "#cbdcbf",
-    accent: "#6f8e70",
-  },
-  sakura: {
-    wall: "#f1e5df",
-    floor: "#e5cebd",
-    wood: "#c0a091",
-    sky: "#ebdfe0",
-    accent: "#b68590",
-  },
-};
+import { ROOM_THEMES } from "@/lib/world/room-themes";
 export function RoomScene({
   world,
   state = "idle",
@@ -85,13 +14,14 @@ export function RoomScene({
   mini?: boolean;
 }) {
   const id = useId().replaceAll(":", ""),
-    p = palette[world.design],
+    theme = ROOM_THEMES[world.design],
+    p = theme.palette,
     bg = world.background,
-    dark = world.atmosphere === "night" || bg === "night" || bg === "space",
-    rain = world.atmosphere === "rain" || bg === "rain",
-    snow = world.atmosphere === "snow" || bg === "hokkaido",
-    japan = bg === "japanese" || bg === "hokkaido",
-    trees = bg === "forest" || bg === "hokkaido",
+    dark = world.atmosphere === "night" || bg === "night" || theme.decorations.space,
+    rain = theme.decorations.rain || world.atmosphere === "rain" || bg === "rain",
+    snow = theme.decorations.snow || world.atmosphere === "snow" || bg === "hokkaido",
+    japan = bg === "japanese" || bg === "hokkaido" || theme.decorations.sakura,
+    trees = theme.decorations.windowTrees,
     sky = dark
       ? "#25344e"
       : world.atmosphere === "evening"
@@ -133,7 +63,7 @@ export function RoomScene({
         </clipPath>
       </defs>
       <rect width="760" height="430" rx="30" fill={p.wall} />
-      {world.design === "cabin" && (
+      {theme.decorations.wallPlanks && (
         <g stroke={p.wood} opacity=".2">
           {[38, 82, 126, 170, 214, 258, 302].map((y) => (
             <path key={y} d={`M0 ${y}H760`} />
@@ -184,7 +114,7 @@ export function RoomScene({
           d="M193 272Q281 198 379 251Q492 205 586 260V290H193Z"
           fill={dark ? "#364b55" : "#92aa93"}
         />
-        {bg === "ocean" && (
+        {theme.decorations.ocean && (
           <g>
             <path d="M215 186H567V289H215Z" fill="#85bac4" />
             <path

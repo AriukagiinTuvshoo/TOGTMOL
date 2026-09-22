@@ -10,18 +10,3 @@ export const AMBIENTS = [
   { id: "deep", name: "Deep focus", detail: "Нам давтамжийн зөөлөн дэвсгэр" },
 ] as const;
 export type AmbientId = (typeof AMBIENTS)[number]["id"];
-export const THEME_MUSIC: Record<
-  import("@/types/study").DesignTheme,
-  AmbientId[]
-> = {
-  rainy: ["rain", "cafe", "piano"],
-  space: ["deep", "ambient", "night"],
-  cabin: ["piano", "nature", "lofi"],
-  library: ["deep", "piano", "white"],
-  ocean: ["ambient", "nature", "white"],
-  cozy: ["lofi", "cafe", "piano"],
-  forest: ["nature", "rain", "ambient"],
-  night: ["night", "rain", "ambient"],
-  sakura: ["piano", "nature", "rain"],
-  minimal: ["ambient", "piano", "rain"],
-};

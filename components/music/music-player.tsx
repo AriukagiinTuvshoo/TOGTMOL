@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { AMBIENTS, THEME_MUSIC } from "@/lib/music/catalog";
+import { AMBIENTS } from "@/lib/music/catalog";
+import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { youtubeURL } from "@/lib/music/youtube";
 import { Icon } from "@/components/ui/icon";
 import { useMusic } from "./music-provider";
@@ -178,7 +179,7 @@ export function MusicPlayer() {
         <div className="music-library" hidden={!open}>
           <div className="eyebrow">ӨРӨӨНД ТАНЬ ТОХИРОХ АЯ</div>
           <div className="music-recommendations">
-            {THEME_MUSIC[data.settings.world.design].map((id) => (
+            {ROOM_THEMES[data.settings.world.design].music.map((id) => (
               <button
                 className="button small"
                 key={id}

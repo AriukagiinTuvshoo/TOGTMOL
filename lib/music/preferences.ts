@@ -1,5 +1,6 @@
 import type { DesignTheme, MusicSource } from "@/types/study";
-import { AMBIENTS, THEME_MUSIC, type AmbientId } from "./catalog";
+import { AMBIENTS, type AmbientId } from "./catalog";
+import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { parseYouTube } from "./youtube";
 export type PlaybackState = "playing" | "paused" | "stopped";
 export interface MusicSession {
@@ -114,5 +115,5 @@ export function initialMusicSelection(
       sources.some((s) => !s.deletedAt && s.id === last))
   )
     return last;
-  return `ambient:${preference.defaultCategory === "theme" ? THEME_MUSIC[design][0] : preference.defaultCategory}`;
+  return `ambient:${preference.defaultCategory === "theme" ? ROOM_THEMES[design].music[0] : preference.defaultCategory}`;
 }
