@@ -40,9 +40,13 @@ export function useWakeLock(enabled: boolean) {
     };
     if (enabled) void acquire();
     document.addEventListener("visibilitychange", acquire);
+    window.addEventListener("focus", acquire);
+    window.addEventListener("pageshow", acquire);
     return () => {
       disposed = true;
       document.removeEventListener("visibilitychange", acquire);
+      window.removeEventListener("focus", acquire);
+      window.removeEventListener("pageshow", acquire);
       void lock?.release().catch(() => {});
     };
   }, [enabled]);
