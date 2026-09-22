@@ -835,3 +835,128 @@
     transform: none;
   }
 }
+
+/* Animated study buddy */
+.knowledge-hero {
+  isolation: isolate;
+}
+.knowledge-hero > .animated-buddy {
+  position: absolute;
+  left: clamp(245px, 42%, 500px);
+  bottom: -2px;
+  z-index: 0;
+  width: 112px;
+}
+.knowledge-hero > div:not(.animated-buddy),
+.knowledge-hero > .review-today {
+  position: relative;
+  z-index: 1;
+}
+.animated-buddy {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+.animated-buddy-glow {
+  position: absolute;
+  width: 76px;
+  height: 76px;
+  bottom: 24px;
+  border-radius: 50%;
+  background: var(--yellow-soft);
+  filter: blur(16px);
+  opacity: 0.8;
+  animation: buddy-glow 3s ease-in-out infinite;
+}
+.animated-buddy img {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  image-rendering: auto;
+  animation: buddy-float 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 12px #1b2a1b18);
+}
+.animated-buddy-bubble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 150px;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 6px 20px #1b2a1b12;
+  color: var(--text);
+  font-size: 9px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.animated-buddy-bubble b {
+  font-size: 11px;
+}
+@keyframes buddy-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(2deg);
+  }
+}
+@keyframes buddy-glow {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+@media (max-width: 1180px) {
+  .knowledge-hero > .animated-buddy {
+    left: 38%;
+    width: 96px;
+  }
+  .animated-buddy img {
+    width: 78px;
+    height: 78px;
+  }
+}
+@media (max-width: 720px) {
+  .knowledge-hero > .animated-buddy {
+    left: auto;
+    right: 170px;
+    bottom: 5px;
+  }
+}
+@media (max-width: 480px) {
+  .knowledge-hero > .animated-buddy {
+    position: relative;
+    right: auto;
+    left: auto;
+    bottom: auto;
+    justify-self: center;
+    width: 100px;
+    margin: -8px 0 -2px;
+    order: -1;
+  }
+  .knowledge-hero > .animated-buddy img {
+    width: 74px;
+    height: 74px;
+  }
+  .animated-buddy-bubble {
+    font-size: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animated-buddy img,
+  .animated-buddy-glow {
+    animation: none;
+  }
+}
