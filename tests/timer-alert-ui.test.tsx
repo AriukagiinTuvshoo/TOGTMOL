@@ -180,6 +180,49 @@ it("warning popup shows the live countdown, and offers a sound stop button", () 
   expect(sounds.stopTimerAlertSound).toHaveBeenCalled();
 });
 
+it("resets task completion choice when a new timer starts", async () => {
+  data.tasks = [
+    {
+      id: "task-1",
+      subjectId: "math",
+      date: "2026-09-15",
+      title: "Жишээ бодох",
+      minutes: 25,
+      startTime: null,
+      goalId: null,
+      completed: false,
+      createdAt: NOW,
+      updatedAt: NOW,
+      deletedAt: null,
+      extras: {},
+    },
+  ];
+  data.activeTimer = {
+    ...startTimer("math", "pomodoro", "focus", 1, NOW, "task-1"),
+  };
+
+  const view = render(<StudyTimer />);
+  const checkbox = screen.getByRole("checkbox", {
+    name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
+  }) as HTMLInputElement;
+  expect(checkbox.checked).toBe(true);
+
+  fireEvent.click(checkbox);
+  expect(checkbox.checked).toBe(false);
+
+  data.activeTimer = null;
+  view.rerender(<StudyTimer />);
+  data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW + 1000, "task-1");
+  view.rerender(<StudyTimer />);
+
+  await act(async () => {});
+  expect(
+    (screen.getByRole("checkbox", {
+      name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
+    }) as HTMLInputElement).checked,
+  ).toBe(true);
+});
+
 it("saves chime, design and countdown preferences without changing study records", async () => {
   data.activeTimer = null;
   const subjects = JSON.stringify(data.subjects),
