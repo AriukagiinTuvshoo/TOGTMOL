@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useClock, useStoreState, useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
 import { clock, timeLabel } from "@/lib/calculations/dates";
@@ -79,6 +79,59 @@ export function TimerWatch() {
     Boolean(t?.running && data.settings.extras.wakeLock !== false),
   );
 
+  const completeTimer = useCallback(
+    async (expectedId: string) => {
+      if (finishing.current) return;
+      const current = store.getSnapshot().data.activeTimer;
+      if (
+        !current ||
+        current.id !== expectedId ||
+        !current.running ||
+        current.status !== "active" ||
+        current.targetMs === null ||
+        elapsed(current, Date.now()) < current.targetMs
+      )
+        return;
+      finishing.current = true;
+      const phase = current.phase;
+      const ok = await run(() => store.mutate(actions.finish()));
+      finishing.current = false;
+      if (!ok) return;
+      const message =
+        phase === "focus"
+          ? "Хичээл дууслаа. Хугацаа статистикт хадгалагдлаа."
+          : "Амралт дууслаа.";
+      setNotice(message);
+      void notifyUser(message, store.getSnapshot().data.settings, `togtmol-timer-${expectedId}`);
+    },
+    [run, setNotice, store],
+  );
+
+  // One-shot deadline wakeup. The elapsed value is always derived from the
+  // stored timestamps, so background-tab throttling cannot make the timer
+  // drift or count "missed" seconds.
+  useEffect(() => {
+    if (!t?.running || t.status !== "active" || t.targetMs === null) return;
+    const remaining = Math.max(0, t.targetMs - elapsed(t, Date.now()));
+    if (remaining <= 0) {
+      void completeTimer(t.id);
+      return;
+    }
+    const timeout = window.setTimeout(
+      () => void completeTimer(t.id),
+      Math.min(remaining + 60, 2147483647),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [
+    t?.id,
+    t?.running,
+    t?.status,
+    t?.runningSince,
+    t?.accumulatedMs,
+    t?.targetMs,
+    completeTimer,
+  ]);
+
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
     const remainingMs = Math.max(0, t.targetMs - elapsed(t, now));
@@ -127,28 +180,20 @@ export function TimerWatch() {
       t?.running &&
       t.targetMs !== null &&
       elapsed(t, now) >= t.targetMs &&
-      t.status === "active" &&
-      !finishing.current
+      t.status === "active"
     ) {
-      finishing.current = true;
-      void run(() => store.mutate(actions.finish())).then((ok) => {
-        finishing.current = false;
-        if (ok && store.getSnapshot().data.activeTimer?.id === t.id) {
-          const message =
-            t.phase === "focus"
-              ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
-              : "Амралт дууслаа.";
-          setNotice(message);
+      void completeTimer(t.id).then(() => {
+        const current = store.getSnapshot().data.activeTimer;
+        if (current?.id === t.id && current.status === "review") {
           setAlert({
             kind: "complete",
             timerId: t.id,
             runningSince: t.runningSince,
           });
-          void notifyUser(message, data.settings, `togtmol-timer-${t.id}`);
         }
       });
     }
-  }, [t, now, store, run, data.settings, setNotice]);
+  }, [t, now, completeTimer, store]);
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
@@ -437,7 +482,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             t.phase === "focus" ? (
               <button
                 className="button primary large"
-                disabled={busy || ms < 5000}
+                disabled={busy || ms <= 0}
                 onClick={async () => {
                   if (
                     await run(
@@ -513,8 +558,8 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         </div>
         {t?.status === "review" && t.phase === "focus" && ms < 5000 && (
           <p className="muted">
-            5 секундээс богино хэмжилтийг хадгалахгүй. Дахин эхлүүлэхийн тулд
-            цуцална уу.
+            Багахан хугацаа байсан ч хэмжсэн хэсгийг хадгална. Дахин эхлүүлэх
+            бол Цуцлах товчийг ашиглаарай.
           </p>
         )}
         {t && (
