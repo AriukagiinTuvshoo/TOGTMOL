@@ -13,7 +13,7 @@ import {
   clearTimerDraft,
 } from "@/lib/persistence/timer-draft";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { enableSound, notifyUser, playTimerWarning } from "@/lib/notifications";
+import { enableSound, notifyTimerWarning, notifyUser } from "@/lib/notifications";
 
 export function TimerWatch() {
   const { data, store, run, navigate, setNotice } = useStudy(),
@@ -21,6 +21,8 @@ export function TimerWatch() {
     now = useClock(Boolean(t?.running)),
     finishing = useRef(false),
     warningTriggered = useRef(false);
+  const [alert, setAlert] = useState<"warning" | "complete" | null>(null);
+  const [warningText, setWarningText] = useState("");
   const wakeStatus = useWakeLock(
     Boolean(t?.running && data.settings.extras.wakeLock),
   );
@@ -38,7 +40,16 @@ export function TimerWatch() {
       !warningTriggered.current
     ) {
       warningTriggered.current = true;
-      playTimerWarning(data.settings);
+      const label =
+        warningSeconds === 60
+          ? "1 минут үлдлээ!"
+          : `${warningSeconds} секунд үлдлээ!`;
+      setWarningText(label);
+      setAlert("warning");
+      window.setTimeout(() => {
+        setAlert((current) => (current === "warning" ? null : current));
+      }, 6000);
+      void notifyTimerWarning(label, data.settings, `togtmol-timer-warning-${t.id}`);
     }
   }, [t, now, data.settings]);
 
@@ -71,19 +82,71 @@ export function TimerWatch() {
               ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
               : "Амралт дууслаа.",
           );
-          notifyUser(
+          const message =
             t.phase === "focus"
               ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
-              : "Амралт дууслаа.",
-            data.settings,
-            `togtmol-timer-${t.id}`,
-          );
+              : "Амралт дууслаа.";
+          setAlert("complete");
+          void notifyUser(message, data.settings, `togtmol-timer-${t.id}`);
         }
       });
     }
   }, [t, now, store, run, data.settings, setNotice]);
+  const closeAlert = () => {
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator)
+        navigator.vibrate(0);
+    } catch {}
+    setAlert(null);
+  };
+
   if (!t) return null;
   return (
+    <>
+      {alert && (
+        <div className={`timer-alert-layer timer-alert-${alert}`} role="alertdialog" aria-modal="true" aria-live="assertive">
+          <div className="timer-alert-backdrop" aria-hidden="true" />
+          <section className="timer-alert-card">
+            <div className="timer-alert-icon" aria-hidden="true">
+              {alert === "complete" ? "⏰" : "⚠"}
+            </div>
+            <p className="timer-alert-kicker">
+              {alert === "complete" ? "TIMER ДУУССАН" : "АНХААРУУЛГА"}
+            </p>
+            <h2>
+              {alert === "complete" ? "Хугацаа дууслаа!" : warningText}
+            </h2>
+            <p>
+              {alert === "complete"
+                ? "Таны timer зогслоо. Үр дүнгээ хадгалж болно."
+                : "Хэдхэн минутын дараа timer дуусна."}
+            </p>
+            <div className="timer-alert-actions">
+              {alert === "complete" ? (
+                <button
+                  className="button primary large"
+                  onClick={() => {
+                    closeAlert();
+                    navigate("focus");
+                  }}
+                >
+                  Үр дүнгээ харах
+                </button>
+              ) : (
+                <button className="button large" onClick={closeAlert}>
+                  Ойлголоо
+                </button>
+              )}
+            </div>
+            {alert === "complete" && (
+              <button className="text-button timer-alert-dismiss" onClick={closeAlert}>
+                Дууны дохиог хаах
+              </button>
+            )}
+          </section>
+        </div>
+      )}
+      <button
     <button
       title={wakeStatus}
       className="active-timer-chip"
