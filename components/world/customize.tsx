@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
 import {
@@ -24,6 +24,7 @@ export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
+  const [showAllRooms, setShowAllRooms] = useState(false);
   const furniture = roomFurniture(world);
   const furnish = (patch: Partial<Furniture>) =>
     run(() =>
@@ -246,7 +247,7 @@ export function CustomizeRoom() {
           subtitle="Theme солиход өрөө, Бондоок, гэрэл болон хуудасны загвар хамт өөрчлөгдөнө."
         />
         <div className="theme-gallery">
-          {DESIGNS.map((d) => (
+          {(showAllRooms ? DESIGNS : DESIGNS.slice(0, 4)).map((d) => (
             <button
               className={`theme-preview theme-${d.id}`}
               key={d.id}
@@ -266,7 +267,7 @@ export function CustomizeRoom() {
                   ...world,
                   design: d.id,
                   background: d.background,
-                  companion: d.companion,
+                  companion: d.id,
                   atmosphere: d.atmosphere,
                 }}
               />
@@ -278,6 +279,15 @@ export function CustomizeRoom() {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="text-button settings-link"
+          aria-expanded={showAllRooms}
+          onClick={() => setShowAllRooms((current) => !current)}
+        >
+          {showAllRooms ? "Үндсэн 4 өрөөг харуулах" : "Бусад өрөө (6)"}
+          <Icon name={showAllRooms ? "chevron-up" : "chevron-down"} size={16} />
+        </button>
       </section>
     </div>
   );
