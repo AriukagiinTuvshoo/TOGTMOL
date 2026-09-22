@@ -83,7 +83,7 @@ function Shell() {
             <Icon name="leaf" size={24} />
           </span>
           <span>
-            тогтмол<span className="brand-version">STUDY WORLD · 05</span>
+            тогтмол<span className="brand-version">STUDY WORLD · 06</span>
           </span>
         </button>
         <div className="nav-caption">МИНИЙ ОРОН ЗАЙ</div>
@@ -264,7 +264,7 @@ function Shell() {
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
             <span>Өнөөдөр бага байсан ч ахиц.</span>
-            <span>Тогтмол v5.0</span>
+            <span>Тогтмол v6.0</span>
           </footer>
         </main>
       </div>
