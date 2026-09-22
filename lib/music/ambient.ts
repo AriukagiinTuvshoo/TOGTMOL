@@ -48,14 +48,7 @@ export class AmbientPlayer {
       low = 0.985 * low + 0.015 * noise;
       slow = 0.999 * slow + 0.001 * noise;
       let v = 0;
-      if (id === "white") v = noise * 0.12;
-      if (id === "deep") v = low * 1.6 + slow * 2;
       if (id === "rain") v = low * 2.2 + noise * 0.045;
-      if (id === "cafe")
-        v =
-          low * 0.8 +
-          Math.sin(t * 2 * Math.PI * 180) * slow * 0.65 +
-          Math.sin(t * 2 * Math.PI * 910) * Math.exp(-(t % 4) * 30) * 0.035;
       if (id === "nature") {
         const chirp = t % 4;
         v =
@@ -65,20 +58,6 @@ export class AmbientPlayer {
             Math.exp(-chirp * 4) *
             0.06;
       }
-      if (id === "ambient")
-        v =
-          (Math.sin(2 * Math.PI * 130 * t) +
-            Math.sin(2 * Math.PI * 195 * t) +
-            Math.sin(2 * Math.PI * 260 * t)) *
-          0.045 *
-          (0.8 + 0.2 * Math.cos((t * Math.PI) / 8));
-      if (id === "night")
-        v =
-          (Math.sin(2 * Math.PI * 110 * t) +
-            0.6 * Math.sin(2 * Math.PI * 165 * t)) *
-            0.06 *
-            (0.75 + 0.25 * Math.cos((t * Math.PI) / 8)) +
-          low * 0.25;
       if (id === "piano" || id === "lofi") {
         const n = notes[Math.floor(t / 2) % notes.length],
           age = t % 2;
