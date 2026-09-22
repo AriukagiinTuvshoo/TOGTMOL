@@ -122,25 +122,16 @@ export function TimerWatch() {
   // drift or count "missed" seconds.
   useEffect(() => {
     if (!t?.running || t.status !== "active" || t.targetMs === null) return;
+
+    const timerId = t.id;
     const remaining = Math.max(0, t.targetMs - elapsed(t, Date.now()));
-    if (remaining <= 0) {
-      void completeTimer(t.id);
-      return;
-    }
     const timeout = window.setTimeout(
-      () => void completeTimer(t.id),
-      Math.min(remaining + 60, 2147483647),
+      () => void completeTimer(timerId),
+      Math.min(Math.max(0, remaining) + 60, 2147483647),
     );
+
     return () => window.clearTimeout(timeout);
-  }, [
-    t?.id,
-    t?.running,
-    t?.status,
-    t?.runningSince,
-    t?.accumulatedMs,
-    t?.targetMs,
-    completeTimer,
-  ]);
+  }, [t, completeTimer]);
 
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
@@ -184,16 +175,6 @@ export function TimerWatch() {
     if (elapsed(t, now) < Math.max(0, t.targetMs - warningSeconds * 1000))
       warningTriggered.current = false;
   }, [t, now, data.settings]);
-
-  useEffect(() => {
-    if (
-      t?.running &&
-      t.targetMs !== null &&
-      elapsed(t, now) >= t.targetMs &&
-      t.status === "active"
-    )
-      void completeTimer(t.id);
-  }, [t, now, completeTimer]);
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
