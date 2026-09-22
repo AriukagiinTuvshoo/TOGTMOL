@@ -4,6 +4,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Empty, Modal, SubjectSelect } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { AnimatedBuddy } from "@/components/ui/animated-buddy";
 import { ModuleBoundary } from "@/components/ui/module-boundary";
 import { KnowledgeEditor, type EditableKind } from "./editor";
 import { CardReview, QuizSession } from "./review";
@@ -122,6 +123,7 @@ export function KnowledgeHub() {
   return (
     <div className="knowledge-page">
       <section className="knowledge-hero">
+        <AnimatedBuddy mood="idea" />
         <div>
           <span className="eyebrow">МИНИЙ МЭДЛЭГ</span>
           <h2>
