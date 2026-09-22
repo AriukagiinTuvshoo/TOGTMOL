@@ -48,7 +48,7 @@ function sourceTrack(source: MusicSource | undefined, fallback = "Хөгжим")
       title: source.title,
       artist: "YouTube",
       videoId: source.kind === "video" ? source.youtubeId : null,
-      url: youtubeURL(source),
+      url: youtubeURL(source as { kind: "video" | "playlist"; youtubeId: string }),
     };
   }
   return { title: fallback, artist: "Хөгжим", videoId: null, url: "" };
