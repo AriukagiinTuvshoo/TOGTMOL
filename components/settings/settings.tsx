@@ -6,7 +6,7 @@ import { actions } from "@/lib/persistence/actions";
 import { dateKey, formatTime } from "@/lib/calculations/dates";
 import { migrate } from "@/lib/migration/migrate";
 import { mergeData, resolveConflict } from "@/lib/migration/merge";
-import { enableSound } from "@/lib/notifications";
+import { enableSound, playTimerComplete } from "@/lib/notifications";
 import type { Backup } from "@/lib/persistence/repository";
 import type { StudyData, Theme } from "@/types/study";
 import { downloadJson, Modal, SectionTitle } from "@/components/ui/common";
@@ -160,6 +160,24 @@ export function Settings() {
               />
               Timer дуусахад дуу гаргах
             </label>
+            <button
+              type="button"
+              className="button"
+              onClick={() =>
+                void run(
+                  async () => {
+                    await enableSound();
+                    await playTimerComplete({
+                      ...data.settings,
+                      sound: true,
+                    });
+                  },
+                  "Дуусах хүчтэй дохиог туршлаа.",
+                )
+              }
+            >
+              🔊 Дуусах хүчтэй дохиог турших
+            </button>
             <label>
               Дуусахаас өмнө анхааруулах
               <select
