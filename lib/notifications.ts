@@ -7,6 +7,7 @@ type WebkitWindow = typeof window & {
 
 let audioContext: AudioContext | null = null;
 let titleFlashTimer: number | null = null;
+const activeTones = new Set<{ tone: OscillatorNode; gain: GainNode }>();
 
 function getAudioContextCtor(): typeof AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -51,12 +52,32 @@ function scheduleTone(
   gain.gain.linearRampToValueAtTime(volume, start + 0.018);
   gain.gain.setValueAtTime(volume, start + Math.max(0.025, duration - 0.06));
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  activeTones.add({ tone, gain });
   tone.start(start);
   tone.stop(start + duration);
   tone.onended = () => {
+    activeTones.forEach((entry) => {
+      if (entry.tone === tone) activeTones.delete(entry);
+    });
     tone.disconnect();
     gain.disconnect();
   };
+}
+
+export function stopTimerAlertSound() {
+  if (!audioContext) return;
+  const now = audioContext.currentTime;
+  for (const { tone, gain } of activeTones) {
+    try {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(0.0001, now);
+      tone.stop(now + 0.03);
+    } catch {
+      /* Tone may already be finished. */
+    }
+  }
+  activeTones.clear();
+  safeVibrate(0);
 }
 
 function safeVibrate(pattern: number | number[]) {
@@ -123,11 +144,11 @@ export async function playTimerWarning(settings: Settings) {
   try {
     await ensureAudioReady();
     const now = audioContext!.currentTime;
-    const volume = Math.max(0.02, completionVolume(settings) * 0.72);
-    // Three-part attention chime: unmistakable, but brief enough not to be annoying.
-    scheduleTone(1047, now, 0.24, volume, "square");
-    scheduleTone(1319, now + 0.28, 0.24, volume, "square");
-    scheduleTone(1568, now + 0.56, 0.34, volume, "triangle");
+    const volume = Math.max(0.025, completionVolume(settings) * 0.32);
+    // Softer musical warning instead of a harsh electronic beep.
+    scheduleTone(784, now, 0.3, volume, "sine");
+    scheduleTone(988, now + 0.34, 0.3, volume, "sine");
+    scheduleTone(1175, now + 0.68, 0.42, volume, "triangle");
     safeVibrate([180, 90, 180, 90, 260]);
   } catch {
     /* Audio is optional; a released device must not stop the timer. */
@@ -139,21 +160,24 @@ export async function playTimerComplete(settings: Settings) {
   try {
     await ensureAudioReady();
     const now = audioContext!.currentTime;
-    const volume = Math.max(0.03, completionVolume(settings) * 0.9);
+    stopTimerAlertSound();
+    const volume = Math.max(0.03, completionVolume(settings) * 0.58);
+    // Original musical chime: warm, bright and noticeable without the harsh siren tone.
     const pattern: Array<[number, number, number, OscillatorType]> = [
-      [988, 0.0, 0.24, "square"],
-      [1319, 0.26, 0.24, "square"],
-      [1568, 0.52, 0.32, "triangle"],
-      [1319, 0.88, 0.24, "square"],
-      [988, 1.14, 0.55, "sawtooth"],
-      [784, 2.0, 0.24, "square"],
-      [1047, 2.26, 0.24, "square"],
-      [1319, 2.52, 0.42, "triangle"],
+      [659, 0.0, 0.38, "sine"],
+      [784, 0.38, 0.38, "sine"],
+      [988, 0.76, 0.52, "triangle"],
+      [1175, 1.32, 0.38, "sine"],
+      [988, 1.72, 0.7, "triangle"],
     ];
-    for (const [frequency, offset, duration, type] of pattern)
-      scheduleTone(frequency, now + offset, duration, volume, type);
-    safeVibrate([350, 120, 350, 120, 500, 160, 500]);
-    flashTitle("⏰ Хугацаа дууслаа!");
+    const repeats = 3;
+    for (let repeat = 0; repeat < repeats; repeat++) {
+      const base = now + repeat * 3.15;
+      for (const [frequency, offset, duration, type] of pattern)
+        scheduleTone(frequency, base + offset, duration, volume, type);
+    }
+    safeVibrate([300, 90, 300, 90, 420, 140, 420]);
+    flashTitle("⏰ Хугацаа дууслаа!", 10);
   } catch {
     /* Audio is optional; a released device must not stop timer completion. */
   }
