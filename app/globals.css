@@ -2951,11 +2951,20 @@ main {
 }
 .timer-alert-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 10px;
   margin-top: 24px;
 }
 .timer-alert-actions .button {
   min-width: 190px;
+}
+.timer-alert-stop {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.timer-alert-stop:hover {
+  background: #a5484312;
 }
 .timer-alert-dismiss {
   justify-content: center;
@@ -3010,6 +3019,9 @@ main {
   }
   .timer-alert-card > p:not(.timer-alert-kicker) {
     font-size: 12px;
+  }
+  .timer-alert-actions {
+    flex-direction: column;
   }
   .timer-alert-actions .button {
     width: 100%;
