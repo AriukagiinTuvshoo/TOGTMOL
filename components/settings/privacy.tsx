@@ -60,91 +60,102 @@ export function PrivacyCenter() {
               <span className="eyebrow">DATA STATUS</span>
               <h2>Одоогийн хадгалалтын төлөв</h2>
             </div>
-            <span className={account.syncEnabled ? "privacy-chip on" : "privacy-chip"}>{account.syncEnabled ? "СИНК АСААЛТТАЙ" : "ЛОКАЛ ГОРИМ"}</span>
+            <span
+              className={
+                account.syncEnabled ? "privacy-chip on" : "privacy-chip"
+              }
+            >
+              {account.syncEnabled ? "СИНК АСААЛТТАЙ" : "ЛОКАЛ ГОРИМ"}
+            </span>
           </div>
           <dl className="detail-list privacy-details">
-          <div>
-            <dt>Энд хадгалагдаж буй зүйл</dt>
-            <dd>
-              {data.sessions.filter((s) => !s.deletedAt).length} хэмжилт ·{" "}
-              {data.knowledge.filter((r) => !r.deletedAt).length} мэдлэгийн
-              бичлэг · зорилго, төлөвлөгөө, тохиргоо
-            </dd>
+            <div>
+              <dt>Энд хадгалагдаж буй зүйл</dt>
+              <dd>
+                {data.sessions.filter((s) => !s.deletedAt).length} хэмжилт ·{" "}
+                {data.knowledge.filter((r) => !r.deletedAt).length} мэдлэгийн
+                бичлэг · зорилго, төлөвлөгөө, тохиргоо
+              </dd>
+            </div>
+            <div>
+              <dt>Үндсэн хадгалалт</dt>
+              <dd>
+                {store.repository.fallback
+                  ? "Энэ браузерын жижиг хадгалалт"
+                  : "Энэ төхөөрөмжийн IndexedDB өгөгдлийн сан"}
+              </dd>
+            </div>
+            <div>
+              <dt>Үүлэн синк</dt>
+              <dd>
+                {account.syncEnabled
+                  ? "Асаалттай · хувийн бүртгэл"
+                  : "Унтраалттай"}
+              </dd>
+            </div>
+            <div>
+              <dt>Онлайн Бондоокийн зөвшөөрөл</dt>
+              <dd>{ai ? "Асаасан" : "Өгөгдөөгүй"}</dd>
+            </div>
+            <div>
+              <dt>Сүүлд синк хийсэн</dt>
+              <dd>
+                {synced
+                  ? new Date(synced).toLocaleString("mn-MN")
+                  : "Хийгээгүй"}
+              </dd>
+            </div>
+            <div>
+              <dt>Сүүлийн нөөц</dt>
+              <dd>
+                {backup
+                  ? new Date(backup).toLocaleString("mn-MN")
+                  : "Одоогоор үүсээгүй"}
+              </dd>
+            </div>
+          </dl>
+          <div className="button-row privacy-actions">
+            <button
+              className="button primary"
+              disabled={busy || working}
+              onClick={() =>
+                void run(async () => {
+                  const snapshot = store.exportData();
+                  const b = await store.repository.backup(
+                    namespace,
+                    "Өөрийн үүсгэсэн бүрэн нөөц",
+                    JSON.stringify(snapshot),
+                  );
+                  downloadJson(
+                    snapshot,
+                    `togtmol-v5-${new Date().toISOString().slice(0, 10)}.json`,
+                  );
+                  setBackup(b.createdAt);
+                  await store.repository.setMetadata(
+                    `last-export:${namespace}`,
+                    b.createdAt,
+                  );
+                }, "Бүрэн нөөц үүсгэлээ.")
+              }
+            >
+              <Icon name="download" size={17} />
+              Бүрэн нөөц татах
+            </button>
           </div>
-          <div>
-            <dt>Үндсэн хадгалалт</dt>
-            <dd>
-              {store.repository.fallback
-                ? "Энэ браузерын жижиг хадгалалт"
-                : "Энэ төхөөрөмжийн IndexedDB өгөгдлийн сан"}
-            </dd>
-          </div>
-          <div>
-            <dt>Үүлэн синк</dt>
-            <dd>
-              {account.syncEnabled
-                ? "Асаалттай · хувийн бүртгэл"
-                : "Унтраалттай"}
-            </dd>
-          </div>
-          <div>
-            <dt>Онлайн Бондоокийн зөвшөөрөл</dt>
-            <dd>{ai ? "Асаасан" : "Өгөгдөөгүй"}</dd>
-          </div>
-          <div>
-            <dt>Сүүлд синк хийсэн</dt>
-            <dd>
-              {synced ? new Date(synced).toLocaleString("mn-MN") : "Хийгээгүй"}
-            </dd>
-          </div>
-          <div>
-            <dt>Сүүлийн нөөц</dt>
-            <dd>
-              {backup
-                ? new Date(backup).toLocaleString("mn-MN")
-                : "Одоогоор үүсээгүй"}
-            </dd>
-          </div>
-        </dl>
-        <div className="button-row privacy-actions">
-          <button
-            className="button primary"
-            disabled={busy || working}
-            onClick={() =>
-              void run(async () => {
-                const snapshot = store.exportData();
-                const b = await store.repository.backup(
-                  namespace,
-                  "Өөрийн үүсгэсэн бүрэн нөөц",
-                  JSON.stringify(snapshot),
-                );
-                downloadJson(
-                  snapshot,
-                  `togtmol-v5-${new Date().toISOString().slice(0, 10)}.json`,
-                );
-                setBackup(b.createdAt);
-                await store.repository.setMetadata(
-                  `last-export:${namespace}`,
-                  b.createdAt,
-                );
-              }, "Бүрэн нөөц үүсгэлээ.")
-            }
-          >
-            <Icon name="download" size={17} />
-            Бүрэн нөөц татах
-          </button>
-        </div>
-        <p className="tiny muted">
-          Нөөц файл нь энэ төхөөрөмж дээрх одоогийн өгөгдлийг бүхэлд нь JSON
-          хэлбэрээр хадгална. Бусад төхөөрөмж рүү шилжихдээ энэ файлыг ашиглаж
-          болно.
-        </p>
-        {!account.user && (
-          <button className="text-button" onClick={() => navigate("settings")}>
-            Бүртгэл, холболтын тохиргоо →
-          </button>
-        )}
-      </section>
+          <p className="tiny muted">
+            Нөөц файл нь энэ төхөөрөмж дээрх одоогийн өгөгдлийг бүхэлд нь JSON
+            хэлбэрээр хадгална. Бусад төхөөрөмж рүү шилжихдээ энэ файлыг ашиглаж
+            болно.
+          </p>
+          {!account.user && (
+            <button
+              className="text-button"
+              onClick={() => navigate("settings")}
+            >
+              Бүртгэл, холболтын тохиргоо →
+            </button>
+          )}
+        </section>
       </section>
       <section className="card privacy-action-card">
         <div className="privacy-section-head">
@@ -159,16 +170,34 @@ export function PrivacyCenter() {
             <span className="privacy-action-icon">◈</span>
             <div>
               <strong>AI боловсруулалт</strong>
-              <p>{ai ? "Онлайн Бондоок ашиглах зөвшөөрөл асаалттай." : "Онлайн Бондоокт зөвшөөрөл өгөөгүй."}</p>
+              <p>
+                {ai
+                  ? "Онлайн Бондоок ашиглах зөвшөөрөл асаалттай."
+                  : "Онлайн Бондоокт зөвшөөрөл өгөөгүй."}
+              </p>
             </div>
-            <button className="button small" disabled={!ai || busy} onClick={() => void run(() => store.mutate((d) => ({
-              ...d,
-              settings: {
-                ...d.settings,
-                updatedAt: Date.now(),
-                extras: { ...d.settings.extras, aiEnabled: false, aiIncludeNotes: false },
-              },
-            })), "Онлайн Бондоокийн зөвшөөрлийг унтраалаа.")}>
+            <button
+              className="button small"
+              disabled={!ai || busy}
+              onClick={() =>
+                void run(
+                  () =>
+                    store.mutate((d) => ({
+                      ...d,
+                      settings: {
+                        ...d.settings,
+                        updatedAt: Date.now(),
+                        extras: {
+                          ...d.settings.extras,
+                          aiEnabled: false,
+                          aiIncludeNotes: false,
+                        },
+                      },
+                    })),
+                  "Онлайн Бондоокийн зөвшөөрлийг унтраалаа.",
+                )
+              }
+            >
               AI боловсруулалтыг унтраах
             </button>
           </article>
@@ -176,19 +205,41 @@ export function PrivacyCenter() {
             <span className="privacy-action-icon">☁</span>
             <div>
               <strong>Үүлэн синк</strong>
-              <p>{account.syncEnabled ? "Энэ бүртгэлтэй автоматаар синк хийнэ." : "Энэ төхөөрөмж локал өгөгдөл ашиглаж байна."}</p>
+              <p>
+                {account.syncEnabled
+                  ? "Энэ бүртгэлтэй автоматаар синк хийнэ."
+                  : "Энэ төхөөрөмж локал өгөгдөл ашиглаж байна."}
+              </p>
             </div>
             {account.syncEnabled ? (
-              <button className="button small" disabled={busy || working} onClick={() => void run(account.disableSync, "Үүлэн синк унтраалаа.")}>Унтраах</button>
+              <button
+                className="button small"
+                disabled={busy || working}
+                onClick={() =>
+                  void run(account.disableSync, "Үүлэн синк унтраалаа.")
+                }
+              >
+                Унтраах
+              </button>
             ) : (
-              <button className="button small" disabled={!account.user || busy || working} onClick={() => void run(() => account.connect(false))}>Асаах</button>
+              <button
+                className="button small"
+                disabled={!account.user || busy || working}
+                onClick={() => void run(() => account.connect(false))}
+              >
+                Асаах
+              </button>
             )}
           </article>
           <article>
             <span className="privacy-action-icon">↥</span>
             <div>
               <strong>Автомат нөөцийн сануулга</strong>
-              <p>{data.settings.extras.backupReminder === true ? "14 хоног тутам нөөц сануулна." : "Нөөцийн сануулга унтраалттай."}</p>
+              <p>
+                {data.settings.extras.backupReminder === true
+                  ? "14 хоног тутам нөөц сануулна."
+                  : "Нөөцийн сануулга унтраалттай."}
+              </p>
             </div>
             <label className="switch-control">
               <input
@@ -196,14 +247,19 @@ export function PrivacyCenter() {
                 checked={data.settings.extras.backupReminder === true}
                 onChange={(e) => {
                   const enabled = e.target.checked;
-                  void run(() => store.mutate((d) => ({
-                    ...d,
-                    settings: {
-                      ...d.settings,
-                      updatedAt: Date.now(),
-                      extras: { ...d.settings.extras, backupReminder: enabled },
-                    },
-                  })));
+                  void run(() =>
+                    store.mutate((d) => ({
+                      ...d,
+                      settings: {
+                        ...d.settings,
+                        updatedAt: Date.now(),
+                        extras: {
+                          ...d.settings.extras,
+                          backupReminder: enabled,
+                        },
+                      },
+                    })),
+                  );
                 }}
               />
               <span aria-hidden="true" />
@@ -219,8 +275,8 @@ export function PrivacyCenter() {
               <span className="eyebrow">THIS DEVICE</span>
               <h2>Энэ төхөөрөмжийн локал өгөгдөл</h2>
               <p>
-                Энэ төхөөрөмж дээр хадгалагдсан хуулбарыг цэвэрлэнэ. Үүлэн
-                түүх болон бусад бүртгэл устахгүй.
+                Энэ төхөөрөмж дээр хадгалагдсан хуулбарыг цэвэрлэнэ. Үүлэн түүх
+                болон бусад бүртгэл устахгүй.
               </p>
             </div>
             <span className="privacy-chip danger">АНХААР</span>
@@ -274,7 +330,9 @@ export function PrivacyCenter() {
           <div>
             <span className="eyebrow">REMOTE DATA</span>
             <h2>Үүлэн суралцах түүхийг цэвэрлэх</h2>
-            <p>Зөвхөн энэ бүртгэлийн үүлэнд хадгалсан суралцах түүхэд үйлчилнэ.</p>
+            <p>
+              Зөвхөн энэ бүртгэлийн үүлэнд хадгалсан суралцах түүхэд үйлчилнэ.
+            </p>
           </div>
           <span className="privacy-chip danger">УСТГАЛТ</span>
         </div>

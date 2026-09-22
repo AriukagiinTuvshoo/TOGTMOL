@@ -1733,7 +1733,6 @@ body {
   }
 }
 
-
 /* Privacy & data center — structured to match the reference glass UI. */
 .privacy-page {
   gap: 14px !important;
@@ -1755,9 +1754,17 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 83% 18%, rgba(117,79,255,.28), transparent 28%),
-    radial-gradient(circle at 70% 100%, rgba(35,217,255,.10), transparent 32%),
-    linear-gradient(145deg, rgba(12,21,47,.92), rgba(7,13,30,.97)) !important;
+    radial-gradient(
+      circle at 83% 18%,
+      rgba(117, 79, 255, 0.28),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 70% 100%,
+      rgba(35, 217, 255, 0.1),
+      transparent 32%
+    ),
+    linear-gradient(145deg, rgba(12, 21, 47, 0.92), rgba(7, 13, 30, 0.97)) !important;
 }
 
 .privacy-header::after {
@@ -1768,7 +1775,11 @@ body {
   right: -70px;
   bottom: -150px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(58,216,255,.16), transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgba(58, 216, 255, 0.16),
+    transparent 68%
+  );
   pointer-events: none;
 }
 
@@ -1799,11 +1810,21 @@ body {
   gap: 4px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 48%, rgba(7,15,35,.94) 0 47%, transparent 48%),
-    conic-gradient(from 220deg, rgba(141,92,255,.08), #34d9ff 31%, #8d5cff 74%, rgba(141,92,255,.08) 100%);
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(7, 15, 35, 0.94) 0 47%,
+      transparent 48%
+    ),
+    conic-gradient(
+      from 220deg,
+      rgba(141, 92, 255, 0.08),
+      #34d9ff 31%,
+      #8d5cff 74%,
+      rgba(141, 92, 255, 0.08) 100%
+    );
   box-shadow:
-    0 0 0 8px rgba(141,92,255,.04),
-    0 0 42px rgba(61,209,255,.08);
+    0 0 0 8px rgba(141, 92, 255, 0.04),
+    0 0 42px rgba(61, 209, 255, 0.08);
   color: #f5f8ff;
   position: relative;
   z-index: 1;
@@ -1848,7 +1869,7 @@ body {
   margin-top: 6px;
   font-size: 21px;
   font-weight: 710;
-  letter-spacing: -.5px;
+  letter-spacing: -0.5px;
   color: #f5f7ff;
 }
 
@@ -1869,8 +1890,8 @@ body {
   padding: 7px 10px;
   border-radius: 999px;
   white-space: nowrap;
-  border: 1px solid rgba(109,137,204,.18);
-  background: rgba(10,21,44,.62);
+  border: 1px solid rgba(109, 137, 204, 0.18);
+  background: rgba(10, 21, 44, 0.62);
   color: #9fb1cf;
   font-size: 8px;
   font-weight: 800;
@@ -1879,19 +1900,19 @@ body {
 
 .privacy-chip.on {
   color: #51e4ca;
-  border-color: rgba(57,224,190,.25);
-  background: rgba(35,214,179,.09);
+  border-color: rgba(57, 224, 190, 0.25);
+  background: rgba(35, 214, 179, 0.09);
 }
 
 .privacy-chip.danger {
   color: #ff8bad;
-  border-color: rgba(255,105,148,.24);
-  background: rgba(255,82,132,.08);
+  border-color: rgba(255, 105, 148, 0.24);
+  background: rgba(255, 82, 132, 0.08);
 }
 
 .privacy-details {
   margin-top: 15px;
-  grid-template-columns: repeat(2, minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px !important;
 }
 
@@ -1899,15 +1920,15 @@ body {
   padding: 12px 13px;
   min-width: 0;
   border-radius: 14px;
-  border: 1px solid rgba(104,131,198,.13);
-  background: rgba(7,17,38,.48);
+  border: 1px solid rgba(104, 131, 198, 0.13);
+  background: rgba(7, 17, 38, 0.48);
 }
 
 .privacy-details dt {
   color: #7f92b5;
   font-size: 8px;
   text-transform: uppercase;
-  letter-spacing: .8px;
+  letter-spacing: 0.8px;
   margin-bottom: 5px;
   font-weight: 800;
 }
@@ -1922,7 +1943,7 @@ body {
 .privacy-actions {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(105,132,196,.13);
+  border-top: 1px solid rgba(105, 132, 196, 0.13);
 }
 
 .privacy-actions .button {
@@ -1931,21 +1952,25 @@ body {
 
 .privacy-action-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 15px;
 }
 
 .privacy-action-grid article {
   display: grid;
-  grid-template-columns: 40px minmax(0,1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   min-width: 0;
   padding: 12px;
   border-radius: 16px;
-  border: 1px solid rgba(105,132,198,.14);
-  background: linear-gradient(145deg, rgba(10,22,46,.67), rgba(7,14,30,.58));
+  border: 1px solid rgba(105, 132, 198, 0.14);
+  background: linear-gradient(
+    145deg,
+    rgba(10, 22, 46, 0.67),
+    rgba(7, 14, 30, 0.58)
+  );
 }
 
 .privacy-action-grid article > div {
@@ -1974,8 +1999,12 @@ body {
   border-radius: 12px;
   color: #fff;
   font-size: 17px;
-  background: linear-gradient(145deg, rgba(130,83,255,.28), rgba(42,213,255,.10));
-  border: 1px solid rgba(117,144,213,.16);
+  background: linear-gradient(
+    145deg,
+    rgba(130, 83, 255, 0.28),
+    rgba(42, 213, 255, 0.1)
+  );
+  border: 1px solid rgba(117, 144, 213, 0.16);
 }
 
 .switch-control {
@@ -1995,8 +2024,8 @@ body {
   width: 34px;
   height: 19px;
   border-radius: 999px;
-  background: rgba(86,102,146,.25);
-  border: 1px solid rgba(105,132,198,.20);
+  background: rgba(86, 102, 146, 0.25);
+  border: 1px solid rgba(105, 132, 198, 0.2);
   position: relative;
 }
 
@@ -2009,12 +2038,18 @@ body {
   left: 2px;
   border-radius: 50%;
   background: #8c9bb7;
-  transition: transform .16s ease, background .16s ease;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease;
 }
 
 .switch-control input:checked + span {
-  background: linear-gradient(90deg, rgba(118,75,255,.45), rgba(47,216,235,.35));
-  border-color: rgba(130,112,255,.36);
+  background: linear-gradient(
+    90deg,
+    rgba(118, 75, 255, 0.45),
+    rgba(47, 216, 235, 0.35)
+  );
+  border-color: rgba(130, 112, 255, 0.36);
 }
 
 .switch-control input:checked + span::after {
@@ -2025,18 +2060,22 @@ body {
 .data-center {
   padding: 21px !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(100,71,225,.11), transparent 24%),
-    linear-gradient(150deg, rgba(14,27,56,.78), rgba(7,14,31,.91)) !important;
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(100, 71, 225, 0.11),
+      transparent 24%
+    ),
+    linear-gradient(150deg, rgba(14, 27, 56, 0.78), rgba(7, 14, 31, 0.91)) !important;
 }
 
 .data-center-head {
   padding-bottom: 13px;
-  border-bottom: 1px solid rgba(104,132,198,.12);
+  border-bottom: 1px solid rgba(104, 132, 198, 0.12);
 }
 
 .data-metrics {
   display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
   margin: 13px 0;
 }
@@ -2045,15 +2084,15 @@ body {
   min-height: 68px;
   padding: 12px 13px;
   border-radius: 14px;
-  border: 1px solid rgba(104,132,198,.13);
-  background: rgba(6,15,34,.46);
+  border: 1px solid rgba(104, 132, 198, 0.13);
+  background: rgba(6, 15, 34, 0.46);
 }
 
 .data-metrics span {
   display: block;
   color: #7f92b5;
   font-size: 8px;
-  letter-spacing: .8px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
@@ -2067,7 +2106,7 @@ body {
 
 .data-actions {
   display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
 }
 
@@ -2080,9 +2119,9 @@ body {
 .data-actions > .text-button {
   justify-content: center;
   padding: 10px;
-  border: 1px solid rgba(104,132,198,.14);
+  border: 1px solid rgba(104, 132, 198, 0.14);
   border-radius: 12px;
-  background: rgba(9,18,40,.40);
+  background: rgba(9, 18, 40, 0.4);
 }
 
 .data-note {
@@ -2092,8 +2131,8 @@ body {
   padding: 11px 12px;
   margin-top: 2px;
   border-radius: 13px;
-  border: 1px solid rgba(52,216,255,.12);
-  background: rgba(35,170,201,.05);
+  border: 1px solid rgba(52, 216, 255, 0.12);
+  background: rgba(35, 170, 201, 0.05);
   color: #9eafcb;
 }
 
@@ -2109,15 +2148,19 @@ body {
 }
 
 .data-trash {
-  background: linear-gradient(150deg, rgba(19,24,48,.76), rgba(8,14,31,.92)) !important;
+  background: linear-gradient(
+    150deg,
+    rgba(19, 24, 48, 0.76),
+    rgba(8, 14, 31, 0.92)
+  ) !important;
 }
 
 .data-trash .trash-group {
   margin-top: 12px;
   padding: 11px;
   border-radius: 14px;
-  border: 1px solid rgba(104,132,198,.12);
-  background: rgba(5,13,29,.36);
+  border: 1px solid rgba(104, 132, 198, 0.12);
+  background: rgba(5, 13, 29, 0.36);
 }
 
 .data-trash .trash-group h3 {
@@ -2131,14 +2174,18 @@ body {
   font-size: 9px;
   text-align: center;
   border-radius: 10px;
-  background: rgba(8,17,36,.34);
+  background: rgba(8, 17, 36, 0.34);
 }
 
 .danger-zone {
   background:
-    radial-gradient(circle at 100% 0%, rgba(255,71,125,.08), transparent 22%),
-    linear-gradient(150deg, rgba(18,20,41,.78), rgba(8,14,30,.92)) !important;
-  border-color: rgba(157,95,127,.13) !important;
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(255, 71, 125, 0.08),
+      transparent 22%
+    ),
+    linear-gradient(150deg, rgba(18, 20, 41, 0.78), rgba(8, 14, 30, 0.92)) !important;
+  border-color: rgba(157, 95, 127, 0.13) !important;
 }
 
 .danger-zone .danger-text {
@@ -2170,7 +2217,7 @@ body {
     bottom: -24px;
     width: 155px;
     height: 155px;
-    opacity: .42;
+    opacity: 0.42;
   }
   .privacy-details {
     grid-template-columns: 1fr;
