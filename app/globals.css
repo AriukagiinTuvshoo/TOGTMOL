@@ -1161,84 +1161,173 @@ main {
 }
 .timer-orbit {
   position: relative;
-  margin: 28px auto 26px;
+  isolation: isolate;
+  margin: 34px auto 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  width: min(285px, 100%);
+  width: min(330px, 100%);
   aspect-ratio: 1;
-  border: 8px solid var(--surface-muted);
-  outline: 1px solid var(--border);
-  outline-offset: 9px;
+  border: 1px solid color-mix(in srgb, var(--moss) 24%, var(--border));
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--moss-soft) 82%, transparent) 0 32%, transparent 33%),
+    radial-gradient(circle, var(--surface) 0 57%, var(--surface-muted) 58% 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--surface) 80%, transparent),
+    0 18px 55px color-mix(in srgb, var(--moss) 13%, transparent),
+    inset 0 0 45px color-mix(in srgb, var(--moss) 7%, transparent);
 }
+
+.timer-orbit:before {
+  content: "";
+  position: absolute;
+  inset: -11px;
+  z-index: -1;
+  border-radius: 50%;
+  padding: 7px;
+  background: conic-gradient(
+    from -90deg,
+    var(--moss) 0 var(--progress),
+    color-mix(in srgb, var(--border) 75%, transparent) var(--progress) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--moss) 28%, transparent));
+  pointer-events: none;
+}
+
 .timer-orbit:after {
   content: "";
   position: absolute;
-  inset: -8px;
-  border: 2px solid var(--moss);
+  inset: 15px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: 50%;
-  opacity: 0.3;
-  clip-path: inset(0 0 calc(100% - var(--progress)) 0);
   pointer-events: none;
 }
+
 .timer-type {
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-.timer-digits {
-  font-size: 43px;
-  line-height: 1.1;
-  letter-spacing: -1.3px;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  font-family: Arial, sans-serif;
-  color: var(--text);
-}
-.timer-status {
-  font-size: 9px;
-  color: var(--muted);
-  margin-top: 16px;
-  max-width: 90%;
-}
-.timer-card > .button-row {
-  margin: 30px 0 20px;
-}
-.note-input {
-  margin-top: 20px;
-  border: 0;
-  background: var(--bg);
-  font-size: 12px;
-  min-height: 200px;
-}
-.timer-layout aside h2 {
-  font-size: 17px;
-  margin-top: 10px;
-}
-.timer-layout aside .tiny {
-  margin-top: 12px;
-}
-.quote-card {
-  background: var(--yellow-soft);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 27px;
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.8px;
   color: var(--moss);
+  margin-bottom: 16px;
+  text-transform: uppercase;
 }
-.quote-card p {
-  font-size: 18px;
-  margin: 17px 0 23px;
-  line-height: 1.7;
-  letter-spacing: -0.4px;
+
+.timer-digits {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(47px, 5vw, 64px);
+  line-height: 1;
+  letter-spacing: -3px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  font-family: Arial, "Helvetica Neue", sans-serif;
+  color: var(--text);
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--moss) 12%, transparent);
 }
-.quote-card > span {
-  font-size: 8px;
-  letter-spacing: 1.4px;
+
+.timer-status {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 550;
   color: var(--muted);
+  margin-top: 17px;
+  max-width: 78%;
+  text-align: center;
 }
+
+.timer-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.timer-card:before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -130px;
+  top: -150px;
+  border-radius: 50%;
+  background: var(--moss-soft);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.timer-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.timer-card > .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--moss-soft));
+  box-shadow: 0 5px 18px color-mix(in srgb, var(--moss) 7%, transparent);
+}
+
+.timer-card > h2 {
+  margin-top: 18px;
+  font-size: clamp(21px, 2.4vw, 28px);
+  letter-spacing: -0.8px;
+}
+
+.timer-card > .muted {
+  margin-top: 7px;
+  max-width: 560px;
+}
+
+.timer-card > .button-row {
+  margin: 34px 0 20px;
+}
+
+.timer-card > .button-row .button {
+  border-radius: 12px;
+  min-height: 46px;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--moss) 9%, transparent);
+}
+
+.timer-card > .button-row .button.primary {
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--moss) 20%, transparent);
+}
+
+.timer-card > .button-row .button.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 13px 30px color-mix(in srgb, var(--moss) 25%, transparent);
+}
+
+.timer-card:has(.live-dot) .timer-orbit {
+  animation: timer-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes timer-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-card:has(.live-dot) .timer-orbit {
+    animation: none;
+  }
+}
+
 .result-number {
   text-align: center;
   font-size: 34px;
