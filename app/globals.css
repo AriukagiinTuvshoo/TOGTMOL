@@ -2877,8 +2877,6 @@ main {
     scroll-behavior: auto !important;
   }
 }
-
-
 /* Strong timer alerts */
 .timer-alert-layer {
   position: fixed;
@@ -2904,7 +2902,9 @@ main {
   color: var(--text);
   box-shadow: 0 30px 120px #00000066, 0 0 0 10px #edcf7422;
   text-align: center;
-  animation: timer-alert-pop 0.32s ease-out both, timer-alert-pulse 1.25s ease-in-out infinite;
+  animation:
+    timer-alert-pop 0.32s ease-out both,
+    timer-alert-pulse 1.25s ease-in-out infinite;
 }
 .timer-alert-warning .timer-alert-card {
   border-color: var(--yellow);
@@ -2972,7 +2972,8 @@ main {
   }
 }
 @keyframes timer-alert-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 25px 90px #00000055, 0 0 0 8px #edcf7422;
   }
   50% {
@@ -2980,7 +2981,8 @@ main {
   }
 }
 @keyframes timer-alert-pulse-strong {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 30px 120px #00000070, 0 0 0 12px #a5484326;
   }
