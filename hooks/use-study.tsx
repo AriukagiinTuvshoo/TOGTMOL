@@ -92,8 +92,14 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       roomTheme = ROOM_THEMES[design],
       root = document.documentElement,
       theme = state.data.settings.theme,
+      uiThemeRaw = state.data.settings.extras.uiTheme,
+      uiTheme =
+        uiThemeRaw === "cyber" || uiThemeRaw === "calm"
+          ? uiThemeRaw
+          : "aurora",
       m = window.matchMedia("(prefers-color-scheme: dark)");
     root.dataset.design = design;
+    root.dataset.uiTheme = uiTheme;
     const apply = () => {
       const mode = theme === "system" ? (m.matches ? "dark" : "light") : theme;
       const tokens = roomTheme.ui[mode];
@@ -121,7 +127,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     apply();
     m.addEventListener("change", apply);
     return () => m.removeEventListener("change", apply);
-  }, [state.data.settings.theme, state.data.settings.world.design]);
+  }, [state.data.settings.theme, state.data.settings.world.design, state.data.settings.extras.uiTheme]);
   useEffect(() => {
     if (!notice) return;
     const id = setTimeout(
