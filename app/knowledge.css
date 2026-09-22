@@ -759,7 +759,11 @@ body {
   border: 1px solid color-mix(in srgb, var(--moss) 36%, transparent);
   background:
     radial-gradient(circle at 35% 28%, #ffffff22, transparent 30%),
-    linear-gradient(145deg, color-mix(in srgb, var(--moss) 30%, var(--surface)), color-mix(in srgb, var(--yellow) 18%, var(--surface)));
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--moss) 30%, var(--surface)),
+      color-mix(in srgb, var(--yellow) 18%, var(--surface))
+    );
   box-shadow:
     0 14px 30px #1b2a1b22,
     0 0 34px color-mix(in srgb, var(--moss) 18%, transparent),
