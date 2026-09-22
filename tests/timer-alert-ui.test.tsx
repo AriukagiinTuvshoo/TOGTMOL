@@ -93,8 +93,11 @@ it("auto-completes from the deadline timeout without requiring another render", 
   vi.useFakeTimers();
   now = NOW + 60000;
   render(<TimerWatch />);
+  // Flush React effects first, then run the deadline callback that was scheduled
+  // from the already-expired test clock.
+  await act(async () => {});
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
+    await vi.runOnlyPendingTimersAsync();
   });
   expect(data.activeTimer?.status).toBe("review");
   expect(sounds.notifyUser).toHaveBeenCalledOnce();
@@ -104,8 +107,9 @@ it("finishes once, displays Stop first, and stops audio when dismissed", async (
   vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
+  await act(async () => {});
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
+    await vi.runOnlyPendingTimersAsync();
   });
   view.rerender(<TimerWatch />);
   const dialog = screen.getByRole("dialog", { name: "Хугацаа дууслаа!" });
@@ -137,8 +141,9 @@ it("Escape and View result both silence the alert", async () => {
   view.unmount();
   data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW);
   render(<TimerWatch />);
+  await act(async () => {});
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
+    await vi.runOnlyPendingTimersAsync();
   });
   fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ харах" }));
   expect(navigate).toHaveBeenCalledWith("focus");
