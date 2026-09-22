@@ -91,14 +91,22 @@ describe("timer lifecycle", () => {
 
   it("updates the already-recorded session when the review note is saved", () => {
     const d = fixture();
-    d.sessions = [];
-    d.activeTimer = startTimer("math", "stopwatch", "focus", null, NOW);
-    vi.spyOn(Date, "now").mockReturnValue(NOW + 30000);
-    const recorded = actions.finish()(d);
-    const before = recorded.sessions[0];
-    const saved = actions.saveTimer("тайлбар", false)(recorded);
+    const timer = startTimer("math", "stopwatch", "focus", null, NOW);
+    const reviewed = review(timer, NOW + 30000);
+    d.activeTimer = reviewed;
+    d.sessions = [
+      session({
+        id: reviewed.id,
+        startEpoch: reviewed.sessionStartedAt,
+        endEpoch: NOW + 30000,
+        durationSec: 30,
+        segments: reviewed.segments,
+      }),
+    ];
+
+    const saved = actions.saveTimer("тайлбар", false)(d);
     expect(saved.sessions).toHaveLength(1);
-    expect(saved.sessions[0].id).toBe(before.id);
+    expect(saved.sessions[0].id).toBe(reviewed.id);
     expect(saved.sessions[0].note).toBe("тайлбар");
     expect(saved.sessions[0].durationSec).toBe(30);
   });
