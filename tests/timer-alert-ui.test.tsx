@@ -8,6 +8,7 @@ import {
   render,
   screen,
   within,
+  waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { fixture, NOW } from "./fixtures";
@@ -91,27 +92,16 @@ it("counts 10 through 1 once per second and Stop silences the rest of this count
 });
 
 it("auto-completes from the deadline timeout without requiring another render", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   render(<TimerWatch />);
-  await act(async () => {});
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
-  expect(data.activeTimer?.status).toBe("review");
-  expect(sounds.notifyUser).toHaveBeenCalledOnce();
+  await waitFor(() => expect(data.activeTimer?.status).toBe("review"));
+  await waitFor(() => expect(sounds.notifyUser).toHaveBeenCalledOnce());
 });
 
 it("finishes once, displays Stop first, and stops audio when dismissed", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {});
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
-  view.rerender(<TimerWatch />);
-  const dialog = screen.getByRole("dialog", { name: "Хугацаа дууслаа!" });
+  const dialog = await screen.findByRole("dialog", { name: "Хугацаа дууслаа!" });
   expect(within(dialog).getAllByRole("button")[0]).toHaveTextContent(
     "Дууг зогсоох",
   );
@@ -125,13 +115,9 @@ it("finishes once, displays Stop first, and stops audio when dismissed", async (
 });
 
 it("Escape and View result both silence the alert", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {});
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
+  await screen.findByRole("dialog");
   fireEvent(
     screen.getByRole("dialog"),
     new Event("cancel", { bubbles: true, cancelable: true }),
@@ -141,9 +127,7 @@ it("Escape and View result both silence the alert", async () => {
   view.unmount();
   data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW);
   render(<TimerWatch />);
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
+  await screen.findByRole("dialog");
   fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ харах" }));
   expect(navigate).toHaveBeenCalledWith("focus");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
