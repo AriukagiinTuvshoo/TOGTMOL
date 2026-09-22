@@ -65,7 +65,7 @@ describe("original soundscape playback", () => {
       ).toBe(true);
       expect(samples.some((v) => Math.abs(v) > 0.001)).toBe(true);
     }
-    const provider = ambientProvider(engine, "deep");
+    const provider = ambientProvider(engine, "rain");
     await provider.pause();
     expect(suspend).toHaveBeenCalled();
     await provider.play();
