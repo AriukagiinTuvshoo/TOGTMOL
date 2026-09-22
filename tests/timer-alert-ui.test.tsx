@@ -137,7 +137,9 @@ it("Escape and View result both silence the alert", async () => {
   view.unmount();
   data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW);
   render(<TimerWatch />);
-  await act(async () => {});
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60);
+  });
   fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ харах" }));
   expect(navigate).toHaveBeenCalledWith("focus");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
