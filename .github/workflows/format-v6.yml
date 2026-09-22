@@ -1,0 +1,44 @@
+name: Format v6 branch
+on:
+  push:
+    branches:
+      - v6-neon-redesign
+permissions:
+  contents: write
+jobs:
+  format:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v6-neon-redesign
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format changed v6 files
+        run: |
+          npx prettier --write \
+            app/neon.css \
+            components/settings/privacy.tsx \
+            components/settings/settings.tsx \
+            components/timer/study-timer.tsx \
+            hooks/use-study.tsx \
+            lib/persistence/actions.ts \
+            tests/timer-alert-ui.test.tsx \
+            tests/ui.test.tsx
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/neon.css components/settings/privacy.tsx components/settings/settings.tsx \
+            components/timer/study-timer.tsx hooks/use-study.tsx lib/persistence/actions.ts \
+            tests/timer-alert-ui.test.tsx tests/ui.test.tsx
+          git commit -m "chore: format v6 files"
+          git push origin HEAD:v6-neon-redesign
