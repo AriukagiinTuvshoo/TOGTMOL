@@ -72,7 +72,7 @@ describe("original soundscape playback", () => {
     expect(started).toHaveBeenCalledTimes(AMBIENTS.length + 1);
     engine.close();
     expect(close).toHaveBeenCalled();
-    expect(stopped).toHaveBeenCalledTimes(AMBIENTS.length);
+    expect(stopped).toHaveBeenCalledTimes(AMBIENTS.length + 1);
   });
 });
 
