@@ -39,6 +39,14 @@ describe("timer lifecycle", () => {
     expect(t.finishedAt).toBe(NOW + 1500000);
     expect(sessionFromTimer(t, "", NOW + 3 * 3600000).durationSec).toBe(1500);
   });
+  it("preserves the actual end time when Finish is pressed long after pausing", () => {
+    let t = startTimer("math", "stopwatch", "focus", null, NOW);
+    t = pause(t, NOW + 10000);
+    t = review(t, NOW + 3600000);
+    expect(t.finishedAt).toBe(NOW + 10000);
+    expect(sessionFromTimer(t, "", NOW + 3600000).endEpoch).toBe(NOW + 10000);
+  });
+
   it("moves the deadline correctly around a Pomodoro pause", () => {
     let t = pause(
       startTimer("math", "pomodoro", "focus", 25, NOW),
