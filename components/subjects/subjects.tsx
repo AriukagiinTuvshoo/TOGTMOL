@@ -201,7 +201,8 @@ export function Subjects() {
               return <button type="button" key={t.id} className={`subject-track-chip ${track === t.id ? "active" : ""}`} onClick={() => setTrack(t.id)}><strong>{t.name}</strong><small>{count} хичээл</small></button>;
             })}
           </div>
-        )}\n        {categorized.length ? (
+        )}
+        {categorized.length ? (
           <div className="subjects-grid">
           {categorized.map((s) => {
             const stats = periodStats(index, 7, today, s.id),
