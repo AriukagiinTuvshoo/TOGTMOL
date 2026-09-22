@@ -35,7 +35,7 @@ function validDate(date: string) {
 }
 export const actions = {
   addSubject:
-    (name: string, color: string) =>
+    (name: string, color: string, extras: Record<string, unknown> = {}) =>
     (data: StudyData): StudyData => {
       const clean = name.trim();
       if (!clean || clean.length > 100)
@@ -59,12 +59,13 @@ export const actions = {
             color,
             icon: "book",
             archived: false,
+            extras,
           },
         ],
       };
     },
   editSubject:
-    (id: string, patch: Pick<Subject, "name" | "color" | "archived">) =>
+    (id: string, patch: Pick<Subject, "name" | "color" | "archived"> & { extras?: Record<string, unknown> }) =>
     (data: StudyData): StudyData => {
       subject(data, id);
       if (
@@ -77,7 +78,13 @@ export const actions = {
         ...data,
         subjects: data.subjects.map((s) =>
           s.id === id
-            ? { ...s, ...patch, name: patch.name.trim(), updatedAt: Date.now() }
+            ? {
+                ...s,
+                ...patch,
+                extras: patch.extras ?? s.extras,
+                name: patch.name.trim(),
+                updatedAt: Date.now(),
+              }
             : s,
         ),
       };
