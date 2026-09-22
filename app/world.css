@@ -1884,3 +1884,158 @@ details.card[open] > summary {
     width: 100%;
   }
 }
+
+/* Timer-only focus mode */
+.is-focus {
+  min-height: 100dvh;
+}
+.is-focus #main-content {
+  max-width: none;
+  min-height: 100dvh;
+  padding: 0;
+}
+.is-focus .music-player {
+  display: none;
+}
+.focus-timer-screen {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding: 32px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 35%, var(--moss-soft), transparent 42%),
+    var(--bg);
+}
+.focus-timer-brand {
+  position: absolute;
+  top: max(22px, env(safe-area-inset-top));
+  left: 24px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+.focus-exit-button {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  right: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 8px 28px #00000010;
+}
+.focus-exit-button:hover {
+  border-color: var(--moss);
+}
+.focus-timer-stage {
+  width: min(760px, 100%);
+}
+.focus-timer-stage .timer-layout {
+  display: block;
+}
+.focus-timer-stage .timer-layout > aside {
+  display: none;
+}
+.focus-timer-stage .timer-card {
+  width: 100%;
+  min-height: min(640px, calc(100dvh - 120px));
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 42px 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 100px #1b2a1b14;
+}
+.focus-timer-stage .timer-card > .eyebrow,
+.focus-timer-stage .timer-card > h2,
+.focus-timer-stage .timer-card > .muted,
+.focus-timer-stage .timer-card > .timer-task,
+.focus-timer-stage .timer-card > .button-row,
+.focus-timer-stage .timer-card > .tiny,
+.focus-timer-stage .timer-card > .text-button {
+  position: relative;
+  z-index: 2;
+}
+.focus-timer-stage .timer-card > h2 {
+  font-size: clamp(18px, 3vw, 28px);
+  text-align: center;
+}
+.focus-timer-stage .timer-card > .muted,
+.focus-timer-stage .timer-card > .timer-task,
+.focus-timer-stage .timer-card > .eyebrow,
+.focus-timer-stage .timer-card > .tiny {
+  text-align: center;
+}
+.focus-timer-stage .timer-config {
+  width: min(560px, 100%);
+}
+.focus-timer-stage .timer-orbit {
+  width: min(430px, 72vw);
+  max-width: 100%;
+  margin: 28px auto;
+}
+.focus-timer-stage .timer-digits {
+  font-size: clamp(54px, 10vw, 104px);
+}
+.focus-timer-stage .timer-card.timer-design-digital .timer-orbit {
+  min-height: 260px;
+}
+.focus-timer-stage .timer-card.timer-design-minimal .timer-orbit {
+  min-height: 250px;
+}
+.focus-hint {
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+@media (max-width: 620px) {
+  .focus-timer-screen {
+    padding: 18px 12px;
+  }
+  .focus-timer-brand {
+    left: 15px;
+    font-size: 9px;
+  }
+  .focus-exit-button {
+    right: 13px;
+    min-height: 38px;
+    padding: 0 11px;
+    font-size: 11px;
+  }
+  .focus-timer-stage .timer-card {
+    min-height: calc(100dvh - 76px);
+    padding: 34px 14px 42px;
+    border-radius: 22px;
+  }
+  .focus-timer-stage .timer-orbit {
+    width: min(330px, 82vw);
+    margin: 18px auto;
+  }
+  .focus-timer-stage .timer-digits {
+    font-size: clamp(50px, 17vw, 82px);
+  }
+  .focus-hint {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-timer-stage .timer-card {
+    transition: none;
+  }
+}
