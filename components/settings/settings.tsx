@@ -51,7 +51,7 @@ export function Settings() {
     <div className="settings-grid">
       <div className="stack">
         <section className="card">
-          <SectionTitle title="Харагдах байдал" subtitle="Танд тухтай орчин." />
+          <SectionTitle title="Харагдах байдал" subtitle="Системийн горим болон TOGTMOL-ийн өнгөний хэв маягийг сонгоно." />
           <div className="theme-options">
             {(
               [
@@ -135,7 +135,7 @@ export function Settings() {
         </section>
         <MusicSettings />
         <section className="card">
-          <SectionTitle title="Timer-ийн хэмнэл" />
+          <SectionTitle title="Timer-ийн тохиргоо" subtitle="Төвлөрөл, амралтын хугацаа болон үндсэн горимоо тохируулна." />
           <form
             className="form-stack"
             onSubmit={(e) => {
@@ -219,7 +219,7 @@ export function Settings() {
           </button>
         </section>
         <section className="card">
-          <SectionTitle title="Сануулах ба offline" />
+          <SectionTitle title="Сануулга ба офлайн горим" />
           <div className="form-stack">
             <label className="check-label">
               <input
