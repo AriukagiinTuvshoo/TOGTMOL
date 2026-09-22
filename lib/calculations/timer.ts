@@ -83,7 +83,7 @@ export function sessionFromTimer(
   note: string,
   now: number,
 ): StudySession {
-  if (t.status !== "review" || t.phase !== "focus" || t.accumulatedMs < 5000)
+  if (t.status !== "review" || t.phase !== "focus" || t.accumulatedMs <= 0)
     throw Error("Хадгалахад бэлэн хичээл алга.");
   return {
     id: t.id,
@@ -91,7 +91,7 @@ export function sessionFromTimer(
     date: t.date,
     startEpoch: t.sessionStartedAt,
     endEpoch: t.finishedAt ?? now,
-    durationSec: Math.floor(t.accumulatedMs / 1000),
+    durationSec: Math.max(1, Math.round(t.accumulatedMs / 1000)),
     note: note.trim(),
     segments: t.segments,
     mode: t.mode,
