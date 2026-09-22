@@ -309,9 +309,10 @@ export async function notifyTimerWarning(
   message: string,
   settings: Settings,
   tag = "togtmol-timer-warning",
+  seconds = 0,
 ) {
   await Promise.all([
-    playTimerWarning(settings),
+    playTimerWarning(settings, seconds),
     showBrowserNotification(message, settings, tag, "Тогтмол · Сануулга"),
   ]);
 }
