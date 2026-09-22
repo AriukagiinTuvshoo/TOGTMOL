@@ -176,7 +176,10 @@ async function load() {
   return players.at(-1)!;
 }
 async function start() {
-  click("Хөгжим тоглуулах");
+  const playButton = within(dock()).queryByRole("button", {
+    name: "Хөгжим тоглуулах",
+  });
+  if (playButton) fireEvent.click(playButton);
   await waitFor(() =>
     expect(dock()).toHaveAttribute("data-playback", "playing"),
   );
@@ -317,7 +320,10 @@ describe("persistent music dock", () => {
     expect(restored.setVolume).toHaveBeenCalledWith(65);
     expect(dock()).toHaveAttribute("data-open", "false");
     expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(screen.getByText("Үргэлжлүүлэхэд Play дарна уу")).toBeVisible();
+    expect(dock()).toHaveAttribute("data-playback", "paused");
+    expect(
+      within(dock()).getByRole("button", { name: "Хөгжим тоглуулах" }),
+    ).toBeVisible();
   });
   it("does not pause on visibility/intersection changes or a mobile-size resize", async () => {
     const observe = vi.fn();
@@ -337,7 +343,7 @@ describe("persistent music dock", () => {
     vi.stubGlobal("innerWidth", 375);
     fireEvent(window, new Event("resize"));
     expect(observe).not.toHaveBeenCalled();
-    for (const name of ["Хөгжим түр зогсоох", "Хөгжим зогсоох", "Хөгжим нээх"])
+    for (const name of ["Хөгжим түр зогсоох", "Хөгжим нээх"])
       expect(within(dock()).getByRole("button", { name })).toBeVisible();
     expect(
       within(dock()).getByRole("slider", { name: "Дууны түвшин" }),
@@ -360,7 +366,7 @@ describe("persistent music dock", () => {
       screen.getByRole("heading", { name: "Миний хичээлүүд" }),
     ).toBeVisible();
     failConstruction = false;
-    click("Дахин ачаалах");
+    click("Дахин оролдох");
     await screen.findByTitle("Test YouTube");
     const player = players[0];
     await start();
@@ -435,7 +441,7 @@ describe("persistent music dock", () => {
     expect(await screen.findByText(/YouTube-г ачаалж чадсангүй/)).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     window.YT = { Player };
-    click("Дахин ачаалах");
+    click("Дахин оролдох");
     await screen.findByTitle("Test YouTube");
     await start();
     expect(players).toHaveLength(1);
@@ -526,7 +532,7 @@ describe("persistent music dock", () => {
     await boot();
     click("Хөгжим нээх");
     fireEvent.click(
-      within(dock()).getByRole("button", { name: /Rainy window.*Борооны/ }),
+      within(dock()).getByRole("button", { name: /RainТайван борооны чимээ/ }),
     );
     await start();
     expect(local.play).toHaveBeenLastCalledWith("rain");

@@ -1,5 +1,6 @@
 import { normalizeWorld } from "@/lib/world/config";
 import { validYouTubeSource } from "@/lib/music/youtube";
+import { validAudioDescriptor, parseAudioURL } from "@/lib/music/native-audio";
 import { parseKnowledge } from "@/lib/knowledge/validation";
 import { emptyData, PALETTE } from "@/lib/constants";
 import { dateKey, parseDate } from "@/lib/calculations/dates";
@@ -255,6 +256,38 @@ export function migrate(input: unknown): StudyData {
     };
   });
   data.musicSources = records<MusicSource>(data, raw, "musicSources", (m) => {
+    if (m.kind === "audio") {
+      const audioUrl =
+        typeof m.audioUrl === "string" && m.audioUrl.trim()
+          ? parseAudioURL(m.audioUrl)
+          : undefined;
+      const audioStorageKey =
+        typeof m.audioStorageKey === "string" ? m.audioStorageKey : undefined;
+      if (!validAudioDescriptor(audioUrl, audioStorageKey))
+        throw Error("Аудио эх сурвалж буруу");
+      return {
+        ...base(m, requireId(m.id), [
+          "title",
+          "kind",
+          "youtubeId",
+          "audioUrl",
+          "audioStorageKey",
+          "mimeType",
+          "sizeBytes",
+        ]),
+        title: text(m.title, "Миний хөгжим"),
+        kind: "audio",
+        youtubeId: "",
+        ...(audioUrl ? { audioUrl } : {}),
+        ...(audioStorageKey ? { audioStorageKey } : {}),
+        ...(typeof m.mimeType === "string"
+          ? { mimeType: m.mimeType.slice(0, 120) }
+          : {}),
+        ...(Number.isFinite(m.sizeBytes) && Number(m.sizeBytes) >= 0
+          ? { sizeBytes: Number(m.sizeBytes) }
+          : {}),
+      };
+    }
     if (!validYouTubeSource(m.kind, m.youtubeId))
       throw Error("YouTube эх сурвалж буруу");
     return {

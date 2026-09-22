@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AmbientPlayer, ambientProvider } from "@/lib/music/ambient";
 import { AMBIENTS } from "@/lib/music/catalog";
 import { normalizeMusicPreference } from "@/lib/music/preferences";
+import { parseAudioURL } from "@/lib/music/native-audio";
 import { StudyStore } from "@/lib/persistence/store";
 import { Repository } from "@/lib/persistence/repository";
 import { IDBFactory } from "fake-indexeddb";
@@ -57,21 +58,21 @@ describe("original soundscape playback", () => {
     for (const preset of AMBIENTS)
       await ambientProvider(engine, preset.id).play();
     expect(started).toHaveBeenCalledTimes(AMBIENTS.length);
-    expect(buffers).toHaveLength(9);
+    expect(buffers).toHaveLength(AMBIENTS.length);
     for (const samples of buffers) {
       expect(
         samples.every((v) => Number.isFinite(v) && Math.abs(v) <= 0.8),
       ).toBe(true);
       expect(samples.some((v) => Math.abs(v) > 0.001)).toBe(true);
     }
-    const provider = ambientProvider(engine, "deep");
+    const provider = ambientProvider(engine, "rain");
     await provider.pause();
     expect(suspend).toHaveBeenCalled();
     await provider.play();
-    expect(started).toHaveBeenCalledTimes(AMBIENTS.length);
+    expect(started).toHaveBeenCalledTimes(AMBIENTS.length + 1);
     engine.close();
     expect(close).toHaveBeenCalled();
-    expect(stopped).toHaveBeenCalledTimes(AMBIENTS.length);
+    expect(stopped).toHaveBeenCalledTimes(AMBIENTS.length + 1);
   });
 });
 
@@ -192,5 +193,59 @@ describe("music persistence and cancellation", () => {
     expect(createBuffer).not.toHaveBeenCalled();
     expect(suspended).toHaveBeenCalledTimes(2);
     engine.close();
+  });
+});
+
+describe("native audio library", () => {
+  it("validates remote audio URLs without allowing executable schemes", () => {
+    expect(parseAudioURL("https://cdn.example.com/music/study.mp3")).toBe(
+      "https://cdn.example.com/music/study.mp3",
+    );
+    expect(() => parseAudioURL("javascript:alert(1)")).toThrow();
+    expect(() =>
+      parseAudioURL("https://user:pass@example.com/song.mp3"),
+    ).toThrow();
+  });
+
+  it("stores uploaded audio blobs separately from study JSON", async () => {
+    const repo = new Repository(new IDBFactory(), new MemoryStorage());
+    await repo.save("guest", fixture(), 0);
+    await repo.initialize("guest");
+    const blob = new Blob(["native-audio"], { type: "audio/mpeg" });
+    await repo.saveMusicBlob("guest", "musicblob_test123", blob);
+    const loaded = await repo.loadMusicBlob("guest", "musicblob_test123");
+    expect(loaded).not.toBeNull();
+    expect(await loaded!.text()).toBe("native-audio");
+    await repo.deleteMusicBlob("guest", "musicblob_test123");
+    expect(await repo.loadMusicBlob("guest", "musicblob_test123")).toBeNull();
+    await repo.close();
+  });
+
+  it("can clear all uploaded audio for a namespace", async () => {
+    const repo = new Repository(new IDBFactory(), new MemoryStorage());
+    await repo.save("guest", fixture(), 0);
+    await repo.initialize("guest");
+    await repo.saveMusicBlob(
+      "guest",
+      "musicblob_test123",
+      new Blob(["one"], { type: "audio/mpeg" }),
+    );
+    await repo.saveMusicBlob(
+      "guest",
+      "musicblob_test456",
+      new Blob(["two"], { type: "audio/mpeg" }),
+    );
+    await repo.saveMusicBlob(
+      "other",
+      "musicblob_test789",
+      new Blob(["keep"], { type: "audio/mpeg" }),
+    );
+    await repo.clearMusicBlobs("guest");
+    expect(await repo.loadMusicBlob("guest", "musicblob_test123")).toBeNull();
+    expect(await repo.loadMusicBlob("guest", "musicblob_test456")).toBeNull();
+    expect(
+      await repo.loadMusicBlob("other", "musicblob_test789"),
+    ).not.toBeNull();
+    await repo.close();
   });
 });

@@ -2,6 +2,7 @@ import type { DesignTheme, MusicSource } from "@/types/study";
 import { AMBIENTS, type AmbientId } from "./catalog";
 import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { parseYouTube } from "./youtube";
+import { parseAudioURL } from "./native-audio";
 export type PlaybackState = "playing" | "paused" | "stopped";
 export interface MusicSession {
   selection: string;
@@ -38,7 +39,11 @@ export function normalizeMusicSession(raw: unknown): MusicSession | null {
   let url = "";
   try {
     if (typeof track.url === "string" && track.url.length <= 2048) {
-      parseYouTube(track.url);
+      try {
+        parseYouTube(track.url);
+      } catch {
+        parseAudioURL(track.url);
+      }
       url = track.url;
     }
   } catch {

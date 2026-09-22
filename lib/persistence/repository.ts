@@ -57,7 +57,7 @@ export class Repository {
     if (!this.database)
       this.database = new Promise<IDBDatabase>((resolve, reject) => {
         let blocked = false;
-        const r = this.factory!.open(DB_NAME, 2);
+        const r = this.factory!.open(DB_NAME, 3);
         r.onupgradeneeded = () => {
           const db = r.result;
           if (!db.objectStoreNames.contains("documents"))
@@ -71,6 +71,10 @@ export class Repository {
               keyPath: ["namespace", "id"],
             }).createIndex("namespace", "namespace");
           }
+          if (!db.objectStoreNames.contains("musicBlobs"))
+            db.createObjectStore("musicBlobs", {
+              keyPath: ["namespace", "key"],
+            });
         };
         r.onsuccess = () => {
           if (blocked) {
@@ -287,6 +291,59 @@ export class Repository {
       )
       .sort((a, b) => b.createdAt - a.createdAt);
   }
+  async saveMusicBlob(
+    namespace: string,
+    key: string,
+    blob: Blob,
+  ): Promise<void> {
+    if (this.fallback)
+      throw Error("Төхөөрөмжийн аудио файл хадгалахад IndexedDB шаардлагатай.");
+    const db = await this.db(),
+      tx = db.transaction("musicBlobs", "readwrite"),
+      finished = done(tx);
+    tx.objectStore("musicBlobs").put({ namespace, key, blob });
+    await finished;
+  }
+
+  async loadMusicBlob(namespace: string, key: string): Promise<Blob | null> {
+    if (this.fallback) return null;
+    const db = await this.db();
+    const value = await request(
+      db
+        .transaction("musicBlobs", "readonly")
+        .objectStore("musicBlobs")
+        .get([namespace, key]),
+    );
+    return value?.blob instanceof Blob ? value.blob : null;
+  }
+
+  async deleteMusicBlob(namespace: string, key: string): Promise<void> {
+    if (this.fallback) return;
+    const db = await this.db(),
+      tx = db.transaction("musicBlobs", "readwrite"),
+      finished = done(tx);
+    tx.objectStore("musicBlobs").delete([namespace, key]);
+    await finished;
+  }
+
+  async clearMusicBlobs(namespace: string): Promise<void> {
+    if (this.fallback) return;
+    const db = await this.db(),
+      tx = db.transaction("musicBlobs", "readwrite"),
+      finished = done(tx),
+      store = tx.objectStore("musicBlobs"),
+      cursorRequest = store.openCursor();
+    cursorRequest.onsuccess = () => {
+      const cursor = cursorRequest.result;
+      if (!cursor) return;
+      const key = cursor.key;
+      if (Array.isArray(key) && key.length === 2 && key[0] === namespace)
+        cursor.delete();
+      cursor.continue();
+    };
+    await finished;
+  }
+
   async metadata<T>(key: string): Promise<T | null> {
     if (this.fallback) {
       const raw = this.local().getItem(PREFIX + "meta:" + key);
