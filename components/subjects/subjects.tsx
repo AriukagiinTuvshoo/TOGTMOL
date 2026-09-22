@@ -15,10 +15,26 @@ export function Subjects() {
   const { data, index, today, store, run, navigate } = useStudy(),
     [editing, setEditing] = useState<Subject | "new" | null>(null),
     [selected, setSelected] = useState(""),
-    [archived, setArchived] = useState(false);
+    [archived, setArchived] = useState(false),
+    [category, setCategory] = useState("all");
   const subject = data.subjects.find((s) => s.id === selected && !s.deletedAt),
     list = data.subjects.filter(
       (s) => !s.deletedAt && (archived || !s.archived),
+    ),
+    categories = [
+      { id: "all", name: "Бүгд", icon: "book" },
+      { id: "it", name: "IT / Програмчлал", icon: "chart" },
+      { id: "business", name: "Бизнес / Эдийн засаг", icon: "target" },
+      { id: "language", name: "Хэл", icon: "book" },
+      { id: "science", name: "Шинжлэх ухаан", icon: "spark" },
+      { id: "social", name: "Нийгэм / Хүмүүнлэг", icon: "user" },
+      { id: "school10", name: "10 жилийн сургууль", icon: "calendar" },
+      { id: "other", name: "Бусад", icon: "more" },
+    ],
+    categoryName = (id: string) =>
+      categories.find((c) => c.id === id)?.name ?? "Бусад",
+    categorized = list.filter(
+      (s) => category === "all" || (s.extras.subjectCategory ?? "other") === category,
     );
   if (subject) {
     const all = periodStats(index, "all", today, subject.id),
@@ -120,6 +136,7 @@ export function Subjects() {
           <SubjectForm
             subject={editing === "new" ? undefined : editing}
             onClose={() => setEditing(null)}
+            categories={categories.filter((c) => c.id !== "all")}
           />
         )}
       </div>
@@ -141,9 +158,40 @@ export function Subjects() {
           Хичээл нэмэх
         </button>
       </div>
-      {list.length ? (
-        <div className="subjects-grid">
-          {list.map((s) => {
+      <section className="subject-catalog">
+        <div className="subject-catalog-head">
+          <div>
+            <span className="eyebrow">ХИЧЭЭЛИЙН СОНГОЛТ</span>
+            <h1>Юу сурах вэ?</h1>
+            <p>Мэргэжил, чиглэлээрээ сонгоод зөвхөн хэрэгтэй хичээлүүдээ хараарай.</p>
+          </div>
+          <div className="subject-catalog-count">
+            <strong>{categorized.length}</strong>
+            <span>хичээл</span>
+          </div>
+        </div>
+        <div className="subject-category-grid">
+          {categories.map((c) => {
+            const count = list.filter(
+              (s) => (s.extras.subjectCategory ?? "other") === c.id,
+            ).length;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`subject-category-card ${category === c.id ? "active" : ""}`}
+                onClick={() => setCategory(c.id)}
+              >
+                <span className="subject-category-icon"><Icon name={c.icon} size={20} /></span>
+                <span><strong>{c.name}</strong><small>{count} хичээл</small></span>
+                <Icon name="chevron" size={16} />
+              </button>
+            );
+          })}
+        </div>
+        {categorized.length ? (
+          <div className="subjects-grid">
+          {categorized.map((s) => {
             const stats = periodStats(index, 7, today, s.id),
               sessions = index.bySubject.get(s.id) ?? [];
             return (
@@ -187,9 +235,9 @@ export function Subjects() {
               </button>
             );
           })}
-        </div>
-      ) : (
-        <section className="card">
+          </div>
+        ) : (
+          <section className="card">
           <Empty
             title="Юу сурахыг хүсэж байна вэ?"
             description="Хэл, математик, код… Өөрийн сонирхлыг энд нэмээрэй."
@@ -203,7 +251,8 @@ export function Subjects() {
             }
           />
         </section>
-      )}
+        )}
+      </section>
       {editing && (
         <SubjectForm
           subject={editing === "new" ? undefined : editing}
@@ -219,9 +268,11 @@ function SubjectForm({
 }: {
   subject?: Subject;
   onClose: () => void;
+  categories: { id: string; name: string }[];
 }) {
   const { data, store, run } = useStudy(),
     [name, setName] = useState(s?.name ?? ""),
+    [category, setCategory] = useState(String(s?.extras.subjectCategory ?? "other")),
     [color, setColor] = useState(
       s?.color ?? PALETTE[data.subjects.length % PALETTE.length],
     ),
@@ -239,8 +290,15 @@ function SubjectForm({
               () =>
                 store.mutate(
                   s
-                    ? actions.editSubject(s.id, { name, color, archived })
-                    : actions.addSubject(name, color),
+                    ? actions.editSubject(s.id, {
+                        name,
+                        color,
+                        archived,
+                        extras: { ...s.extras, subjectCategory: category },
+                      })
+                    : actions.addSubject(name, color, {
+                        subjectCategory: category,
+                      }),
                 ),
               "Хичээл хадгалагдлаа.",
             )
@@ -259,6 +317,12 @@ function SubjectForm({
             maxLength={100}
             placeholder="Жишээ: Япон хэл"
           />
+        </label>
+        <label>
+          Ангилал
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
         </label>
         <fieldset>
           <legend>Өнгө</legend>
