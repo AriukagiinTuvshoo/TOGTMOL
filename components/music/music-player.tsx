@@ -342,7 +342,7 @@ export function MusicPlayer() {
                 <h3>{name}</h3>
                 <p className="muted">
                   {playing
-                    ? "Утсаа түгжсэн ч тоглуулахыг үргэлжлүүлж болно."
+                    ? "Дэмждэг браузер, төхөөрөмж дээр background-аар үргэлжилнэ."
                     : "Play дарж эхлүүлнэ үү."}
                 </p>
               </div>
