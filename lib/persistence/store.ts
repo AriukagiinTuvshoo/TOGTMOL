@@ -208,6 +208,7 @@ export class StudyStore {
           emptyData(),
           this.state.revision,
         );
+        await this.repository.clearMusicBlobs(namespace);
         this.publish({ ...document, error: null });
         this.channel?.postMessage(namespace);
       } catch (error) {
