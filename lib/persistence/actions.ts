@@ -65,15 +65,16 @@ export const actions = {
       };
     },
   editSubject:
-    (id: string, patch: Pick<Subject, "name" | "color" | "archived"> & { extras?: Record<string, unknown> }) =>
+    (
+      id: string,
+      patch: Pick<Subject, "name" | "color" | "archived"> & {
+        extras?: Record<string, unknown>;
+      },
+    ) =>
     (data: StudyData): StudyData => {
       subject(data, id);
       const clean = patch.name.trim();
-      if (
-        !clean ||
-        clean.length > 100 ||
-        !/^#[a-f0-9]{6}$/i.test(patch.color)
-      )
+      if (!clean || clean.length > 100 || !/^#[a-f0-9]{6}$/i.test(patch.color))
         throw Error("Нэр болон өнгөө шалгана уу.");
       if (
         data.subjects.some(
@@ -225,7 +226,9 @@ export const actions = {
     (data: StudyData): StudyData => {
       const timer = data.activeTimer;
       if (!timer) return data;
-      const now = Number.isFinite(completedAt) ? Number(completedAt) : Date.now();
+      const now = Number.isFinite(completedAt)
+        ? Number(completedAt)
+        : Date.now();
 
       // A review timer can survive a reload before its final Save action.
       // Materialize its session here as well, but stay idempotent by timer id.

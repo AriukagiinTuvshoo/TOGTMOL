@@ -1,6 +1,10 @@
 import type { Settings } from "@/types/study";
 import { completionVolume } from "./preferences";
-import { COMPLETION_NOTES, countdownFrequency, timerChime } from "./timer-alerts";
+import {
+  COMPLETION_NOTES,
+  countdownFrequency,
+  timerChime,
+} from "./timer-alerts";
 
 type WebkitWindow = typeof window & {
   webkitAudioContext?: typeof AudioContext;
@@ -189,11 +193,7 @@ export async function playTimerWarning(settings: Settings, seconds = 10) {
   if (settings.extras.timerVibration !== false) safeVibrate([120, 70, 120]);
   // When the final-10-second countdown is enabled, it owns every second.
   // This prevents the warning melody and countdown ticks from overlapping.
-  if (
-    seconds <= 10 &&
-    seconds >= 1 &&
-    settings.extras.timerCountdown !== false
-  )
+  if (seconds <= 10 && seconds >= 1 && settings.extras.timerCountdown !== false)
     return;
   if (!settings.sound || completionVolume(settings) <= 0) return;
   try {
@@ -255,7 +255,7 @@ export async function playTimerComplete(settings: Settings, preview = false) {
     await ensureAudioReady();
     if (request !== generation) return false;
     const now = audioContext!.currentTime;
-    const volume = completionVolume(settings) * 0.30;
+    const volume = completionVolume(settings) * 0.3;
 
     // One original "finished!" phrase. It plays once instead of looping.
     COMPLETION_NOTES.forEach((frequency, index) => {
@@ -270,22 +270,8 @@ export async function playTimerComplete(settings: Settings, preview = false) {
     });
 
     // A soft final sparkle/chord gives the zero-second moment a warm finish.
-    scheduleTone(
-      1318.51,
-      now + 1.12,
-      0.78,
-      volume * 0.42,
-      "triangle",
-      0.04,
-    );
-    scheduleTone(
-      1567.98,
-      now + 1.12,
-      0.78,
-      volume * 0.30,
-      "triangle",
-      0.04,
-    );
+    scheduleTone(1318.51, now + 1.12, 0.78, volume * 0.42, "triangle", 0.04);
+    scheduleTone(1567.98, now + 1.12, 0.78, volume * 0.3, "triangle", 0.04);
     return true;
   } catch {
     /* Audio failure must not block timer completion or notification. */

@@ -133,8 +133,7 @@ export function TimerWatch() {
     const deadline =
       t.runningSince === null
         ? Date.now()
-        : t.runningSince +
-          Math.max(0, t.targetMs - t.accumulatedMs);
+        : t.runningSince + Math.max(0, t.targetMs - t.accumulatedMs);
     const remaining = deadline - Date.now();
 
     // If the tab/render was resumed exactly at or after the deadline,
@@ -142,9 +141,7 @@ export function TimerWatch() {
     // handles suspended/background tabs without depending on another render.
     const timeout = window.setTimeout(
       () => void completeTimer(timerId, deadline),
-      remaining <= 0
-        ? 0
-        : Math.min(remaining + 60, 2147483647),
+      remaining <= 0 ? 0 : Math.min(remaining + 60, 2147483647),
     );
 
     return () => window.clearTimeout(timeout);
@@ -591,9 +588,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() =>
-              setNotePanel({ timerId: tId, open: !showNote })
-            }
+            onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}

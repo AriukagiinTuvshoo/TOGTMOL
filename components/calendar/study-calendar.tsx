@@ -32,7 +32,9 @@ export function StudyCalendar({
     ),
     [subjectId, setSubject] = useState(fixedSubject ?? ""),
     [month, setMonth] = useState(today.slice(0, 7)),
-    [calendarView, setCalendarView] = useState<"month" | "week" | "day" | "timeline">("month"),
+    [calendarView, setCalendarView] = useState<
+      "month" | "week" | "day" | "timeline"
+    >("month"),
     [addingTask, setAddingTask] = useState(false);
   const actualSubject = fixedSubject ?? subjectId,
     map = actualSubject ? index.subjectDays.get(actualSubject) : index.days;
@@ -48,8 +50,22 @@ export function StudyCalendar({
   const day = map?.get(selected),
     daySessions = index.sessions.filter((s) => day?.sessions.has(s.id));
   const selectedMinutes = Math.round((day?.seconds ?? 0) / 60);
-  const dayMood = selectedMinutes >= 60 ? "🏆" : selectedMinutes >= 30 ? "🔥" : selectedMinutes > 0 ? "🌱" : "🌿";
-  const dayMoodText = selectedMinutes >= 60 ? "Өнөөдрийн хүчтэй ахиц!" : selectedMinutes >= 30 ? "Гоё төвлөрчээ!" : selectedMinutes > 0 ? "Жижиг ахиц ч ахиц." : "Эндээс дахин эхэлж болно.";
+  const dayMood =
+    selectedMinutes >= 60
+      ? "🏆"
+      : selectedMinutes >= 30
+        ? "🔥"
+        : selectedMinutes > 0
+          ? "🌱"
+          : "🌿";
+  const dayMoodText =
+    selectedMinutes >= 60
+      ? "Өнөөдрийн хүчтэй ахиц!"
+      : selectedMinutes >= 30
+        ? "Гоё төвлөрчээ!"
+        : selectedMinutes > 0
+          ? "Жижиг ахиц ч ахиц."
+          : "Эндээс дахин эхэлж болно.";
   const cell = (ds: string | null, i: number) =>
     ds ? (
       <button
@@ -82,13 +98,21 @@ export function StudyCalendar({
   const selectedWeekStart = weekStart(selected);
   const selectedWeekDates = datesBetween(
     selectedWeekStart,
-    dateKey(new Date((parseDate(selectedWeekStart)?.getTime() ?? 0) + 6 * 86400000)),
+    dateKey(
+      new Date((parseDate(selectedWeekStart)?.getTime() ?? 0) + 6 * 86400000),
+    ),
   );
   const scheduleSessions = index.sessions
-    .filter((s) => !s.deletedAt && (!actualSubject || s.subjectId === actualSubject))
+    .filter(
+      (s) => !s.deletedAt && (!actualSubject || s.subjectId === actualSubject),
+    )
     .sort((a, b) => a.startEpoch - b.startEpoch);
-  const selectedDaySessions = scheduleSessions.filter((s) => s.date === selected);
-  const selectedWeekSessions = scheduleSessions.filter((s) => selectedWeekDates.includes(s.date));
+  const selectedDaySessions = scheduleSessions.filter(
+    (s) => s.date === selected,
+  );
+  const selectedWeekSessions = scheduleSessions.filter((s) =>
+    selectedWeekDates.includes(s.date),
+  );
   const moveSelectedDay = (delta: number) => {
     if (!selectedDateObj) return;
     const d = new Date(selectedDateObj);
@@ -123,97 +147,274 @@ export function StudyCalendar({
             <h2>Таны суралцах хэмнэл</h2>
             <p>Өдөр бүрийн цаг, хичээл, жижиг ахицыг нэг дороос хараарай.</p>
           </div>
-          <div className="calendar-smart-buddy" aria-hidden="true">🤖✨</div>
+          <div className="calendar-smart-buddy" aria-hidden="true">
+            🤖✨
+          </div>
         </div>
         <div className="calendar-quick-actions">
-          <button className="button primary small" onClick={() => setAddingTask(true)}>＋ Төлөвлөгөө нэмэх</button>
-          <button className="button small" onClick={() => { setCalendarView("day"); setSelected(today); }}>☀️ Өнөөдөр</button>
+          <button
+            className="button primary small"
+            onClick={() => setAddingTask(true)}
+          >
+            ＋ Төлөвлөгөө нэмэх
+          </button>
+          <button
+            className="button small"
+            onClick={() => {
+              setCalendarView("day");
+              setSelected(today);
+            }}
+          >
+            ☀️ Өнөөдөр
+          </button>
         </div>
         <div className="calendar-summary-strip">
-          <div><span>🌱</span><strong>{dayMood}</strong><small>{dayMoodText}</small></div>
-          <div><span>⏱️</span><strong>{formatTime(day?.seconds ?? 0)}</strong><small>сонгосон өдөр</small></div>
-          <div><span>📚</span><strong>{day?.subjects.size ?? 0}</strong><small>хичээл</small></div>
-          <div><span>✨</span><strong>{daySessions.length}</strong><small>session</small></div>
+          <div>
+            <span>🌱</span>
+            <strong>{dayMood}</strong>
+            <small>{dayMoodText}</small>
+          </div>
+          <div>
+            <span>⏱️</span>
+            <strong>{formatTime(day?.seconds ?? 0)}</strong>
+            <small>сонгосон өдөр</small>
+          </div>
+          <div>
+            <span>📚</span>
+            <strong>{day?.subjects.size ?? 0}</strong>
+            <small>хичээл</small>
+          </div>
+          <div>
+            <span>✨</span>
+            <strong>{daySessions.length}</strong>
+            <small>session</small>
+          </div>
         </div>
         <div className="filter-row">
           <div className="segmented calendar-view-switch">
-            {([["month", "📅 Сар"], ["week", "🗓️ 7 хоног"], ["day", "☀️ Өдөр"], ["timeline", "🕐 Timeline"]] as const).map(([v, label]) => (
-              <button key={v} aria-pressed={calendarView === v} onClick={() => setCalendarView(v)}>{label}</button>
+            {(
+              [
+                ["month", "📅 Сар"],
+                ["week", "🗓️ 7 хоног"],
+                ["day", "☀️ Өдөр"],
+                ["timeline", "🕐 Timeline"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                aria-pressed={calendarView === v}
+                onClick={() => setCalendarView(v)}
+              >
+                {label}
+              </button>
             ))}
           </div>
           <div className="calendar-filter-tools">
             <div className="segmented calendar-range-switch">
               {([30, 90, 365] as const).map((n) => (
-                <button key={n} aria-pressed={range === n} onClick={() => setRange(n)}>{n} өдөр</button>
+                <button
+                  key={n}
+                  aria-pressed={range === n}
+                  onClick={() => setRange(n)}
+                >
+                  {n} өдөр
+                </button>
               ))}
             </div>
-            {!fixedSubject && <SubjectSelect all value={subjectId} onChange={setSubject} />}
+            {!fixedSubject && (
+              <SubjectSelect all value={subjectId} onChange={setSubject} />
+            )}
           </div>
         </div>
         {calendarView === "week" ? (
           <>
             <div className="calendar-period-nav">
-              <button className="icon-button bordered" onClick={() => moveSelectedWeek(-1)} aria-label="Өмнөх 7 хоног">‹</button>
-              <strong>{selectedWeekStart} — {selectedWeekDates[6]}</strong>
-              <button className="icon-button bordered" onClick={() => moveSelectedWeek(1)} aria-label="Дараагийн 7 хоног">›</button>
+              <button
+                className="icon-button bordered"
+                onClick={() => moveSelectedWeek(-1)}
+                aria-label="Өмнөх 7 хоног"
+              >
+                ‹
+              </button>
+              <strong>
+                {selectedWeekStart} — {selectedWeekDates[6]}
+              </strong>
+              <button
+                className="icon-button bordered"
+                onClick={() => moveSelectedWeek(1)}
+                aria-label="Дараагийн 7 хоног"
+              >
+                ›
+              </button>
             </div>
             <div className="calendar-week-grid">
               {selectedWeekDates.map((ds) => {
-                const sessions = selectedWeekSessions.filter((s) => s.date === ds);
+                const sessions = selectedWeekSessions.filter(
+                  (s) => s.date === ds,
+                );
                 const summary = map?.get(ds);
-                return <button key={ds} className={`calendar-week-day ${ds === selected ? "selected" : ""} ${ds === today ? "today" : ""}`} onClick={() => setSelected(ds)}>
-                  <span className="calendar-week-date">{ds.slice(5).replace("-", "/")}</span>
-                  <strong>{formatTime(summary?.seconds ?? 0)}</strong>
-                  {sessions.slice(0, 3).map((s) => <span className="calendar-event-chip" key={s.id}><i style={{background: index.subjects.get(s.subjectId)?.color}} />{index.subjects.get(s.subjectId)?.icon ?? "📚"} {index.subjects.get(s.subjectId)?.name ?? "Хичээл"} · {Math.round(s.durationSec / 60)}м</span>)}
-                  {sessions.length > 3 && <small>+{sessions.length - 3} session</small>}
-                </button>;
+                return (
+                  <button
+                    key={ds}
+                    className={`calendar-week-day ${ds === selected ? "selected" : ""} ${ds === today ? "today" : ""}`}
+                    onClick={() => setSelected(ds)}
+                  >
+                    <span className="calendar-week-date">
+                      {ds.slice(5).replace("-", "/")}
+                    </span>
+                    <strong>{formatTime(summary?.seconds ?? 0)}</strong>
+                    {sessions.slice(0, 3).map((s) => (
+                      <span className="calendar-event-chip" key={s.id}>
+                        <i
+                          style={{
+                            background: index.subjects.get(s.subjectId)?.color,
+                          }}
+                        />
+                        {index.subjects.get(s.subjectId)?.icon ?? "📚"}{" "}
+                        {index.subjects.get(s.subjectId)?.name ?? "Хичээл"} ·{" "}
+                        {Math.round(s.durationSec / 60)}м
+                      </span>
+                    ))}
+                    {sessions.length > 3 && (
+                      <small>+{sessions.length - 3} session</small>
+                    )}
+                  </button>
+                );
               })}
             </div>
           </>
         ) : calendarView === "day" ? (
           <>
             <div className="calendar-period-nav">
-              <button className="icon-button bordered" onClick={() => moveSelectedDay(-1)} aria-label="Өмнөх өдөр">‹</button>
+              <button
+                className="icon-button bordered"
+                onClick={() => moveSelectedDay(-1)}
+                aria-label="Өмнөх өдөр"
+              >
+                ‹
+              </button>
               <strong>{dateLabel(selected, today)}</strong>
-              <button className="icon-button bordered" onClick={() => moveSelectedDay(1)} aria-label="Дараагийн өдөр">›</button>
+              <button
+                className="icon-button bordered"
+                onClick={() => moveSelectedDay(1)}
+                aria-label="Дараагийн өдөр"
+              >
+                ›
+              </button>
             </div>
             <div className="calendar-day-agenda">
-              {selectedDaySessions.length ? selectedDaySessions.map((s) => {
-                const subject = index.subjects.get(s.subjectId);
-                const start = new Date(s.startEpoch);
-                return <div className="calendar-agenda-row" key={s.id}>
-                  <time>{start.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</time>
-                  <div className="calendar-agenda-dot" style={{background: subject?.color}} />
-                  <div><strong>{subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}</strong><small>{Math.round(s.durationSec / 60)} минут · {s.note || "Төвлөрсөн session"}</small></div>
-                </div>;
-              }) : <div className="calendar-empty-state">🌱 Энэ өдөр session алга. Жижигхэн 10 минутын алхмаас эхэлж болно.</div>}
+              {selectedDaySessions.length ? (
+                selectedDaySessions.map((s) => {
+                  const subject = index.subjects.get(s.subjectId);
+                  const start = new Date(s.startEpoch);
+                  return (
+                    <div className="calendar-agenda-row" key={s.id}>
+                      <time>
+                        {start.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                      <div
+                        className="calendar-agenda-dot"
+                        style={{ background: subject?.color }}
+                      />
+                      <div>
+                        <strong>
+                          {subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}
+                        </strong>
+                        <small>
+                          {Math.round(s.durationSec / 60)} минут ·{" "}
+                          {s.note || "Төвлөрсөн session"}
+                        </small>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="calendar-empty-state">
+                  🌱 Энэ өдөр session алга. Жижигхэн 10 минутын алхмаас эхэлж
+                  болно.
+                </div>
+              )}
             </div>
           </>
         ) : calendarView === "timeline" ? (
           <div className="calendar-timeline">
-            {scheduleSessions.slice(-30).reverse().map((s) => {
-              const subject = index.subjects.get(s.subjectId);
-              return <button key={s.id} className="calendar-timeline-row" onClick={() => setSelected(s.date)}>
-                <time>{s.date}<br />{new Date(s.startEpoch).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</time>
-                <span className="calendar-timeline-line"><i style={{background: subject?.color}} /></span>
-                <span><strong>{subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}</strong><small>{Math.round(s.durationSec / 60)} минут</small></span>
-              </button>;
-            })}
-            {!scheduleSessions.length && <div className="calendar-empty-state">📭 Одоогоор session бүртгэгдээгүй байна.</div>}
+            {scheduleSessions
+              .slice(-30)
+              .reverse()
+              .map((s) => {
+                const subject = index.subjects.get(s.subjectId);
+                return (
+                  <button
+                    key={s.id}
+                    className="calendar-timeline-row"
+                    onClick={() => setSelected(s.date)}
+                  >
+                    <time>
+                      {s.date}
+                      <br />
+                      {new Date(s.startEpoch).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                    <span className="calendar-timeline-line">
+                      <i style={{ background: subject?.color }} />
+                    </span>
+                    <span>
+                      <strong>
+                        {subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}
+                      </strong>
+                      <small>{Math.round(s.durationSec / 60)} минут</small>
+                    </span>
+                  </button>
+                );
+              })}
+            {!scheduleSessions.length && (
+              <div className="calendar-empty-state">
+                📭 Одоогоор session бүртгэгдээгүй байна.
+              </div>
+            )}
           </div>
         ) : range === "month" ? (
           <>
             <div className="calendar-month-head">
-              <button className="icon-button bordered" aria-label="Өмнөх сар" onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() - 1); setMonth(dateKey(d).slice(0, 7)); } }}>‹</button>
+              <button
+                className="icon-button bordered"
+                aria-label="Өмнөх сар"
+                onClick={() => {
+                  const d = parseDate(month + "-01");
+                  if (d) {
+                    d.setMonth(d.getMonth() - 1);
+                    setMonth(dateKey(d).slice(0, 7));
+                  }
+                }}
+              >
+                ‹
+              </button>
               <label className="month-picker">
-              Сар
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            </label>
-            <button className="icon-button bordered" aria-label="Дараагийн сар" onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() + 1); setMonth(dateKey(d).slice(0, 7)); } }}>›</button>
+                Сар
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                />
+              </label>
+              <button
+                className="icon-button bordered"
+                aria-label="Дараагийн сар"
+                onClick={() => {
+                  const d = parseDate(month + "-01");
+                  if (d) {
+                    d.setMonth(d.getMonth() + 1);
+                    setMonth(dateKey(d).slice(0, 7));
+                  }
+                }}
+              >
+                ›
+              </button>
             </div>
             <div className="monthly-calendar">
               {SHORT_DAYS.map((s) => (
@@ -307,18 +508,56 @@ export function StudyCalendar({
         </div>
         <div className="calendar-planned-tasks">
           <div className="calendar-subsection-head">
-            <div><h3>📌 Энэ өдрийн төлөвлөгөө</h3><p>Цагтай алхмууд календарь дээр харагдана.</p></div>
-            <button className="button small" onClick={() => setAddingTask(true)}>＋ Нэмэх</button>
-          </div>
-          {data.tasks.filter((t) => !t.deletedAt && t.date === selected && (!actualSubject || t.subjectId === actualSubject)).sort((a,b) => (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99")).map((t) => (
-            <div className={`calendar-plan-row ${t.completed ? "completed" : ""}`} key={t.id}>
-              <span className="calendar-plan-time">{t.startTime ?? "—"}</span>
-              <span className="calendar-plan-icon">{index.subjects.get(t.subjectId)?.icon ?? "📚"}</span>
-              <div><strong>{t.title}</strong><small>{index.subjects.get(t.subjectId)?.name ?? "Хичээл"} · {t.minutes} минут</small></div>
-              <span>{t.completed ? "✓" : "○"}</span>
+            <div>
+              <h3>📌 Энэ өдрийн төлөвлөгөө</h3>
+              <p>Цагтай алхмууд календарь дээр харагдана.</p>
             </div>
-          ))}
-          {!data.tasks.some((t) => !t.deletedAt && t.date === selected && (!actualSubject || t.subjectId === actualSubject)) && <p className="tiny muted">Энэ өдөр төлөвлөгөө алга. Нэг жижиг алхам нэмээрэй.</p>}
+            <button
+              className="button small"
+              onClick={() => setAddingTask(true)}
+            >
+              ＋ Нэмэх
+            </button>
+          </div>
+          {data.tasks
+            .filter(
+              (t) =>
+                !t.deletedAt &&
+                t.date === selected &&
+                (!actualSubject || t.subjectId === actualSubject),
+            )
+            .sort((a, b) =>
+              (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99"),
+            )
+            .map((t) => (
+              <div
+                className={`calendar-plan-row ${t.completed ? "completed" : ""}`}
+                key={t.id}
+              >
+                <span className="calendar-plan-time">{t.startTime ?? "—"}</span>
+                <span className="calendar-plan-icon">
+                  {index.subjects.get(t.subjectId)?.icon ?? "📚"}
+                </span>
+                <div>
+                  <strong>{t.title}</strong>
+                  <small>
+                    {index.subjects.get(t.subjectId)?.name ?? "Хичээл"} ·{" "}
+                    {t.minutes} минут
+                  </small>
+                </div>
+                <span>{t.completed ? "✓" : "○"}</span>
+              </div>
+            ))}
+          {!data.tasks.some(
+            (t) =>
+              !t.deletedAt &&
+              t.date === selected &&
+              (!actualSubject || t.subjectId === actualSubject),
+          ) && (
+            <p className="tiny muted">
+              Энэ өдөр төлөвлөгөө алга. Нэг жижиг алхам нэмээрэй.
+            </p>
+          )}
         </div>
         <div className="manual-marks">
           <h3>Суралцсан гэж тэмдэглэх</h3>
@@ -359,7 +598,9 @@ export function StudyCalendar({
           </div>
         </div>
       </section>
-      {addingTask && <TaskForm date={selected} onClose={() => setAddingTask(false)} />}
+      {addingTask && (
+        <TaskForm date={selected} onClose={() => setAddingTask(false)} />
+      )}
       {dayKnowledge.length > 0 && (
         <section className="card">
           <h2>Энэ өдрийн мэдлэг</h2>
