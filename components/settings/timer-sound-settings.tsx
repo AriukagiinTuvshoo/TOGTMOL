@@ -59,7 +59,7 @@ export function TimerSoundSettings() {
         </select>
       </label>
       <p className="tiny muted">
-        Сонгосон аялгуу 3 удаа давтагдана. Интернэтгүй үед ч апп дотроо тоглоно.
+        Дуусах дуу нэг удаа тоглоно. Эцсийн мөчид зөөлөн, гэгээлэг аялгуугаар дуусгана.
       </p>
       <label>
         Дуусах дохионы түвшин · {Math.round(completionVolume(settings) * 100)}%
