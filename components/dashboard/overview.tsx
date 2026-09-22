@@ -15,11 +15,15 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "@/components/statistics/charts";
 import { DailyPlan } from "./daily-plan";
 import { Insights } from "@/components/assistant/insights";
+import { companionProgress } from "@/lib/world/progress";
 export function Overview() {
   const { data, index, today, navigate } = useStudy(),
     week = weeklyReport(index, today),
     subjects = data.subjects.filter((s) => !s.deletedAt && !s.archived),
-    streak = currentStreak(new Set(index.sortedDates), today);
+    streak = currentStreak(new Set(index.sortedDates), today),
+    progress = companionProgress(data, today),
+    dailyTargetMinutes = data.goals.dailyMinutes ?? Math.max(1, Math.round((data.goals.weeklyHours * 60) / Math.max(1, data.goals.weeklyDays))),
+    dailyGoalPercent = Math.min(100, (periodStats(index, 1, today).seconds / (dailyTargetMinutes * 60)) * 100);
   const weeklyStats = periodStats(
     index,
     datesBetween(weekStart(today), today).length,
@@ -55,42 +59,28 @@ export function Overview() {
       </section>
       <div className="metrics four">
         <Metric
-          label="Өнөөдрийн хугацаа"
-          value={formatTime(index.days.get(today)?.seconds ?? 0)}
-          icon="clock"
-          foot={
-            index.days.get(today)?.subjects.size
-              ? "Өнөөдрийн алхмаа хийлээ"
-              : "Эхлэхэд оройтоогүй"
-          }
-        />
-        <Metric
-          label="Одоогийн дараалал"
-          value={
-            <>
-              {streak}
-              <small>өдөр</small>
-            </>
-          }
+          label="Day Streak"
+          value={<><span className="metric-emoji">🔥</span> {streak}<small> өдөр</small></>}
           icon="leaf"
-          foot="Дахин эхлэх боломж үргэлж бий"
+          foot={streak ? "Хэмнэлээ үргэлжлүүлээрэй" : "Өнөөдөр эхлэхэд оройтоогүй"}
         />
         <Metric
-          label="Энэ долоо хоног"
-          value={formatTime(week.seconds)}
+          label="Level"
+          value={<><span className="metric-emoji">✦</span> {progress.level}</>}
+          icon="award"
+          foot={progress.intoLevel + "/100 XP энэ түвшинд"}
+        />
+        <Metric
+          label="XP"
+          value={<>{progress.xp}<small> XP</small></>}
+          icon="spark"
+          foot={progress.todayXP ? "Өнөөдөр +" + progress.todayXP + " XP" : "Жижиг алхам = XP"}
+        />
+        <Metric
+          label="Daily Goal"
+          value={<>{Math.round(dailyGoalPercent)}<small>%</small></>}
           icon="chart"
-          foot={`${week.studyDays} өдөр суралцсан`}
-        />
-        <Metric
-          label="Нийт суралцсан өдөр"
-          value={
-            <>
-              {index.days.size}
-              <small>өдөр</small>
-            </>
-          }
-          icon="calendar"
-          foot={`${subjects.length} идэвхтэй хичээл`}
+          foot={formatTime(index.days.get(today)?.seconds ?? 0) + " / " + dailyTargetMinutes + "м"}
         />
       </div>
       <div className="dashboard-columns">
