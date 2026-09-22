@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./world.css";
 import "./knowledge.css";
+import "./neon.css";
 export const metadata: Metadata = {
   title: "Тогтмол v5 — Бондооктой хамт суралцъя",
   description:
