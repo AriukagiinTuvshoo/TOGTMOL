@@ -453,7 +453,7 @@ it("falls back to a labelled local reply when online AI has no configured accoun
     expect(screen.getByLabelText("Онлайн AI ашиглах")).toBeChecked(),
   );
   fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
-  expect(await screen.findByText("Бондоок · Local")).toBeVisible();
+  expect(screen.getByText("ТӨХӨӨРӨМЖ ДЭЭР")).toBeVisible();
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
   );
