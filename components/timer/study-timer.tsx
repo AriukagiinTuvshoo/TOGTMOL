@@ -80,7 +80,7 @@ export function TimerWatch() {
   );
 
   const completeTimer = useCallback(
-    async (expectedId: string) => {
+    async (expectedId: string, expectedDeadline?: number) => {
       if (finishing.current) return;
       const current = store.getSnapshot().data.activeTimer;
       if (
@@ -88,14 +88,20 @@ export function TimerWatch() {
         current.id !== expectedId ||
         !current.running ||
         current.status !== "active" ||
-        current.targetMs === null ||
-        elapsed(current, Date.now()) < current.targetMs
+        current.targetMs === null
       )
         return;
+      const deadline =
+        Number.isFinite(expectedDeadline) && expectedDeadline !== undefined
+          ? expectedDeadline
+          : current.runningSince === null
+            ? Date.now()
+            : current.runningSince +
+              Math.max(0, current.targetMs - current.accumulatedMs);
       finishing.current = true;
       const phase = current.phase;
       const runningSince = current.runningSince;
-      const ok = await run(() => store.mutate(actions.finish()));
+      const ok = await run(() => store.mutate(actions.finish(deadline)));
       finishing.current = false;
       if (!ok) return;
       const message =
@@ -124,9 +130,14 @@ export function TimerWatch() {
     if (!t?.running || t.status !== "active" || t.targetMs === null) return;
 
     const timerId = t.id;
-    const remaining = Math.max(0, t.targetMs - elapsed(t, Date.now()));
+    const deadline =
+      t.runningSince === null
+        ? Date.now()
+        : t.runningSince +
+          Math.max(0, t.targetMs - t.accumulatedMs);
+    const remaining = Math.max(0, deadline - Date.now());
     const timeout = window.setTimeout(
-      () => void completeTimer(timerId),
+      () => void completeTimer(timerId, deadline),
       Math.min(Math.max(0, remaining) + 60, 2147483647),
     );
 
