@@ -1142,3 +1142,85 @@ html, body {
     min-height: 0;
   }
 }
+
+/* Focus screen: keep the music controls available, matching the reference layouts. */
+.is-focus .music-player {
+  display: block !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 18px !important;
+  width: min(760px, calc(100% - 36px)) !important;
+  transform: translateX(-50%);
+  border-radius: 18px !important;
+  opacity: .96;
+}
+
+:root:not([data-theme="light"]) .focus-timer-screen,
+:root[data-theme="dark"] .focus-timer-screen {
+  background:
+    linear-gradient(rgba(3, 7, 20, .30), rgba(3, 7, 20, .46)),
+    var(--room-body-background-image),
+    radial-gradient(circle at 50% 25%, rgba(112, 76, 255, .18), transparent 34%),
+    #040816 !important;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+:root[data-ui-theme="cyber"] .focus-timer-screen {
+  background:
+    linear-gradient(rgba(10, 1, 20, .34), rgba(8, 2, 20, .48)),
+    var(--room-body-background-image),
+    radial-gradient(circle at 50% 25%, rgba(255, 60, 172, .16), transparent 34%),
+    #060212 !important;
+  background-size: cover;
+}
+
+:root[data-ui-theme="calm"] .focus-timer-screen {
+  background:
+    linear-gradient(rgba(2, 13, 20, .28), rgba(2, 13, 20, .44)),
+    var(--room-body-background-image),
+    radial-gradient(circle at 50% 25%, rgba(36, 217, 194, .13), transparent 34%),
+    #041018 !important;
+  background-size: cover;
+}
+
+:root:not([data-theme="light"]) .focus-timer-stage .timer-card,
+:root[data-theme="dark"] .focus-timer-stage .timer-card {
+  background: rgba(4, 11, 26, .54) !important;
+  backdrop-filter: blur(8px);
+}
+
+:root:not([data-theme="light"]) .focus-timer-stage .timer-orbit,
+:root[data-theme="dark"] .focus-timer-stage .timer-orbit {
+  border-width: 4px !important;
+  background: radial-gradient(circle at 50% 42%, rgba(141,92,255,.10), rgba(5,10,22,.16) 62%, transparent 63%);
+}
+
+:root:not([data-theme="light"]) .focus-timer-stage .timer-digits,
+:root[data-theme="dark"] .focus-timer-stage .timer-digits {
+  font-weight: 730;
+  letter-spacing: -3px;
+  text-shadow:
+    0 0 26px rgba(196, 173, 255, .18),
+    0 0 62px rgba(51, 217, 255, .12);
+}
+
+:root:not([data-theme="light"]) .music-player .music-bar,
+:root[data-theme="dark"] .music-player .music-bar {
+  min-height: 58px;
+}
+
+:root:not([data-theme="light"]) .music-player .music-play,
+:root[data-theme="dark"] .music-player .music-play {
+  background: linear-gradient(135deg, #7d4cff, #31dcff) !important;
+  color: #fff !important;
+  box-shadow: 0 0 22px rgba(70, 202, 255, .18);
+}
+
+@media (max-width: 650px) {
+  .is-focus .music-player {
+    width: calc(100% - 18px) !important;
+    bottom: calc(9px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
