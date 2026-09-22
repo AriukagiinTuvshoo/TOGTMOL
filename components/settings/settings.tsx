@@ -21,6 +21,11 @@ export function Settings() {
     [short, setShort] = useState(String(data.settings.shortBreakMinutes)),
     [long, setLong] = useState(String(data.settings.longBreakMinutes)),
     [time, setTime] = useState(data.settings.reminderTime ?? "");
+  const warningRaw = data.settings.extras.timerWarningSeconds;
+  const warningSeconds =
+    warningRaw === 10 || warningRaw === 30 || warningRaw === 60
+      ? warningRaw
+      : 0;
   return (
     <div className="settings-grid">
       <div className="stack">
@@ -154,6 +159,29 @@ export function Settings() {
                 }}
               />
               Timer дуусахад дуу гаргах
+            </label>
+            <label>
+              Дуусахаас өмнө анхааруулах
+              <select
+                value={warningSeconds}
+                onChange={(e) =>
+                  run(() =>
+                    store.mutate(
+                      actions.settings({
+                        extras: {
+                          ...data.settings.extras,
+                          timerWarningSeconds: Number(e.target.value),
+                        },
+                      }),
+                    ),
+                  )
+                }
+              >
+                <option value={0}>Унтраах</option>
+                <option value={60}>60 секундийн өмнө</option>
+                <option value={30}>30 секундийн өмнө</option>
+                <option value={10}>10 секундийн өмнө</option>
+              </select>
             </label>
             <label className="check-label">
               <input
