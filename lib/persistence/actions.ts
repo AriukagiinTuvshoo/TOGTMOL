@@ -180,6 +180,7 @@ export const actions = {
         (!Number.isFinite(minutes) || !minutes || minutes < 1 || minutes > 240)
       )
         throw Error("Хугацаа 1–240 минут байна.");
+      const now = Date.now();
       return {
         ...data,
         activeTimer: {
@@ -188,10 +189,10 @@ export const actions = {
             mode,
             mode === "stopwatch" ? "focus" : phase,
             minutes,
-            Date.now(),
+            now,
             taskId,
           ),
-          date: studyDate(new Date(Date.now()), dayBoundary(data.settings)),
+          date: studyDate(new Date(now), dayBoundary(data.settings)),
           extras: taskId
             ? {
                 taskId,
