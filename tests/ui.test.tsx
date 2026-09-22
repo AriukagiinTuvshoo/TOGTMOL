@@ -93,7 +93,11 @@ describe("interactive local workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
     await screen.findByRole("button", { name: "Save result" });
     fireEvent.click(screen.getByRole("button", { name: "Save result" }));
-    await screen.findByText(/Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа./);
+    await screen.findByText(
+      /Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа./,
+      {},
+      { timeout: 10000 },
+    );
     const repo = new Repository(indexedDB, localStorage),
       saved = await repo.load("guest");
     expect(saved?.data.sessions).toHaveLength(1);

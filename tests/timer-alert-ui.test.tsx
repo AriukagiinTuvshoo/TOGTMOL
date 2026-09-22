@@ -8,6 +8,7 @@ import {
   render,
   screen,
   within,
+  waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { fixture, NOW } from "./fixtures";
@@ -30,6 +31,7 @@ vi.mock("@/lib/notifications", () => sounds);
 let data: StudyData;
 let now: number;
 const navigate = vi.fn();
+const setNotice = vi.fn();
 const store = {
   getSnapshot: () => ({ data, namespace: "local" }),
   mutate: async (transform: (d: StudyData) => StudyData) => {
@@ -46,7 +48,7 @@ vi.mock("@/hooks/use-study", () => ({
     store,
     run,
     navigate,
-    setNotice: vi.fn(),
+    setNotice,
     index: { subjects: new Map(data.subjects.map((s) => [s.id, s])) },
   }),
   useClock: () => now,
@@ -90,25 +92,18 @@ it("counts 10 through 1 once per second and Stop silences the rest of this count
 });
 
 it("auto-completes from the deadline timeout without requiring another render", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   render(<TimerWatch />);
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
-  expect(data.activeTimer?.status).toBe("review");
-  expect(sounds.notifyUser).toHaveBeenCalledOnce();
+  await waitFor(() => expect(data.activeTimer?.status).toBe("review"));
+  await waitFor(() => expect(sounds.notifyUser).toHaveBeenCalledOnce());
 });
 
 it("finishes once, displays Stop first, and stops audio when dismissed", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
+  const dialog = await screen.findByRole("dialog", {
+    name: "Хугацаа дууслаа!",
   });
-  view.rerender(<TimerWatch />);
-  const dialog = screen.getByRole("dialog", { name: "Хугацаа дууслаа!" });
   expect(within(dialog).getAllByRole("button")[0]).toHaveTextContent(
     "Дууг зогсоох",
   );
@@ -122,12 +117,9 @@ it("finishes once, displays Stop first, and stops audio when dismissed", async (
 });
 
 it("Escape and View result both silence the alert", async () => {
-  vi.useFakeTimers();
   now = NOW + 60000;
   const view = render(<TimerWatch />);
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
+  await screen.findByRole("dialog");
   fireEvent(
     screen.getByRole("dialog"),
     new Event("cancel", { bubbles: true, cancelable: true }),
@@ -137,9 +129,7 @@ it("Escape and View result both silence the alert", async () => {
   view.unmount();
   data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW);
   render(<TimerWatch />);
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(60);
-  });
+  await screen.findByRole("dialog");
   fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ харах" }));
   expect(navigate).toHaveBeenCalledWith("focus");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -161,6 +151,7 @@ it("skips missed ticks after suspension and resets countdown for another timer",
 
 it("finishes a countdown when Pause is clicked after its deadline", async () => {
   now = NOW + 60000;
+  data.sessions = [];
   const view = render(<StudyTimer />);
   await act(async () => {});
   fireEvent.click(screen.getByRole("button", { name: "Pause" }));
@@ -231,14 +222,23 @@ it("resets task completion choice when a new timer starts", async () => {
 
   data.activeTimer = null;
   view.rerender(<StudyTimer />);
-  data.activeTimer = startTimer("math", "pomodoro", "focus", 1, NOW + 1000, "task-1");
+  data.activeTimer = startTimer(
+    "math",
+    "pomodoro",
+    "focus",
+    1,
+    NOW + 1000,
+    "task-1",
+  );
   view.rerender(<StudyTimer />);
 
   await act(async () => {});
   expect(
-    (screen.getByRole("checkbox", {
-      name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
-    }) as HTMLInputElement).checked,
+    (
+      screen.getByRole("checkbox", {
+        name: "Хадгалаад төлөвлөгөөг биелсэнд тооцох",
+      }) as HTMLInputElement
+    ).checked,
   ).toBe(true);
 });
 

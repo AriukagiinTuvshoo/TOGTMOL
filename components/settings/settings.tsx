@@ -16,9 +16,24 @@ import { InstallButton } from "./pwa";
 import { MusicSettings } from "./music-settings";
 
 const UI_THEMES = [
-  { id: "aurora", label: "Aurora", description: "Purple · Cyan · Glass", icon: "spark" },
-  { id: "cyber", label: "Cyber Night", description: "Indigo · Pink · Neon", icon: "moon" },
-  { id: "calm", label: "Calm Space", description: "Blue · Violet · Soft", icon: "leaf" },
+  {
+    id: "aurora",
+    label: "Aurora",
+    description: "Purple · Cyan · Glass",
+    icon: "spark",
+  },
+  {
+    id: "cyber",
+    label: "Cyber Night",
+    description: "Indigo · Pink · Neon",
+    icon: "moon",
+  },
+  {
+    id: "calm",
+    label: "Calm Space",
+    description: "Blue · Violet · Soft",
+    icon: "leaf",
+  },
 ] as const;
 export function Settings() {
   const { data, store, run, navigate } = useStudy(),
@@ -74,7 +89,9 @@ export function Settings() {
                   <button
                     key={uiTheme.id}
                     type="button"
-                    className={active ? "ui-theme-card active" : "ui-theme-card"}
+                    className={
+                      active ? "ui-theme-card active" : "ui-theme-card"
+                    }
                     aria-pressed={active}
                     onClick={() =>
                       void run(() =>
@@ -89,7 +106,12 @@ export function Settings() {
                       )
                     }
                   >
-                    <span className={"ui-theme-preview ui-theme-preview-" + uiTheme.id} aria-hidden="true">
+                    <span
+                      className={
+                        "ui-theme-preview ui-theme-preview-" + uiTheme.id
+                      }
+                      aria-hidden="true"
+                    >
                       <i />
                       <i />
                       <i />

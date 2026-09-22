@@ -133,6 +133,18 @@ export function TimerWatch() {
     return () => window.clearTimeout(timeout);
   }, [t, completeTimer]);
 
+  // Redundant deadline guard: if the clock jumps directly to/past the target
+  // (for example after a throttled/background tab), queue completion without
+  // synchronously mutating React state from the effect body.
+  useEffect(() => {
+    if (!t?.running || t.status !== "active" || t.targetMs === null) return;
+    if (elapsed(t, now) < t.targetMs) return;
+
+    const timerId = t.id;
+    const timeout = window.setTimeout(() => void completeTimer(timerId), 0);
+    return () => window.clearTimeout(timeout);
+  }, [t, now, completeTimer]);
+
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
     const remainingMs = Math.max(0, t.targetMs - elapsed(t, now));
@@ -574,9 +586,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() =>
-              setNotePanel({ timerId: tId, open: !showNote })
-            }
+            onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
