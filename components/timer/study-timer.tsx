@@ -235,6 +235,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     { busy } = useStoreState(),
     t = data.activeTimer,
     now = useClock(Boolean(t?.running));
+  const tId = t?.id;
   const [subjectId, setSubjectId] = useState(
     t?.subjectId ??
       data.subjects.find((s) => !s.deletedAt && !s.archived)?.id ??
@@ -246,15 +247,19 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [complete, setComplete] = useState(true),
-    [showNote, setShowNote] = useState(false);
-  const tId = t?.id;
-  useEffect(() => {
-    // A new timer starts with the task-completion checkbox enabled by default.
-    // Keep the user's choice while the same timer is paused/resumed or reviewed.
-    setComplete(true);
-    setShowNote(false);
-  }, [tId]);
+    [completionChoice, setCompletionChoice] = useState<{
+      timerId: string | undefined;
+      checked: boolean;
+    }>({ timerId: undefined, checked: true }),
+    [notePanel, setNotePanel] = useState<{
+      timerId: string | undefined;
+      open: boolean;
+    }>({ timerId: undefined, open: false });
+  // These UI choices are scoped to the active timer. A different timer ID
+  // naturally falls back to the default without synchronously setting state in an effect.
+  const complete =
+    completionChoice.timerId === tId ? completionChoice.checked : true;
+  const showNote = notePanel.timerId === tId ? notePanel.open : false;
 
   useEffect(() => {
     if (!tId) return;
@@ -560,7 +565,9 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() => setShowNote(!showNote)}
+            onClick={() =>
+              setNotePanel({ timerId: tId, open: !showNote })
+            }
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
@@ -599,7 +606,12 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 <input
                   type="checkbox"
                   checked={complete}
-                  onChange={(e) => setComplete(e.target.checked)}
+                  onChange={(e) =>
+                    setCompletionChoice({
+                      timerId: tId,
+                      checked: e.target.checked,
+                    })
+                  }
                 />
                 Хадгалаад төлөвлөгөөг биелсэнд тооцох
               </label>
