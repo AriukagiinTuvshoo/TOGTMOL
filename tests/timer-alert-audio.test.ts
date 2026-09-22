@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 import { fixture } from "./fixtures";
+import { COMPLETION_NOTES, countdownFrequency } from "@/lib/timer-alerts";
 
 let nodes: {
   start: ReturnType<typeof vi.fn>;
@@ -83,17 +84,17 @@ afterEach(() => {
 });
 
 it.each(["warm", "calm", "bright"])(
-  "plays three complete melodic phrases for %s, then Stop disconnects every note and vibration",
+  "plays one gentle completion phrase for %s, then Stop disconnects every note and vibration",
   async (timerChime) => {
     const settings = fixture().settings;
     settings.sound = true;
     settings.extras = { timerChime, completionVolume: 0.5 };
     await api.playTimerComplete(settings, true);
-    expect(nodes).toHaveLength(15);
-    expect(nodes[0].frequency.value).toBe(nodes[5].frequency.value);
-    expect(nodes[0].frequency.value).toBe(nodes[10].frequency.value);
-    expect(nodes[5].start).toHaveBeenCalledWith(13.15);
-    expect(nodes[10].start).toHaveBeenCalledWith(16.3);
+    expect(nodes).toHaveLength(COMPLETION_NOTES.length + 2);
+    expect(nodes[0].frequency.value).toBe(COMPLETION_NOTES[0]);
+    expect(nodes[COMPLETION_NOTES.length - 1].frequency.value).toBe(
+      COMPLETION_NOTES[COMPLETION_NOTES.length - 1],
+    );
     api.stopTimerAlertSound();
     for (const node of nodes) {
       expect(node.stop).toHaveBeenLastCalledWith(10);
@@ -122,6 +123,14 @@ it("cancels a pending audio resume before any notes can start", async () => {
   await pending;
   expect(nodes).toHaveLength(0);
   expect(vibrate).toHaveBeenLastCalledWith(0);
+});
+
+it("uses a unique rising pitch from 10 down to 1", () => {
+  const frequencies = Array.from({ length: 10 }, (_, index) =>
+    countdownFrequency(10 - index),
+  );
+  expect(new Set(frequencies).size).toBe(10);
+  expect(frequencies).toEqual([...frequencies].sort((a, b) => a - b));
 });
 
 it("does not replay a backlog of countdown ticks when audio resumes", async () => {
