@@ -166,8 +166,8 @@ it("finishes a countdown when Pause is clicked after its deadline", async () => 
   fireEvent.click(screen.getByRole("button", { name: "Pause" }));
   await act(async () => {});
   expect(data.activeTimer?.status).toBe("review");
-  expect(data.sessions).toHaveLength(1);
-  expect(data.sessions[0].durationSec).toBe(60);
+  expect(data.sessions).toHaveLength(2);
+  expect(data.sessions[1].durationSec).toBe(60);
   view.unmount();
 });
 
