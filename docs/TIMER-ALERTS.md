@@ -63,3 +63,12 @@ tests/timer-alert-ui.test.tsx
 tests/ui.test.tsx
 docs/TIMER-ALERTS.md
 ```
+
+## Timer-ийн найдвартай ажиллагаа
+
+- Countdown-ийн UI нь setInterval-ээр секундыг нэмэгдүүлж тоолдоггүй. sessionStartedAt, runningSince, accumulatedMs, targetMs timestamp-уудаас elapsed хугацааг бодно. Иймээс tab background-д орсон эсвэл browser түр throttled болсон ч дахин active болоход хугацаа бодит цагтайгаа таарна.
+- Deadline дээр нэг удаагийн setTimeout ашиглан дуусгалтыг өдөөдөг. Энэ нь тогтмол interval timer биш. Нэмэлтээр visible/focus/pageshow event дээр timestamp-ийг шууд дахин уншина.
+- Focus session-ийг Finish дарахад partial хугацаатай нь шууд sessions collection-д бичнэ. Statistics нь ингэснээр автоматаар шинэ хугацааг харна. Дараа нь Save result хийхэд аль хэдийн бичигдсэн session-ийн note болон мэдээллийг шинэчилнэ.
+- Timer-ийг зорьсондоо хүрэлгүй зогсоосон бол хэмжсэн хэсэг хугацаа нь хадгалагдана; 0 гэж хаяхгүй. Амралтын phase session болж статистикт орохгүй.
+- Focus mode нь navigation, header, footer, хөгжмийн UI-г нууж, зөвхөн timer болон гарах товчтой дэлгэцийг харуулна. Хөгжмийн player өөрөө mounted хэвээр тул audio state хадгалагдана.
+- Screen Wake Lock нь timer ажиллах үед default-аар идэвхтэй. Browser дэмжихгүй эсвэл систем татгалзвал timer хэвийн үргэлжилж, status дээр шалтгааныг харуулна; visible/focus/pageshow үед боломжтой бол lock-ийг дахин авна.
