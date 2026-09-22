@@ -193,7 +193,15 @@ export function Subjects() {
             );
           })}
         </div>
-        {category !== "all" && tracks.length > 0 && (\n          <div className="subject-track-row">\n            <button type="button" className={`subject-track-chip ${track === "all" ? "active" : ""}`} onClick={() => setTrack("all")}>Бүх чиглэл</button>\n            {tracks.map((t) => {\n              const count = list.filter((s) => (s.extras.subjectCategory ?? "other") === category && (s.extras.subjectTrack ?? "") === t.id).length;\n              return <button type="button" key={t.id} className={`subject-track-chip ${track === t.id ? "active" : ""}`} onClick={() => setTrack(t.id)}><strong>{t.name}</strong><small>{count} хичээл</small></button>;\n            })}\n          </div>\n        )}\n        {categorized.length ? (
+        {category !== "all" && tracks.length > 0 && (
+          <div className="subject-track-row">
+            <button type="button" className={`subject-track-chip ${track === "all" ? "active" : ""}`} onClick={() => setTrack("all")}>Бүх чиглэл</button>
+            {tracks.map((t) => {
+              const count = list.filter((s) => (s.extras.subjectCategory ?? "other") === category && (s.extras.subjectTrack ?? "") === t.id).length;
+              return <button type="button" key={t.id} className={`subject-track-chip ${track === t.id ? "active" : ""}`} onClick={() => setTrack(t.id)}><strong>{t.name}</strong><small>{count} хичээл</small></button>;
+            })}
+          </div>
+        )}\n        {categorized.length ? (
           <div className="subjects-grid">
           {categorized.map((s) => {
             const stats = periodStats(index, 7, today, s.id),
@@ -261,6 +269,9 @@ export function Subjects() {
         <SubjectForm
           subject={editing === "new" ? undefined : editing}
           onClose={() => setEditing(null)}
+          categories={categories.filter((c) => c.id !== "all")}
+          defaultCategory={category === "all" ? "other" : category}
+          defaultTrack={track === "all" ? undefined : track}
         />
       )}
     </>
@@ -269,19 +280,27 @@ export function Subjects() {
 function SubjectForm({
   subject: s,
   onClose,
+  categories,
+  defaultCategory,
+  defaultTrack,
 }: {
   subject?: Subject;
   onClose: () => void;
-  categories: { id: string; name: string; tracks?: readonly { id: string; name: string }[] }[];\n  defaultCategory?: string;\n  defaultTrack?: string;
+  categories: { id: string; name: string; tracks?: readonly { id: string; name: string }[] }[];
+  defaultCategory?: string;
+  defaultTrack?: string;
 }) {
   const { data, store, run } = useStudy(),
     [name, setName] = useState(s?.name ?? ""),
-    [category, setCategory] = useState(String(s?.extras.subjectCategory ?? defaultCategory ?? "other")),\n    [track, setTrack] = useState(String(s?.extras.subjectTrack ?? defaultTrack ?? "")),
+    [category, setCategory] = useState(String(s?.extras.subjectCategory ?? defaultCategory ?? "other")),
+    [track, setTrack] = useState(String(s?.extras.subjectTrack ?? defaultTrack ?? "")),
     [color, setColor] = useState(
       s?.color ?? PALETTE[data.subjects.length % PALETTE.length],
     ),
     [archived, setArchived] = useState(s?.archived ?? false),
     [busy, setBusy] = useState(false);
+  const selectedCategory = categories.find((c) => c.id === category),
+    categoryTracks = selectedCategory?.tracks ?? [];
   return (
     <Modal title={s ? "Хичээлээ засах" : "Шинэ хичээл"} onClose={onClose}>
       <form
@@ -302,6 +321,7 @@ function SubjectForm({
                       })
                     : actions.addSubject(name, color, {
                         subjectCategory: category,
+                        subjectTrack: track || null,
                       }),
                 ),
               "Хичээл хадгалагдлаа.",
