@@ -9,7 +9,7 @@ import {
   startTimer,
 } from "@/lib/calculations/timer";
 import { actions } from "@/lib/persistence/actions";
-import { fixture, NOW } from "./fixtures";
+import { fixture, NOW, session } from "./fixtures";
 afterEach(() => vi.restoreAllMocks());
 describe("timer lifecycle", () => {
   it("excludes pauses and preserves the original start through repeated resumes", () => {
