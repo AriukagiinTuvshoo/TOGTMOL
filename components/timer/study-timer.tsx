@@ -106,6 +106,7 @@ export function TimerWatch() {
         label,
         data.settings,
         `togtmol-timer-warning-${t.id}`,
+        warningSeconds,
       );
     }
   }, [t, now, data.settings]);
