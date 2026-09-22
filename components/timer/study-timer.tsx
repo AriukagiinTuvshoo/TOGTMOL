@@ -17,6 +17,7 @@ import {
   enableSound,
   notifyTimerWarning,
   notifyUser,
+  stopTimerAlertSound,
 } from "@/lib/notifications";
 
 export function TimerWatch() {
@@ -98,11 +99,13 @@ export function TimerWatch() {
     }
   }, [t, now, store, run, data.settings, setNotice]);
 
+  const stopAlertSound = () => {
+    stopTimerAlertSound();
+    setAlert(null);
+  };
+
   const closeAlert = () => {
-    try {
-      if (typeof navigator !== "undefined" && "vibrate" in navigator)
-        navigator.vibrate(0);
-    } catch {}
+    stopTimerAlertSound();
     setAlert(null);
   };
 
@@ -135,29 +138,30 @@ export function TimerWatch() {
             </p>
             <div className="timer-alert-actions">
               {alert === "complete" ? (
-                <button
-                  className="button primary large"
-                  onClick={() => {
-                    closeAlert();
-                    navigate("focus");
-                  }}
-                >
-                  Үр дүнгээ харах
-                </button>
+                <>
+                  <button
+                    className="button primary large"
+                    onClick={() => {
+                      stopAlertSound();
+                      navigate("focus");
+                    }}
+                  >
+                    Үр дүнгээ харах
+                  </button>
+                  <button
+                    type="button"
+                    className="button large timer-alert-stop"
+                    onClick={stopAlertSound}
+                  >
+                    🔇 Дууг зогсоох
+                  </button>
+                </>
               ) : (
                 <button className="button large" onClick={closeAlert}>
                   Ойлголоо
                 </button>
               )}
             </div>
-            {alert === "complete" && (
-              <button
-                className="text-button timer-alert-dismiss"
-                onClick={closeAlert}
-              >
-                Дууны дохиог хаах
-              </button>
-            )}
           </section>
         </div>
       )}
