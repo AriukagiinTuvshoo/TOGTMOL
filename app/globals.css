@@ -3032,3 +3032,22 @@ main {
     animation: none;
   }
 }
+
+/* Smart study calendar */
+.calendar-main-card { overflow: hidden; }
+.calendar-smart-head { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:18px; }
+.calendar-smart-head h2 { margin-top:5px; font-size:22px; }
+.calendar-smart-head p { color:var(--muted); font-size:11px; margin-top:6px; }
+.calendar-smart-buddy { font-size:42px; animation:calendar-buddy-float 3s ease-in-out infinite; filter:drop-shadow(0 8px 10px #1b2a1b12); }
+.calendar-summary-strip { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:22px; }
+.calendar-summary-strip > div { display:grid; grid-template-columns:auto 1fr; column-gap:9px; padding:12px 13px; border:1px solid var(--border); border-radius:13px; background:var(--bg); min-width:0; }
+.calendar-summary-strip span { grid-row:span 2; font-size:19px; align-self:center; }
+.calendar-summary-strip strong { font-size:16px; line-height:1.2; }
+.calendar-summary-strip small { color:var(--muted); font-size:9px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.calendar-summary-strip strong:has(+ small) { font-variant-numeric:tabular-nums; }
+.calendar-month-head { display:flex; align-items:end; justify-content:center; gap:8px; margin-bottom:13px; }
+.calendar-month-head .month-picker { flex:1; max-width:180px; }
+.calendar-month-head .icon-button { width:38px; height:38px; }
+@keyframes calendar-buddy-float { 0%,100% { transform:translateY(0) rotate(-2deg); } 50% { transform:translateY(-5px) rotate(2deg); } }
+@media (max-width:620px) { .calendar-smart-head { align-items:flex-start; } .calendar-smart-buddy { font-size:31px; } .calendar-summary-strip { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (prefers-reduced-motion:reduce) { .calendar-smart-buddy { animation:none; } }
