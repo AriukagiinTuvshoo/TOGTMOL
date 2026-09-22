@@ -144,6 +144,7 @@ export function PrivacyCenter() {
           </button>
         )}
       </section>
+      </section>
       <section className="card privacy-action-card">
         <div className="privacy-section-head">
           <div>
