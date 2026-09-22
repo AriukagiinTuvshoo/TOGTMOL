@@ -221,19 +221,43 @@ export const actions = {
         ? { ...data, activeTimer: resume(data.activeTimer, Date.now()) }
         : data,
   finish:
-    () =>
+    (completedAt?: number) =>
     (data: StudyData): StudyData => {
       const timer = data.activeTimer;
-      if (!timer || timer.status === "review") return data;
-      const now = Date.now();
+      if (!timer) return data;
+      const now = Number.isFinite(completedAt) ? Number(completedAt) : Date.now();
+
+      // A review timer can survive a reload before its final Save action.
+      // Materialize its session here as well, but stay idempotent by timer id.
+      if (timer.status === "review") {
+        if (timer.phase !== "focus" || timer.accumulatedMs <= 0) return data;
+        const session = sessionFromTimer(timer, timer.note, now);
+        const exists = data.sessions.some((s) => s.id === session.id);
+        return {
+          ...data,
+          sessions: exists
+            ? data.sessions.map((s) =>
+                s.id === session.id
+                  ? {
+                      ...s,
+                      note: session.note,
+                      durationSec: session.durationSec,
+                      endEpoch: session.endEpoch,
+                      updatedAt: now,
+                      segments: session.segments,
+                      extras: session.extras,
+                    }
+                  : s,
+              )
+            : [...data.sessions, session],
+        };
+      }
+
       const reviewed = review(timer, now);
       if (reviewed.phase !== "focus" || reviewed.accumulatedMs <= 0)
         return { ...data, activeTimer: reviewed };
-      const session = sessionFromTimer(
-        reviewed,
-        reviewed.note,
-        now,
-      );
+
+      const session = sessionFromTimer(reviewed, reviewed.note, now);
       const exists = data.sessions.some((s) => s.id === session.id);
       return {
         ...data,
@@ -241,7 +265,14 @@ export const actions = {
         sessions: exists
           ? data.sessions.map((s) =>
               s.id === session.id
-                ? { ...s, durationSec: session.durationSec, endEpoch: session.endEpoch, updatedAt: now }
+                ? {
+                    ...s,
+                    durationSec: session.durationSec,
+                    endEpoch: session.endEpoch,
+                    updatedAt: now,
+                    segments: session.segments,
+                    extras: session.extras,
+                  }
                 : s,
             )
           : [...data.sessions, session],
