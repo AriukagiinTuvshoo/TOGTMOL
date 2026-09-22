@@ -211,10 +211,9 @@ export function StudyCalendar({
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                max={today.slice(0, 7)}
               />
             </label>
-            <button className="icon-button bordered" aria-label="Дараагийн сар" disabled={month >= today.slice(0, 7)} onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() + 1); setMonth(dateKey(d).slice(0, 7)); } }}>›</button>
+            <button className="icon-button bordered" aria-label="Дараагийн сар" onClick={() => { const d = parseDate(month + "-01"); if (d) { d.setMonth(d.getMonth() + 1); setMonth(dateKey(d).slice(0, 7)); } }}>›</button>
             </div>
             <div className="monthly-calendar">
               {SHORT_DAYS.map((s) => (
