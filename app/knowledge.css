@@ -847,7 +847,7 @@ body {
     margin: -8px 0 -2px;
     order: -1;
   }
-  .knowledge-hero > .animated-buddy-avatar {
+  .knowledge-hero > .animated-buddy .animated-buddy-avatar {
     width: 74px;
     height: 74px;
   }
