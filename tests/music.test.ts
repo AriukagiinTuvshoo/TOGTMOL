@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AmbientPlayer, ambientProvider } from "@/lib/music/ambient";
 import { AMBIENTS } from "@/lib/music/catalog";
+import { isVideoMedia } from "@/lib/music/native-audio";
 import { normalizeMusicPreference } from "@/lib/music/preferences";
 import { parseAudioURL } from "@/lib/music/native-audio";
 import { StudyStore } from "@/lib/persistence/store";
@@ -247,5 +248,22 @@ describe("native audio library", () => {
       await repo.loadMusicBlob("other", "musicblob_test789"),
     ).not.toBeNull();
     await repo.close();
+  });
+});
+
+
+describe("new media controls", () => {
+  it("defaults and normalizes playback preferences", () => {
+    const preference = normalizeMusicPreference({});
+    expect(preference.autoNext).toBe(true);
+    expect(preference.repeat).toBe(false);
+    expect(preference.seekSeconds).toBe(10);
+    expect(normalizeMusicPreference({ seekSeconds: 30 }).seekSeconds).toBe(30);
+  });
+
+  it("recognizes MP4 media", () => {
+    expect(isVideoMedia("https://cdn.example.com/video.mp4", undefined)).toBe(true);
+    expect(isVideoMedia("blob:study-video", "video/mp4")).toBe(true);
+    expect(isVideoMedia("https://cdn.example.com/song.mp3", "audio/mpeg")).toBe(false);
   });
 });
