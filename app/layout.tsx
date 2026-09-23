@@ -3,11 +3,13 @@ import "./globals.css";
 import "./world.css";
 import "./knowledge.css";
 import "./neon.css";
+
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://togtmol.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      "https://togtmol.tuvshoo0331.workers.dev",
   ),
-  title: "Тогтмол v6 — Бондооктой хамт суралцъя",
+  title: "Тогтмол — Бондооктой хамт суралцъя",
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",
@@ -36,6 +38,7 @@ export const metadata: Metadata = {
     images: ["/icons/icon-512.png"],
   },
 };
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -44,6 +47,7 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#161a16" },
   ],
 };
+
 export default function RootLayout({
   children,
 }: {
