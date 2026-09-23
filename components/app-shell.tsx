@@ -176,7 +176,7 @@ function Shell() {
             <Icon name="leaf" size={24} />
           </span>
           <span>
-            тогтмол<span className="brand-version">STUDY WORLD · 06</span>
+            тогтмол<span className="brand-version">STUDY WORLD · 07</span>
           </span>
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
