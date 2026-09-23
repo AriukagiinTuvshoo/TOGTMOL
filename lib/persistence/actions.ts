@@ -1,7 +1,7 @@
 import { dayBoundary } from "@/lib/preferences";
-import { datesBetween, parseDate, shiftDate, studyDate } from "@/lib/calculations/dates";
+import { datesBetween, parseDate, studyDate } from "@/lib/calculations/dates";
 import { uid } from "@/lib/constants";
-import { validCalendarTime, withCalendarDeadlines } from "@/lib/calculations/calendar";
+import { readCalendarDeadlines, validCalendarTime, withCalendarDeadlines } from "@/lib/calculations/calendar";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
@@ -659,8 +659,7 @@ export const actions = {
       if (!input.title.trim() || input.title.trim().length > 200 || !validCalendarTime(input.time))
         throw Error("Deadline-ийн нэр, огноо, цагийг шалгана уу.");
       const now = Date.now();
-      const current = data.extras.calendarDeadlines;
-      const deadlines = Array.isArray(current) ? current : [];
+      const deadlines = readCalendarDeadlines(data);
       return withCalendarDeadlines(data, [
         ...deadlines,
         {
@@ -674,22 +673,18 @@ export const actions = {
           updatedAt: now,
           deletedAt: null,
         },
-      ] as never);
+      ]);
     },
   deleteDeadline:
     (id: string) =>
     (data: StudyData): StudyData => {
-      const deadlines = Array.isArray(data.extras.calendarDeadlines)
-        ? data.extras.calendarDeadlines
-        : [];
+      const deadlines = readCalendarDeadlines(data);
       const now = Date.now();
       return withCalendarDeadlines(
         data,
         deadlines.map((d) =>
-          d && typeof d === "object" && (d as Record<string, unknown>).id === id
-            ? { ...(d as Record<string, unknown>), deletedAt: now, updatedAt: now }
-            : d,
-        ) as never,
+          d.id === id ? { ...d, deletedAt: now, updatedAt: now } : d,
+        ),
       );
     },
   moveSession:
