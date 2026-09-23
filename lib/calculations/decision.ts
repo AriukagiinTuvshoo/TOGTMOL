@@ -156,6 +156,7 @@ export interface BehaviorAttempt {
   targetSec: number | null;
 }
 
+// Only explicitly discarded timers become abandonment signals.
 function behaviorAttempts(data: StudyData): BehaviorAttempt[] {
   const raw = data.extras.behaviorAttempts;
   if (!Array.isArray(raw)) return [];
