@@ -118,7 +118,7 @@ function Shell() {
             .data.subjects.find((item) => !item.deletedAt && !item.archived);
           if (!subject) {
             navigate("subjects");
-            setNotice("Эхлээд нэг хичээл нэмье.");
+            setNotice(t("shell.todayNotice"));
             return;
           }
           try {
@@ -180,7 +180,7 @@ function Shell() {
           </span>
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
-        <nav aria-label="Үндсэн цэс">
+        <nav aria-label={t("shell.mySpace")}>
           {NAV.map((n) => (
             <button
               key={n.view}
@@ -202,9 +202,9 @@ function Shell() {
           <div className="sidebar-quote">
             <Icon name="leaf" size={23} />
             <p>
-              Тогтмол байдал
+              {t("shell.quote1")}
               <br />
-              төгсөөс чухал.
+              {t("shell.quote2")}
             </p>
           </div>
           <button className="profile-button" onClick={() => go("settings")}>
@@ -250,7 +250,7 @@ function Shell() {
             </span>
             <button
               className="icon-button"
-              aria-label="Тохиргоо нээх"
+              aria-label={t("shell.settings")}
               onClick={() => go("settings")}
             >
               <Icon name="user" size={20} />
@@ -263,7 +263,7 @@ function Shell() {
           >
             <div>
               <span className="eyebrow">{today.replaceAll("-", ".")}</span>
-              <h1>{titles[view]}</h1>
+              <h1>{t(titles[view])}</h1>
             </div>
             <TimerWatch />
           </div>
@@ -335,14 +335,14 @@ function Shell() {
               )}
               {view === "subjects" && <Subjects />}
               {view === "statistics" && (
-                <ModuleBoundary name="Статистик">
+                <ModuleBoundary name={t("page.statistics")}>
                   <Statistics />
                 </ModuleBoundary>
               )}
               {view === "goals" && <Goals />}
               {view === "achievements" && <Achievements />}
               {view === "assistant" && (
-                <ModuleBoundary name="Бондоок">
+                <ModuleBoundary name={t("page.assistant")}>
                   <Assistant />
                 </ModuleBoundary>
               )}
@@ -361,7 +361,7 @@ function Shell() {
           <button
             className="more-close"
             onClick={() => setMore(false)}
-            aria-label="Нэмэлт цэс хаах"
+            aria-label={t("common.close")}
           />
           <nav aria-label={t("nav.more")}>
             {NAV.filter(
@@ -411,7 +411,7 @@ function Shell() {
         )}
       </div>
       {state.ready && (
-        <ModuleBoundary key={state.namespace} name="Хөгжим">
+        <ModuleBoundary key={state.namespace} name={t("settings.music")}>
           <MusicProvider>
             <MusicPlayer />
           </MusicProvider>
@@ -426,7 +426,7 @@ export function AppShell() {
     <LanguageProvider>
       <StudyProvider>
         <AccountProvider>
-        <Shell />
+          <Shell />
         </AccountProvider>
       </StudyProvider>
     </LanguageProvider>
