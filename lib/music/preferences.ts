@@ -12,11 +12,15 @@ export interface MusicSession {
   playlistIndex: number;
   track: { title: string; artist: string; videoId: string | null; url: string };
 }
+export type MusicSeekSeconds = 5 | 10 | 15 | 30;
 export interface MusicPreferences {
   volume: number;
   muted: boolean;
   defaultCategory: AmbientId | "theme";
   rememberLast: boolean;
+  autoNext: boolean;
+  repeat: boolean;
+  seekSeconds: MusicSeekSeconds;
   lastPlayed: string | null;
   session: MusicSession | null;
 }
@@ -91,6 +95,15 @@ export function normalizeMusicPreference(raw: unknown): MusicPreferences {
       ? (value.defaultCategory as AmbientId)
       : "theme",
     rememberLast: value.rememberLast !== false,
+    autoNext: value.autoNext !== false,
+    repeat: value.repeat === true,
+    seekSeconds:
+      value.seekSeconds === 5 ||
+      value.seekSeconds === 10 ||
+      value.seekSeconds === 15 ||
+      value.seekSeconds === 30
+        ? value.seekSeconds
+        : 10,
     session: normalizeMusicSession(value.session),
     lastPlayed:
       typeof value.lastPlayed === "string" && value.lastPlayed.length <= 200
