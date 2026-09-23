@@ -42,40 +42,7 @@ Import the chosen repository in Vercel. Framework: **Next.js**. Install command:
 
 Do not replace the build command with `next build` alone: the second step generates the offline manifest and service worker. Service worker scope is `/`; this release expects a root-domain deployment rather than a URL subdirectory.
 
-
-
-## 4. Configure Render
-
-Render should run the normal Next.js application, not the Cloudflare Worker bundle. The repository includes `render.yaml` as a version-controlled Blueprint reference.
-
-For the existing Render Web Service, use these settings:
-
-| Setting | Value |
-| --- | --- |
-| Runtime | **Node** |
-| Branch | **main** |
-| Root Directory | repository root / empty |
-| Build Command | **`npm ci && npm run build`** |
-| Start Command | **`npm start`** |
-| Health Check Path | **`/api/health`** |
-| Auto Deploy | **On Commit** |
-| Node version | **24** |
-
-The production `start` script explicitly binds Next.js to `0.0.0.0` so the service is reachable by Render's public web-service proxy. Render requires web services to listen on an externally reachable interface, and HTTP health checks succeed when the configured path returns a 2xx/3xx response. See Render's web-service and health-check documentation.
-
-The new `/api/health` endpoint does not require Supabase or AI credentials and reports the Render commit when Render provides `RENDER_GIT_COMMIT`. This keeps optional integrations from making the web process look unhealthy.
-
-**Important:** an existing Render service does not automatically adopt every field in `render.yaml` just because the file exists. Update the existing service's **Settings** to match the table above. Then use **Manual Deploy → Clear build cache & deploy** once after changing the build command or when stale generated/static assets may be involved.
-
-Do not use a Cloudflare command on Render. In particular, do not set the Render build/start commands to `wrangler deploy`, `npx wrangler deploy`, `npx @opennextjs/cloudflare build`, or a `.open-next/worker.js` start command. Render serves the standard Next.js server here. The Cloudflare Worker configuration remains in `wrangler.jsonc` for the separate Cloudflare deployment path.
-
-If the Render service is connected to GitHub, keep **Auto-Deploy = On Commit** so pushes to `main` trigger a new deploy. If a deploy fails, Render keeps the last healthy deployment serving traffic until a later deploy succeeds.
-
-## 5. Validate the real deployment
-
-For Render specifically, verify that the build completes, the start process stays running, `GET /api/health` returns JSON with `"ok": true`, the instance becomes healthy, the home page and static assets load, and a second push to `main` creates a new deploy.
-
-## 6. Validate the real deployment
+## 4. Validate the real deployment
 
 Use two test accounts and two browser profiles/devices:
 
