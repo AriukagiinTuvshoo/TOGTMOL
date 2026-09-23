@@ -12,6 +12,7 @@ Capacitor dependencies are pinned to the verified stable 8.5.2 line, with Splash
 - App name: `Тогтмол`
 - Production web origin is supplied with `CAPACITOR_SERVER_URL`.
 - Local fallback is `mobile/www/index.html`.
+- Native iOS (`mobile/ios`) and Android (`mobile/android`) project skeletons are checked into the repository.
 - No native signing credentials are stored in the repository.
 
 ## Phase 2 — authentication
@@ -24,12 +25,7 @@ Recommended callback:
 
 The native browser/OAuth bridge is now implemented in `lib/auth/capacitor.ts`: Google OAuth opens through Capacitor Browser, the app receives `togtmol://auth/callback`, and the PKCE authorization code is exchanged with Supabase inside the app. Email confirmation and password recovery use the same native callback. Tokens are not placed in the deep-link URL.
 
-Native setup before device QA:
-
-- Add the `togtmol` URL scheme to the iOS target.
-- Add an Android VIEW/BROWSABLE intent filter for `togtmol://auth/callback`.
-- Add `togtmol://auth/callback` to the Supabase Auth redirect allowlist.
-- Verify the Google provider's callback configuration and production web origin.
+Native deep-link registration is now checked in: iOS registers `togtmol` in `Info.plist`, Android registers a VIEW/BROWSABLE intent filter, and the Swift SceneDelegate forwards URL opens to Capacitor's App plugin. Supabase still needs `togtmol://auth/callback` in its production redirect allowlist before device testing.
 
 ## Phase 3 — device QA
 
