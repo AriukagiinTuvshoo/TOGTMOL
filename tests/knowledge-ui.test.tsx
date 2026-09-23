@@ -193,8 +193,8 @@ describe("knowledge flows", () => {
     );
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: "AI боловсруулалтыг унтраах" }),
-      ).toBeDisabled(),
+        screen.getByText("Онлайн Бондоокт зөвшөөрөл өгөөгүй."),
+      ).toBeVisible(),
     );
     navigate("Суралцах туслах");
     expect(await screen.findByLabelText("Онлайн AI ашиглах")).not.toBeChecked();
