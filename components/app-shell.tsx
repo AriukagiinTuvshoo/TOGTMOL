@@ -185,7 +185,7 @@ function Shell() {
               onClick={() => go(n.view)}
             >
               <Icon name={n.icon} />
-              {n.label}
+              {t(n.key)}
               {n.view === "assistant" && (
                 <span className="nav-tag" aria-hidden="true">
                   LOCAL
@@ -224,7 +224,7 @@ function Shell() {
       <div className="app-main">
         <header className="topbar">
           <div className="breadcrumbs">
-            <span className="mobile-brand">тогтмол</span>
+            <span className="mobile-brand">TOGTMOL</span>
             <span className="desktop-breadcrumb">
               {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view])}
             </span>
@@ -268,7 +268,7 @@ function Shell() {
               <p>{state.error}</p>
               <button
                 className="icon-button"
-                aria-label="Алдааны мэдэгдэл хаах"
+                aria-label={t("common.close")}
                 onClick={store.clearError}
               >
                 <Icon name="close" size={18} />
@@ -288,56 +288,56 @@ function Shell() {
           ) : (
             <Fragment key={state.namespace}>
               {view === "overview" && (
-                <ModuleBoundary name="Өнөөдрийн өрөө">
+                <ModuleBoundary name={t("page.overview")}>
                   <StudyRoom />
                 </ModuleBoundary>
               )}
               {view === "timer" && (
-                <ModuleBoundary name="Цаг хэмжигч">
+                <ModuleBoundary name={t("page.timer")}>
                   <StudyTimer key={state.data.activeTimer?.id ?? "new-timer"} />
                 </ModuleBoundary>
               )}
               {view === "room" && (
-                <ModuleBoundary name="Өрөөний загвар">
+                <ModuleBoundary name={t("nav.room")}>
                   <CustomizeRoom />
                 </ModuleBoundary>
               )}
               {view === "focus" && (
-                <ModuleBoundary name="Төвлөрөх өрөө">
+                <ModuleBoundary name={t("page.focus")}>
                   <StudyRoom focus />
                 </ModuleBoundary>
               )}
               {view === "knowledge" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "knowledge"}
-                  name="Мэдлэгийн сан"
+                  name={t("nav.knowledge")}
                 >
                   <KnowledgeHub />
                 </ModuleBoundary>
               )}
               {view === "privacy" && (
-                <ModuleBoundary name="Нууцлал">
+                <ModuleBoundary name={t("page.privacy")}>
                   <PrivacyCenter />
                 </ModuleBoundary>
               )}
               {view === "calendar" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "calendar"}
-                  name="Календарь"
+                  name={t("nav.calendar")}
                 >
                   <StudyCalendar />
                 </ModuleBoundary>
               )}
               {view === "subjects" && <Subjects />}
               {view === "statistics" && (
-                <ModuleBoundary name="Статистик">
+                <ModuleBoundary name={t("nav.statistics")}>
                   <Statistics />
                 </ModuleBoundary>
               )}
               {view === "goals" && <Goals />}
               {view === "achievements" && <Achievements />}
               {view === "assistant" && (
-                <ModuleBoundary name="Бондоок">
+                <ModuleBoundary name={t("nav.bondook")}>
                   <Assistant />
                 </ModuleBoundary>
               )}
@@ -356,7 +356,7 @@ function Shell() {
           <button
             className="more-close"
             onClick={() => setMore(false)}
-            aria-label="Нэмэлт цэс хаах"
+            aria-label={t("common.close")}
           />
           <nav aria-label={t("nav.more")}>
             {NAV.filter(
@@ -406,7 +406,7 @@ function Shell() {
         )}
       </div>
       {state.ready && (
-        <ModuleBoundary key={state.namespace} name="Хөгжим">
+        <ModuleBoundary key={state.namespace} name={t("settings.music")}>
           <MusicProvider>
             <MusicPlayer />
           </MusicProvider>
