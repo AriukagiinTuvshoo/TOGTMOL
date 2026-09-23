@@ -9,7 +9,7 @@ export function CapacitorAuthBridge() {
   const { setNotice } = useStudy();
 
   useEffect(() => {
-    let client;
+    let client: ReturnType<typeof getSupabase>;
     try {
       client = getSupabase();
     } catch {
