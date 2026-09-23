@@ -182,6 +182,39 @@ describe("goals, real study and gentle rewards", () => {
     expect(data.tasks[0].deletedAt).toBe(1);
     expect(data.tasks[1].deletedAt).toBeNull();
   });
+  it("unlocks room rewards from recorded study hours while preserving old data", () => {
+    const d = fixture();
+    d.sessions = [
+      session({
+        id: "five-hours",
+        durationSec: 5 * 3600,
+        startEpoch: NOW - 5 * 3600000,
+        endEpoch: NOW,
+        segments: [{ start: NOW - 5 * 3600000, end: NOW }],
+      }),
+    ];
+    expect(companionProgress(d).studyHours).toBe(5);
+    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual([
+      "botanical_poster",
+    ]);
+
+    d.sessions.push(
+      session({
+        id: "another-five-hours",
+        durationSec: 5 * 3600,
+        startEpoch: NOW - 10 * 3600000,
+        endEpoch: NOW - 5 * 3600000,
+        segments: [{ start: NOW - 10 * 3600000, end: NOW - 5 * 3600000 }],
+      }),
+    );
+    expect(companionProgress(d).studyHours).toBe(10);
+    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual([
+      "botanical_poster",
+      "bookshelf",
+      "star",
+    ]);
+  });
+
   it("caps daily XP at 60 and excludes manual marks and edited timing", () => {
     expect([0, 10, 30, 60, 90, 900].map(dailyXP)).toEqual([
       0, 10, 30, 45, 60, 60,
