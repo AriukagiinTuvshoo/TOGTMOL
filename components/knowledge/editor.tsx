@@ -8,6 +8,7 @@ import { cleanTags, safeLink } from "@/lib/knowledge/validation";
 import { prepareImage } from "@/lib/knowledge/images";
 import { uid } from "@/lib/constants";
 import type { KnowledgeRecord, QuizQuestion } from "@/types/knowledge";
+import { MarkdownView } from "./markdown-view";
 export type EditableKind = "note" | "deck" | "card" | "quiz" | "link";
 const names: Record<EditableKind, string> = {
   note: "Тэмдэглэл",
@@ -43,7 +44,8 @@ export function KnowledgeEditor({
         data.knowledge.find((r) => r.id === deckId)?.subjectId ??
         "",
     ),
-    [tags, setTags] = useState(record?.tags.join(", ") ?? "");
+    [tags, setTags] = useState(record?.tags.join(", ") ?? ""),
+    [preview, setPreview] = useState(false);
   const [body, setBody] = useState(
     record?.kind === "note"
       ? record.body
@@ -165,16 +167,62 @@ export function KnowledgeEditor({
           </label>
         </div>
         {(kind === "note" || kind === "deck" || kind === "link") && (
-          <label>
-            {kind === "note" ? "Тэмдэглэл" : "Тайлбар"}
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={kind === "note" ? 7 : 3}
-              maxLength={50000}
-            />
-          </label>
-        )}
+          kind === "note" ? (
+            <div className="knowledge-markdown-editor">
+              <div className="markdown-editor-tabs" role="tablist" aria-label="Тэмдэглэл засварлах">
+                <button
+                  type="button"
+                  className={preview ? "button" : "button primary"}
+                  onClick={() => setPreview(false)}
+                  role="tab"
+                  aria-selected={!preview}
+                >
+                  ✏️ Засах
+                </button>
+                <button
+                  type="button"
+                  className={preview ? "button primary" : "button"}
+                  onClick={() => setPreview(true)}
+                  role="tab"
+                  aria-selected={preview}
+                >
+                  👀 Урьдчилж харах
+                </button>
+              </div>
+              {!preview ? (
+                <textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  rows={12}
+                  maxLength={50000}
+                  aria-label="Markdown тэмдэглэл"
+                  placeholder={"# Гарчиг\n\n**Чухал санаа**\n\n- Нэг зүйл\n- Хоёр зүйл\n\n\x60\x60\x60python\nprint('hello')\n\x60\x60\x60"}
+                />
+              ) : (
+                <div className="markdown-preview-panel">
+                  {body.trim() ? (
+                    <MarkdownView value={body} />
+                  ) : (
+                    <p className="tiny muted">Энд Markdown урьдчилж харагдана.</p>
+                  )}
+                </div>
+              )}
+              <p className="tiny muted">
+                Markdown: # гарчиг · **тод** · *налуу* · - жагсаалт · 1. жагсаалт · &gt; ишлэл · \x60код\x60 · fenced code block · холбоос.
+              </p>
+            </div>
+          ) : (
+            <label>
+              Тайлбар
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={3}
+                maxLength={50000}
+              />
+            </label>
+          )
+        )
         {kind === "note" && (
           <>
             <label>
