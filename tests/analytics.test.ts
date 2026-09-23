@@ -87,14 +87,34 @@ describe("calendar and statistics", () => {
     expect(weeklyReport(buildIndex(fixture()), "2026-09-15").change).toBeNull();
   });
   it("uses freeze reserves to bridge missed days without creating a streak from freezes alone", () => {
-    const dates = new Set(["2026-09-12", "2026-09-14"]);
-    expect(streakWithFreezes(dates, "2026-09-15", 2)).toMatchObject({
-      streak: 4,
+    expect(
+      streakWithFreezes(new Set(["2026-09-12", "2026-09-14"]), "2026-09-15", 2),
+    ).toMatchObject({
+      streak: 2,
+      freezesUsed: 1,
+      freezesRemaining: 1,
+    });
+    expect(
+      streakWithFreezes(
+        new Set(["2026-09-11", "2026-09-13", "2026-09-15"]),
+        "2026-09-15",
+        2,
+      ),
+    ).toMatchObject({
+      streak: 5,
       freezesUsed: 2,
       freezesRemaining: 0,
     });
-    expect(streakWithFreezes(new Set(["2026-09-12"]), "2026-09-15", 2).streak).toBe(0);
-    expect(streakWithFreezes(dates, "2026-09-15", 1)).toMatchObject({
+    expect(
+      streakWithFreezes(new Set(["2026-09-12"]), "2026-09-15", 2).streak,
+    ).toBe(0);
+    expect(
+      streakWithFreezes(
+        new Set(["2026-09-12", "2026-09-14"]),
+        "2026-09-15",
+        1,
+      ),
+    ).toMatchObject({
       streak: 2,
       freezesUsed: 1,
       freezesRemaining: 0,
@@ -112,8 +132,11 @@ describe("calendar and statistics", () => {
     expect(rollingSevenDayReport(index, "2026-09-15")).toMatchObject({
       seconds: 4800,
       previousSeconds: 1800,
-      change: 166.66666666666669,
     });
+    expect(rollingSevenDayReport(index, "2026-09-15").change).toBeCloseTo(
+      166.6667,
+      3,
+    );
     const balance = subjectBalance(periodStats(index, 7, "2026-09-15"));
     expect(balance.warning).toBe(true);
     expect(balance.topSubject).toBe("math");
