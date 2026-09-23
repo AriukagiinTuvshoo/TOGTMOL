@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
 import {
@@ -135,7 +135,7 @@ export function Statistics() {
             86400000,
         )
       : null;
-  const saveExam = async (e: React.FormEvent) => {
+  const saveExam = async (e: FormEvent) => {
     e.preventDefault();
     if (!examDateInput) {
       await run(
@@ -500,9 +500,10 @@ export function Statistics() {
                 : "Шинэ долоо хоног — шинэ боломж."
               : `Ижил өдрүүдээр харьцуулахад ${Math.abs(week.change).toFixed(0)}% ${week.change >= 0 ? "өссөн" : "буурсан"}.`}
           </p>
-          <button className="text-button" onClick={() => {}}>
-            <Icon name="chart" size={15} /> 7 өдрийн харьцуулалтыг ашиглав
-          </button>
+          <p className="comparison decision-note">
+            <Icon name="chart" size={15} /> Дээрх decision card нь сүүлийн 7
+            өдрийг өмнөх 7 өдөртэй шууд харьцуулж байна.
+          </p>
         </section>
       </div>
 
