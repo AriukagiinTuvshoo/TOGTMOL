@@ -418,7 +418,7 @@ export function KnowledgeHub() {
             }
           />
         </section>
-      )
+      )}
       {(items.length > limit ||
         (tab === "session" && data.sessions.length > limit)) && (
         <button
