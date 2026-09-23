@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { periodStats } from "@/lib/calculations/analytics";
 import {
@@ -15,7 +15,6 @@ import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { calendarTimeZone, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
-import { useEffect, useState } from "react";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
