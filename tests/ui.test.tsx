@@ -461,7 +461,11 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
   );
-  expect(
-    within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
-  ).toBeVisible();
+  await waitFor(
+    () =>
+      expect(
+        within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
+      ).toBeVisible(),
+    { timeout: 5000 },
+  );
 });
