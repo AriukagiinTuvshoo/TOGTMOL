@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
-import { periodStats } from "@/lib/calculations/analytics";
+import { longestStreakWithFreezes, periodStats, streakFreezeCount } from "@/lib/calculations/analytics";
 import {
   dateLabel,
   formatTime,
@@ -148,7 +148,10 @@ export function Statistics() {
           label="Хамгийн урт дараалал"
           value={
             <>
-              {stats.longestStreak}
+              {longestStreakWithFreezes(
+                stats.days.filter((d) => d.subjects.size).map((d) => d.date),
+                streakFreezeCount(data.settings),
+              )}
               <small>өдөр</small>
             </>
           }
