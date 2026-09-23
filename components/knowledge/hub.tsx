@@ -21,6 +21,7 @@ import { QuizGenerator } from "./quiz-generator";
 
 import type { KnowledgeRecord, StudyQuiz } from "@/types/knowledge";
 import type { KnowledgeView } from "@/types/study";
+import { useI18n } from "@/components/i18n/language-provider";
 const labels: Record<string, string> = {
   note: "Тэмдэглэл",
   deck: "Картын багц",
@@ -41,9 +42,18 @@ const tabs: [KnowledgeView, string][] = [
   ["session", "Хичээлийн түүх"],
   ["trash", "Хогийн сав"],
 ];
+const LABEL_EN: Record<string, string> = {
+  note: "Note", deck: "Deck", card: "Card", review: "Review",
+  quiz: "Quiz", attempt: "Quiz history", link: "Link", session: "Session",
+};
+const TAB_EN: Record<string, string> = {
+  all: "All", note: "Notes", image: "Images", deck: "Cards",
+  quiz: "Quizzes", link: "Links", session: "Session history", trash: "Trash",
+};
 export function KnowledgeHub() {
   const { data, store, run, today, selectedRecord, navigate } = useStudy(),
     { busy } = useStoreState();
+  const { language } = useI18n();
   const [tab, setTab] = useState<KnowledgeView>("all"),
     [query, setQuery] = useState(""),
     [subject, setSubject] = useState(""),
@@ -101,7 +111,7 @@ export function KnowledgeHub() {
     if (confirm(`«${r.title}»-г хогийн саванд шилжүүлэх үү?`)) {
       const removed = await run(
         () => store.mutate(removeKnowledge(r.id)),
-        "Хогийн саванд шилжүүллээ. Буцааж сэргээж болно.",
+        language === "en" ? "Moved to trash. You can restore it." : "Хогийн саванд шилжүүллээ. Буцааж сэргээж болно.",
       );
       if (removed) setSelected(null);
     }
@@ -121,84 +131,84 @@ export function KnowledgeHub() {
               : v,
           ),
         })),
-      "Сэргээсэн.",
+      language === "en" ? "Restored." : "Сэргээсэн.",
     );
   return (
     <div className="knowledge-page">
       <section className="knowledge-hero">
         <AnimatedBuddy mood="idea" />
         <div>
-          <span className="eyebrow">МИНИЙ МЭДЛЭГ</span>
+          <span className="eyebrow">{language === "en" ? "MY KNOWLEDGE" : "МИНИЙ МЭДЛЭГ"}</span>
           <h2>
-            Сурсан зүйлээ
+            {language === "en" ? "Keep what you learn" : "Сурсан зүйлээ"}
             <br />
-            <em>өөртөө үлдээ.</em>
+            <em>{language === "en" ? "for yourself." : "өөртөө үлдээ."}</em>
           </h2>
-          <p>Тэмдэглэлээс ойлголт руу. Ойлголтоос тогтоосон мэдлэг рүү.</p>
+          <p>{language === "en" ? "From notes to understanding, and from understanding to lasting knowledge." : "Тэмдэглэлээс ойлголт руу. Ойлголтоос тогтоосон мэдлэг рүү."}</p>
         </div>
         <div className="review-today">
           <Icon name="book" size={28} />
           <strong>{index.due.length + index.fresh.length}</strong>
-          <span>давтах карт</span>
+          <span>{language === "en" ? "cards to review" : "давтах карт"}</span>
           <small>
-            {index.due.length} хугацаа болсон · {index.fresh.length} шинэ
+            {index.due.length} {language === "en" ? "due" : "хугацаа болсон"} · {index.fresh.length} {language === "en" ? "new" : "шинэ"}
           </small>
           <button
             className="button primary"
             onClick={() => setReview("all")}
             disabled={!index.reviewQueue.length}
           >
-            Давтлага эхлүүлэх
+            {language === "en" ? "Start review" : "Давтлага эхлүүлэх"}
           </button>
         </div>
       </section>
       <section
         className="knowledge-command-center"
-        aria-label="Мэдлэгийн сангийн удирдлага"
+        aria-label={language === "en" ? "Knowledge controls" : "Мэдлэгийн сангийн удирдлага"}
       >
         <div className="knowledge-command-copy">
-          <span className="eyebrow">МЭДЛЭГИЙН САН</span>
-          <h3>Юу хийх вэ?</h3>
-          <p>Шинэ зүйл нэмэх, давтах эсвэл өмнөх мэдлэгээ олох.</p>
+          <span className="eyebrow">{language === "en" ? "KNOWLEDGE HUB" : "МЭДЛЭГИЙН САН"}</span>
+          <h3>{language === "en" ? "What next?" : "Юу хийх вэ?"}</h3>
+          <p>{language === "en" ? "Add something new, review, or find something you learned." : "Шинэ зүйл нэмэх, давтах эсвэл өмнөх мэдлэгээ олох."}</p>
         </div>
         <div
           className="knowledge-actions"
           role="group"
-          aria-label="Мэдлэг нэмэх"
+          aria-label={language === "en" ? "Add knowledge" : "Мэдлэг нэмэх"}
         >
           <button
             className="button primary"
             onClick={() => setEditor({ kind: "note" })}
           >
-            <Icon name="plus" size={16} /> Тэмдэглэл
+            <Icon name="plus" size={16} /> {language === "en" ? "Note" : "Тэмдэглэл"}
           </button>
           <button
             className="button"
             onClick={() => setEditor({ kind: "deck" })}
           >
-            <Icon name="plus" size={16} /> Картын багц
+            <Icon name="plus" size={16} /> {language === "en" ? "Deck" : "Картын багц"}
           </button>
           <button className="button" onClick={() => setGenerator(true)}>
-            <Icon name="spark" size={16} /> Карт үүсгэх
+            <Icon name="spark" size={16} /> {language === "en" ? "Create cards" : "Карт үүсгэх"}
           </button>
           <button className="button" onClick={() => setQuizGenerator(true)}>
-            <Icon name="spark" size={16} /> Quiz үүсгэх
+            <Icon name="spark" size={16} /> {language === "en" ? "Create quiz" : "Quiz үүсгэх"}
           </button>
           <button
             className="text-button"
             onClick={() => setEditor({ kind: "quiz" })}
           >
-            Сорил нэмэх
+            {language === "en" ? "Add quiz" : "Сорил нэмэх"}
           </button>
           <button
             className="text-button"
             onClick={() => setEditor({ kind: "link" })}
           >
-            Холбоос нэмэх
+            {language === "en" ? "Add link" : "Холбоос нэмэх"}
           </button>
         </div>
       </section>
-      <nav className="knowledge-tabs" aria-label="Мэдлэгийн төрөл">
+      <nav className="knowledge-tabs" aria-label={language === "en" ? "Knowledge type" : "Мэдлэгийн төрөл"}>
         {tabs.map(([id, label]) => (
           <button
             key={id}
@@ -208,7 +218,7 @@ export function KnowledgeHub() {
               setLimit(36);
             }}
           >
-            {label}
+            {language === "en" ? TAB_EN[id] : label}
           </button>
         ))}
       </nav>
@@ -216,8 +226,8 @@ export function KnowledgeHub() {
         <label className="search-field">
           <Icon name="search" size={18} />
           <input
-            aria-label="Мэдлэгийн сангаас хайх"
-            placeholder="Мэдлэгээс хайх…"
+            aria-label={language === "en" ? "Search knowledge" : "Мэдлэгийн сангаас хайх"}
+            placeholder={language === "en" ? "Search knowledge…" : "Мэдлэгээс хайх…"}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
