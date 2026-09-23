@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { AMBIENTS } from "@/lib/music/catalog";
 import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { youtubeURL } from "@/lib/music/youtube";
+import { isVideoMedia } from "@/lib/music/native-audio";
 import { Icon } from "@/components/ui/icon";
 import { useMusic } from "./music-provider";
 import "./music.css";
@@ -25,8 +26,13 @@ function isYouTubeSource(
 }
 
 function sourceKind(source: MusicSource) {
-  if (source.kind === "audio")
+  if (source.kind === "audio") {
+    if (isVideoMedia(source.audioUrl, source.mimeType))
+      return source.audioStorageKey
+        ? "Төхөөрөмжийн MP4 видео"
+        : "MP4 видео холбоос";
     return source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос";
+  }
   return "YouTube";
 }
 
@@ -66,8 +72,24 @@ export function MusicPlayer() {
     onReady,
     onState,
     onError,
+    autoNext,
+    repeat,
+    seekSeconds,
+    currentTime,
+    duration,
+    canSeek,
+    seekBy,
+    seekTo,
+    isVideoMedia: hasNativeVideo,
+    setNativeVideoHost,
   } = useMusic();
   const dock = useRef<HTMLElement>(null);
+  const mediaProgressMax = duration > 0 ? duration : Math.max(1, currentTime);
+  const formatTime = (seconds: number) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+    const total = Math.floor(seconds);
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     const element = dock.current;
@@ -264,13 +286,13 @@ export function MusicPlayer() {
               }}
             >
               <label>
-                Аудио эсвэл YouTube холбоос
+                Аудио, MP4 эсвэл YouTube холбоос
                 <input
                   type="url"
                   required
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://…/song.mp3"
+                  placeholder="https://…/song.mp3 эсвэл video.mp4"
                   maxLength={2048}
                 />
               </label>
@@ -333,7 +355,24 @@ export function MusicPlayer() {
           className={`music-preview ${source?.kind === "audio" ? "music-native-preview" : ""}`}
           hidden={!open && !source}
         >
-          {source?.kind === "audio" ? (
+          {hasNativeVideo && source?.kind === "audio" ? (
+            <div className="music-video-runtime">
+              <div
+                className="music-native-video-host"
+                ref={setNativeVideoHost}
+                aria-label="MP4 видео тоглуулагч"
+              />
+              <div className="music-video-caption">
+                <div>
+                  <span className="eyebrow">MP4 VIDEO</span>
+                  <h3>{name}</h3>
+                </div>
+                <span className="tiny muted">
+                  {playing ? "Бичлэг тоглож байна" : "Play дарж эхлүүлнэ үү."}
+                </span>
+              </div>
+            </div>
+          ) : source?.kind === "audio" ? (
             <div className="music-native-card">
               <span className="soundscape-art">
                 <Icon name="music" size={36} />
@@ -405,12 +444,90 @@ export function MusicPlayer() {
           )}
           {open && (
             <div className="music-details">
+              {canSeek && (
+                <div className="music-seek-controls">
+                  <div className="music-seek-buttons">
+                    <button
+                      className="button small"
+                      onClick={() => seekBy(-seekSeconds)}
+                      disabled={!duration && currentTime <= 0}
+                    >
+                      −{seekSeconds}с
+                    </button>
+                    <input
+                      className="music-progress"
+                      type="range"
+                      min="0"
+                      max={mediaProgressMax}
+                      step="0.1"
+                      value={Math.min(currentTime, mediaProgressMax)}
+                      onChange={(event) => seekTo(Number(event.target.value))}
+                      aria-label="Тоглолтын байрлал"
+                    />
+                    <button
+                      className="button small"
+                      onClick={() => seekBy(seekSeconds)}
+                      disabled={duration > 0 && currentTime >= duration}
+                    >
+                      +{seekSeconds}с
+                    </button>
+                  </div>
+                  <div className="music-time-row">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+              )}
+              <div className="music-options">
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={autoNext}
+                    onChange={(event) =>
+                      void savePreference({ autoNext: event.target.checked })
+                    }
+                  />
+                  Дараагийн дууг автоматаар тоглуулах
+                </label>
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={repeat}
+                    onChange={(event) =>
+                      void savePreference({ repeat: event.target.checked })
+                    }
+                  />
+                  Одоогийн дууг давтах
+                </label>
+                <label>
+                  Урагш/ухрах алхам
+                  <select
+                    value={seekSeconds}
+                    onChange={(event) =>
+                      void savePreference({
+                        seekSeconds: Number(event.target.value) as 5 | 10 | 15 | 30,
+                      })
+                    }
+                  >
+                    <option value={5}>5 секунд</option>
+                    <option value={10}>10 секунд</option>
+                    <option value={15}>15 секунд</option>
+                    <option value={30}>30 секунд</option>
+                  </select>
+                </label>
+              </div>
               <div className="button-row mobile-music-steps">
                 <button className="button small" onClick={() => next(-1)}>
-                  Өмнөх
+                  Өмнөх дуу
                 </button>
                 <button className="button small" onClick={() => next(1)}>
-                  Дараах
+                  Дараагийн дуу
+                </button>
+                <button className="button small" onClick={() => seekBy(-seekSeconds)}>
+                  Буцаах
+                </button>
+                <button className="button small" onClick={() => seekBy(seekSeconds)}>
+                  Урагшлуулах
                 </button>
               </div>
             </div>
