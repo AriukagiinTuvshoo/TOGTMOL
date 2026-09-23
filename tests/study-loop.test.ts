@@ -57,6 +57,25 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("statistics behavior history", () => {
+  it("records an explicitly discarded timer for future pattern analysis", () => {
+    let now = new Date("2026-09-15T22:00:00").getTime();
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const started = actions.start("math", "pomodoro", "focus", 25)(fixture());
+    now += 10 * 60000;
+    const discarded = actions.discard()(started);
+    expect(discarded.activeTimer).toBeNull();
+    expect(discarded.extras.behaviorAttempts).toEqual([
+      expect.objectContaining({
+        id: started.activeTimer?.id,
+        subjectId: "math",
+        accumulatedSec: 600,
+        targetSec: 1500,
+      }),
+    ]);
+  });
+});
+
 describe("v4.1 goal milestones and task lifecycle", () => {
   it("preserves an explicitly unassigned session stage when its task is later assigned", () => {
     const data = planned(),
