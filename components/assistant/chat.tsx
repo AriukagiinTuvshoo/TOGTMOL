@@ -19,19 +19,21 @@ export function BondookChat() {
     [changingAI, setChangingAI] = useState(false),
     [messageLimit, setMessageLimit] = useState(100),
     [consent, setConsent] = useState(false),
+    [forceLocal, setForceLocal] = useState(false),
     [notesConsent, setNotesConsent] = useState(false),
     [error, setError] = useState(""),
     [plan, setPlan] = useState<string | null>(null),
     end = useRef<HTMLDivElement>(null),
     request = useRef(0),
     disposed = useRef(false);
-  const online = data.settings.extras.aiEnabled === true;
+  const online = !forceLocal && data.settings.extras.aiEnabled === true;
   const includeNotes = data.settings.extras.aiIncludeNotes === true;
   const messages = useMemo(
     () => readMessages(data.extras.bondookMessages),
     [data.extras.bondookMessages],
   );
   const setAI = async (enabled: boolean, notes = false) => {
+    setForceLocal(!enabled);
     const namespace = store.getSnapshot().namespace;
     setChangingAI(true);
     try {
