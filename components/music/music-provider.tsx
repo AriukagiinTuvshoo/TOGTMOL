@@ -22,7 +22,7 @@ import {
   type PlaybackState,
 } from "@/lib/music/preferences";
 import { parseYouTube, youtubeURL } from "@/lib/music/youtube";
-import { parseAudioURL } from "@/lib/music/native-audio";
+import { isVideoMedia, parseAudioURL } from "@/lib/music/native-audio";
 import { uid } from "@/lib/constants";
 import type { MusicSource } from "@/types/study";
 
@@ -34,13 +34,6 @@ function isAudioFile(file: File) {
     file.type.startsWith("audio/") ||
     file.type === "video/mp4" ||
     AUDIO_EXTENSIONS.test(file.name)
-  );
-}
-
-function isMp4Media(target: MusicSource) {
-  return (
-    target.mimeType === "video/mp4" ||
-    /\.mp4(?:$|[?#])/i.test(target.audioUrl ?? "")
   );
 }
 
@@ -131,12 +124,15 @@ function useMusicController() {
   const nativeAudio = useRef<HTMLMediaElement | null>(null);
   const nativeSourceId = useRef<string | null>(null);
   const nativeObjectURL = useRef<string | null>(null);
+  const nativeVideoHost = useRef<HTMLElement | null>(null);
+  const [mediaPosition, setMediaPosition] = useState(0);
+  const [mediaDuration, setMediaDuration] = useState(0);
 
   const sources = data.musicSources.filter((s) => !s.deletedAt);
   const selected = session.selection;
   const source = sources.find((s) => s.id === selected);
   const isAmbient = selected.startsWith("ambient:");
-  const { volume, muted } = preference;
+  const { volume, muted, autoNext, repeat, seekSeconds } = preference;
 
   const currentSources = () =>
     store.getSnapshot().data.musicSources.filter((s) => !s.deletedAt);
@@ -164,11 +160,36 @@ function useMusicController() {
     setError(message);
   };
 
+  const attachNativeVideoHost = (host: HTMLElement | null) => {
+    nativeVideoHost.current = host;
+    const element = nativeAudio.current;
+    if (element instanceof HTMLVideoElement) {
+      if (host && element.parentElement !== host) {
+        host.append(element);
+        element.style.display = "";
+      } else if (!host) {
+        element.style.display = "none";
+      }
+    }
+  };
+
   const ensureNativeAudio = (target?: MusicSource) => {
-    const wantVideo = target ? isMp4Media(target) : false;
+    const wantVideo = target
+      ? isVideoMedia(target.audioUrl, target.mimeType)
+      : false;
     if (nativeAudio.current) {
       const existingIsVideo = nativeAudio.current instanceof HTMLVideoElement;
-      if (existingIsVideo === wantVideo) return nativeAudio.current;
+      if (existingIsVideo === wantVideo) {
+        if (
+          existingIsVideo &&
+          nativeVideoHost.current &&
+          nativeAudio.current.parentElement !== nativeVideoHost.current
+        ) {
+          nativeVideoHost.current.append(nativeAudio.current);
+          nativeAudio.current.style.display = "";
+        }
+        return nativeAudio.current;
+      }
       try {
         nativeAudio.current.pause();
       } catch {}
@@ -180,16 +201,16 @@ function useMusicController() {
       ? document.createElement("video")
       : new Audio();
     if (wantVideo) {
-      (element as HTMLVideoElement).playsInline = true;
-      element.controls = false;
-      element.setAttribute("aria-hidden", "true");
-      element.style.position = "fixed";
-      element.style.width = "1px";
-      element.style.height = "1px";
-      element.style.opacity = "0";
-      element.style.pointerEvents = "none";
-      element.style.left = "-10000px";
-      document.body.appendChild(element);
+      const video = element as HTMLVideoElement;
+      video.playsInline = true;
+      video.controls = false;
+      video.className = "music-native-video";
+      if (nativeVideoHost.current) {
+        nativeVideoHost.current.append(video);
+      } else {
+        video.style.display = "none";
+        document.body.appendChild(video);
+      }
     }
     element.preload = "metadata";
     try {
@@ -268,6 +289,10 @@ function useMusicController() {
       }
     }
     element.volume = muted ? 0 : volume;
+    if (wantVideo && nativeVideoHost.current) {
+      nativeVideoHost.current.append(element);
+      element.style.display = "";
+    }
     return element;
   };
 
@@ -352,6 +377,32 @@ function useMusicController() {
 
   const pause = () => control("pause");
   const stop = () => control("stop");
+
+  const seekBy = (delta: number) => {
+    const native = nativeAudio.current;
+    if (nativeSourceId.current === latest.current.selection && native) {
+      const nextTime = Math.max(
+        0,
+        Math.min(
+          Number.isFinite(native.duration) ? native.duration : Infinity,
+          native.currentTime + delta,
+        ),
+      );
+      native.currentTime = nextTime;
+      setMediaPosition(nextTime);
+      commit({ ...capture(), position: nextTime });
+      return;
+    }
+    if (youtube.current && !latest.current.selection.startsWith("ambient:")) {
+      const current = youtube.current.getCurrentTime?.() ?? latest.current.position;
+      const nextTime = Math.max(0, current + delta);
+      youtube.current.seekTo?.(nextTime, true);
+      setMediaPosition(nextTime);
+      commit({ ...capture(), position: nextTime });
+    }
+  };
+
+  const seekTo = (time: number) => seekBy(time - mediaPosition);
 
   const play = async (id = latest.current.selection) => {
     if (actual.current === "playing" && id === latest.current.selection) return;
@@ -458,7 +509,14 @@ function useMusicController() {
       if (id.startsWith("ambient:")) void play(id);
       else if (target?.kind === "audio") void play(id);
       else playWhenReady.current = true;
-    } else mark("stopped");
+    } else {
+      mark("stopped");
+      if (target?.kind === "audio" && isVideoMedia(target.audioUrl, target.mimeType)) {
+        void loadNativeSource(target, 0).catch((e) =>
+          fail(e instanceof Error ? e.message : "MP4 бичлэгийг ачаалж чадсангүй."),
+        );
+      }
+    }
   };
 
   const setOpen = (open: boolean) => {
@@ -490,8 +548,21 @@ function useMusicController() {
     if (!mounted.current) return;
     if (state === 1) mark("playing");
     else if (state === 2 && actual.current !== "stopped") mark("paused");
-    else if (state === 0) mark("stopped");
-    else return;
+    else if (state === 0) {
+      if (repeat && youtube.current) {
+        youtube.current.seekTo?.(0, true);
+        void youtubeProvider(youtube.current)
+          .play()
+          .then(() => mark("playing"))
+          .catch(() => fail("Давталтыг эхлүүлж чадсангүй."));
+        return;
+      }
+      if (autoNext) {
+        next(1);
+        return;
+      }
+      mark("stopped");
+    } else return;
     setBusy(false);
     commit({ ...capture(), playback: actual.current });
   };
@@ -751,7 +822,24 @@ function useMusicController() {
     };
     const handleEnded = () => {
       if (nativeSourceId.current !== latest.current.selection) return;
+      if (repeat && nativeAudio.current) {
+        nativeAudio.current.currentTime = 0;
+        void nativeAudio.current
+          .play()
+          .then(() => {
+            mark("playing");
+            setBusy(false);
+            commit({ playback: "playing", position: 0 });
+          })
+          .catch(() => fail("Давталтыг эхлүүлж чадсангүй."));
+        return;
+      }
+      if (autoNext) {
+        next(1);
+        return;
+      }
       mark("stopped");
+      setMediaPosition(0);
       setBusy(false);
       commit({ ...capture(), playback: "stopped", position: 0 });
     };
@@ -760,17 +848,49 @@ function useMusicController() {
       mark("paused");
       fail("Энэ аудиог тоглуулж чадсангүй. Файлаа эсвэл холбоосоо шалгана уу.");
     };
+    const handleLoadedMetadata = () => {
+      setMediaDuration(
+        Number.isFinite(element.duration) ? Math.max(0, element.duration) : 0,
+      );
+    };
     element.addEventListener("play", handlePlay);
     element.addEventListener("pause", handlePause);
     element.addEventListener("ended", handleEnded);
     element.addEventListener("error", handleError);
+    element.addEventListener("loadedmetadata", handleLoadedMetadata);
     return () => {
       element.removeEventListener("play", handlePlay);
       element.removeEventListener("pause", handlePause);
       element.removeEventListener("ended", handleEnded);
       element.removeEventListener("error", handleError);
+      element.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   });
+
+  useEffect(() => {
+    const tick = window.setInterval(() => {
+      if (actual.current !== "playing") return;
+      const native = nativeAudio.current;
+      if (
+        nativeSourceId.current === latest.current.selection &&
+        native
+      ) {
+        setMediaPosition(
+          Number.isFinite(native.currentTime) ? Math.max(0, native.currentTime) : 0,
+        );
+        setMediaDuration(
+          Number.isFinite(native.duration) ? Math.max(0, native.duration) : 0,
+        );
+        return;
+      }
+      const yt = youtube.current;
+      if (yt) {
+        setMediaPosition(yt.getCurrentTime?.() ?? latest.current.position);
+        setMediaDuration(yt.getDuration?.() ?? 0);
+      }
+    }, 250);
+    return () => window.clearInterval(tick);
+  }, []);
 
   useEffect(() => {
     try {
@@ -858,6 +978,16 @@ function useMusicController() {
     name: session.track.title,
     error: error || storageError,
     busy,
+    autoNext,
+    repeat,
+    seekSeconds,
+    currentTime: mediaPosition,
+    duration: mediaDuration,
+    canSeek: source?.kind === "audio" || source?.kind === "video" || source?.kind === "playlist",
+    seekBy,
+    seekTo,
+    isVideoMedia: source?.kind === "audio" && isVideoMedia(source.audioUrl, source.mimeType),
+    setNativeVideoHost: attachNativeVideoHost,
     attempt,
     url,
     setUrl,
