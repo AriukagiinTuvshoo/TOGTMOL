@@ -182,17 +182,18 @@ export const actions = {
       )
         throw Error("Хугацаа 1–240 минут байна.");
       const now = Date.now();
+      const timer = startTimer(
+        id,
+        mode,
+        mode === "stopwatch" ? "focus" : phase,
+        minutes,
+        now,
+        taskId,
+      );
       return {
         ...data,
         activeTimer: {
-          ...startTimer(
-            id,
-            mode,
-            mode === "stopwatch" ? "focus" : phase,
-            minutes,
-            now,
-            taskId,
-          ),
+          ...timer,
           date: studyDate(new Date(now), dayBoundary(data.settings)),
           extras: {
             ...timer.extras,
