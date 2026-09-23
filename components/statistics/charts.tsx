@@ -102,13 +102,6 @@ export function AnnualHeatmap({
   weeks: AnnualHeatmapCell[][];
   year: number;
 }) {
-  const firstInMonth = new Set(
-    weeks.map((week, index) => {
-      const cell = week.find((day) => day.inYear);
-      if (!cell) return index;
-      return cell.date.slice(0, 7);
-    }),
-  );
   return (
     <div
       className="heatmap-shell"
@@ -129,12 +122,12 @@ export function AnnualHeatmap({
             {weeks.map((week, index) => {
               const cell = week.find((day) => day.inYear);
               const month = cell ? cell.date.slice(5, 7) : "";
+              const previous = weeks[index - 1]?.find((day) => day.inYear);
+              const monthChanged =
+                Boolean(cell) &&
+                (index === 0 || previous?.date.slice(0, 7) !== month);
               return (
-                <span key={index}>
-                  {index === 0 || firstInMonth.has(cell?.date.slice(0, 7) ?? "")
-                    ? month
-                    : ""}
-                </span>
+                <span key={index}>{monthChanged ? month : ""}</span>
               );
             })}
           </div>
