@@ -6,8 +6,8 @@ import {
   shiftDate,
   dateKey,
   weekStart,
-  currentStreak,
 } from "@/lib/calculations/dates";
+import { streakFreezeCount, streakWithFreezes } from "@/lib/calculations/analytics";
 export type CompanionState =
   | "idle"
   | "studying"
@@ -62,7 +62,11 @@ export function companionState(
         : t.running
           ? "studying"
           : "paused";
-  const streak = currentStreak(new Set(index.sortedDates), today);
+  const streak = streakWithFreezes(
+    new Set(index.sortedDates),
+    today,
+    streakFreezeCount(data.settings),
+  ).streak;
   if (index.days.has(today) && streak > 0 && streak % 7 === 0)
     return "celebrating";
   if (index.days.has(today)) return "happy";
