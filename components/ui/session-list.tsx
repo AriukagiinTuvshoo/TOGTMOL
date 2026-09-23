@@ -18,7 +18,7 @@ export function SessionList({
   sessions: StudySession[];
   limit?: number;
 }) {
-  const { index } = useStudy(),
+  const { index, navigate } = useStudy(),
     [selected, setSelected] = useState<StudySession | null>(null),
     [count, setCount] = useState(limit);
   if (!sessions.length)
@@ -26,6 +26,11 @@ export function SessionList({
       <Empty
         title="Эхний хичээлээ эхлүүлье"
         description="Таны суралцсан хугацаа, тэмдэглэл энд хадгалагдана."
+        action={
+          <button className="button primary" onClick={() => navigate("timer")}>
+            Эндээс эхлэх <Icon name="play" size={16} />
+          </button>
+        }
       />
     );
   return (
