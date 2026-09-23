@@ -5,7 +5,6 @@ import {
   shiftDate,
   dateKey,
   weekStart,
-  currentStreak,
 } from "@/lib/calculations/dates";
 import { currentStreakWithFreezes, streakFreezeLimit } from "@/lib/calculations/decision";
 export type CompanionState =
