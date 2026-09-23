@@ -14,13 +14,20 @@ import { RecoveryPanel } from "./settings/recovery";
 import { GlobalSearch } from "./knowledge/search";
 import { StudyRoom } from "./world/study-room";
 import { MusicPlayer, MusicProvider } from "./music/music-player";
+import { LanguageProvider, useI18n } from "./i18n/language-provider";
+import { LanguageSwitcher } from "./i18n/language-switcher";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
+function LocalizedLoading() {
+  const { t } = useI18n();
+  return <p role="status">{t("common.loading")}</p>;
+}
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
-  { loading: () => <p role="status">Мэдлэгийн санг нээж байна…</p> },
+  { loading: () => <LocalizedLoading /> },
 );
 const PrivacyCenter = dynamic(
   () => import("./settings/privacy").then((m) => m.PrivacyCenter),
-  { loading: () => <p role="status">Нууцлалын тохиргоог нээж байна…</p> },
+  { loading: () => <LocalizedLoading /> },
 );
 const CustomizeRoom = dynamic(() =>
   import("./world/customize").then((m) => m.CustomizeRoom),
@@ -38,33 +45,33 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
-const NAV: { view: View; label: string; icon: string }[] = [
-  { view: "overview", label: "Миний өрөө", icon: "home" },
-  { view: "knowledge", label: "Миний мэдлэг", icon: "book" },
-  { view: "calendar", label: "Календарь", icon: "calendar" },
-  { view: "subjects", label: "Хичээлүүд", icon: "book" },
-  { view: "statistics", label: "Статистик", icon: "chart" },
-  { view: "goals", label: "Зорилго", icon: "target" },
-  { view: "achievements", label: "Амжилт", icon: "award" },
-  { view: "assistant", label: "Суралцах туслах", icon: "spark" },
-  { view: "room", label: "Өрөөний загвар", icon: "sun" },
-  { view: "privacy", label: "Нууцлал ба өгөгдөл", icon: "shield" },
-  { view: "settings", label: "Тохиргоо", icon: "settings" },
+const NAV: { view: View; label: TranslationKey; icon: string }[] = [
+  { view: "overview", label: "nav.overview", icon: "home" },
+  { view: "knowledge", label: "nav.knowledge", icon: "book" },
+  { view: "calendar", label: "nav.calendar", icon: "calendar" },
+  { view: "subjects", label: "nav.subjects", icon: "book" },
+  { view: "statistics", label: "nav.statistics", icon: "chart" },
+  { view: "goals", label: "nav.goals", icon: "target" },
+  { view: "achievements", label: "nav.achievements", icon: "award" },
+  { view: "assistant", label: "nav.assistant", icon: "spark" },
+  { view: "room", label: "nav.room", icon: "sun" },
+  { view: "privacy", label: "nav.privacy", icon: "shield" },
+  { view: "settings", label: "nav.settings", icon: "settings" },
 ];
-const titles: Record<View, string> = {
-  overview: "Миний өдөр",
-  timer: "Төвлөрөх цаг",
-  calendar: "Суралцах календарь",
-  subjects: "Миний хичээлүүд",
-  statistics: "Таны ахиц, тоогоор",
-  goals: "Миний зорилго",
-  achievements: "Таны жижиг ялалтууд",
-  assistant: "Суралцах туслах",
-  settings: "Өөрийн хэмнэлээр",
-  room: "Таны жижиг ертөнц",
-  focus: "Төвлөрөх орон зай",
-  knowledge: "Миний мэдлэг",
-  privacy: "Нууцлал ба өгөгдөл",
+const titles: Record<View, TranslationKey> = {
+  overview: "page.overview",
+  timer: "page.timer",
+  calendar: "page.calendar",
+  subjects: "page.subjects",
+  statistics: "page.statistics",
+  goals: "page.goals",
+  achievements: "page.achievements",
+  assistant: "page.assistant",
+  settings: "page.settings",
+  room: "page.room",
+  focus: "page.focus",
+  knowledge: "page.knowledge",
+  privacy: "page.privacy",
 };
 function Shell() {
   const {
@@ -81,6 +88,7 @@ function Shell() {
     } = useStudy(),
     state = useStoreState(),
     { status, user } = useAccount(),
+    { t } = useI18n(),
     [more, setMore] = useState(false);
   const go = (v: View) => {
     navigate(v);
@@ -160,7 +168,7 @@ function Shell() {
   return (
     <div className={`app-shell ${view === "focus" ? "is-focus" : ""}`}>
       <a className="skip-link" href="#main-content">
-        Үндсэн хэсэг рүү
+        {t("shell.skip")}
       </a>
       <aside className="sidebar">
         <button className="brand" onClick={() => go("overview")}>
@@ -171,7 +179,7 @@ function Shell() {
             тогтмол<span className="brand-version">STUDY WORLD · 06</span>
           </span>
         </button>
-        <div className="nav-caption">МИНИЙ ОРОН ЗАЙ</div>
+        <div className="nav-caption">{t("shell.mySpace")}</div>
         <nav aria-label="Үндсэн цэс">
           {NAV.map((n) => (
             <button
@@ -181,7 +189,7 @@ function Shell() {
               onClick={() => go(n.view)}
             >
               <Icon name={n.icon} />
-              {n.label}
+              {t(n.label)}
               {n.view === "assistant" && (
                 <span className="nav-tag" aria-hidden="true">
                   LOCAL
@@ -206,11 +214,11 @@ function Shell() {
             <span>
               <strong>
                 {state.namespace === "guest"
-                  ? "Миний төхөөрөмж"
-                  : (user?.email?.split("@")[0] ?? "Миний бүртгэл")}
+                  ? t("shell.device")
+                  : (user?.email?.split("@")[0] ?? t("shell.myAccount"))}
               </strong>
               <small>
-                {state.namespace === "guest" ? "Локал горим" : "Бүртгэлтэй"}
+                {state.namespace === "guest" ? t("common.local") : t("shell.account")}
               </small>
             </span>
             <Icon name="settings" size={17} />
@@ -222,21 +230,22 @@ function Shell() {
           <div className="breadcrumbs">
             <span className="mobile-brand">тогтмол</span>
             <span className="desktop-breadcrumb">
-              Миний орон зай <span>/</span> {titles[view]}
+              {t("shell.mySpace")} <span>/</span> {t(titles[view])}
             </span>
           </div>
           <div className="topbar-right">
             {state.ready && (
-              <ModuleBoundary name="Хайлт">
+              <ModuleBoundary name={t("search.module")}>
                 <GlobalSearch />
               </ModuleBoundary>
             )}
+            <LanguageSwitcher compact />
             <span className="save-status">
               <span className="status-dot" />
               {state.busy
-                ? "Хадгалж байна…"
+                ? t("shell.saveBusy")
                 : state.namespace === "guest"
-                  ? "Локал хадгалалт"
+                  ? t("shell.localStorage")
                   : status}
             </span>
             <button
@@ -264,7 +273,7 @@ function Shell() {
               <p>{state.error}</p>
               <button
                 className="icon-button"
-                aria-label="Алдааны мэдэгдэл хаах"
+                aria-label={t("shell.errorClose")}
                 onClick={store.clearError}
               >
                 <Icon name="close" size={18} />
@@ -284,42 +293,42 @@ function Shell() {
           ) : (
             <Fragment key={state.namespace}>
               {view === "overview" && (
-                <ModuleBoundary name="Өнөөдрийн өрөө">
+                <ModuleBoundary name={t("page.overview")}>
                   <StudyRoom />
                 </ModuleBoundary>
               )}
               {view === "timer" && (
-                <ModuleBoundary name="Цаг хэмжигч">
+                <ModuleBoundary name={t("page.timer")}>
                   <StudyTimer key={state.data.activeTimer?.id ?? "new-timer"} />
                 </ModuleBoundary>
               )}
               {view === "room" && (
-                <ModuleBoundary name="Өрөөний загвар">
+                <ModuleBoundary name={t("page.room")}>
                   <CustomizeRoom />
                 </ModuleBoundary>
               )}
               {view === "focus" && (
-                <ModuleBoundary name="Төвлөрөх өрөө">
+                <ModuleBoundary name={t("page.focus")}>
                   <StudyRoom focus />
                 </ModuleBoundary>
               )}
               {view === "knowledge" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "knowledge"}
-                  name="Мэдлэгийн сан"
+                  name={t("page.knowledge")}
                 >
                   <KnowledgeHub />
                 </ModuleBoundary>
               )}
               {view === "privacy" && (
-                <ModuleBoundary name="Нууцлал">
+                <ModuleBoundary name={t("page.privacy")}>
                   <PrivacyCenter />
                 </ModuleBoundary>
               )}
               {view === "calendar" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "calendar"}
-                  name="Календарь"
+                  name={t("page.calendar")}
                 >
                   <StudyCalendar />
                 </ModuleBoundary>
@@ -342,8 +351,8 @@ function Shell() {
           )}
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
-            <span>Өнөөдөр бага байсан ч ахиц.</span>
-            <span>Тогтмол v6.0</span>
+            <span>{t("shell.footer1")}</span>
+            <span>TOGTMOL v7</span>
           </footer>
         </main>
       </div>
@@ -354,24 +363,24 @@ function Shell() {
             onClick={() => setMore(false)}
             aria-label="Нэмэлт цэс хаах"
           />
-          <nav aria-label="Нэмэлт цэс">
+          <nav aria-label={t("nav.more")}>
             {NAV.filter(
               (n) => !["overview", "knowledge", "assistant"].includes(n.view),
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
-                {n.label}
+                {t(n.label)}
               </button>
             ))}
           </nav>
         </div>
       )}
-      <nav className="mobile-nav" aria-label="Гар утасны цэс">
+      <nav className="mobile-nav" aria-label={t("nav.more")}>
         {[
-          { view: "overview", label: "Нүүр", icon: "home" },
-          { view: "knowledge", label: "Мэдлэг", icon: "book" },
-          { view: "timer", label: "Төвлөрөх", icon: "play" },
-          { view: "assistant", label: "Бондоок", icon: "spark" },
+          { view: "overview", label: t("nav.home"), icon: "home" },
+          { view: "knowledge", label: t("nav.knowledgeShort"), icon: "book" },
+          { view: "timer", label: t("nav.focus"), icon: "play" },
+          { view: "assistant", label: t("nav.bondook"), icon: "spark" },
         ].map((n) => (
           <button
             key={n.view}
@@ -385,7 +394,7 @@ function Shell() {
         ))}
         <button aria-expanded={more} onClick={() => setMore(!more)}>
           <Icon name="more" size={21} />
-          <span>Бусад</span>
+          <span>{t("nav.more")}</span>
         </button>
       </nav>
       <div className="toast-region" aria-live="polite" aria-atomic="true">
@@ -395,7 +404,7 @@ function Shell() {
             {notice}
             {undo && (
               <button className="text-button" onClick={() => void run(undo)}>
-                Буцаах
+                {t("common.undo")}
               </button>
             )}
           </div>
@@ -414,10 +423,12 @@ function Shell() {
 }
 export function AppShell() {
   return (
-    <StudyProvider>
-      <AccountProvider>
+    <LanguageProvider>
+      <StudyProvider>
+        <AccountProvider>
         <Shell />
-      </AccountProvider>
-    </StudyProvider>
+        </AccountProvider>
+      </StudyProvider>
+    </LanguageProvider>
   );
 }
