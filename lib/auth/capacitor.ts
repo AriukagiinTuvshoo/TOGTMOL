@@ -52,7 +52,7 @@ export async function registerAuthDeepLinks(
       parsed.searchParams.get("error_description") ??
       parsed.searchParams.get("error");
     if (error) {
-      onError?.(decodeURIComponent(error.replace(/\+/g, " ")));
+      onError?.(error);
       return;
     }
 
@@ -61,7 +61,9 @@ export async function registerAuthDeepLinks(
 
     const result = await client.auth.exchangeCodeForSession(code);
     if (result.error) {
-      onError?.("Нэвтрэлтийн холбоосыг баталгаажуулж чадсангүй: " + result.error.message);
+      onError?.(
+        "Нэвтрэлтийн холбоосыг баталгаажуулж чадсангүй: " + result.error.message,
+      );
       return;
     }
 
