@@ -1,4 +1,5 @@
 import { dayBoundary } from "@/lib/preferences";
+import { calendarTimeZone } from "@/lib/calculations/calendar";
 import type {
   DailySummary,
   PeriodStats,
@@ -35,6 +36,7 @@ function getDay(map: Map<string, DailySummary>, date: string) {
 export function sessionAllocations(
   session: StudySession,
   boundary = 0,
+  timeZone = calendarTimeZone(),
 ): { date: string; hour: number; seconds: number }[] {
   const spans = [...session.segments].sort((a, b) => a.start - b.start),
     sum = spans.reduce((n, s) => n + (s.end - s.start) / 1000, 0);
@@ -53,7 +55,15 @@ export function sessionAllocations(
         date: session.date,
         hour: session.startTimeEstimated
           ? -1
-          : new Date(session.startEpoch).getHours(),
+          : Number(
+            new Intl.DateTimeFormat("en-US", {
+              timeZone,
+              hour: "2-digit",
+              hourCycle: "h23",
+            })
+              .formatToParts(new Date(session.startEpoch))
+              .find((p) => p.type === "hour")?.value ?? 0,
+          ),
         seconds: session.durationSec,
       },
     ];
@@ -66,8 +76,16 @@ export function sessionAllocations(
       next.setMinutes(60, 0, 0);
       const end = Math.min(span.end, Math.max(cursor + 1, next.getTime()));
       result.push({
-        date: studyDate(d, boundary),
-        hour: d.getHours(),
+        date: studyDate(d, boundary, timeZone),
+        hour: Number(
+          new Intl.DateTimeFormat("en-US", {
+            timeZone,
+            hour: "2-digit",
+            hourCycle: "h23",
+          })
+            .formatToParts(d)
+            .find((p) => p.type === "hour")?.value ?? 0,
+        ),
         seconds: ((end - cursor) / 1000) * (session.durationSec / sum),
       });
       cursor = end;
@@ -77,8 +95,13 @@ export function sessionAllocations(
 }
 export function buildIndex(
   data: StudyData,
-  today = studyDate(new Date(), dayBoundary(data.settings)),
+  today = studyDate(
+    new Date(),
+    dayBoundary(data.settings),
+    calendarTimeZone(data),
+  ),
   boundary = dayBoundary(data.settings),
+  timeZone = calendarTimeZone(data),
 ): StudyIndex {
   const days = new Map<string, DailySummary>(),
     subjectDays = new Map<string, Map<string, DailySummary>>(),
@@ -111,7 +134,7 @@ export function buildIndex(
       bySubject.set(session.subjectId, list);
     }
     list.push(session);
-    for (const part of sessionAllocations(session, boundary)) {
+    for (const part of sessionAllocations(session, boundary, timeZone)) {
       if (part.date > today) continue;
       for (const d of [
         getDay(days, part.date),
