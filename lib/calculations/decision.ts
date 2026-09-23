@@ -1,14 +1,25 @@
 import type { Settings, StudyData, StudyIndex } from "@/types/study";
 import { parseDate, shiftDate, weekStart } from "./dates";
 function heatmapLevel(minutes: number) {
-  return minutes > 60 ? 4 : minutes > 40 ? 3 : minutes > 20 ? 2 : minutes > 0 ? 1 : 0;
+  return minutes > 60
+    ? 4
+    : minutes > 40
+      ? 3
+      : minutes > 20
+        ? 2
+        : minutes > 0
+          ? 1
+          : 0;
 }
 
 export const DEFAULT_STREAK_FREEZES = 2;
 
 export function streakFreezeLimit(settings: Settings): number {
   const value = settings.extras.streakFreezeLimit;
-  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 2
+  return typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 2
     ? value
     : DEFAULT_STREAK_FREEZES;
 }
@@ -96,10 +107,7 @@ export interface AnnualHeatmap {
   totalMinutes: number;
 }
 
-export function annualHeatmap(
-  index: StudyIndex,
-  year: number,
-): AnnualHeatmap {
+export function annualHeatmap(index: StudyIndex, year: number): AnnualHeatmap {
   const start = `${year}-01-01`;
   const end = `${year}-12-31`;
   const firstWeek = weekStart(start);

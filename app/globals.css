@@ -3670,7 +3670,7 @@ main {
   height: 120px;
   border-radius: 50%;
   background: var(--moss-soft);
-  opacity: .55;
+  opacity: 0.55;
 }
 .decision-icon {
   width: 34px;
@@ -3835,7 +3835,7 @@ main {
   background: var(--moss);
 }
 .heatmap-cell.outside {
-  opacity: .22;
+  opacity: 0.22;
 }
 .heatmap-legend {
   display: flex;
@@ -3850,7 +3850,7 @@ main {
 }
 .subject-chart-layout {
   display: grid;
-  grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
   gap: 34px;
   align-items: center;
 }
@@ -3927,14 +3927,30 @@ main {
   flex: 0 0 auto;
   margin-top: 1px;
 }
-@media(max-width:1050px){
-  .decision-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .decision-card{min-height:200px}
+@media (max-width: 1050px) {
+  .decision-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .decision-card {
+    min-height: 200px;
+  }
 }
-@media(max-width:680px){
-  .decision-grid{grid-template-columns:1fr}
-  .decision-card{min-height:0}
-  .subject-chart-layout{grid-template-columns:1fr;gap:24px}
-  .donut-chart{grid-template-columns:150px minmax(0,1fr);gap:17px}
-  .heatmap-body{min-width:700px}
+@media (max-width: 680px) {
+  .decision-grid {
+    grid-template-columns: 1fr;
+  }
+  .decision-card {
+    min-height: 0;
+  }
+  .subject-chart-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .donut-chart {
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 17px;
+  }
+  .heatmap-body {
+    min-width: 700px;
+  }
 }

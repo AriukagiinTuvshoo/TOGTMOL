@@ -100,10 +100,7 @@ describe("calendar and statistics", () => {
       currentStreakWithFreezes(new Set(["2026-09-13"]), "2026-09-15", 1),
     ).toEqual({ streak: 0, usedFreezes: 0 });
     expect(
-      longestStreakWithFreezes(
-        ["2026-09-10", "2026-09-12", "2026-09-13"],
-        1,
-      ),
+      longestStreakWithFreezes(["2026-09-10", "2026-09-12", "2026-09-13"], 1),
     ).toBe(4);
   });
   it("builds a year heatmap from actual minutes and keeps non-year cells inert", () => {

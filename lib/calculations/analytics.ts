@@ -15,10 +15,7 @@ import {
   shiftDate,
   weekStart,
 } from "./dates";
-import {
-  currentStreakWithFreezes,
-  longestStreakWithFreezes,
-} from "./decision";
+import { currentStreakWithFreezes, longestStreakWithFreezes } from "./decision";
 export function emptyDay(date: string): DailySummary {
   return {
     date,
@@ -195,9 +192,7 @@ export function periodStats(
             days.filter((d) => d.subjects.size).map((d) => d.date),
             freezeLimit,
           )
-        : longestStreak(
-            days.filter((d) => d.subjects.size).map((d) => d.date),
-          );
+        : longestStreak(days.filter((d) => d.subjects.size).map((d) => d.date));
   return {
     seconds,
     averageDaily: seconds / Math.max(1, dates.length),

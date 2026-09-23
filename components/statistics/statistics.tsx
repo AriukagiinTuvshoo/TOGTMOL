@@ -78,17 +78,10 @@ export function Statistics() {
   const freezeLimit = streakFreezeLimit(data.settings);
   const freeze = useMemo(
     () =>
-      currentStreakWithFreezes(
-        new Set(index.sortedDates),
-        today,
-        freezeLimit,
-      ),
+      currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit),
     [index.sortedDates, today, freezeLimit],
   );
-  const patterns = useMemo(
-    () => behaviorPatterns(data, index),
-    [data, index],
-  );
+  const patterns = useMemo(() => behaviorPatterns(data, index), [data, index]);
   const heatmap = useMemo(
     () => annualHeatmap(index, Number(today.slice(0, 4))),
     [index, today],
@@ -126,12 +119,10 @@ export function Statistics() {
       stats.seconds > 0 && subjectEntries.length
         ? subjectEntries[0][1] / stats.seconds
         : 0,
-    balanceWarning =
-      subjectEntries.length >= 2 && topSubjectShare >= 0.65,
+    balanceWarning = subjectEntries.length >= 2 && topSubjectShare >= 0.65,
     examDiff = exam.date
       ? Math.round(
-          (parseDate(exam.date)!.getTime() -
-            parseDate(today)!.getTime()) /
+          (parseDate(exam.date)!.getTime() - parseDate(today)!.getTime()) /
             86400000,
         )
       : null;
@@ -202,7 +193,9 @@ export function Statistics() {
 
       <section className="decision-grid" aria-label="Шийдвэрийн төв">
         <article className="card decision-card">
-          <div className="decision-icon"><Icon name="chart" size={17} /></div>
+          <div className="decision-icon">
+            <Icon name="chart" size={17} />
+          </div>
           <span className="eyebrow">7 ӨДРИЙН ХАРЬЦУУЛАЛТ</span>
           <strong>{formatTime(global7.seconds)}</strong>
           <p>
@@ -214,7 +207,9 @@ export function Statistics() {
         </article>
 
         <article className="card decision-card exam-card">
-          <div className="decision-icon"><Icon name="target" size={17} /></div>
+          <div className="decision-icon">
+            <Icon name="target" size={17} />
+          </div>
           <span className="eyebrow">COUNTDOWN</span>
           <strong>
             {examDiff === null
@@ -225,7 +220,9 @@ export function Statistics() {
                   ? "ӨНӨӨДӨР"
                   : `${Math.abs(examDiff)} өдөр өнгөрсөн`}
           </strong>
-          <p>{examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}</p>
+          <p>
+            {examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}
+          </p>
           <form className="exam-form" onSubmit={saveExam}>
             <label>
               Шалгалтын өдөр
@@ -248,11 +245,14 @@ export function Statistics() {
         </article>
 
         <article className="card decision-card freeze-card">
-          <div className="decision-icon"><Icon name="leaf" size={17} /></div>
+          <div className="decision-icon">
+            <Icon name="leaf" size={17} />
+          </div>
           <span className="eyebrow">STREAK FREEZE</span>
           <strong>{freeze.streak} өдөр</strong>
           <p>
-            Нөөц: {Math.max(0, freezeLimit - freeze.usedFreezes)} / {freezeLimit}
+            Нөөц: {Math.max(0, freezeLimit - freeze.usedFreezes)} /{" "}
+            {freezeLimit}
           </p>
           <label className="freeze-control">
             Хамгаалалтын өдөр
@@ -285,11 +285,16 @@ export function Statistics() {
         </article>
 
         <article className="card decision-card pattern-card">
-          <div className="decision-icon"><Icon name="spark" size={17} /></div>
+          <div className="decision-icon">
+            <Icon name="spark" size={17} />
+          </div>
           <span className="eyebrow">ЗАН ҮЙЛИЙН PATTERN</span>
           {patterns.length ? (
             patterns.map((pattern) => (
-              <div className={`pattern-result ${pattern.tone}`} key={pattern.id}>
+              <div
+                className={`pattern-result ${pattern.tone}`}
+                key={pattern.id}
+              >
                 <strong>{pattern.title}</strong>
                 <p>{pattern.body}</p>
               </div>
@@ -475,7 +480,10 @@ export function Statistics() {
 
       <div className="two-columns">
         <section className="card">
-          <SectionTitle title="Өдрийн аль цагт?" subtitle="Pause болон амралтыг оруулаагүй." />
+          <SectionTitle
+            title="Өдрийн аль цагт?"
+            subtitle="Pause болон амралтыг оруулаагүй."
+          />
           <BarChart
             values={stats.hours}
             labels={stats.hours.map((_, i) =>

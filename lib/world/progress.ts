@@ -1,12 +1,11 @@
 import { dayBoundary } from "@/lib/preferences";
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
 import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
+import { shiftDate, dateKey, weekStart } from "@/lib/calculations/dates";
 import {
-  shiftDate,
-  dateKey,
-  weekStart,
-} from "@/lib/calculations/dates";
-import { currentStreakWithFreezes, streakFreezeLimit } from "@/lib/calculations/decision";
+  currentStreakWithFreezes,
+  streakFreezeLimit,
+} from "@/lib/calculations/decision";
 export type CompanionState =
   | "idle"
   | "studying"
@@ -59,7 +58,11 @@ export function companionState(
           ? "studying"
           : "paused";
   const freezeLimit = streakFreezeLimit(data.settings);
-  const streak = currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit).streak;
+  const streak = currentStreakWithFreezes(
+    new Set(index.sortedDates),
+    today,
+    freezeLimit,
+  ).streak;
   if (index.days.has(today) && streak > 0 && streak % 7 === 0)
     return "celebrating";
   if (index.days.has(today)) return "happy";

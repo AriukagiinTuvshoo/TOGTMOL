@@ -7,7 +7,10 @@ import {
   parseDate,
 } from "@/lib/calculations/dates";
 import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
-import { currentStreakWithFreezes, streakFreezeLimit } from "@/lib/calculations/decision";
+import {
+  currentStreakWithFreezes,
+  streakFreezeLimit,
+} from "@/lib/calculations/decision";
 import { SHORT_DAYS, WEEKDAYS } from "@/lib/constants";
 import { Empty, Metric, Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
@@ -21,7 +24,11 @@ export function Overview() {
     week = weeklyReport(index, today),
     subjects = data.subjects.filter((s) => !s.deletedAt && !s.archived),
     freezeLimit = streakFreezeLimit(data.settings),
-    streak = currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit).streak,
+    streak = currentStreakWithFreezes(
+      new Set(index.sortedDates),
+      today,
+      freezeLimit,
+    ).streak,
     progress = companionProgress(data, today),
     dailyTargetMinutes =
       data.goals.dailyMinutes ??

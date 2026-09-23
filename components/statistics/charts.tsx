@@ -130,9 +130,7 @@ export function AnnualHeatmap({
               const monthChanged =
                 Boolean(cell) &&
                 (index === 0 || previous?.date.slice(0, 7) !== month);
-              return (
-                <span key={index}>{monthChanged ? month : ""}</span>
-              );
+              return <span key={index}>{monthChanged ? month : ""}</span>;
             })}
           </div>
           <div className="heatmap-grid">

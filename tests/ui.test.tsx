@@ -163,9 +163,7 @@ it("renders decision statistics with heatmap, freeze control and persistent exam
   fireEvent.change(screen.getByLabelText("Шалгалтын нэр"), {
     target: { value: "JLPT N1" },
   });
-  fireEvent.click(
-    screen.getByRole("button", { name: "Хадгалах" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Хадгалах" }));
   await waitFor(async () => {
     const saved = (await repo.load("guest"))?.data;
     expect(saved?.settings.extras.streakFreezeLimit).toBe(1);
