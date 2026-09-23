@@ -123,7 +123,7 @@ export function BondookChat() {
             return session?.access_token ?? null;
           }, includeNotes, language)
         : localChatProvider;
-      const reply = await provider.reply(prompt, { data, index, today });
+      const reply = await provider.reply(prompt, { data, index, today, language });
       if (
         !disposed.current &&
         request.current === token &&
@@ -184,12 +184,12 @@ export function BondookChat() {
         <div className="chat-header">
           <CompanionAvatar world={data.settings.world} />
           <div>
-            <span className="eyebrow">ТАНЫ СУРАЛЦАХ ХАМТРАГЧ</span>
-            <h2>Сайн уу, би Бондоок.</h2>
-            <p>Нэг жижиг алхмыг хамт сонгоё.</p>
+            <span className="eyebrow">{t("assistant.companion")}</span>
+            <h2>{t("assistant.greeting")}</h2>
+            <p>{t("assistant.smallStep")}</p>
           </div>
           <span className="badge">
-            {online ? "ОНЛАЙН AI" : "ТӨХӨӨРӨМЖ ДЭЭР"}
+            {online ? t("assistant.online") : t("assistant.local")}
           </span>
         </div>
         <div className="chat-options">
@@ -207,7 +207,7 @@ export function BondookChat() {
                 }
               }}
             />
-            Онлайн AI ашиглах
+            {t("assistant.enableOnline")}
           </label>
           {!online && (
             <span className="tiny muted">
@@ -222,7 +222,7 @@ export function BondookChat() {
                 disabled={busy || changingAI}
                 onChange={(e) => void setAI(true, e.target.checked)}
               />
-              Сүүлийн 5 хүртэл тэмдэглэл хуваалцах
+              {t("assistant.shareNotes")}
             </label>
           )}
         </div>
@@ -239,8 +239,9 @@ export function BondookChat() {
                 checked={notesConsent}
                 onChange={(e) => setNotesConsent(e.target.checked)}
               />
-              Сүүлийн 7 өдрийн 5 хүртэл тэмдэглэлийг хуваалцах (тус бүр эхний
-              500 тэмдэгт)
+              {language === "en"
+                ? "Share up to 5 notes from the last 7 days (first 500 characters each)"
+                : "Сүүлийн 7 өдрийн 5 хүртэл тэмдэглэлийг хуваалцах (тус бүр эхний 500 тэмдэгт)"}
             </label>
             <div className="button-row">
               <button
@@ -250,13 +251,13 @@ export function BondookChat() {
                   setConsent(false);
                 }}
               >
-                Зөвшөөрч асаах
+                {language === "en" ? "Allow and enable" : "Зөвшөөрч асаах"}
               </button>
               <button
                 className="button small"
                 onClick={() => setConsent(false)}
               >
-                Төхөөрөмж дээр ашиглах
+                {language === "en" ? "Use on this device" : "Төхөөрөмж дээр ашиглах"}
               </button>
             </div>
           </div>
@@ -305,7 +306,7 @@ export function BondookChat() {
               className="button small"
               onClick={() => setMessageLimit((v) => v + 100)}
             >
-              Өмнөх зурвасууд
+              {t("assistant.previous")}
             </button>
           )}
           {messages.slice(-messageLimit).map((m) => (
@@ -343,7 +344,7 @@ export function BondookChat() {
               )}
             </article>
           ))}
-          {busy && <p className="muted">Бондоок бодож байна…</p>}
+          {busy && <p className="muted">{t("assistant.thinking")}</p>}
           <div ref={end} />
         </div>
         {error && (
@@ -356,7 +357,7 @@ export function BondookChat() {
                 setError("");
               }}
             >
-              Local туслах руу шилжих
+              {t("assistant.localFallback")}
             </button>
           </div>
         )}
@@ -385,7 +386,9 @@ export function BondookChat() {
         </form>
         <p className="tiny muted">
           {online ? t("assistant.onlineWarning") : t("assistant.localDescription")}{" "}
-          Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана.
+          {language === "en"
+            ? "Conversation history is stored with your study data and included in JSON backups."
+            : "Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана."}
         </p>
       </section>
       <details className="card">
