@@ -194,7 +194,7 @@ export const actions = {
             now,
             taskId,
           ),
-          date: studyDate(new Date(now), dayBoundary(data.settings)),
+          date: studyDate(new Date(now), dayBoundary(data.settings), calendarTimeZone(data)),
           extras: taskId
             ? {
                 taskId,
@@ -517,7 +517,7 @@ export const actions = {
                   ...t.extras,
                   completedOn: t.completed
                     ? null
-                    : studyDate(new Date(now), dayBoundary(data.settings)),
+                    : studyDate(new Date(now), dayBoundary(data.settings), calendarTimeZone(data)),
                 },
               }
             : t,
