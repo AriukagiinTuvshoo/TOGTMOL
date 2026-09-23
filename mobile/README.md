@@ -55,11 +55,11 @@ iOS build/signing нь macOS + Xcode дээр, Android build/signing нь Androi
 
 Web app нь native орчинд `togtmol://auth/callback` callback ашиглаж, Supabase PKCE authorization code-ыг app дотор `exchangeCodeForSession()`-оор солино. Google login нь Capacitor Browser-оор browser руу нээгдэж, email confirmation болон password recovery мөн ижил callback руу буцна.
 
-Native project үүссэний дараа scheme-ийг platform бүрт бүртгэнэ:
+Native project-д deep-link registration аль хэдийн checked in. Xcode/Android Studio дээр доорх тохиргоо байгааг зөвхөн баталгаажуул:
 
-iOS — Xcode → Target → Info → URL Types дээр URL scheme `togtmol` нэм.
+iOS — Target → Info → URL Types дахь `togtmol` scheme.
 
-Android — `mobile/android/app/src/main/AndroidManifest.xml` дахь main activity-д дараах intent filter-ийг нэм:
+Android — `mobile/android/app/src/main/AndroidManifest.xml` дахь main activity-ийн `togtmol://auth/callback` VIEW/BROWSABLE intent filter.
 
 ```xml
 <intent-filter>
@@ -78,6 +78,7 @@ Supabase Dashboard → Authentication → URL Configuration → Redirect URLs-д
 2. Supabase Auth redirect configuration-д `togtmol://auth/callback` болон production web callback-ийг зөвшөөрөх.
 3. iOS bundle display name, signing team, deployment target, privacy manifests-ийг Xcode дээр шалгах.
 4. Android application ID, signing key, target SDK болон Play App Signing-ийг Android Studio/Play Console дээр тохируулах.
-5. Бодит iPhone болон Android төхөөрөмж дээр login, offline/PWA, sync, timer, YouTube, privacy delete урсгалуудыг шалгах.
+5. Release version: iOS `1.0.0`, Android `1.0.0`.
+6. Бодит iPhone болон Android төхөөрөмж дээр login, offline/PWA, sync, timer, YouTube, privacy delete урсгалуудыг шалгах.
 
 Native project skeleton болон deep-link registration бэлэн. Xcode/Android Studio дээр signing, simulator/emulator болон бодит төхөөрөмжийн build одоогоор эндээс бүрэн баталгаажаагүй.
