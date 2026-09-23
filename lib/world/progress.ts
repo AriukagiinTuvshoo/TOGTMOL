@@ -1,4 +1,5 @@
 import { dayBoundary } from "@/lib/preferences";
+import { ROOM_REWARDS } from "@/lib/world/config";
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
 import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
 import {
@@ -37,11 +38,14 @@ export function companionProgress(data: StudyData, today = dateKey()) {
     (n, d) => n + dailyXP(d.seconds / 60),
     0,
   );
+  const studyHours = measured.totalSeconds / 3600;
   return {
     xp,
     level: Math.floor(xp / 100) + 1,
     intoLevel: xp % 100,
     todayXP: dailyXP((measured.days.get(today)?.seconds ?? 0) / 60),
+    studyHours,
+    roomRewards: ROOM_REWARDS.filter((reward) => studyHours >= reward.requiredHours),
   };
 }
 export function companionState(
