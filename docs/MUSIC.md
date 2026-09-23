@@ -23,6 +23,15 @@
 - `lib/persistence/store.ts`-д зөвхөн хоёр optional flag нэмсэн. Хөгжмийн бичилт ерөнхий `busy` төлөвийг асаахгүй, ерөнхий алдааг үүсгэхгүй/арилгахгүй. Анхдагч үйлдэл бусад бүх caller-д хэвээр; сериалчлал, backup, revision/CAS, IndexedDB save хэвээр. Database schema, migration, Supabase өөрчлөгдөөгүй.
 - Desktop-д доод булангийн dock; mobile-д navigation-ийн дээр байрлах dock. Дууны түвшин mobile дээр ч харагдана. Dock-ийн хэмжээгээр контентын доод зайг нэмж, timer controls руу гүйлгэж хүрэх боломжийг хадгална. Expanded panel жижиг дэлгэцэд гүйлгэгдэнэ.
 
+## MP4 болон тоглуулах удирдлага
+
+- Upload хэсэгт MP3 болон MP4 файлыг 80 MB хүртэл төхөөрөмж дээр IndexedDB-д хадгалж болно.
+- MP4 нь зөвхөн далд audio engine биш: нэг жинхэнэ HTML5 video элементээр дуу болон дүрсийг зэрэг тоглуулна. Expanded music panel дээр видео нь player-ийн баруун талын preview-д харагдана; mobile дээр preview дээд талд байрлана.
+- MP4 болон YouTube media-д progress slider, одоогийн хугацаа/нийт хугацаа, configurable ухрах/урагшлах алхам (5 / 10 / 15 / 30 секунд), Previous/Next, Play/Pause, Stop control ашиглаж болно.
+- autoNext нь finite audio/video дуусмагц дараагийн хадгалсан source руу шилжинэ. repeat идэвхтэй үед одоогийн source эхнээсээ дахин тоглоно. Эдгээр нь local persistence-д хадгалагдана.
+- MP4 сонгох үед Play дарахаас өмнө эхний дүрсийг ачаалахыг оролддог; autoplay-г өөрөө эхлүүлэхгүй.
+- Remote MP4 холбоос мөн audioUrl descriptor-оор хадгалагдана. MIME type нь video/mp4, эсвэл URL .mp4 төгсгөлтэй бол video гэж танина.
+
 ## Хадгалдаг төлөв
 
 Одоогийн `settings.extras.musicPreferences.session` дотор:
@@ -31,9 +40,10 @@
 - `open`: том/жижиг харагдац;
 - `playback`: playing/paused/stopped гэсэн сүүлийн intent;
 - `position`, `playlistIndex`;
-- `track.title`, `track.artist`, `track.videoId`, `track.url`.
+- `track.title`, `track.artist`, `track.videoId`, `track.url`;
+- `autoNext`, `repeat`, `seekSeconds` зэрэг playback тохиргоо.
 
-Volume/mute болон saved video/playlist нь одоогийн music preferences, `musicSources` дотроо үлдсэн. Шинэ database, storage key эсвэл хоёр дахь хадгалалтын систем нэмээгүй. Хуучин `togtmol:music:<namespace>` compatibility key болон одоогийн event холбоос хадгалагдсан; IndexedDB-ийн аппын документ үндсэн эх сурвалж хэвээр.
+Volume/mute, auto-next/repeat/seek тохиргоо болон saved video/playlist нь одоогийн music preferences, `musicSources` дотроо үлдсэн. Шинэ database, storage key эсвэл хоёр дахь хадгалалтын систем нэмээгүй. Хуучин `togtmol:music:<namespace>` compatibility key болон одоогийн event холбоос хадгалагдсан; IndexedDB-ийн аппын документ үндсэн эх сурвалж хэвээр.
 
 Команд, state event, minimize/expand дээр snapshot хадгална. YouTube тоглож байхад байрлалыг 15 секунд тутам шинэчилнэ; `pagehide` дээр best-effort checkpoint хийнэ. Браузер/OS процессыг гэнэт устгавал хамгийн сүүлийн агшны бичилтийг батлахгүй.
 
@@ -80,6 +90,8 @@ Media Session API дэмжигдсэн үед play, pause, stop, nexttrack, prev
 components/music/music-player.tsx
 components/music/music-provider.tsx
 components/music/music.css
+lib/music/native-audio.ts
+lib/music/preferences.ts
 components/music/youtube-embed.tsx
 components/settings/music-settings.tsx
 hooks/use-music-media-session.ts
