@@ -160,7 +160,7 @@ it("renders decision statistics with heatmap, freeze control and persistent exam
   fireEvent.change(screen.getByLabelText("Шалгалтын өдөр"), {
     target: { value: "2099-12-31" },
   });
-  fireEvent.change(screen.getByLabelText("Нэр"), {
+  fireEvent.change(screen.getByLabelText("Шалгалтын нэр"), {
     target: { value: "JLPT N1" },
   });
   fireEvent.click(
