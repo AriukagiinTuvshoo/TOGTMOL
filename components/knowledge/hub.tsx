@@ -16,6 +16,9 @@ import {
 } from "@/lib/knowledge/index";
 import { removeKnowledge } from "@/lib/knowledge/actions";
 import { formatTime } from "@/lib/calculations/dates";
+import { MarkdownView } from "./markdown-view";
+import { QuizGenerator } from "./quiz-generator";
+
 import type { KnowledgeRecord, StudyQuiz } from "@/types/knowledge";
 import type { KnowledgeView } from "@/types/study";
 const labels: Record<string, string> = {
@@ -56,7 +59,8 @@ export function KnowledgeHub() {
     } | null>(null),
     [review, setReview] = useState<string | null>(null),
     [quiz, setQuiz] = useState<StudyQuiz | null>(null),
-    [generator, setGenerator] = useState(false);
+    [generator, setGenerator] = useState(false),
+    [quizGenerator, setQuizGenerator] = useState(false);
   const [selected, setSelected] = useState<string | null>(selectedRecord);
   const [cardLimit, setCardLimit] = useState(100);
   const index = useMemo(
@@ -177,7 +181,10 @@ export function KnowledgeHub() {
             <Icon name="plus" size={16} /> Картын багц
           </button>
           <button className="button" onClick={() => setGenerator(true)}>
-            <Icon name="spark" size={16} /> Бондоок
+            <Icon name="spark" size={16} /> Карт үүсгэх
+          </button>
+          <button className="button" onClick={() => setQuizGenerator(true)}>
+            <Icon name="spark" size={16} /> Quiz үүсгэх
           </button>
           <button
             className="text-button"
@@ -398,7 +405,7 @@ export function KnowledgeHub() {
                     alt={selectedItem.title}
                   />
                 )}
-                <p className="preserve-lines">{selectedItem.body}</p>
+                <MarkdownView value={selectedItem.body} />
                 {selectedItem.links.map((url) => (
                   <a
                     key={url}
@@ -600,6 +607,7 @@ export function KnowledgeHub() {
       )}{" "}
       {quiz && <QuizSession quiz={quiz} onClose={() => setQuiz(null)} />}{" "}
       {generator && <CardGenerator onClose={() => setGenerator(false)} />}
+      {quizGenerator && <QuizGenerator onClose={() => setQuizGenerator(false)} />}
     </div>
   );
 }
