@@ -165,8 +165,11 @@ export function CustomizeRoom() {
                 >
                   <option value="landscape">Байгаль</option>
                   <option value="none">Зураггүй</option>
-                  <option value="botanical" disabled={!unlockedRewards.has("botanical_poster")}>
-                    Ургамлын зураг · 2-р түвшин
+                  <option
+                    value="botanical"
+                    disabled={!unlockedRewards.has("botanical_poster")}
+                  >
+                    Ургамлын зураг · 5 цаг
                   </option>
                 </select>
               </label>
@@ -174,10 +177,12 @@ export function CustomizeRoom() {
                 <input
                   type="checkbox"
                   checked={furniture.bookshelf}
-                  disabled={!unlockedRewards.has("bookshelf") && !furniture.bookshelf}
+                  disabled={
+                    !unlockedRewards.has("bookshelf") && !furniture.bookshelf
+                  }
                   onChange={(e) => furnish({ bookshelf: e.target.checked })}
                 />
-                Номын тавиур · 3-р түвшин
+                Номын тавиур · 10 цаг
               </label>
             </div>
           </section>
@@ -235,7 +240,8 @@ export function CustomizeRoom() {
                   key={a.id}
                   className="button small"
                   disabled={
-                    !unlockedRewards.has(a.id) && !["none", "leaf", "glasses"].includes(a.id)
+                    !unlockedRewards.has(a.id) &&
+                    !["none", "leaf", "glasses"].includes(a.id)
                   }
                   aria-pressed={world.accessory === a.id}
                   onClick={() => update({ accessory: a.id })}
