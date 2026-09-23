@@ -4314,3 +4314,25 @@ main {
   border-radius: inherit;
   max-width: 100%;
 }
+
+.legal-links {
+  display: inline-flex;
+  gap: 10px;
+  margin-left: 6px;
+}
+
+.legal-links a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  color: var(--moss);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .legal-links {
+    margin-left: 0;
+  }
+}
