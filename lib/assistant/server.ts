@@ -66,6 +66,11 @@ export async function handleBondookRequest(
   } catch {
     return json({ error: "Хүсэлтийн бүтэц буруу." }, 400);
   }
+  const language = input.language === "en" ? "en" : "mn";
+  const languageInstruction =
+    language === "en"
+      ? "Respond in natural English unless the user explicitly requests another language."
+      : "Respond in natural Mongolian unless the user explicitly requests another language.";
   if (
     (kind === "chat" || kind === "plan") &&
     (typeof input?.message !== "string" ||
