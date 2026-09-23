@@ -178,11 +178,11 @@ function useMusicController() {
       nativeAudio.current.load();
       nativeAudio.current = null;
     }
-    const element = wantVideo
+    const element: HTMLMediaElement = wantVideo
       ? document.createElement("video")
       : new Audio();
     if (wantVideo) {
-      element.playsInline = true;
+      (element as HTMLVideoElement).playsInline = true;
       element.controls = false;
       element.setAttribute("aria-hidden", "true");
       element.style.position = "fixed";
