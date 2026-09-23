@@ -68,6 +68,38 @@ export function MusicSettings() {
           />
           Сүүлд тоглуулсан аяыг санах
         </label>
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={preference.autoNext}
+            onChange={(e) => change({ autoNext: e.target.checked })}
+          />
+          Дуу дуусахад дараагийн дууг автоматаар тоглуулах
+        </label>
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={preference.repeat}
+            onChange={(e) => change({ repeat: e.target.checked })}
+          />
+          Одоогийн дууг давтах
+        </label>
+        <label>
+          Урагш / ухрах алхам
+          <select
+            value={preference.seekSeconds}
+            onChange={(e) =>
+              change({
+                seekSeconds: Number(e.target.value) as 5 | 10 | 15 | 30,
+              })
+            }
+          >
+            <option value={5}>5 секунд</option>
+            <option value={10}>10 секунд</option>
+            <option value={15}>15 секунд</option>
+            <option value={30}>30 секунд</option>
+          </select>
+        </label>
         <p className="tiny muted">
           Сүүлд тоглуулсан: {last ?? "Одоогоор алга"}. Дараа нээхэд сонголтыг
           сэргээнэ. Аяыг та өөрөө эхлүүлнэ.
