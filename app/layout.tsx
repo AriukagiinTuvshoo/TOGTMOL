@@ -10,6 +10,28 @@ export const metadata: Metadata = {
   applicationName: "Тогтмол",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Тогтмол" },
   icons: { icon: "/icons/icon.svg", apple: "/icons/apple-touch-icon.png" },
+  openGraph: {
+    type: "website",
+    locale: "mn_MN",
+    title: "Тогтмол — Бондооктой хамт суралцъя",
+    description:
+      "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
+    images: [
+      {
+        url: "/icons/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Тогтмол аппын лого",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Тогтмол — Бондооктой хамт суралцъя",
+    description:
+      "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
+    images: ["/icons/icon-512.png"],
+  },
 };
 export const viewport: Viewport = {
   width: "device-width",
