@@ -13,6 +13,8 @@ npm run check
 
 The included GitHub Actions workflow runs the same gates on pushes and pull requests.
 
+For Cloudflare/OpenNext deployment, use `npm run build:worker`. Keep the normal `npm run build` script as the standard Next.js application build so local validation, Vercel, and Lighthouse do not recursively invoke OpenNext.
+
 ## 2. Configure a Supabase project
 
 Use the intended development/staging project first. Obtain its Project URL and **publishable key** from the Supabase dashboard. Do not put a secret/service-role key in `NEXT_PUBLIC_*` variables.
