@@ -13,6 +13,7 @@ export interface YTPlayer {
   destroy(): void;
   getPlayerState(): number;
   getCurrentTime?(): number;
+  getDuration?(): number;
   seekTo?(seconds: number, allowSeekAhead: boolean): void;
   getPlaylistIndex?(): number;
   getVideoUrl?(): string;
