@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useStudy } from "@/hooks/use-study";
 import {
   datesBetween,
@@ -41,12 +41,6 @@ export function DecisionDashboard() {
     parseDate(data.settings.extras.examDate)
       ? data.settings.extras.examDate
       : "";
-  const [examDate, setExamDate] = useState(storedExamDate);
-
-  useEffect(() => {
-    setExamDate(storedExamDate);
-  }, [storedExamDate]);
-
   const last7 = useMemo(() => periodStats(index, 7, today), [index, today]);
   const comparison = useMemo(
     () => rollingSevenDayReport(index, today),
@@ -111,7 +105,6 @@ export function DecisionDashboard() {
 
   const saveExamDate = (value: string) => {
     if (value && !parseDate(value)) return;
-    setExamDate(value);
     void run(() =>
       store.mutate((current) => {
         const extras = { ...current.settings.extras };
