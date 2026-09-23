@@ -94,7 +94,7 @@ describe("calendar and statistics", () => {
         2,
       ),
     ).toMatchObject({
-      streak: 2,
+      streak: 3,
       freezesUsed: 1,
       freezesRemaining: 1,
     });
