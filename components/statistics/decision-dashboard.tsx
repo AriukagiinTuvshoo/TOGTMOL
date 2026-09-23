@@ -68,10 +68,12 @@ export function DecisionDashboard() {
 
   const heatMonthLabels = useMemo(
     () =>
-      heatWeeks.map((week) => {
+      heatWeeks.map((week, i) => {
         const first = week.find(Boolean);
-        return first && first.endsWith("-01")
-          ? first.slice(0, 7).replace("-", ".")
+        const previous = i > 0 ? heatWeeks[i - 1].find(Boolean) : undefined;
+        const month = first?.slice(0, 7);
+        return month && month !== previous?.slice(0, 7)
+          ? month.replace("-", ".")
           : "";
       }),
     [heatWeeks],
