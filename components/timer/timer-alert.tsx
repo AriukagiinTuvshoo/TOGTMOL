@@ -6,11 +6,13 @@ export function TimerAlert({
   message,
   onStop,
   onReview,
+  onExit,
 }: {
   complete: boolean;
   message: string;
   onStop: () => void;
   onReview: () => void;
+  onExit?: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -59,9 +61,16 @@ export function TimerAlert({
             🔇 Дууг зогсоох
           </button>
           {complete && (
-            <button type="button" className="button large" onClick={onReview}>
-              Үр дүнгээ харах
-            </button>
+            <>
+              <button type="button" className="button large" onClick={onReview}>
+                Үр дүнгээ харах
+              </button>
+              {onExit && (
+                <button type="button" className="button ghost large" onClick={onExit}>
+                  Focus-оос гарах
+                </button>
+              )}
+            </>
           )}
         </div>
       </section>
