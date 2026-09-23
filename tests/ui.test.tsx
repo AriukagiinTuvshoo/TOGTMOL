@@ -125,15 +125,13 @@ describe("interactive local workflow", () => {
       await screen.findByText("Тогтмол байдал", { exact: true }),
     ).toBeVisible();
     fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
-    expect(
-      await screen.findByRole("button", { name: "365 өдөр" }),
-    ).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "365 өдөр" }));
-    expect(
-      screen.getAllByRole("button", {
-        name: /\d{4}-\d{2}-\d{2}, 0м, 0 хичээл/,
-      }),
-    ).toHaveLength(365);
+    expect(await screen.findByRole("tab", { name: /Сар/ })).toBeVisible();
+    expect(screen.getByRole("tab", { name: /7 хоног/ })).toBeVisible();
+    expect(screen.getByRole("tab", { name: /Өдөр/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: /7 хоног/ }));
+    expect(await screen.findByText(/таны суралцах хуваарь/i)).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: /Өдөр/ }));
+    expect(screen.getByText(/timeline/i)).toBeVisible();
     fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
     fireEvent.click(await screen.findByRole("button", { name: "Бараан" }));
     await waitFor(() =>
