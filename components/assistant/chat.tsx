@@ -205,7 +205,7 @@ export function BondookChat() {
                 }
               }}
             />
-            Онлайн AI ашиглах
+            {t("assistant.enableOnline")}
           </label>
           {!online && (
             <span className="tiny muted">
@@ -220,7 +220,7 @@ export function BondookChat() {
                 disabled={busy || changingAI}
                 onChange={(e) => void setAI(true, e.target.checked)}
               />
-              Сүүлийн 5 хүртэл тэмдэглэл хуваалцах
+              {t("assistant.shareNotes")}
             </label>
           )}
         </div>
