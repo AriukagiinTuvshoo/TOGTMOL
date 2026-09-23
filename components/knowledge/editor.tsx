@@ -195,7 +195,7 @@ export function KnowledgeEditor({
                   onChange={(e) => setBody(e.target.value)}
                   rows={12}
                   maxLength={50000}
-                  aria-label="Markdown тэмдэглэл"
+                  aria-label="Тэмдэглэл"
                   placeholder={"# Гарчиг\n\n**Чухал санаа**\n\n- Нэг зүйл\n- Хоёр зүйл\n\n\x60\x60\x60python\nprint('hello')\n\x60\x60\x60"}
                 />
               ) : (
