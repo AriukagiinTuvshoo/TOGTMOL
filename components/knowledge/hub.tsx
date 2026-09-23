@@ -374,16 +374,43 @@ export function KnowledgeHub() {
             }
             description="Нэг тэмдэглэл, зураг эсвэл холбоосоос эхэлж болно. Хайлт хийсэн бол шүүлтүүрээ өөрчлөөд үзээрэй."
             action={
-              <button
-                className="button primary"
-                onClick={() => setEditor({ kind: "note" })}
-              >
-                Анхны тэмдэглэлээ нэмэх
-              </button>
+              tab === "trash" ? (
+                <button className="button primary" onClick={() => setTab("all")}>
+                  Мэдлэг рүү буцах <Icon name="arrow" size={16} />
+                </button>
+              ) : tab === "deck" ? (
+                <button
+                  className="button primary"
+                  onClick={() => setEditor({ kind: "deck" })}
+                >
+                  Картын багцаа эхлүүлэх <Icon name="plus" size={16} />
+                </button>
+              ) : tab === "quiz" ? (
+                <button
+                  className="button primary"
+                  onClick={() => setQuizGenerator(true)}
+                >
+                  Анхны сорилоо үүсгэх <Icon name="spark" size={16} />
+                </button>
+              ) : tab === "link" ? (
+                <button
+                  className="button primary"
+                  onClick={() => setEditor({ kind: "link" })}
+                >
+                  Анхны холбоосоо нэмэх <Icon name="plus" size={16} />
+                </button>
+              ) : (
+                <button
+                  className="button primary"
+                  onClick={() => setEditor({ kind: "note" })}
+                >
+                  Анхны тэмдэглэлээ нэмэх <Icon name="plus" size={16} />
+                </button>
+              )
             }
           />
         </section>
-      )}
+      )
       {(items.length > limit ||
         (tab === "session" && data.sessions.length > limit)) && (
         <button
