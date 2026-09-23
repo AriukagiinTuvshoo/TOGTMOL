@@ -19,7 +19,7 @@ import {
 } from "@/lib/calculations/dates";
 import { unlock } from "@/lib/calculations/achievements";
 import { actions } from "@/lib/persistence/actions";
-import { fixture, NOW, session } from "./fixtures";
+import { fixture, NOW, session, subject } from "./fixtures";
 afterEach(() => vi.restoreAllMocks());
 describe("calendar and statistics", () => {
   it("handles month/year/leap boundaries without UTC date shifts", () => {
