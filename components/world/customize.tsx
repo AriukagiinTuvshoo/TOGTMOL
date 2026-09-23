@@ -88,6 +88,12 @@ const ROOM_DESCRIPTION_EN: Record<string, string> = {
 };
 const roomDescription = (value: string, language: "mn" | "en") =>
   language === "en" ? ROOM_DESCRIPTION_EN[value] ?? value : value;
+const ROOM_REWARD_EN: Record<string, string> = {
+  "Ургамлын ханын зураг": "Botanical poster",
+  "Номын тавиур": "Bookshelf",
+  "Од": "Star",
+  "Цэцэг": "Flower",
+};
 
 export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
@@ -135,7 +141,7 @@ export function CustomizeRoom() {
         <div className="customizer-preview">
           <RoomScene world={world} />
           <p>
-            Бондоок · Lv. {progress.level} · {progress.xp} XP
+            Bondook · Lv. {progress.level} · {progress.xp} XP
           </p>
         </div>
         <div className="stack">
@@ -317,7 +323,7 @@ export function CustomizeRoom() {
                   >
                     {roomText(a.name, language)}
                     {reward && !unlockedRewards.has(reward.id)
-                      ? ` · ${reward.requiredHours}ц`
+                      ? ` · ${reward.requiredHours}${language === "en" ? " h" : "ц"}`
                       : ""}
                   </button>
                 );
@@ -326,10 +332,16 @@ export function CustomizeRoom() {
             <div className="room-reward-progress">
               <strong>{language === "en" ? "Room rewards" : "Өрөөний шагнал"}</strong>
               <span>
-                {language === "en" ? `Total study time: ${progress.studyHours.toFixed(1)} hours.` : `Нийт ${progress.studyHours.toFixed(1)} цаг суралцжээ.`}
+                {language === "en"
+                  ? `Total study time: ${progress.studyHours.toFixed(1)} hours.`
+                  : `Нийт ${progress.studyHours.toFixed(1)} цаг суралцжээ.`}
                 {nextReward
-                  ? ` Дараагийнх: ${nextReward.name} · ${nextReward.requiredHours} цаг.`
-                  : " {language === "en" ? "All rewards unlocked." : "Бүх шагналаа нээлээ."}"}
+                  ? language === "en"
+                    ? ` Next: ${ROOM_REWARD_EN[nextReward.name] ?? nextReward.name} · ${nextReward.requiredHours} h.`
+                    : ` Дараагийнх: ${nextReward.name} · ${nextReward.requiredHours} цаг.`
+                  : language === "en"
+                    ? " All rewards unlocked."
+                    : " Бүх шагналаа нээлээ."}
               </span>
               <div
                 className="progress"
@@ -350,8 +362,9 @@ export function CustomizeRoom() {
               </div>
             </div>
             <p className="tiny muted">
-              Өмнөх өрөөний тохиргоо хэвээр хадгалагдана. Шинэ зүйлсийг
-              суралцсан цагаар нээнэ.
+              {language === "en"
+                ? "Your room settings stay saved. New items unlock as you study."
+                : "Өмнөх өрөөний тохиргоо хэвээр хадгалагдана. Шинэ зүйлсийг суралцсан цагаар нээнэ."}
             </p>
           </section>
         </div>
