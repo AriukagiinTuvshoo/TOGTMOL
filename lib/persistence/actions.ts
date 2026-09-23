@@ -194,18 +194,22 @@ export const actions = {
             taskId,
           ),
           date: studyDate(new Date(now), dayBoundary(data.settings)),
-          extras: taskId
-            ? {
-                taskId,
-                goalId:
-                  data.tasks.find((t) => t.id === taskId && !t.deletedAt)
-                    ?.goalId ?? null,
-                milestoneId:
-                  data.tasks.find((t) => t.id === taskId)?.extras.milestoneId ??
-                  null,
-                taskTitle: data.tasks.find((t) => t.id === taskId)?.title ?? "",
-              }
-            : {},
+          extras: {
+            ...timer.extras,
+            ...(taskId
+              ? {
+                  taskId,
+                  goalId:
+                    data.tasks.find((t) => t.id === taskId && !t.deletedAt)
+                      ?.goalId ?? null,
+                  milestoneId:
+                    data.tasks.find((t) => t.id === taskId)?.extras.milestoneId ??
+                    null,
+                  taskTitle:
+                    data.tasks.find((t) => t.id === taskId)?.title ?? "",
+                }
+              : {}),
+          },
         },
       };
     },
