@@ -197,6 +197,8 @@ describe("knowledge flows", () => {
       ).toBeDisabled(),
     );
     navigate("Суралцах туслах");
-    expect(await screen.findByLabelText("Онлайн AI ашиглах")).not.toBeChecked();
+    await waitFor(() =>
+      expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
+    );
   });
 });
