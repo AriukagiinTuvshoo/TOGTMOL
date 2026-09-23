@@ -27,7 +27,11 @@ jobs:
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx cap --version
       - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync android
-      - run: npx cap doctor
+      - name: Verify Android wrapper config
+        working-directory: mobile
+        run: |
+          test -f android/app/src/main/assets/public/index.html
+          grep -q 'android:scheme="togtmol"' android/app/src/main/AndroidManifest.xml
   android-build:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -58,4 +62,5 @@ jobs:
           node-version: 24
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync ios
+      - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync android
       - run: npx cap doctor
