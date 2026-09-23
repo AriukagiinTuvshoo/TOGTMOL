@@ -350,8 +350,14 @@ export function subjectBalance(
     subjects: rows,
   };
 }
-export function lateSessionPattern(index: StudyIndex) {
+export function lateSessionPattern(
+  index: StudyIndex,
+  today = dateKey(),
+  days = 30,
+) {
+  const start = shiftDate(today, 1 - Math.max(1, days));
   const candidates = index.sessions.filter((s) => {
+    if (s.date < start || s.date > today) return false;
     const h = new Date(s.startEpoch).getHours();
     return h >= 21 || h < 5;
   });
