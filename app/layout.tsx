@@ -21,10 +21,10 @@ export const metadata: Metadata = {
       "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
     images: [
       {
-        url: "/icons/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Тогтмол аппын лого",
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Тогтмол — Бондооктой хамт суралцъя",
       },
     ],
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "Тогтмол — Бондооктой хамт суралцъя",
     description:
       "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
-    images: ["/icons/icon-512.png"],
+    images: ["/opengraph-image"],
   },
 };
 export const viewport: Viewport = {
