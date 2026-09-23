@@ -129,7 +129,7 @@ describe("calendar and statistics", () => {
       heatmap.weeks.flat().find((cell) => cell.date === "2026-01-01"),
     ).toMatchObject({ minutes: 30, level: 2, inYear: true });
     expect(
-      heatmap.weeks.flat().find((cell) => cell.date === "2025-12-28"),
+      heatmap.weeks.flat().find((cell) => cell.date === "2025-12-29"),
     ).toMatchObject({ level: 0, inYear: false });
   });
   it("finds a basic late-night abandonment pattern from explicit discarded timer attempts", () => {
