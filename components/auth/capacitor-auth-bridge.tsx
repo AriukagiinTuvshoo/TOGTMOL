@@ -2,9 +2,12 @@
 
 import { useEffect } from "react";
 import { getSupabase } from "@/lib/supabase/client";
+import { useStudy } from "@/hooks/use-study";
 import { registerAuthDeepLinks } from "@/lib/auth/capacitor";
 
 export function CapacitorAuthBridge() {
+  const { setNotice } = useStudy();
+
   useEffect(() => {
     const client = getSupabase();
     if (!client) return;
@@ -14,9 +17,7 @@ export function CapacitorAuthBridge() {
 
     void registerAuthDeepLinks(client, (message) => {
       if (!active) return;
-      window.dispatchEvent(
-        new CustomEvent("togtmol-auth-error", { detail: message }),
-      );
+      setNotice(message);
     }).then((cleanup) => {
       if (!active) {
         void cleanup();
@@ -29,7 +30,7 @@ export function CapacitorAuthBridge() {
       active = false;
       if (remove) void remove();
     };
-  }, []);
+  }, [setNotice]);
 
   return null;
 }
