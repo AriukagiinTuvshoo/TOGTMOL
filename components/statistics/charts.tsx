@@ -113,7 +113,8 @@ export function AnnualHeatmap({
     >
       <div className="heatmap-scroll">
         <div className="heatmap-weekdays" aria-hidden="true">
-          <span>Дв</span>
+          <span>Да</span>
+          <span>Мя</span>
           <span>Лх</span>
           <span>Пү</span>
           <span>Ба</span>
