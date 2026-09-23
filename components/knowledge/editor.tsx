@@ -222,7 +222,7 @@ export function KnowledgeEditor({
               />
             </label>
           )
-        )
+        )}
         {kind === "note" && (
           <>
             <label>
