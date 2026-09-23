@@ -14,9 +14,10 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
-import { calendarTimeZone, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
+import { calendarTimeZone, calendarWeekStartsOn, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
 export function Statistics() {
   const { data, index, today } = useStudy(),
+    weekStartsOn = calendarWeekStartsOn(data);
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -28,7 +29,7 @@ export function Statistics() {
         period === "today"
           ? 1
           : period === "week"
-            ? datesBetween(weekStart(today), today).length
+            ? datesBetween(weekStart(today, weekStartsOn), today).length
             : period === "month"
               ? Number(today.slice(-2))
               : period,
@@ -45,7 +46,7 @@ export function Statistics() {
       : period === "today"
         ? today
         : period === "week"
-          ? weekStart(today)
+          ? weekStart(today, weekStartsOn)
           : period === "month"
             ? `${today.slice(0, 7)}-01`
             : shiftDate(today, 1 - period),
@@ -57,7 +58,7 @@ export function Statistics() {
       stats.days.length > 90
         ? d.date.slice(0, 7)
         : stats.days.length > 30
-          ? weekStart(d.date)
+          ? weekStart(d.date, weekStartsOn)
           : d.date;
     groups.set(key, (groups.get(key) ?? 0) + d.seconds);
   }
