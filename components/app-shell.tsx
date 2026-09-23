@@ -5,6 +5,7 @@ import { StudyProvider, useStudy, useStoreState } from "@/hooks/use-study";
 import { AccountProvider, useAccount } from "@/hooks/use-account";
 import type { View } from "@/types/study";
 import { Icon } from "./ui/icon";
+import { AppSkeleton } from "./ui/app-skeleton";
 import { ModuleBoundary } from "./ui/module-boundary";
 import { RecoveryPanel } from "./settings/recovery";
 import { GlobalSearch } from "./knowledge/search";
@@ -194,13 +195,7 @@ function Shell() {
                 onRecovered={() => store.switchNamespace(state.namespace)}
               />
             ) : (
-              <section className="card loading-card">
-                <span className="brand-mark">
-                  <Icon name="leaf" size={28} />
-                </span>
-                <h2>Таны орон зайг нээж байна…</h2>
-                <p>Өмнөх алхмуудыг тань ачаалж байна.</p>
-              </section>
+              <AppSkeleton />
             )
           ) : (
             <Fragment key={state.namespace}>
