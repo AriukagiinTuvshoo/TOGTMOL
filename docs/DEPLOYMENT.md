@@ -42,6 +42,25 @@ Import the chosen repository in Vercel. Framework: **Next.js**. Install command:
 
 Do not replace the build command with `next build` alone: the second step generates the offline manifest and service worker. Service worker scope is `/`; this release expects a root-domain deployment rather than a URL subdirectory.
 
+### Production Supabase smoke test
+
+The current TOGTMOL architecture does **not** require `SUPABASE_SERVICE_ROLE_KEY` for normal authentication, RLS-protected sync, cloud deletion, or the Bondook quota RPC. The database functions validate `auth.uid()` and grant access to authenticated users; a service-role key must not be exposed to the browser. Keep any admin-only secret out of `NEXT_PUBLIC_*` variables and do not add it just to make the normal user flow work.
+
+For a real production-account check, create a dedicated test account in the selected Supabase project, confirm its email when required, then run:
+
+```bash
+SUPABASE_PRODUCTION_URL=https://YOUR_PROJECT.supabase.co \
+SUPABASE_PRODUCTION_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY \
+SUPABASE_TEST_EMAIL=your-test@example.com \
+SUPABASE_TEST_PASSWORD='use-a-dedicated-test-password' \
+SUPABASE_EXPECTED_PROJECT_REF=YOUR_PROJECT \
+SUPABASE_REQUIRE_CONFIRMED_EMAIL=1 \
+npm run verify:supabase:production
+```
+
+The smoke test signs in, verifies the authenticated user, performs an RLS-protected `study_profiles` read, calls `pull_study_data`, and confirms the returned snapshot is schema version 5. It does not create, update, or delete study data and does not consume the Bondook quota. Run it against a dedicated test account, not a personal account.
+
+
 ## 4. Validate the real deployment
 
 Use two test accounts and two browser profiles/devices:
