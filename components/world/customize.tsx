@@ -235,24 +235,23 @@ export function CustomizeRoom() {
             </div>
             <fieldset className="accessory-options">
               <legend>Жижиг чимэглэл</legend>
-              {ACCESSORIES.map((a) => (
-                <button
-                  key={a.id}
-                  className="button small"
-                  disabled={
-                    !unlockedRewards.has(a.id) &&
-                    !["none", "leaf", "glasses"].includes(a.id)
-                  }
-                  aria-pressed={world.accessory === a.id}
-                  onClick={() => update({ accessory: a.id })}
-                >
-                  {a.name}
-                  {!unlockedRewards.has(a.id) &&
-                  !["none", "leaf", "glasses"].includes(a.id)
-                    ? ` · ${ROOM_REWARDS.find((reward) => reward.id === a.id)?.requiredHours ?? "?"}ц`
-                    : ""}
-                </button>
-              ))}
+              {ACCESSORIES.map((a) => {
+                const reward = ROOM_REWARDS.find((item) => item.id === a.id);
+                return (
+                  <button
+                    key={a.id}
+                    className="button small"
+                    disabled={Boolean(reward && !unlockedRewards.has(reward.id))}
+                    aria-pressed={world.accessory === a.id}
+                    onClick={() => update({ accessory: a.id })}
+                  >
+                    {a.name}
+                    {reward && !unlockedRewards.has(reward.id)
+                      ? ` · ${reward.requiredHours}ц`
+                      : ""}
+                  </button>
+                );
+              })}
             </fieldset>
             <div className="room-reward-progress">
               <strong>Өрөөний шагнал</strong>
