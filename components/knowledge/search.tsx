@@ -157,9 +157,9 @@ export function GlobalSearch() {
   );
   const results = searchResults(index, deferred, {}, 40);
 
-  useEffect(() => {
-    setActiveCommand(0);
-  }, [deferred]);
+  const selectedCommandIndex = commands.length
+    ? Math.min(activeCommand, commands.length - 1)
+    : 0;
 
   const closePalette = () => {
     setOpen(false);
@@ -186,7 +186,7 @@ export function GlobalSearch() {
       );
       return;
     }
-    if (event.key === "Enter" && commands[activeCommand]) {
+    if (event.key === "Enter" && commands[selectedCommandIndex]) {
       event.preventDefault();
       runCommand(commands[activeCommand]);
     }
@@ -231,7 +231,7 @@ export function GlobalSearch() {
                     key={command.id}
                     type="button"
                     role="option"
-                    aria-selected={index === activeCommand}
+                    aria-selected={index === selectedCommandIndex}
                     className={
                       index === activeCommand
                         ? "command-palette-command active"
