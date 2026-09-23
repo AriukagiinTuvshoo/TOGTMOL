@@ -42,7 +42,13 @@ Leave both empty for local-only operation. Restart/rebuild after changing these 
 
 Import the chosen repository in Vercel. Framework: **Next.js**. Install command: `npm ci`. Build command: **`npm run build`**. Node: **24.x**. Add both public environment values to the intended environment and deploy. The checked-in `vercel.json` selects the same commands.
 
-Do not replace the build command with `next build` alone: the second step generates the offline manifest and service worker. Service worker scope is `/`; this release expects a root-domain deployment rather than a URL subdirectory.
+Keep Vercel's build command as `npm run build` so the production build also generates the offline manifest and service worker. Service worker scope is `/`; this release expects a root-domain deployment rather than a URL subdirectory.
+
+### Cloudflare/OpenNext
+
+For the checked-in Cloudflare worker configuration (`wrangler.jsonc`), use `npm run build:worker` before deploying the generated `.open-next` output. The worker entry is `.open-next/worker.js` and static assets are served from `.open-next/assets` through the `ASSETS` binding. The deployed Worker name is `togtmol`.
+
+The build commands are intentionally separate: `npm run build` is the normal Next.js/PWA validation and Vercel build, while `npm run build:worker` runs the OpenNext adapter for the Cloudflare runtime.
 
 ### Production Supabase smoke test
 
