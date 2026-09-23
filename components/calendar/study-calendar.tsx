@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StoredImage } from "@/components/ui/stored-image";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -8,7 +8,6 @@ import { studyDate } from "@/lib/calculations/dates";
 import {
   calendarTimeZone,
   calendarWeekStartsOn,
-  deadlineEpoch,
   formatCalendarTime,
   readCalendarDeadlines,
 } from "@/lib/calculations/calendar";
@@ -21,7 +20,6 @@ import {
   shiftDate,
   weekStart,
 } from "@/lib/calculations/dates";
-import { intensity } from "@/lib/calculations/analytics";
 import { SHORT_DAYS, WEEKDAYS } from "@/lib/constants";
 import { SectionTitle, SubjectSelect } from "@/components/ui/common";
 import { SessionList } from "@/components/ui/session-list";
@@ -71,7 +69,6 @@ export function StudyCalendar({
       (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99"),
     );
   const selectedDeadlines = deadlines.filter((d) => d.date === selected);
-  const selectedDate = parseDate(selected) ?? new Date();
   const selectedWeekStart = weekStart(selected, weekStartDay);
   const selectedWeekDates = datesBetween(
     selectedWeekStart,
@@ -103,7 +100,7 @@ export function StudyCalendar({
   const sessionsOn = (ds: string) => visibleSessions.filter((s) => s.date === ds);
   const deadlinesOn = (ds: string) => deadlines.filter((d) => d.date === ds);
 
-  const moveSelection = (delta: number) => {
+  const moveSelection = useCallback((delta: number) => {
     const next =
       calendarView === "month"
         ? (() => {
@@ -121,7 +118,7 @@ export function StudyCalendar({
     } else {
       setSelected(next);
     }
-  };
+  }, [calendarView, month, selected, selectedWeekStart]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -316,7 +313,6 @@ export function StudyCalendar({
                 key={v}
                 role="tab"
                 aria-selected={calendarView === v}
-                aria-pressed={calendarView === v}
                 onClick={() => setCalendarView(v)}
               >
                 {label}
