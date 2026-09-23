@@ -210,6 +210,7 @@ export const actions = {
               }
               : {}),
           },
+        },
       };
     },
   pause:
