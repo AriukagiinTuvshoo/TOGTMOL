@@ -52,9 +52,16 @@ function sourceTrack(
     };
   }
   if (source.kind === "audio") {
+    const video = isVideoMedia(source.audioUrl, source.mimeType);
     return {
       title: source.title,
-      artist: source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос",
+      artist: video
+        ? source.audioStorageKey
+          ? "Төхөөрөмжийн MP4 видео"
+          : "MP4 видео холбоос"
+        : source.audioStorageKey
+          ? "Төхөөрөмжийн файл"
+          : "Аудио холбоос",
       videoId: null,
       url: source.audioUrl ?? "",
     };
