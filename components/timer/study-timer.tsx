@@ -208,8 +208,13 @@ export function TimerWatch() {
           }
           onStop={stopAlertSound}
           onReview={() => {
+            // The timer is already in review state. Just close the alert so
+            // the Save result action underneath becomes clickable.
             stopAlertSound();
-            navigate("focus");
+          }}
+          onExit={() => {
+            stopAlertSound();
+            navigate("overview");
           }}
         />
       )}
