@@ -139,7 +139,7 @@ export const actions = {
     (data: StudyData): StudyData => {
       subject(data, id);
       validDate(date);
-      const today = studyDate(new Date(), dayBoundary(data.settings));
+      const today = studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data));
       if (date > today)
         throw Error("Ирээдүйн өдрийг суралцсан гэж тэмдэглэх боломжгүй.");
       const matches = data.entries.filter(
@@ -333,6 +333,7 @@ export const actions = {
                       completedOn: studyDate(
                         new Date(now),
                         dayBoundary(data.settings),
+                        calendarTimeZone(data),
                       ),
                     },
                   }
@@ -354,7 +355,7 @@ export const actions = {
         throw Error("Энэ бичлэг өөрчлөгдсөн байна. Дахин нээгээд засна уу.");
       validDate(patch.date);
       if (
-        patch.date > studyDate(new Date(), dayBoundary(data.settings)) ||
+        patch.date > studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data)) ||
         !Number.isFinite(patch.durationSec) ||
         patch.durationSec < 5 ||
         patch.durationSec > 86400 * 366
@@ -696,7 +697,7 @@ export const actions = {
       validDate(newDate);
       const from = parseDate(old.date), to = parseDate(newDate);
       if (!from || !to) throw Error("Огноо буруу.");
-      if (newDate > studyDate(new Date(), dayBoundary(data.settings)))
+      if (newDate > studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data)))
         throw Error("Session-ийг ирээдүйн өдөр рүү зөөж болохгүй.");
       const delta = to.getTime() - from.getTime();
       const shiftEpoch = (epoch: number) => {
