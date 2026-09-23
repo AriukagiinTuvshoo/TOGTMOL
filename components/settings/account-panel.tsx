@@ -5,6 +5,7 @@ import { useStoreState, useStudy } from "@/hooks/use-study";
 import { SupabaseAdapter } from "@/lib/supabase/sync";
 import { SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { authRedirectUrl, beginGoogleSignIn } from "@/lib/auth/capacitor";
 export function AccountPanel() {
   const { client, user, error, status, sync, connect, logout, recovery } =
       useAccount(),
@@ -204,7 +205,7 @@ export function AccountPanel() {
                     : await client.auth.signUp({
                         email,
                         password,
-                        options: { emailRedirectTo: window.location.origin },
+                        options: { emailRedirectTo: authRedirectUrl() },
                       });
                 if (result.error) throw Error(result.error.message);
                 setPassword("");
@@ -246,11 +247,7 @@ export function AccountPanel() {
             disabled={busy}
             onClick={() =>
               call(async () => {
-                const { error } = await client.auth.signInWithOAuth({
-                  provider: "google",
-                  options: { redirectTo: window.location.origin },
-                });
-                if (error) throw Error(error.message);
+                await beginGoogleSignIn(client);
               })
             }
           >
@@ -264,7 +261,7 @@ export function AccountPanel() {
                 if (!email.trim()) throw Error("Эхлээд и-мэйлээ оруулна уу.");
                 const { error } = await client.auth.resetPasswordForEmail(
                   email,
-                  { redirectTo: window.location.origin },
+                  { redirectTo: authRedirectUrl() },
                 );
                 if (error) throw Error(error.message);
               }, "Нууц үг сэргээх захидал илгээлээ.")
