@@ -15,7 +15,7 @@ import { DailyKnowledge } from "@/components/dashboard/daily-knowledge";
 import { flexibleStreak } from "@/lib/calculations/dates";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
 import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
-import { ACCESSORIES } from "@/lib/world/config";
+import { ROOM_REWARDS } from "@/lib/world/config";
 import { knowledgeIndex } from "@/lib/knowledge/index";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
@@ -25,7 +25,9 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
   const state = companionState(data, index, today),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
-  const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
+  const nextUnlock = ROOM_REWARDS.find(
+    (reward) => progress.studyHours < reward.requiredHours,
+  );
   const reviewCount = knowledgeIndex(data.knowledge, today).reviewQueue.length;
   const todaySeconds = index.days.get(today)?.seconds ?? 0,
     daily =
@@ -291,7 +293,8 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
                 <div className="next-unlock">
                   <Icon name="leaf" size={18} />
                   <span>
-                    Дараагийн чимэглэл: <strong>{nextUnlock.name}</strong>
+                    Дараагийн шагнал: <strong>{nextUnlock.name}</strong> ·{" "}
+                    {(nextUnlock.requiredHours - progress.studyHours).toFixed(1)} цаг үлдлээ
                   </span>
                 </div>
               )}
