@@ -81,7 +81,7 @@ export function parseQuizDrafts(input: unknown): QuizDraft[] {
       throw Error("Quiz асуултын бүтэц буруу байна.");
     const options = Array.isArray(q.options)
       ? q.options
-          .filter((v): v is string => typeof v === "string")
+          .filter((v: unknown): v is string => typeof v === "string")
           .map((v) => v.trim())
           .filter(Boolean)
       : [];
