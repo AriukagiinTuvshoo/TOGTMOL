@@ -4,6 +4,13 @@ export interface NativeAudioDescriptor {
 }
 const storageKeyPattern = /^musicblob_[A-Za-z0-9_-]{8,160}$/;
 
+export function isVideoMedia(url?: string | null, mimeType?: string | null) {
+  return (
+    mimeType === "video/mp4" ||
+    /\\.mp4(?:$|[?#])/i.test(url ?? "")
+  );
+}
+
 export function parseAudioURL(input: string): string {
   let url: URL;
   try {
