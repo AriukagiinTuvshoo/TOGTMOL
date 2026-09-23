@@ -1,0 +1,28 @@
+{
+  "name": "togtmol-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Native iOS and Android wrapper for Тогтмол.",
+  "scripts": {
+    "cap": "cap",
+    "add:ios": "cap add ios",
+    "add:android": "cap add android",
+    "sync": "cap sync",
+    "copy": "cap copy",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android",
+    "validate:release": "node scripts/validate-release-config.mjs"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/browser": "8.0.4",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/splash-screen": "8.0.2"
+  }
+}
