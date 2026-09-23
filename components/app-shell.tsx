@@ -38,6 +38,7 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
+import { CapacitorAuthBridge } from "./auth/capacitor-auth-bridge";
 const NAV: { view: View; label: string; icon: string }[] = [
   { view: "overview", label: "Миний өрөө", icon: "home" },
   { view: "knowledge", label: "Миний мэдлэг", icon: "book" },
@@ -420,6 +421,7 @@ export function AppShell() {
   return (
     <StudyProvider>
       <AccountProvider>
+        <CapacitorAuthBridge />
         <Shell />
       </AccountProvider>
     </StudyProvider>
