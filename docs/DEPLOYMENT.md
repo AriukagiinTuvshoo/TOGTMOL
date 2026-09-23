@@ -13,7 +13,7 @@ npm run check
 
 The included GitHub Actions workflow runs the same gates on pushes and pull requests.
 
-For Cloudflare/OpenNext deployment, use `npm run build:worker`. Keep the normal `npm run build` script as the standard Next.js application build so local validation, Vercel, and Lighthouse do not recursively invoke OpenNext.
+For Cloudflare/OpenNext deployment, use `npm run build:worker`. The normal `npm run build` script runs the standard Next.js build and then generates the PWA precache manifest/service worker; the worker build does the same after OpenNext finishes. Keeping these commands separate prevents OpenNext from recursively invoking the package's own `build` script.
 
 ## 2. Configure a Supabase project
 
