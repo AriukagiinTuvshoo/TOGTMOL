@@ -22,7 +22,7 @@ export function validCalendarTime(value: unknown): value is string {
 
 export function calendarTimeZone(data?: StudyData): string {
   const raw = data?.settings.extras.timeZone;
-  if (typeof raw === "string" && raw) return raw;
+  if (typeof raw === "string" && raw && validTimeZone(raw)) return raw;
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
