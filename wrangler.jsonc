@@ -1,20 +1,13 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "togtmol",
+  "name": "togtmol1",
   "main": ".open-next/worker.js",
-  "build": {
-    "command": "npx @opennextjs/cloudflare@1.20.6 build",
-  },
-  "compatibility_date": "2026-09-21",
+  "compatibility_date": "2026-09-23",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS",
+    "binding": "ASSETS"
   },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "togtmol",
-    },
-  ],
+  "observability": {
+    "enabled": true
+  }
 }
