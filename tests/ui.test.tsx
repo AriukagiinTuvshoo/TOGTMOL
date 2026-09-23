@@ -143,6 +143,40 @@ describe("interactive local workflow", () => {
   });
 });
 
+it("renders decision statistics with heatmap, freeze control and persistent exam countdown", async () => {
+  const repo = new Repository(indexedDB, localStorage);
+  render(<AppShell />);
+  await screen.findByText("Миний төлөвлөгөө");
+  const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
+  fireEvent.click(within(nav).getByRole("button", { name: "Статистик" }));
+  expect(
+    await screen.findByRole("region", { name: /2026 оны суралцах heatmap/ }),
+  ).toBeVisible();
+
+  const freeze = screen.getByLabelText("Хамгаалалтын өдөр");
+  fireEvent.change(freeze, { target: { value: "1" } });
+  await waitFor(() => expect(freeze).toHaveValue("1"));
+
+  fireEvent.change(screen.getByLabelText("Шалгалтын өдөр"), {
+    target: { value: "2099-12-31" },
+  });
+  fireEvent.change(screen.getByLabelText("Нэр"), {
+    target: { value: "JLPT N1" },
+  });
+  const decision = screen.getByRole("article", { name: "" });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Хадгалах" }),
+  );
+  await waitFor(async () => {
+    const saved = (await repo.load("guest"))?.data;
+    expect(saved?.settings.extras.streakFreezeLimit).toBe(1);
+    expect(saved?.settings.extras.statisticsExamDate).toBe("2099-12-31");
+    expect(saved?.settings.extras.statisticsExamTitle).toBe("JLPT N1");
+  });
+  expect(screen.getByText("JLPT N1")).toBeVisible();
+  await repo.close();
+});
+
 describe("study world integration", () => {
   it("saves a full theme and room customization across reloads", async () => {
     render(<AppShell />);
