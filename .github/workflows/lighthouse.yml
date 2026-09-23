@@ -34,6 +34,30 @@ jobs:
           exit 1
       - name: Run Lighthouse
         run: npx --yes @lhci/cli@0.15.1 autorun
+      - name: Summarize Lighthouse scores
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const dir = path.resolve("lighthouse-report");
+          const file = fs.readdirSync(dir).find((name) => name.endsWith(".json"));
+          if (!file) throw new Error("Lighthouse JSON report not found");
+          const report = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+          const wanted = ["performance", "accessibility", "best-practices", "seo", "pwa"];
+          for (const key of wanted) {
+            const score = report.categories?.[key]?.score;
+            console.log(`${key}: ${score == null ? "n/a" : Math.round(score * 100)}`);
+          }
+          const failing = Object.entries(report.audits ?? {})
+            .filter(([, audit]) => audit.score !== null && audit.score < 0.9)
+            .sort((a, b) => (a[1].score ?? 1) - (b[1].score ?? 1))
+            .slice(0, 12);
+          if (failing.length) {
+            console.log("Lowest audits:");
+            for (const [id, audit] of failing)
+              console.log(`- ${id}: ${audit.score} · ${audit.title}`);
+          }
+          NODE
       - name: Upload Lighthouse report
         uses: actions/upload-artifact@v4
         with:
