@@ -1,5 +1,6 @@
 import { useStudy } from "@/hooks/use-study";
 import { ACHIEVEMENTS } from "@/lib/calculations/achievements";
+import { ROOM_REWARDS } from "@/lib/world/config";
 import { Icon } from "@/components/ui/icon";
 export function Achievements() {
   const { data } = useStudy();
@@ -13,6 +14,9 @@ export function Achievements() {
       <div className="achievements-grid">
         {ACHIEVEMENTS.map((a) => {
           const unlocked = data.achievementsUnlocked[a.id];
+          const roomReward = ROOM_REWARDS.find(
+            (reward) => reward.achievementId === a.id,
+          );
           return (
             <article
               className={`card achievement ${unlocked ? "unlocked" : ""}`}
@@ -26,6 +30,11 @@ export function Achievements() {
               </span>
               <h2>{a.name}</h2>
               <p>{a.description}</p>
+              {roomReward && (
+                <p className="achievement-reward">
+                  🏠 Өрөөний шагнал: <strong>{roomReward.name}</strong>
+                </p>
+              )}
               <small>
                 {unlocked?.replaceAll("-", ".") ?? "Өөрийн хэмнэлээр"}
               </small>
