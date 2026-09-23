@@ -32,6 +32,7 @@ jobs:
         run: |
           test -f android/app/src/main/assets/public/index.html
           grep -q 'android:scheme="togtmol"' android/app/src/main/AndroidManifest.xml
+      - run: npm run validate:release
   android-build:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
