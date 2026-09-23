@@ -17,6 +17,10 @@ import { MusicPlayer, MusicProvider } from "./music/music-player";
 import { LanguageProvider, useI18n } from "./i18n/language-provider";
 import { LanguageSwitcher } from "./i18n/language-switcher";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
+function LocalizedLoading() {
+  const { t } = useI18n();
+  return <p role="status">{t("common.loading")}</p>;
+}
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
   { loading: () => <p role="status">{t("common.loading")}</p> },
