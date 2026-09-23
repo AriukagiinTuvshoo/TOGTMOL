@@ -46,14 +46,17 @@ export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
       (r): r is import("@/types/knowledge").QuizAttempt => r.kind === "attempt",
     )
     .sort((a, b) => b.createdAt - a.createdAt);
+  const resolvedQuizQuestions = new Set<string>();
   for (const attempt of attempts) {
     for (const answer of attempt.answers) {
       const key = `${attempt.quizId}:${answer.question.id}`;
-      if (quizRetryByQuestion.has(key)) continue;
-      quizRetryByQuestion.set(key, {
-        quizId: attempt.quizId,
-        question: answer.correct ? null : answer.question,
-      });
+      if (resolvedQuizQuestions.has(key)) continue;
+      resolvedQuizQuestions.add(key);
+      if (!answer.correct)
+        quizRetryByQuestion.set(key, {
+          quizId: attempt.quizId,
+          question: answer.question,
+        });
     }
   }
   const quizRetryQueue = [...quizRetryByQuestion.values()].filter(

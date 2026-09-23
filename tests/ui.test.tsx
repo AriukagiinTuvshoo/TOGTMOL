@@ -96,6 +96,11 @@ describe("interactive local workflow", () => {
     });
     await waitFor(() => expect(saveButton).toBeEnabled());
     fireEvent.click(saveButton);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Save result" }),
+      ).not.toBeInTheDocument(),
+    );
     await waitFor(async () => {
       const checkRepo = new Repository(indexedDB, localStorage);
       const check = await checkRepo.load("guest");
@@ -462,6 +467,6 @@ it("falls back to a labelled local reply when online AI has no configured accoun
     expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
   );
   expect(
-    within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
+    await within(screen.getByRole("log")).findByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();
 });

@@ -99,13 +99,12 @@ export function KnowledgeHub() {
   );
   const remove = async (r: KnowledgeRecord) => {
     if (confirm(`«${r.title}»-г хогийн саванд шилжүүлэх үү?`)) {
-      if (
-        await run(
-          () => store.mutate(removeKnowledge(r.id)),
-          "Хогийн саванд шилжүүллээ. Буцааж сэргээж болно.",
-        )
-      )
-        setSelected(null);
+      const removed = await run(
+        () => store.mutate(removeKnowledge(r.id)),
+        "Хогийн саванд шилжүүллээ. Буцааж сэргээж болно.",
+        true,
+      );
+      if (removed) setSelected(null);
     }
   };
   const restore = (r: KnowledgeRecord) =>

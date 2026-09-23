@@ -200,6 +200,7 @@ export function BondookChat() {
                   setConsent(true);
                 } else {
                   void setAI(false);
+                  setConsent(false);
                 }
               }}
             />
