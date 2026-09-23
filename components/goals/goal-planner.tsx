@@ -29,6 +29,7 @@ import {
   nextTask,
 } from "@/lib/world/milestones";
 import { TaskForm } from "@/components/dashboard/task-form";
+import { useI18n } from "@/components/i18n/language-provider";
 export function GoalPlanner() {
   const { data, index, today, store, run, navigate } = useStudy(),
     [adding, setAdding] = useState(false),
@@ -280,6 +281,7 @@ export function PlanWizard({
   initial?: string;
 }) {
   const { data, today, store, run, navigate } = useStudy(),
+    { language } = useI18n(),
     [text, setText] = useState(initial),
     [input, setInput] = useState<PlanInput | null>(
       initial ? inferPlan(initial, data, today) : null,
@@ -340,6 +342,8 @@ export function PlanWizard({
             availableWeeks: draft.weeks,
             daysPerWeek: draft.daysPerWeek,
             minutesPerDay: draft.minutesPerDay,
+          },
+          language,
           },
         }),
         signal: controller.signal,
