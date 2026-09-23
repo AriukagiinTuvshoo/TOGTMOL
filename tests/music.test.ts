@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AmbientPlayer, ambientProvider } from "@/lib/music/ambient";
 import { AMBIENTS } from "@/lib/music/catalog";
-import { isVideoMedia } from "@/lib/music/native-audio";
+import {
+  isVideoMedia,
+  parseAudioURL,
+} from "@/lib/music/native-audio";
 import { normalizeMusicPreference } from "@/lib/music/preferences";
-import { parseAudioURL } from "@/lib/music/native-audio";
 import { StudyStore } from "@/lib/persistence/store";
 import { Repository } from "@/lib/persistence/repository";
 import { IDBFactory } from "fake-indexeddb";
