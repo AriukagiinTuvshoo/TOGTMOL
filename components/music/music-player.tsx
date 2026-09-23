@@ -24,9 +24,15 @@ function isYouTubeSource(
   return source.kind === "video" || source.kind === "playlist";
 }
 
-function sourceKind(source: MusicSource) {
+function sourceKind(source: MusicSource, language: "mn" | "en") {
   if (source.kind === "audio")
-    return source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос";
+    return source.audioStorageKey
+      ? language === "en"
+        ? "Device file"
+        : "Төхөөрөмжийн файл"
+      : language === "en"
+        ? "Audio URL"
+        : "Аудио холбоос";
   return "YouTube";
 }
 
@@ -305,7 +311,7 @@ export function MusicPlayer() {
                       />
                       <span>
                         <strong>{s.title}</strong>
-                        <small>{sourceKind(s)}</small>
+                        <small>{sourceKind(s, language)}</small>
                       </span>
                     </button>
                     <button
@@ -338,7 +344,7 @@ export function MusicPlayer() {
                 <Icon name="music" size={36} />
               </span>
               <div>
-                <span className="eyebrow">{sourceKind(source)}</span>
+                <span className="eyebrow">{sourceKind(source, language)}</span>
                 <h3>{name}</h3>
                 <p className="muted">
                   {playing
