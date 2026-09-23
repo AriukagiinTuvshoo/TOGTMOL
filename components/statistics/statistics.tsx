@@ -14,6 +14,8 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
+import { calendarTimeZone, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
+import { useEffect, useState } from "react";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
@@ -62,6 +64,21 @@ export function Statistics() {
   }
   const buckets = [...groups].slice(-36),
     ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const tz = calendarTimeZone(data);
+  const nextDeadline = useMemo(
+    () =>
+      readCalendarDeadlines(data)
+        .filter((d) => !d.deletedAt && (!subject || d.subjectId === subject))
+        .map((d) => ({ deadline: d, epoch: deadlineEpoch(d, tz) }))
+        .filter((x) => Number.isFinite(x.epoch) && x.epoch >= clockNow)
+        .sort((a, b) => a.epoch - b.epoch)[0] ?? null,
+    [data, subject, tz, clockNow],
+  );
   return (
     <div className="stack">
       <div className="filter-row">
@@ -119,6 +136,18 @@ export function Statistics() {
             : `Картын давтлагын ${knowledge.recall}%-д хариултаа санасан гэж үнэлсэн. Энэ нь өөрийн үнэлгээ бөгөөд чадварын шалгалт биш.`}
         </p>
       </section>
+      {nextDeadline && (
+        <section className="card deadline-countdown-card" aria-label="Дараагийн deadline">
+          <SectionTitle
+            title="🎯 Дараагийн шалгалт / deadline"
+            subtitle={`${nextDeadline.deadline.title} · ${nextDeadline.deadline.date} ${nextDeadline.deadline.time} · ${index.subjects.get(nextDeadline.deadline.subjectId)?.name ?? "Хичээл"}`}
+          />
+          <strong className="deadline-countdown-value">
+            {countdownLabel(nextDeadline.epoch - clockNow)}
+          </strong>
+          <p className="tiny muted">Countdown нь Calendar дахь deadline-ийн өгөгдлөөс шууд тооцогдоно · ${tz}</p>
+        </section>
+      )}
       <div className="metrics four">
         <Metric label="Нийт хугацаа" value={formatTime(stats.seconds)} />
         <Metric
