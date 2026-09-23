@@ -740,7 +740,7 @@ function useMusicController() {
   const addFile = async (file: File | null) => {
     if (!file) return;
     if (!isAudioFile(file)) {
-      fail("Зөвхөн аудио файл сонгоно уу.");
+      fail("Зөвхөн аудио эсвэл MP4 видео файл сонгоно уу.");
       return;
     }
     if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
