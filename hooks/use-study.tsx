@@ -52,6 +52,10 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   const [undo, setUndo] = useState<(() => Promise<void>) | null>(null);
   const { subjects, sessions, entries, settings } = state.data;
   const boundary = dayBoundary(settings);
+  const timeZone = calendarTimeZone(state.data);
+  useEffect(() => {
+    setToday(studyDate(new Date(), boundary, timeZone));
+  }, [boundary, timeZone]);
   const index = useMemo(
     () =>
       buildIndex({ subjects, sessions, entries } as StudyData, today, boundary),
