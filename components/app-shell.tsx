@@ -198,9 +198,9 @@ function Shell() {
           <div className="sidebar-quote">
             <Icon name="leaf" size={23} />
             <p>
-              Тогтмол байдал
+              {t("shell.quote1")}
               <br />
-              төгсөөс чухал.
+              {t("shell.quote2")}
             </p>
           </div>
           <button className="profile-button" onClick={() => go("settings")}>
@@ -210,8 +210,8 @@ function Shell() {
             <span>
               <strong>
                 {state.namespace === "guest"
-                  ? "Миний төхөөрөмж"
-                  : (user?.email?.split("@")[0] ?? "Миний бүртгэл")}
+                  ? t("shell.device")
+                  : (user?.email?.split("@")[0] ?? t("shell.myAccount"))}
               </strong>
               <small>
                 {state.namespace === "guest" ? t("shell.localStorage") : t("shell.account")}
@@ -238,9 +238,9 @@ function Shell() {
             <span className="save-status">
               <span className="status-dot" />
               {state.busy
-                ? "Хадгалж байна…"
+                ? t("shell.saveBusy")
                 : state.namespace === "guest"
-                  ? "Локал хадгалалт"
+                  ? t("shell.localStorage")
                   : status}
             </span>
             <button
