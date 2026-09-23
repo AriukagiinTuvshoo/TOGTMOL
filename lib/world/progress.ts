@@ -38,7 +38,7 @@ export function companionProgress(data: StudyData, today = dateKey()) {
     (n, d) => n + dailyXP(d.seconds / 60),
     0,
   );
-  const studyHours = measured.totalSeconds / 3600;
+  const studyHours = buildIndex(data, today).totalSeconds / 3600;
   return {
     xp,
     level: Math.floor(xp / 100) + 1,
