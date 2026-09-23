@@ -121,7 +121,7 @@ export function BondookChat() {
             )
               return null;
             return session?.access_token ?? null;
-          }, includeNotes)
+          }, includeNotes, language)
         : localChatProvider;
       const reply = await provider.reply(prompt, { data, index, today });
       if (
@@ -155,6 +155,7 @@ export function BondookChat() {
             data,
             index,
             today,
+            language,
           });
           if (
             !disposed.current &&
@@ -210,7 +211,7 @@ export function BondookChat() {
           </label>
           {!online && (
             <span className="tiny muted">
-              Таны мэдээллийг гаднын AI руу илгээхгүй.
+              {t("assistant.localPrivacy")}
             </span>
           )}
           {online && (
@@ -228,9 +229,9 @@ export function BondookChat() {
         {consent && !online && (
           <div className="ai-consent">
             <p>
-              Онлайн AI-д асуулт, хичээлийн нэр, зорилго, суралцсан хугацааны
-              товч дүгнэлт илгээнэ. Тэмдэглэлийг доорх сонголтоор л хуваалцана.
-              Серверийн AI тохиргоо болон зөвшөөрөгдсөн бүртгэл шаардлагатай.
+              {t("assistant.consent")}
+              {language === "mn" &&
+                " Серверийн AI тохиргоо болон зөвшөөрөгдсөн бүртгэл шаардлагатай."}
             </p>
             <label className="check-label">
               <input
@@ -284,16 +285,18 @@ export function BondookChat() {
         <div
           className="chat-messages"
           role="log"
-          aria-label="Бондооктой ярилцлага"
+          aria-label={t("assistant.conversation")}
           aria-live="polite"
         >
           {!messages.length && (
             <div className="chat-welcome">
               <Icon name="leaf" size={35} />
               <p>
-                Таны жижиг алхам бүр энд үлдэнэ.
+                {t("assistant.welcome")}
                 <br />
-                Өнөөдөр юунаас эхлэх вэ?
+                {language === "en"
+                  ? "What would you like to start with today?"
+                  : "Өнөөдөр юунаас эхлэх вэ?"}
               </p>
             </div>
           )}
@@ -309,8 +312,8 @@ export function BondookChat() {
             <article key={m.id} className={`chat-message chat-${m.role}`}>
               <small>
                 {m.role === "user"
-                  ? "Та"
-                  : `Бондоок · ${m.kind === "local" ? "Local" : "AI"}`}
+                  ? t("assistant.you")
+                  : `Bondook · ${m.kind === "local" ? t("common.local") : t("common.ai")}`}
               </small>
               <p>{m.text}</p>
               {m.action && (
@@ -329,12 +332,12 @@ export function BondookChat() {
                   }
                 >
                   {m.action === "plan"
-                    ? "Төлөвлөгөө гаргах"
+                    ? t("assistant.actionPlan")
                     : m.action === "timer"
-                      ? "Timer нээх"
+                      ? t("assistant.actionTimer")
                       : m.action === "knowledge"
-                        ? "Мэдлэгийн сан"
-                        : "Зорилго нээх"}
+                        ? t("assistant.actionKnowledge")
+                        : t("assistant.actionGoals")}
                   <Icon name="arrow" size={16} />
                 </button>
               )}
@@ -374,7 +377,7 @@ export function BondookChat() {
           />
           <button
             className="button primary"
-            aria-label="Бондоокт илгээх"
+            aria-label={t("assistant.send")}
             disabled={busy || changingAI || !text.trim()}
           >
             <Icon name="arrow" />
@@ -382,8 +385,8 @@ export function BondookChat() {
         </form>
         <p className="tiny muted">
           {online
-            ? "AI санал алдаатай байж болно. Хуваарийг та хянаж хадгална."
-            : "Local туслах нь цаг, зорилго, тэмдэглэлд тулгуурласан дүрмээр хариулна."}{" "}
+            ? "{t("assistant.onlineWarning")}"
+            : "{t("assistant.localDescription")}"}{" "}
           Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана.
         </p>
       </section>
