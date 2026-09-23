@@ -28,24 +28,19 @@ npm run open:android
 
 `CAPACITOR_SERVER_URL` нь тохируулагдаагүй үед Capacitor нь `www/index.html` fallback shell-ийг ашиглана.
 
-## Native project үүсгэх
+## Native project ажиллуулах
 
-Анх удаа:
+`ios/` болон `android/` skeleton-ууд repo-д аль хэдийн орсон. Орон нутагт dependency суулгаад sync хий:
 
 ```bash
 cd mobile
 npm install
-npm run add:ios
-npm run add:android
-```
-
-Үүний дараа:
-
-```bash
 npm run sync
 npm run open:ios
 npm run open:android
 ```
+
+Native project-ийг шинээр үүсгэх шаардлагатай бол эхлээд тухайн platform folder-ийг устгаад дараа нь `npm run add:ios` эсвэл `npm run add:android` ажиллуулна.
 
 iOS build/signing нь macOS + Xcode дээр, Android build/signing нь Android Studio/Android SDK дээр хийгдэнэ.
 
@@ -85,4 +80,4 @@ Supabase Dashboard → Authentication → URL Configuration → Redirect URLs-д
 4. Android application ID, signing key, target SDK болон Play App Signing-ийг Android Studio/Play Console дээр тохируулах.
 5. Бодит iPhone болон Android төхөөрөмж дээр login, offline/PWA, sync, timer, YouTube, privacy delete урсгалуудыг шалгах.
 
-Энэ wrapper нь одоогоор native project skeleton/configuration-ийн шатанд байна. Xcode эсвэл Android Studio байхгүй орчинд signing/build-ийг эндээс баталгаажуулсан гэж үзэхгүй.
+Native project skeleton болон deep-link registration бэлэн. Xcode/Android Studio дээр signing, simulator/emulator болон бодит төхөөрөмжийн build одоогоор эндээс бүрэн баталгаажаагүй.
