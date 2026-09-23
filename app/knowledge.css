@@ -931,3 +931,105 @@ body {
 .markdown-inline-code { padding:2px 6px; border-radius:6px; background:var(--surface); border:1px solid var(--border); font: .92em ui-monospace,SFMono-Regular,Menlo,monospace; }
 .markdown-code { margin:12px 0; padding:14px; border-radius:12px; overflow:auto; background:var(--hero); color:var(--surface); }
 .markdown-code code { font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; white-space:pre; }
+
+
+/* Command palette */
+.command-palette-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.command-palette-hint > span,
+.command-palette-command kbd,
+.global-search-button kbd {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.command-palette-section {
+  margin-top: 16px;
+}
+.command-palette-section-title {
+  margin: 0 2px 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.command-palette-commands {
+  display: grid;
+  gap: 4px;
+  max-height: min(360px, 45vh);
+  overflow-y: auto;
+}
+.command-palette-command {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  text-align: left;
+}
+.command-palette-command:hover,
+.command-palette-command.active {
+  background: var(--moss-soft);
+  border-color: var(--border);
+}
+.command-palette-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+  color: var(--moss);
+}
+.command-palette-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.command-palette-copy strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.command-palette-copy small {
+  color: var(--muted);
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.command-palette-command.active .command-palette-icon {
+  background: var(--surface);
+}
+.command-palette-no-results {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 520px) {
+  .command-palette-hint {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .command-palette-commands {
+    max-height: 34vh;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .command-palette-command {
+    transition: none;
+  }
+}
