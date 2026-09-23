@@ -239,6 +239,7 @@ function useMusicController() {
     resumePosition: number,
   ) => {
     if (target.kind !== "audio") throw Error("Аудио эх сурвалж буруу.");
+    const wantVideo = isVideoMedia(target.audioUrl, target.mimeType);
     const element = ensureNativeAudio(target);
     const targetId = target.id;
     let nextURL = target.audioUrl ?? "";
@@ -402,7 +403,26 @@ function useMusicController() {
     }
   };
 
-  const seekTo = (time: number) => seekBy(time - mediaPosition);
+  const seekTo = (time: number) => {
+    const native = nativeAudio.current;
+    if (nativeSourceId.current === latest.current.selection && native) {
+      const nextTime = Math.max(
+        0,
+        Math.min(Number.isFinite(native.duration) ? native.duration : Infinity, time),
+      );
+      native.currentTime = nextTime;
+      setMediaPosition(nextTime);
+      commit({ ...capture(), position: nextTime });
+      return;
+    }
+    if (youtube.current && !latest.current.selection.startsWith("ambient:")) {
+      const duration = youtube.current.getDuration?.() ?? Infinity;
+      const nextTime = Math.max(0, Math.min(duration, time));
+      youtube.current.seekTo?.(nextTime, true);
+      setMediaPosition(nextTime);
+      commit({ ...capture(), position: nextTime });
+    }
+  };
 
   const play = async (id = latest.current.selection) => {
     if (actual.current === "playing" && id === latest.current.selection) return;
@@ -474,6 +494,8 @@ function useMusicController() {
   const select = (id: string, resume = actual.current === "playing") => {
     if (id === latest.current.selection) return;
     generation.current++;
+    setMediaPosition(0);
+    setMediaDuration(0);
     playWhenReady.current = false;
     try {
       adapter.current?.pause().catch(() => {});
@@ -511,7 +533,7 @@ function useMusicController() {
       else playWhenReady.current = true;
     } else {
       mark("stopped");
-      if (target?.kind === "audio" && isVideoMedia(target.audioUrl, target.mimeType)) {
+        if (target?.kind === "audio" && isVideoMedia(target.audioUrl, target.mimeType)) {
         void loadNativeSource(target, 0).catch((e) =>
           fail(e instanceof Error ? e.message : "MP4 бичлэгийг ачаалж чадсангүй."),
         );
@@ -575,7 +597,9 @@ function useMusicController() {
   };
 
   const next = (direction: number) => {
-    const target = source;
+    const target = currentSources().find(
+      (s) => s.id === latest.current.selection,
+    );
     if (target?.kind === "playlist" && adapter.current?.kind === "youtube") {
       try {
         if (direction > 0) adapter.current.next?.();
@@ -701,6 +725,11 @@ function useMusicController() {
         track: sourceTrack(newSource),
       });
       setActivated(true);
+      if (isVideoMedia(newSource.audioUrl, newSource.mimeType)) {
+        void loadNativeSource(newSource, 0).catch((e) =>
+          fail(e instanceof Error ? e.message : "MP4 бичлэгийг ачаалж чадсангүй."),
+        );
+      }
       setUrl("");
       setTitle("");
     } catch (e) {
@@ -762,6 +791,11 @@ function useMusicController() {
         track: sourceTrack(newSource),
       });
       setActivated(true);
+      if (isVideoMedia(newSource.audioUrl, newSource.mimeType)) {
+        void loadNativeSource(newSource, 0).catch((e) =>
+          fail(e instanceof Error ? e.message : "MP4 бичлэгийг ачаалж чадсангүй."),
+        );
+      }
       setTitle("");
       setUrl("");
     } catch (e) {
