@@ -41,6 +41,7 @@ export function DecisionDashboard() {
     parseDate(data.settings.extras.examDate)
       ? data.settings.extras.examDate
       : "";
+  const examDate = storedExamDate;
   const last7 = useMemo(() => periodStats(index, 7, today), [index, today]);
   const comparison = useMemo(
     () => rollingSevenDayReport(index, today),
