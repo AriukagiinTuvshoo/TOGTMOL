@@ -29,6 +29,7 @@ import {
   nextTask,
 } from "@/lib/world/milestones";
 import { TaskForm } from "@/components/dashboard/task-form";
+import { useI18n } from "@/components/i18n/language-provider";
 export function GoalPlanner() {
   const { data, index, today, store, run, navigate } = useStudy(),
     [adding, setAdding] = useState(false),

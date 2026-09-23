@@ -14,6 +14,8 @@ import { Icon } from "@/components/ui/icon";
 import { AccountPanel } from "./account-panel";
 import { InstallButton } from "./pwa";
 import { MusicSettings } from "./music-settings";
+import { useI18n } from "@/components/i18n/language-provider";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 
 const UI_THEMES = [
   {

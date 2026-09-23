@@ -11,8 +11,10 @@ import {
 import { recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { uid } from "@/lib/constants";
 import type { QuizQuestion, StudyQuiz } from "@/types/knowledge";
+import { useI18n } from "@/components/i18n/language-provider";
 
 export function QuizGenerator({ onClose }: { onClose: () => void }) {
+  const { language } = useI18n();
   const { data, store, run } = useStudy();
   const [title, setTitle] = useState("Бондоок · Миний сорил"),
     [subject, setSubject] = useState(""),
@@ -69,7 +71,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ text, count }),
+          body: JSON.stringify({ text, count, language }),
           signal: controller.signal,
         });
         const result = await response.json();
