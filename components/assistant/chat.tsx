@@ -143,6 +143,12 @@ export function BondookChat() {
       ) {
         setError(e instanceof Error ? e.message : "Түр алдаа гарлаа.");
         if (kind === "ai") {
+          // Do not leave the UI in a broken "online" state after an auth,
+          // network, or configuration failure. Switch the visible mode first,
+          // then persist the preference in the background flow below.
+          setForceLocal(true);
+          setConsent(false);
+          setNotesConsent(false);
           const fallback = await localChatProvider.reply(prompt, {
             data,
             index,
