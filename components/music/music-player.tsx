@@ -239,7 +239,7 @@ export function MusicPlayer() {
               <label className="music-upload">
                 <input
                   type="file"
-                  accept="audio/*,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac,.webm"
+                  accept="audio/*,video/mp4,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac,.webm,.mp4"
                   hidden
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null;
@@ -248,11 +248,11 @@ export function MusicPlayer() {
                   }}
                 />
                 <span className="button small">
-                  <Icon name="upload" size={16} /> Аудио файл
+                  <Icon name="upload" size={16} /> MP3 / MP4 файл
                 </span>
               </label>
               <span className="tiny muted">
-                80 MB хүртэл · төхөөрөмж дээр хадгална
+                80 MB хүртэл · MP3 болон MP4 · төхөөрөмж дээр хадгална
               </span>
             </div>
 
@@ -324,7 +324,7 @@ export function MusicPlayer() {
 
           <p className="tiny music-storage-note">
             Upload хийсэн файл энэ төхөөрөмжийн браузерийн хадгалалтад үлдэнэ.
-            Аудио холбоос нь холбоосоо хадгалж, тоглуулах үед интернэт ашиглана.
+            Аудио/MP4 холбоос нь холбоосоо хадгалж, тоглуулах үед интернэт ашиглана.
           </p>
         </section>
 
