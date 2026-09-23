@@ -12,6 +12,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 import { readMessages, type BondookMessage } from "@/lib/assistant/history";
 import { uid } from "@/lib/constants";
+import { useI18n } from "@/components/i18n/language-provider";
 export function BondookChat() {
   const { data, index, today, navigate, store, run } = useStudy(),
     [text, setText] = useState(""),
@@ -181,12 +182,12 @@ export function BondookChat() {
         <div className="chat-header">
           <CompanionAvatar world={data.settings.world} />
           <div>
-            <span className="eyebrow">ТАНЫ СУРАЛЦАХ ХАМТРАГЧ</span>
-            <h2>Сайн уу, би Бондоок.</h2>
-            <p>Нэг жижиг алхмыг хамт сонгоё.</p>
+            <span className="eyebrow">{language === "en" ? "YOUR STUDY COMPANION" : "ТАНЫ СУРАЛЦАХ ХАМТРАГЧ"}</span>
+            <h2>{t("assistant.greeting")}</h2>
+            <p>{language === "en" ? "Let's choose one small step together." : "Нэг жижиг алхмыг хамт сонгоё."}</p>
           </div>
           <span className="badge">
-            {online ? "ОНЛАЙН AI" : "ТӨХӨӨРӨМЖ ДЭЭР"}
+            {online ? t("assistant.online") : t("assistant.local")}
           </span>
         </div>
         <div className="chat-options">
@@ -338,7 +339,7 @@ export function BondookChat() {
               )}
             </article>
           ))}
-          {busy && <p className="muted">Бондоок бодож байна…</p>}
+          {busy && <p className="muted">{t("assistant.thinking")}</p>}
           <div ref={end} />
         </div>
         {error && (
@@ -363,11 +364,11 @@ export function BondookChat() {
           }}
         >
           <input
-            aria-label="Бондоокт бичих"
+            aria-label={t("assistant.send")}
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={1500}
-            placeholder="Жишээ: Энэ долоо хоног ямар байсан бэ?"
+            placeholder={language === "en" ? "Example: How was my week?" : "Жишээ: Энэ долоо хоног ямар байсан бэ?"}
             disabled={busy || changingAI}
           />
           <button
