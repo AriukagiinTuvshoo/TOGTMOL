@@ -18,11 +18,11 @@ import { LanguageProvider, useI18n } from "./i18n/language-provider";
 import { LanguageSwitcher } from "./i18n/language-switcher";
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
-  { loading: () => <p role="status">Мэдлэгийн санг нээж байна…</p> },
+  { loading: () => <p role="status">{t("common.loading")}</p> },
 );
 const PrivacyCenter = dynamic(
   () => import("./settings/privacy").then((m) => m.PrivacyCenter),
-  { loading: () => <p role="status">Нууцлалын тохиргоог нээж байна…</p> },
+  { loading: () => <p role="status">{t("common.loading")}</p> },
 );
 const CustomizeRoom = dynamic(() =>
   import("./world/customize").then((m) => m.CustomizeRoom),
