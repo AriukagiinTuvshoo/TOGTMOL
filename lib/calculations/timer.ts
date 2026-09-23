@@ -52,7 +52,7 @@ export function startTimer(
     segments: [],
     startTimeEstimated: false,
     taskId,
-    extras: {},
+    extras: minutes !== null ? { plannedDurationSec: minutes * 60 } : {},
   };
 }
 export function pause(timer: ActiveTimer, now: number): ActiveTimer {
