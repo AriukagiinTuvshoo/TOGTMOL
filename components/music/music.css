@@ -369,6 +369,92 @@
   border: 1px solid var(--border);
 }
 
+.music-video-runtime {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  background: #000;
+}
+
+.music-native-video-host {
+  width: 100%;
+  min-height: 240px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.music-native-video-host video,
+.music-native-video-host .music-native-video {
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.music-video-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.music-video-caption h3 {
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-seek-controls {
+  display: grid;
+  gap: 5px;
+}
+
+.music-seek-buttons {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.music-progress {
+  width: 100%;
+  min-width: 0;
+}
+
+.music-time-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.music-options {
+  display: grid;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.music-options > label:not(.check-label) {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 160px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.music-options select {
+  width: 100%;
+}
+
 .music-youtube-runtime {
   width: 100%;
 }
@@ -447,6 +533,15 @@
     min-height: 130px;
   }
 
+  .music-native-video-host {
+    min-height: 190px;
+  }
+
+  .music-video-caption {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .app-shell:has(.music-dock) .app-main {
     padding-bottom: calc(
       var(--music-dock-height, 74px) + 104px + env(safe-area-inset-bottom, 0px)
@@ -464,6 +559,29 @@
   .music-dock.music-player .music-volume {
     width: 72px;
     max-width: 86px;
+  }
+
+  .music-seek-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .music-seek-buttons .music-progress {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .music-seek-buttons .button:first-child {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .music-seek-buttons .button:last-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .music-options > label:not(.check-label) {
+    grid-template-columns: 1fr;
   }
 
   .music-dock.music-player .ambient-options {
