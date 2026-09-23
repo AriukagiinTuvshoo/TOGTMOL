@@ -60,6 +60,7 @@ export async function handleBondookRequest(
     text?: unknown;
     image?: unknown;
     count?: unknown;
+    language?: unknown;
   };
   try {
     input = JSON.parse(raw);
@@ -248,6 +249,7 @@ export async function handleBondookRequest(
               kind === "chat" || kind === "plan"
                 ? JSON.stringify({
                     question: input.message,
+                    language,
                     studyContext: input.context,
                   })
                 : [
