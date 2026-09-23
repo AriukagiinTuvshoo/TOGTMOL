@@ -14,7 +14,7 @@ const YouTubeEmbed = dynamic(
   () => import("./youtube-embed").then((m) => m.YouTubeEmbed),
   {
     ssr: false,
-    loading: () => <p role="status">{language === "en" ? "Loading player…" : "Бичлэгийг ачаалж байна…"}</p>,
+    loading: () => <p role="status">Loading player…</p>,
   },
 );
 
