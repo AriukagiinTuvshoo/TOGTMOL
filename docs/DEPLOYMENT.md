@@ -61,6 +61,12 @@ npm run verify:supabase:production
 The smoke test signs in, verifies the authenticated user, performs an RLS-protected `study_profiles` read, calls `pull_study_data`, and confirms the returned snapshot is schema version 5. It does not create, update, or delete study data and does not consume the Bondook quota. Run it against a dedicated test account, not a personal account.
 
 
+### Legal pages for store release
+
+The public legal pages are available at `/privacy` and `/terms`. The app footer links to both pages so users can reach them from the product itself.
+
+Before App Store or Google Play submission, configure `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` to the support/privacy contact that should appear on those pages. Do not leave the fallback release note text in a public store submission.
+
 ## 4. Validate the real deployment
 
 Use two test accounts and two browser profiles/devices:
