@@ -204,7 +204,7 @@ export function TimerWatch() {
         <TimerAlert
           complete={alert === "complete"}
           message={
-            countdown !== null ? `${countdown} секунд үлдлээ!` : warningText
+            countdown !== null ? (language === "en" ? `${countdown} seconds left!` : `${countdown} {language === "en" ? "seconds left" : "секунд үлдлээ"}!`) : warningText
           }
           onStop={stopAlertSound}
           onReview={() => {
@@ -220,10 +220,10 @@ export function TimerWatch() {
       {countdown !== null && !alert && (
         <aside
           className="timer-countdown-banner"
-          aria-label="Сүүлийн 10 секунд"
+          aria-label={language === "en" ? "Last 10 seconds" : "Сүүлийн 10 секунд"}
         >
           <output aria-live="polite" aria-atomic="true">
-            {countdown} секунд үлдлээ
+            {countdown} {language === "en" ? "seconds left" : "секунд үлдлээ"}
           </output>
           <button
             type="button"
@@ -231,7 +231,7 @@ export function TimerWatch() {
             onClick={stopAlertSound}
             disabled={mutedTimer === t.id}
           >
-            {mutedTimer === t.id ? "Дуу зогссон" : "🔇 Тооллын дууг зогсоох"}
+            {mutedTimer === t.id ? (language === "en" ? "Sound stopped" : "Дуу зогссон") : (language === "en" ? "🔇 Stop countdown sound" : "🔇 Тооллын дууг зогсоох")}
           </button>
         </aside>
       )}
@@ -248,6 +248,8 @@ export function TimerWatch() {
     </>
   );
 }
+import { useI18n } from "@/components/i18n/language-provider";
+
 export function StudyTimer({ compact = false }: { compact?: boolean }) {
   const { data, store, run, navigate, index } = useStudy(),
     { busy } = useStoreState(),
@@ -291,14 +293,14 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     return (
       <div className="card">
         <Empty
-          title="Эхлээд нэг хичээл нэмье"
-          description="Таны анхны жижиг алхам эндээс эхэлнэ."
+          title={language === "en" ? "Add a subject first" : "Эхлээд нэг хичээл нэмье"}
+          description={language === "en" ? "Your first small step starts here." : "Таны анхны жижиг алхам эндээс эхэлнэ."}
           action={
             <button
               className="button primary"
               onClick={() => navigate("subjects")}
             >
-              Хичээл нэмэх <Icon name="plus" />
+              {language === "en" ? "Add subject" : "Хичээл нэмэх"} <Icon name="plus" />
             </button>
           }
         />
@@ -339,19 +341,19 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         className={`card timer-card timer-design-${timerDesign(data.settings)}`}
       >
         <div className="eyebrow">
-          <span className="live-dot" /> ӨӨРТӨӨ ЗОРИУЛСАН ЦАГ
+          <span className="live-dot" /> {language === "en" ? "TIME FOR YOURSELF" : "ӨӨРТӨӨ ЗОРИУЛСАН ЦАГ"}
         </div>
         <h2 className={t ? "active-subject" : ""}>
           {t
             ? index.subjects.get(t.subjectId)?.name
-            : "Нэг жижиг алхам эхлүүлье."}
+            : language === "en" ? "Let’s start with one small step." : "Нэг жижиг алхам эхлүүлье."}
         </h2>
         {t?.taskId && (
           <p className="timer-task">
             {data.tasks.find((task) => task.id === t.taskId)?.title ??
               (typeof t.extras.taskTitle === "string"
                 ? t.extras.taskTitle
-                : "Төлөвлөсөн алхам")}
+                : language === "en" ? "Planned step" : "Төлөвлөсөн алхам")}
           </p>
         )}
         <p className="muted">
@@ -362,7 +364,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         {!t && (
           <div className="timer-config">
             <SubjectSelect value={subjectId} onChange={setSubjectId} required />
-            <div className="segmented" aria-label="Timer горим">
+            <div className="segmented" aria-label={language === "en" ? "Timer mode" : "Timer горим"}>
               {(["stopwatch", "pomodoro"] as const).map((m) => (
                 <button
                   key={m}
@@ -378,9 +380,9 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 <div className="segmented">
                   {(
                     [
-                      ["focus", "Төвлөрөх"],
-                      ["shortBreak", "Богино амралт"],
-                      ["longBreak", "Урт амралт"],
+                      ["focus", language === "en" ? "Focus" : "Төвлөрөх"],
+                      ["shortBreak", language === "en" ? "Short break" : "Богино амралт"],
+                      ["longBreak", language === "en" ? "Long break" : "Урт амралт"],
                     ] as const
                   ).map(([p, label]) => (
                     <button
@@ -424,9 +426,9 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                     </button>
                   ))}
                   <label>
-                    Минут
+                    {language === "en" ? "Minutes" : "Минут"}
                     <input
-                      aria-label="Timer хугацаа минут"
+                      aria-label={language === "en" ? "Timer duration in minutes" : "Timer хугацаа минут"}
                       type="number"
                       min={1}
                       max={240}
@@ -458,7 +460,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 ? "POMODORO"
                 : "STOPWATCH"}
           </span>
-          <output className="timer-digits" aria-label="Хугацаа">
+          <output className="timer-digits" aria-label={language === "en" ? "Time" : "Хугацаа"}>
             {clock(
               t
                 ? remaining === null
@@ -471,12 +473,12 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           </output>
           <span className="timer-status">
             {t?.status === "review"
-              ? "Хадгалахад бэлэн"
+              ? language === "en" ? "Ready to save" : "Хадгалахад бэлэн"
               : t
                 ? t.running
-                  ? "Таны хэмнэлээр үргэлжилж байна"
-                  : "Түр зогссон"
-                : "Бэлэн бол эхэлье"}
+                  ? language === "en" ? "Continuing at your pace" : "Таны хэмнэлээр үргэлжилж байна"
+                  : language === "en" ? "Paused" : "Түр зогссон"
+                : language === "en" ? "Ready when you are" : "Бэлэн бол эхэлье"}
           </span>
         </div>
         <div className="button-row center">
@@ -498,7 +500,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                   if (
                     await run(
                       () => store.mutate(actions.saveTimer(note, complete)),
-                      "Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа.",
+                      language === "en" ? "Small progress still counts. Session saved." : "Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа.",
                     )
                   ) {
                     clearTimerDraft(store.getSnapshot().namespace, t.id);
@@ -525,7 +527,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                   }
                 }}
               >
-                Амралтыг дуусгах
+                {language === "en" ? "End break" : "Амралтыг дуусгах"}
               </button>
             )
           ) : (
@@ -568,18 +570,18 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
               className="button ghost"
               disabled={busy}
               onClick={() => {
-                if (confirm("Энэ timer-ийг хадгалахгүйгээр цуцлах уу?"))
+                if (confirm(language === "en" ? "Cancel this timer without saving?" : "Энэ timer-ийг хадгалахгүйгээр цуцлах уу?"))
                   void run(() => store.mutate(actions.discard()));
               }}
             >
-              Цуцлах
+              {language === "en" ? "Cancel" : "Цуцлах"}
             </button>
           )}
         </div>
         {t?.status === "review" && t.phase === "focus" && ms < 5000 && (
           <p className="muted">
             Багахан хугацаа байсан ч хэмжсэн хэсгийг хадгална. Дахин эхлүүлэх
-            бол Цуцлах товчийг ашиглаарай.
+            бол {language === "en" ? "Cancel" : "Цуцлах"} товчийг ашиглаарай.
           </p>
         )}
         {t && (
@@ -595,18 +597,18 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
-            {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
+            {showNote ? "{language === "en" ? "Hide note" : "Тэмдэглэл хураах"}" : "{language === "en" ? "Take a note" : "Тэмдэглэл бичих"}"}
           </button>
         )}
         {compact &&
           t?.phase === "focus" &&
           t.status !== "review" &&
           showNote && (
-            <section className="timer-inline-note" aria-label="Focus тэмдэглэл">
-              <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
-              <h3>Өнөөдрийн тэмдэглэл</h3>
+            <section className="timer-inline-note" aria-label={language === "en" ? "Focus note" : "Focus тэмдэглэл"}>
+              <div className="eyebrow">{language === "en" ? "CAPTURE WHAT YOU LEARN" : "СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ"}</div>
+              <h3>{language === "en" ? "Today’s note" : "Өнөөдрийн тэмдэглэл"}</h3>
               <label className="sr-only" htmlFor="timer-note-inline">
-                Юу сурсан бэ?
+                {language === "en" ? "What did you learn?" : "Юу сурсан бэ?"}
               </label>
               <textarea
                 id="timer-note-inline"
@@ -626,7 +628,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                       store.reportError(error);
                     }
                 }}
-                placeholder="Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"
+                placeholder={language === "en" ? "What did you understand? What should you continue next?" : "Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"}
                 rows={7}
                 maxLength={10000}
               />
@@ -642,11 +644,11 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                       })
                     }
                   />
-                  Хадгалаад төлөвлөгөөг биелсэнд тооцох
+                  {language === "en" ? "Save and mark the plan complete" : "Хадгалаад төлөвлөгөөг биелсэнд тооцох"}
                 </label>
               )}
               <p className="tiny muted">
-                Тэмдэглэл timer үргэлжилж байх үед автоматаар түр хадгалагдана.
+                {language === "en" ? "Your note is auto-saved while the timer runs." : "Тэмдэглэл timer үргэлжилж байх үед автоматаар түр хадгалагдана."}
               </p>
             </section>
           )}
@@ -654,10 +656,10 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
       {(!compact || t?.status === "review") && (
         <aside className="stack">
           <section className="card">
-            <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
+            <div className="eyebrow">{language === "en" ? "CAPTURE WHAT YOU LEARN" : "СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ"}</div>
             <h2>Өнөөдрийн тэмдэглэл</h2>
             <label className="sr-only" htmlFor="timer-note">
-              Юу сурсан бэ?
+              {language === "en" ? "What did you learn?" : "Юу сурсан бэ?"}
             </label>
             <textarea
               id="timer-note"
@@ -673,7 +675,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                     store.reportError(error);
                   }
               }}
-              placeholder="Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"
+              placeholder={language === "en" ? "What did you understand? What should you continue next?" : "Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"}
               rows={8}
               disabled={!t}
               maxLength={10000}
@@ -690,7 +692,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                     })
                   }
                 />
-                Хадгалаад төлөвлөгөөг биелсэнд тооцох
+                {language === "en" ? "Save and mark the plan complete" : "Хадгалаад төлөвлөгөөг биелсэнд тооцох"}
               </label>
             )}
             <p className="tiny muted">
