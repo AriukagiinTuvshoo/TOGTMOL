@@ -6,6 +6,12 @@ import {
   weeklyReport,
 } from "@/lib/calculations/analytics";
 import {
+  annualHeatmap,
+  behaviorPatterns,
+  currentStreakWithFreezes,
+  longestStreakWithFreezes,
+} from "@/lib/calculations/decision";
+import {
   dateKey,
   currentStreak,
   longestStreak,
@@ -81,6 +87,88 @@ describe("calendar and statistics", () => {
     expect(w.previousFull).toBe(9000);
     expect(w.previousComparable).toBe(1800);
     expect(weeklyReport(buildIndex(fixture()), "2026-09-15").change).toBeNull();
+  });
+  it("uses one or two freeze days without creating a streak from an unrelated gap", () => {
+    expect(
+      currentStreakWithFreezes(
+        new Set(["2026-09-13", "2026-09-15"]),
+        "2026-09-15",
+        1,
+      ),
+    ).toEqual({ streak: 3, usedFreezes: 1 });
+    expect(
+      currentStreakWithFreezes(new Set(["2026-09-13"]), "2026-09-15", 1),
+    ).toEqual({ streak: 0, usedFreezes: 0 });
+    expect(
+      longestStreakWithFreezes(
+        ["2026-09-10", "2026-09-12", "2026-09-13"],
+        1,
+      ),
+    ).toBe(4);
+  });
+  it("builds a year heatmap from actual minutes and keeps non-year cells inert", () => {
+    const d = fixture();
+    d.sessions = [
+      session({
+        id: "jan",
+        date: "2026-01-01",
+        startEpoch: new Date("2026-01-01T10:00:00").getTime(),
+        durationSec: 1800,
+      }),
+      session({
+        id: "june",
+        date: "2026-06-10",
+        startEpoch: new Date("2026-06-10T10:00:00").getTime(),
+        durationSec: 3900,
+      }),
+    ];
+    const heatmap = annualHeatmap(buildIndex(d, "2026-09-15"), 2026);
+    expect(heatmap.activeDays).toBe(2);
+    expect(heatmap.totalMinutes).toBe(95);
+    expect(
+      heatmap.weeks.flat().find((cell) => cell.date === "2026-01-01"),
+    ).toMatchObject({ minutes: 30, level: 2, inYear: true });
+    expect(
+      heatmap.weeks.flat().find((cell) => cell.date === "2025-12-28"),
+    ).toMatchObject({ level: 0, inYear: false });
+  });
+  it("finds a basic late-night abandonment pattern from explicit discarded timer attempts", () => {
+    const d = fixture();
+    d.sessions = [
+      session({
+        id: "late-done-1",
+        startEpoch: new Date("2026-09-11T21:10:00").getTime(),
+      }),
+      session({
+        id: "late-done-2",
+        startEpoch: new Date("2026-09-12T21:20:00").getTime(),
+      }),
+      session({
+        id: "day",
+        startEpoch: new Date("2026-09-12T12:20:00").getTime(),
+      }),
+    ];
+    d.extras.behaviorAttempts = [
+      {
+        id: "late-drop-1",
+        subjectId: "math",
+        startEpoch: new Date("2026-09-13T21:10:00").getTime(),
+        discardedAt: new Date("2026-09-13T21:20:00").getTime(),
+        accumulatedSec: 600,
+        targetSec: 1500,
+      },
+      {
+        id: "late-drop-2",
+        subjectId: "math",
+        startEpoch: new Date("2026-09-14T22:10:00").getTime(),
+        discardedAt: new Date("2026-09-14T22:15:00").getTime(),
+        accumulatedSec: 300,
+        targetSec: 1500,
+      },
+    ];
+    const patterns = behaviorPatterns(d, buildIndex(d, "2026-09-15"));
+    expect(patterns[0].body).toContain("50%");
+    expect(patterns[0].tone).toBe("attention");
   });
   it("preserves unlocked achievements when history is edited", () => {
     let d = fixture();
