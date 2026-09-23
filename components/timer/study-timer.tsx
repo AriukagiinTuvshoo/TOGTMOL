@@ -598,55 +598,58 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
           </button>
         )}
-        {compact && t?.phase === "focus" && t.status !== "review" && showNote && (
-          <section className="timer-inline-note" aria-label="Focus тэмдэглэл">
-            <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
-            <h3>Өнөөдрийн тэмдэглэл</h3>
-            <label className="sr-only" htmlFor="timer-note-inline">
-              Юу сурсан бэ?
-            </label>
-            <textarea
-              id="timer-note-inline"
-              className="note-input"
-              value={note}
-              onChange={(e) => {
-                const value = e.target.value;
-                setNote(value);
-                if (t)
-                  try {
-                    writeTimerDraft(
-                      store.getSnapshot().namespace,
-                      t.id,
-                      value,
-                    );
-                  } catch (error) {
-                    store.reportError(error);
-                  }
-              }}
-              placeholder="Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"
-              rows={7}
-              maxLength={10000}
-            />
-            {t?.taskId && (
-              <label className="check-label">
-                <input
-                  type="checkbox"
-                  checked={complete}
-                  onChange={(e) =>
-                    setCompletionChoice({
-                      timerId: tId,
-                      checked: e.target.checked,
-                    })
-                  }
-                />
-                Хадгалаад төлөвлөгөөг биелсэнд тооцох
+        {compact &&
+          t?.phase === "focus" &&
+          t.status !== "review" &&
+          showNote && (
+            <section className="timer-inline-note" aria-label="Focus тэмдэглэл">
+              <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
+              <h3>Өнөөдрийн тэмдэглэл</h3>
+              <label className="sr-only" htmlFor="timer-note-inline">
+                Юу сурсан бэ?
               </label>
-            )}
-            <p className="tiny muted">
-              Тэмдэглэл timer үргэлжилж байх үед автоматаар түр хадгалагдана.
-            </p>
-          </section>
-        )}
+              <textarea
+                id="timer-note-inline"
+                className="note-input"
+                value={note}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setNote(value);
+                  if (t)
+                    try {
+                      writeTimerDraft(
+                        store.getSnapshot().namespace,
+                        t.id,
+                        value,
+                      );
+                    } catch (error) {
+                      store.reportError(error);
+                    }
+                }}
+                placeholder="Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"
+                rows={7}
+                maxLength={10000}
+              />
+              {t?.taskId && (
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={complete}
+                    onChange={(e) =>
+                      setCompletionChoice({
+                        timerId: tId,
+                        checked: e.target.checked,
+                      })
+                    }
+                  />
+                  Хадгалаад төлөвлөгөөг биелсэнд тооцох
+                </label>
+              )}
+              <p className="tiny muted">
+                Тэмдэглэл timer үргэлжилж байх үед автоматаар түр хадгалагдана.
+              </p>
+            </section>
+          )}
       </section>
       {(!compact || t?.status === "review") && (
         <aside className="stack">

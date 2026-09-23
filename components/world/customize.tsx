@@ -241,7 +241,9 @@ export function CustomizeRoom() {
                   <button
                     key={a.id}
                     className="button small"
-                    disabled={Boolean(reward && !unlockedRewards.has(reward.id))}
+                    disabled={Boolean(
+                      reward && !unlockedRewards.has(reward.id),
+                    )}
                     aria-pressed={world.accessory === a.id}
                     onClick={() => update({ accessory: a.id })}
                   >

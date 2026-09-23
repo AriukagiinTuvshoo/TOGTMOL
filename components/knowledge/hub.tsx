@@ -383,7 +383,10 @@ export function KnowledgeHub() {
             description="Нэг тэмдэглэл, зураг эсвэл холбоосоос эхэлж болно. Хайлт хийсэн бол шүүлтүүрээ өөрчлөөд үзээрэй."
             action={
               tab === "trash" ? (
-                <button className="button primary" onClick={() => setTab("all")}>
+                <button
+                  className="button primary"
+                  onClick={() => setTab("all")}
+                >
                   Мэдлэг рүү буцах <Icon name="arrow" size={16} />
                 </button>
               ) : tab === "deck" ? (
@@ -642,7 +645,9 @@ export function KnowledgeHub() {
       )}{" "}
       {quiz && <QuizSession quiz={quiz} onClose={() => setQuiz(null)} />}{" "}
       {generator && <CardGenerator onClose={() => setGenerator(false)} />}
-      {quizGenerator && <QuizGenerator onClose={() => setQuizGenerator(false)} />}
+      {quizGenerator && (
+        <QuizGenerator onClose={() => setQuizGenerator(false)} />
+      )}
     </div>
   );
 }

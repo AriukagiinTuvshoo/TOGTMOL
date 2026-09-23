@@ -19,7 +19,10 @@ import { ROOM_REWARDS } from "@/lib/world/config";
 import { knowledgeIndex } from "@/lib/knowledge/index";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
-import { streakFreezeCount, streakWithFreezes } from "@/lib/calculations/analytics";
+import {
+  streakFreezeCount,
+  streakWithFreezes,
+} from "@/lib/calculations/analytics";
 export function StudyRoom({ focus = false }: { focus?: boolean }) {
   const { data, index, today, navigate, run, store } = useStudy(),
     now = useClock(false);
@@ -300,7 +303,10 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
                   <Icon name="leaf" size={18} />
                   <span>
                     Дараагийн шагнал: <strong>{nextUnlock.name}</strong> ·{" "}
-                    {(nextUnlock.requiredHours - progress.studyHours).toFixed(1)} цаг үлдлээ
+                    {(nextUnlock.requiredHours - progress.studyHours).toFixed(
+                      1,
+                    )}{" "}
+                    цаг үлдлээ
                   </span>
                 </div>
               )}

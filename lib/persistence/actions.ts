@@ -199,15 +199,16 @@ export const actions = {
             ...timer.extras,
             ...(taskId
               ? {
-                taskId,
-                goalId:
-                  data.tasks.find((t) => t.id === taskId && !t.deletedAt)
-                    ?.goalId ?? null,
-                milestoneId:
-                  data.tasks.find((t) => t.id === taskId)?.extras.milestoneId ??
-                  null,
-                taskTitle: data.tasks.find((t) => t.id === taskId)?.title ?? "",
-              }
+                  taskId,
+                  goalId:
+                    data.tasks.find((t) => t.id === taskId && !t.deletedAt)
+                      ?.goalId ?? null,
+                  milestoneId:
+                    data.tasks.find((t) => t.id === taskId)?.extras
+                      .milestoneId ?? null,
+                  taskTitle:
+                    data.tasks.find((t) => t.id === taskId)?.title ?? "",
+                }
               : {}),
           },
         },

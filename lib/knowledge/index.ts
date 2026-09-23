@@ -1,5 +1,9 @@
 import type { StudyData, View } from "@/types/study";
-import type { Flashcard, KnowledgeRecord, QuizQuestion } from "@/types/knowledge";
+import type {
+  Flashcard,
+  KnowledgeRecord,
+  QuizQuestion,
+} from "@/types/knowledge";
 type QuizQuestionSnapshot = { quizId: string; question: QuizQuestion | null };
 import { studyDate } from "@/lib/calculations/dates";
 import { dayBoundary } from "@/lib/preferences";

@@ -66,7 +66,11 @@ export function TimerAlert({
                 Үр дүнгээ харах
               </button>
               {onExit && (
-                <button type="button" className="button ghost large" onClick={onExit}>
+                <button
+                  type="button"
+                  className="button ghost large"
+                  onClick={onExit}
+                >
                   Focus-оос гарах
                 </button>
               )}

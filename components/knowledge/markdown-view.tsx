@@ -2,10 +2,16 @@
 import type { ReactNode } from "react";
 
 function inline(text: string): ReactNode[] {
-  const tokens = text.split(/(\x60[^\x60]+\x60|\*\*[^\*]+\*\*|\*[^\*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
+  const tokens = text.split(
+    /(\x60[^\x60]+\x60|\*\*[^\*]+\*\*|\*[^\*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g,
+  );
   return tokens.filter(Boolean).map((token, i) => {
     if (token.startsWith("\x60") && token.endsWith("\x60"))
-      return <code key={i} className="markdown-inline-code">{token.slice(1, -1)}</code>;
+      return (
+        <code key={i} className="markdown-inline-code">
+          {token.slice(1, -1)}
+        </code>
+      );
     if (token.startsWith("**") && token.endsWith("**"))
       return <strong key={i}>{token.slice(2, -2)}</strong>;
     if (token.startsWith("*") && token.endsWith("*"))
@@ -40,13 +46,16 @@ export function MarkdownView({ value }: { value: string }) {
       }
       if (i < lines.length) i += 1;
       blocks.push(
-        <pre key={i} className="markdown-code"><code>{code.join("\n")}</code></pre>,
+        <pre key={i} className="markdown-code">
+          <code>{code.join("\n")}</code>
+        </pre>,
       );
       continue;
     }
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     if (heading) {
-      const Tag = heading[1].length === 1 ? "h2" : heading[1].length === 2 ? "h3" : "h4";
+      const Tag =
+        heading[1].length === 1 ? "h2" : heading[1].length === 2 ? "h3" : "h4";
       blocks.push(<Tag key={i}>{inline(heading[2])}</Tag>);
       i += 1;
       continue;
@@ -58,7 +67,11 @@ export function MarkdownView({ value }: { value: string }) {
         i += 1;
       }
       blocks.push(
-        <ul key={i}>{items.map((item, n) => <li key={n}>{inline(item)}</li>)}</ul>,
+        <ul key={i}>
+          {items.map((item, n) => (
+            <li key={n}>{inline(item)}</li>
+          ))}
+        </ul>,
       );
       continue;
     }
@@ -69,7 +82,11 @@ export function MarkdownView({ value }: { value: string }) {
         i += 1;
       }
       blocks.push(
-        <ol key={i}>{items.map((item, n) => <li key={n}>{inline(item)}</li>)}</ol>,
+        <ol key={i}>
+          {items.map((item, n) => (
+            <li key={n}>{inline(item)}</li>
+          ))}
+        </ol>,
       );
       continue;
     }
@@ -79,7 +96,13 @@ export function MarkdownView({ value }: { value: string }) {
         quote.push(lines[i].replace(/^>\s?/, ""));
         i += 1;
       }
-      blocks.push(<blockquote key={i}>{quote.map((q, n) => <p key={n}>{inline(q)}</p>)}</blockquote>);
+      blocks.push(
+        <blockquote key={i}>
+          {quote.map((q, n) => (
+            <p key={n}>{inline(q)}</p>
+          ))}
+        </blockquote>,
+      );
       continue;
     }
     const paragraph: string[] = [line];

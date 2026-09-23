@@ -73,8 +73,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
           signal: controller.signal,
         });
         const result = await response.json();
-        if (!response.ok)
-          throw Error(result.error ?? "Quiz бэлдэж чадсангүй.");
+        if (!response.ok) throw Error(result.error ?? "Quiz бэлдэж чадсангүй.");
         const parsed = parseQuizDrafts(result);
         if (!disposed.current) setDrafts(parsed);
       } finally {
@@ -132,7 +131,9 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                   if (id === "subject") {
                     setText(
                       notes
-                        .map((r) => (r.kind === "note" ? `${r.title}\\n${r.body}` : ""))
+                        .map((r) =>
+                          r.kind === "note" ? `${r.title}\\n${r.body}` : "",
+                        )
                         .join("\\n\\n")
                         .slice(0, 12000),
                     );
@@ -147,9 +148,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
               >
                 <option value="">Текстээ оруулах</option>
                 {subject && (
-                  <option value="subject">
-                    Энэ хичээлийн тэмдэглэлүүд
-                  </option>
+                  <option value="subject">Энэ хичээлийн тэмдэглэлүүд</option>
                 )}
                 {notes.map((n) => (
                   <option value={n.id} key={n.id}>
@@ -254,7 +253,13 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                         setDrafts((ds) =>
                           ds!.map((d, j) =>
                             j === i
-                              ? { ...d, options: e.target.value.split(/\\n+/).map((v) => v.trim()).filter(Boolean) }
+                              ? {
+                                  ...d,
+                                  options: e.target.value
+                                    .split(/\\n+/)
+                                    .map((v) => v.trim())
+                                    .filter(Boolean),
+                                }
                               : d,
                           ),
                         )
@@ -300,10 +305,18 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
               </fieldset>
             ))}
             <div className="button-row">
-              <button className="button" disabled={busy} onClick={() => setDrafts(null)}>
+              <button
+                className="button"
+                disabled={busy}
+                onClick={() => setDrafts(null)}
+              >
                 Буцах
               </button>
-              <button className="button primary" disabled={busy || !drafts.length} onClick={() => void save()}>
+              <button
+                className="button primary"
+                disabled={busy || !drafts.length}
+                onClick={() => void save()}
+              >
                 Хянасан Quiz хадгалах
               </button>
             </div>

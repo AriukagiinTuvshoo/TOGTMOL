@@ -364,14 +364,28 @@ export function DataSettings() {
           <div>
             <span className="eyebrow">DATA CENTER</span>
             <h2>Өгөгдөл ба нөөц</h2>
-            <p>Өгөгдлөө татах, нэгтгэх, сэргээх болон цэвэрлэх үйлдлийг эндээс удирдана.</p>
+            <p>
+              Өгөгдлөө татах, нэгтгэх, сэргээх болон цэвэрлэх үйлдлийг эндээс
+              удирдана.
+            </p>
           </div>
-          <span className="data-scope-chip">{namespace === "guest" ? "Локал горим" : "Бүртгэлийн горим"}</span>
+          <span className="data-scope-chip">
+            {namespace === "guest" ? "Локал горим" : "Бүртгэлийн горим"}
+          </span>
         </div>
         <div className="data-metrics">
-          <div><span>Хэмжилт</span><strong>{data.sessions.filter((s) => !s.deletedAt).length}</strong></div>
-          <div><span>Хичээл</span><strong>{data.subjects.filter((s) => !s.deletedAt).length}</strong></div>
-          <div><span>Мэдлэг</span><strong>{data.knowledge.filter((r) => !r.deletedAt).length}</strong></div>
+          <div>
+            <span>Хэмжилт</span>
+            <strong>{data.sessions.filter((s) => !s.deletedAt).length}</strong>
+          </div>
+          <div>
+            <span>Хичээл</span>
+            <strong>{data.subjects.filter((s) => !s.deletedAt).length}</strong>
+          </div>
+          <div>
+            <span>Мэдлэг</span>
+            <strong>{data.knowledge.filter((r) => !r.deletedAt).length}</strong>
+          </div>
         </div>
         <div className="form-stack data-actions">
           <button
@@ -447,8 +461,8 @@ export function DataSettings() {
           <div className="data-note">
             <Icon name="info" size={16} />
             <p>
-              Өөр төхөөрөмж рүү шилжихийн өмнө бүрэн JSON нөөц татна уу.
-              Локал өгөгдлийг цэвэрлэхэд энэ төхөөрөмжийн хадгалалт арилна.
+              Өөр төхөөрөмж рүү шилжихийн өмнө бүрэн JSON нөөц татна уу. Локал
+              өгөгдлийг цэвэрлэхэд энэ төхөөрөмжийн хадгалалт арилна.
             </p>
           </div>
           {namespace === "guest" && (

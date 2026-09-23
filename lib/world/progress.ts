@@ -2,12 +2,11 @@ import { dayBoundary } from "@/lib/preferences";
 import { ROOM_REWARDS } from "@/lib/world/config";
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
 import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
+import { shiftDate, dateKey, weekStart } from "@/lib/calculations/dates";
 import {
-  shiftDate,
-  dateKey,
-  weekStart,
-} from "@/lib/calculations/dates";
-import { streakFreezeCount, streakWithFreezes } from "@/lib/calculations/analytics";
+  streakFreezeCount,
+  streakWithFreezes,
+} from "@/lib/calculations/analytics";
 export type CompanionState =
   | "idle"
   | "studying"
@@ -45,7 +44,9 @@ export function companionProgress(data: StudyData, today = dateKey()) {
     intoLevel: xp % 100,
     todayXP: dailyXP((measured.days.get(today)?.seconds ?? 0) / 60),
     studyHours,
-    roomRewards: ROOM_REWARDS.filter((reward) => studyHours >= reward.requiredHours),
+    roomRewards: ROOM_REWARDS.filter(
+      (reward) => studyHours >= reward.requiredHours,
+    ),
   };
 }
 export function companionState(

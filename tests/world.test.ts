@@ -194,9 +194,9 @@ describe("goals, real study and gentle rewards", () => {
       }),
     ];
     expect(companionProgress(d).studyHours).toBe(5);
-    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual([
-      "botanical_poster",
-    ]);
+    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual(
+      ["botanical_poster"],
+    );
 
     d.sessions.push(
       session({
@@ -208,11 +208,9 @@ describe("goals, real study and gentle rewards", () => {
       }),
     );
     expect(companionProgress(d).studyHours).toBe(10);
-    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual([
-      "botanical_poster",
-      "bookshelf",
-      "star",
-    ]);
+    expect(companionProgress(d).roomRewards.map((reward) => reward.id)).toEqual(
+      ["botanical_poster", "bookshelf", "star"],
+    );
   });
 
   it("caps daily XP at 60 and excludes manual marks and edited timing", () => {

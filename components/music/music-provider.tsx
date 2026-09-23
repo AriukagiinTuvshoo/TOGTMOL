@@ -27,8 +27,7 @@ import { uid } from "@/lib/constants";
 import type { MusicSource } from "@/types/study";
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
-const AUDIO_EXTENSIONS =
-  /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm|mp4)$/i;
+const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm|mp4)$/i;
 
 function isAudioFile(file: File) {
   return (
@@ -168,8 +167,7 @@ function useMusicController() {
   const ensureNativeAudio = (target?: MusicSource) => {
     const wantVideo = target ? isMp4Media(target) : false;
     if (nativeAudio.current) {
-      const existingIsVideo =
-        nativeAudio.current instanceof HTMLVideoElement;
+      const existingIsVideo = nativeAudio.current instanceof HTMLVideoElement;
       if (existingIsVideo === wantVideo) return nativeAudio.current;
       try {
         nativeAudio.current.pause();

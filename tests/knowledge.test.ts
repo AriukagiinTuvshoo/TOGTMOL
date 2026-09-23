@@ -17,7 +17,12 @@ import {
   searchResults,
 } from "@/lib/knowledge/index";
 import { safeLink, imageData } from "@/lib/knowledge/validation";
-import { localCardDrafts, parseCardDrafts, parseQuizDrafts, localQuizDrafts } from "@/lib/knowledge/generation";
+import {
+  localCardDrafts,
+  parseCardDrafts,
+  parseQuizDrafts,
+  localQuizDrafts,
+} from "@/lib/knowledge/generation";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { studyDate, flexibleStreak } from "@/lib/calculations/dates";
 import { reminderMessage } from "@/lib/reminders";
@@ -176,9 +181,7 @@ describe("retrieval practice", () => {
     let data = knowledgeFixture();
     const first = gradeQuiz(quiz(), { q1: "1", q2: "Үнэн", q3: "WRONG" }, NOW);
     data = saveQuizAttempt(first, NOW)(data);
-    expect(
-      knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue,
-    ).toEqual(
+    expect(knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           quizId: "quiz-1",
@@ -190,10 +193,14 @@ describe("retrieval practice", () => {
         }),
       ]),
     );
-    const second = gradeQuiz(quiz(), { q1: "4", q2: "Худал", q3: "def" }, NOW + 1);
+    const second = gradeQuiz(
+      quiz(),
+      { q1: "4", q2: "Худал", q3: "def" },
+      NOW + 1,
+    );
     data = saveQuizAttempt(second, NOW)(data);
-    const retries = knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue
-      .filter((q) => q.quizId === "quiz-1")
+    const retries = knowledgeIndex(data.knowledge, "2026-09-15")
+      .quizRetryQueue.filter((q) => q.quizId === "quiz-1")
       .map((q) => q.question.id);
     expect(retries).not.toContain("q1");
     expect(retries).not.toContain("q3");
@@ -247,7 +254,9 @@ describe("retrieval practice", () => {
       },
     ];
     expect(parseQuizDrafts({ questions })).toHaveLength(2);
-    expect(localQuizDrafts("Функц: Дахин ашиглах кодын хэсэг", 1)[0]).toMatchObject({
+    expect(
+      localQuizDrafts("Функц: Дахин ашиглах кодын хэсэг", 1)[0],
+    ).toMatchObject({
       type: "short",
       prompt: "Функц гэж юу вэ?",
       answer: "Дахин ашиглах кодын хэсэг",

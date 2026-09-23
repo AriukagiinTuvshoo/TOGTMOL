@@ -149,8 +149,8 @@ export function QuizSession({
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
-  const quizRetry = knowledgeIndex(data.knowledge, today).quizRetryQueue
-    .filter((item) => item.quizId === quiz.id)
+  const quizRetry = knowledgeIndex(data.knowledge, today)
+    .quizRetryQueue.filter((item) => item.quizId === quiz.id)
     .map((item) => item.question);
   const retryIds = new Set(quiz.questions.map((q) => q.id));
   const retryQuestions = quizRetry.filter((q) => !retryIds.has(q.id));
@@ -214,8 +214,8 @@ export function QuizSession({
         <div className="ai-consent">
           <strong>🔁 Өмнөх алдаатай асуулт</strong>
           <p className="tiny muted">
-            Энэ quiz-ийн өмнөх буруу хариултуудыг автоматаар дахин орууллаа.
-            Зөв хариулсны дараа дахин жагсаалтад орохгүй.
+            Энэ quiz-ийн өмнөх буруу хариултуудыг автоматаар дахин орууллаа. Зөв
+            хариулсны дараа дахин жагсаалтад орохгүй.
           </p>
         </div>
       )}

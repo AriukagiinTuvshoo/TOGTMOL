@@ -88,11 +88,7 @@ describe("calendar and statistics", () => {
   });
   it("uses freeze reserves across missed days without consuming today's freeze", () => {
     expect(
-      streakWithFreezes(
-        new Set(["2026-09-12", "2026-09-14"]),
-        "2026-09-15",
-        2,
-      ),
+      streakWithFreezes(new Set(["2026-09-12", "2026-09-14"]), "2026-09-15", 2),
     ).toMatchObject({
       streak: 3,
       freezesUsed: 1,
@@ -122,7 +118,12 @@ describe("calendar and statistics", () => {
     d.subjects.push(subject("js", "JavaScript"));
     d.sessions = [
       session({ date: "2026-09-10", durationSec: 3600 }),
-      session({ id: "js", subjectId: "js", date: "2026-09-11", durationSec: 1200 }),
+      session({
+        id: "js",
+        subjectId: "js",
+        date: "2026-09-11",
+        durationSec: 1200,
+      }),
       session({ id: "old", date: "2026-09-03", durationSec: 1800 }),
     ];
     const index = buildIndex(d, "2026-09-15");
@@ -130,7 +131,10 @@ describe("calendar and statistics", () => {
       seconds: 4800,
       previousSeconds: 1800,
     });
-    expect(rollingSevenDayReport(index, "2026-09-15").change).toBeCloseTo(166.6667, 3);
+    expect(rollingSevenDayReport(index, "2026-09-15").change).toBeCloseTo(
+      166.6667,
+      3,
+    );
     const balance = subjectBalance(periodStats(index, 7, "2026-09-15"));
     expect(balance.warning).toBe(true);
     expect(balance.topSubject).toBe("math");
@@ -162,7 +166,10 @@ describe("calendar and statistics", () => {
         extras: { plannedDurationSec: 1800 },
       }),
     ];
-    const result = lateSessionPattern(buildIndex(d, "2026-09-15"), "2026-09-15");
+    const result = lateSessionPattern(
+      buildIndex(d, "2026-09-15"),
+      "2026-09-15",
+    );
     expect(result).toMatchObject({
       candidates: 3,
       measured: 3,

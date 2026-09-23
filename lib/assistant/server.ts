@@ -42,7 +42,9 @@ export async function handleBondookRequest(
       const part = await reader.read();
       if (part.done) break;
       bytes += part.value.byteLength;
-      if (bytes > (kind === "cards" || kind === "quiz" ? 3 * 1024 * 1024 : 24000)) {
+      if (
+        bytes > (kind === "cards" || kind === "quiz" ? 3 * 1024 * 1024 : 24000)
+      ) {
         await reader.cancel();
         return json({ error: "Асуулт хэт урт байна." }, 413);
       }
@@ -90,7 +92,12 @@ export async function handleBondookRequest(
           ))))
   )
     return json(
-      { error: kind === "quiz" ? "Quiz үүсгэх материал болон тоог шалгана уу." : "Карт үүсгэх текст, зураг эсвэл тоог шалгана уу." },
+      {
+        error:
+          kind === "quiz"
+            ? "Quiz үүсгэх материал болон тоог шалгана уу."
+            : "Карт үүсгэх текст, зураг эсвэл тоог шалгана уу.",
+      },
       400,
     );
   try {
@@ -313,7 +320,10 @@ export async function handleBondookRequest(
       if (!text) return json({ error: "Quiz-ийн хариу хоосон байна." }, 502);
       try {
         return json({
-          questions: parseQuizDrafts(JSON.parse(text)).slice(0, Number(input.count)),
+          questions: parseQuizDrafts(JSON.parse(text)).slice(
+            0,
+            Number(input.count),
+          ),
           kind: "ai",
         });
       } catch {

@@ -103,13 +103,19 @@ function InstallPrompt({ hidden = false }: { hidden?: boolean }) {
   }, []);
   if (hidden || dismissed || !available) return null;
   return (
-    <aside className="pwa-install-prompt" aria-label="Тогтмол апп суулгах урилга">
+    <aside
+      className="pwa-install-prompt"
+      aria-label="Тогтмол апп суулгах урилга"
+    >
       <span className="pwa-install-icon" aria-hidden="true">
         <Icon name="download" size={18} />
       </span>
       <div>
         <strong>Тогтмол-оо суулгаарай</strong>
-        <p>Нүүр дэлгэцээс хурдан нээгээд offline үед ч аппын суурь хэсгийг ашиглаарай.</p>
+        <p>
+          Нүүр дэлгэцээс хурдан нээгээд offline үед ч аппын суурь хэсгийг
+          ашиглаарай.
+        </p>
       </div>
       <div className="pwa-install-actions">
         <button

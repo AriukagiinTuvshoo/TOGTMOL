@@ -140,8 +140,8 @@ export function DecisionDashboard() {
           <span className="eyebrow">DATA → ACTION</span>
           <h2>Тоо хараад зогсохгүй, дараагийн алхмаа ол.</h2>
           <p>
-            Сүүлийн өдрийн хэмнэл, хичээлийн баланс, давтагддаг хэв маягийг нэг дороос
-            хараад төлөвлөгөөгөө засна.
+            Сүүлийн өдрийн хэмнэл, хичээлийн баланс, давтагддаг хэв маягийг нэг
+            дороос хараад төлөвлөгөөгөө засна.
           </p>
         </div>
         <div className="decision-signal">
@@ -149,7 +149,10 @@ export function DecisionDashboard() {
           <strong>{freezeState.streak} өдөр</strong>
           <small>
             {freezeState.freezesUsed
-              ? freezeState.freezesUsed + " freeze ашигласан · " + freezeState.freezesRemaining + " үлдсэн"
+              ? freezeState.freezesUsed +
+                " freeze ашигласан · " +
+                freezeState.freezesRemaining +
+                " үлдсэн"
               : freezeState.freezesRemaining + " freeze нөөцтэй"}
           </small>
         </div>
@@ -163,11 +166,17 @@ export function DecisionDashboard() {
           />
           <div className="exam-countdown-body">
             <strong>
-              {examDays === null ? "—" : examDays === 0 ? "Өнөөдөр" : Math.abs(examDays)}
+              {examDays === null
+                ? "—"
+                : examDays === 0
+                  ? "Өнөөдөр"
+                  : Math.abs(examDays)}
             </strong>
             {examDays !== null && examDays !== 0 && (
               <span>
-                {examDays > 0 ? "өдөр үлдлээ" : Math.abs(examDays) + " өдөр өнгөрсөн"}
+                {examDays > 0
+                  ? "өдөр үлдлээ"
+                  : Math.abs(examDays) + " өдөр өнгөрсөн"}
               </span>
             )}
           </div>
@@ -192,8 +201,17 @@ export function DecisionDashboard() {
             title="Сүүлийн 7 хоног"
             subtitle="Өмнөх 7 хоногийн яг өмнөх 7 өдөртэй харьцуулсан."
           />
-          <div className="decision-big-number">{formatTime(comparison.seconds)}</div>
-          <div className={"decision-change " + (comparison.change !== null && comparison.change < 0 ? "down" : "")}>
+          <div className="decision-big-number">
+            {formatTime(comparison.seconds)}
+          </div>
+          <div
+            className={
+              "decision-change " +
+              (comparison.change !== null && comparison.change < 0
+                ? "down"
+                : "")
+            }
+          >
             {formatDelta(comparison.change)}
           </div>
           <div className="comparison-track">
@@ -207,7 +225,8 @@ export function DecisionDashboard() {
             </div>
           </div>
           <p className="tiny muted">
-            Суралцсан өдөр: {comparison.studyDays} · өмнөх: {comparison.previousStudyDays}
+            Суралцсан өдөр: {comparison.studyDays} · өмнөх:{" "}
+            {comparison.previousStudyDays}
           </p>
         </section>
 
@@ -233,8 +252,8 @@ export function DecisionDashboard() {
             ))}
           </div>
           <p className="tiny muted">
-            Өнөөдөр сураагүй ч өмнөх streak-ийн тасралтыг нөөцөөс хэрэглэнэ. Нөөц дуусвал
-            дараагийн тасралт streak-ийг зогсооно.
+            Өнөөдөр сураагүй ч өмнөх streak-ийн тасралтыг нөөцөөс хэрэглэнэ.
+            Нөөц дуусвал дараагийн тасралт streak-ийг зогсооно.
           </p>
         </section>
       </div>
@@ -261,11 +280,20 @@ export function DecisionDashboard() {
               {heatWeeks.map((week, wi) =>
                 week.map((ds, di) => {
                   if (!ds)
-                    return <span className="stats-heat-cell empty" key={wi + "-" + di} />;
+                    return (
+                      <span
+                        className="stats-heat-cell empty"
+                        key={wi + "-" + di}
+                      />
+                    );
                   const day = index.days.get(ds);
                   return (
                     <span
-                      className={"stats-heat-cell level-" + intensity(day) + (ds === today ? " today" : "")}
+                      className={
+                        "stats-heat-cell level-" +
+                        intensity(day) +
+                        (ds === today ? " today" : "")
+                      }
                       key={ds}
                       title={ds + " · " + formatTime(day?.seconds ?? 0)}
                       aria-label={ds + ", " + formatTime(day?.seconds ?? 0)}
@@ -302,24 +330,30 @@ export function DecisionDashboard() {
               />
               <div className="subject-balance-list">
                 {subjectRows.map(([id, seconds]) => {
-                  const share = last7.seconds ? (seconds / last7.seconds) * 100 : 0;
-                  const subject = id === "__other__" ? null : index.subjects.get(id);
+                  const share = last7.seconds
+                    ? (seconds / last7.seconds) * 100
+                    : 0;
+                  const subject =
+                    id === "__other__" ? null : index.subjects.get(id);
                   return (
                     <div key={id} className="subject-balance-row">
                       <div>
                         <span
                           className="subject-dot"
-                          style={{ background: subject?.color ?? "var(--surface-3)" }}
+                          style={{
+                            background: subject?.color ?? "var(--surface-3)",
+                          }}
                         />
                         <strong>{subject?.name ?? "Бусад"}</strong>
                       </div>
-                      <span>{share.toFixed(0)}% · {formatTime(seconds)}</span>
+                      <span>
+                        {share.toFixed(0)}% · {formatTime(seconds)}
+                      </span>
                       <div className="subject-balance-progress">
                         <span
                           style={{
                             width: share + "%",
-                            background:
-                              subject?.color ?? "var(--surface-3)",
+                            background: subject?.color ?? "var(--surface-3)",
                           }}
                         />
                       </div>
@@ -335,15 +369,21 @@ export function DecisionDashboard() {
             <div className="decision-warning" role="status">
               <strong>Тэнцвэр алдагдаж байна.</strong>
               <span>
-                {(index.subjects.get(balance.topSubject)?.name ?? "Нэг хичээл") +
-                  " нь сүүлийн 7 хоногийн хугацааны " + balance.topShare.toFixed(0) +
+                {(index.subjects.get(balance.topSubject)?.name ??
+                  "Нэг хичээл") +
+                  " нь сүүлийн 7 хоногийн хугацааны " +
+                  balance.topShare.toFixed(0) +
                   "%-ийг эзэлж байна. Дараагийн session-үүдийн нэгийг бага зарцуулсан хичээлдээ өгөхийг бодоорой."}
               </span>
             </div>
           )}
-          {!balance.warning && balance.subjects.length >= 2 && last7.seconds >= 2 * 60 && (
-            <p className="decision-good">Одоогоор нэг хичээл хэт давамгайлаагүй байна.</p>
-          )}
+          {!balance.warning &&
+            balance.subjects.length >= 2 &&
+            last7.seconds >= 2 * 60 && (
+              <p className="decision-good">
+                Одоогоор нэг хичээл хэт давамгайлаагүй байна.
+              </p>
+            )}
         </section>
 
         <section className="card decision-card behavior-card">
@@ -359,25 +399,32 @@ export function DecisionDashboard() {
                     ? "—"
                     : behavior.unfinishedPercent.toFixed(0) + "%"}
                 </strong>
-                <span>21:00–04:59 эхэлсэн төлөвлөгөөт session дутуу дууссан</span>
+                <span>
+                  21:00–04:59 эхэлсэн төлөвлөгөөт session дутуу дууссан
+                </span>
               </div>
               <p>
                 {behavior.unfinishedPercent !== null
                   ? behavior.unfinishedPercent >= 40
-                    ? "Оройн session-үүдийн " + behavior.unfinishedPercent.toFixed(0) + "% нь төлөвлөсөн хугацаандаа хүрээгүй. Оройн зорилгыг богиносгох эсвэл эхлэх цагаа урагшлуулахыг туршиж болно."
-                    : "Оройн session-үүдийн ихэнх нь төлөвлөсөн хугацаандаа хүрч байна (" + (100 - behavior.unfinishedPercent).toFixed(0) + "%)."
+                    ? "Оройн session-үүдийн " +
+                      behavior.unfinishedPercent.toFixed(0) +
+                      "% нь төлөвлөсөн хугацаандаа хүрээгүй. Оройн зорилгыг богиносгох эсвэл эхлэх цагаа урагшлуулахыг туршиж болно."
+                    : "Оройн session-үүдийн ихэнх нь төлөвлөсөн хугацаандаа хүрч байна (" +
+                      (100 - behavior.unfinishedPercent).toFixed(0) +
+                      "%)."
                   : "Төлөвлөгөөт Pomodoro session-ийн мэдээлэл одоогоор хүрэлцэхгүй байна."}
               </p>
               <small className="muted">
-                Шалгасан: {behavior.measured} төлөвлөгөөт session · нийт оройн эхлэлт {behavior.candidates}.
+                Шалгасан: {behavior.measured} төлөвлөгөөт session · нийт оройн
+                эхлэлт {behavior.candidates}.
               </small>
             </>
           ) : (
             <div className="pattern-empty">
               <strong>Одоогоор pattern хангалтгүй.</strong>
               <span>
-                Pomodoro-оо төлөвлөгөөтэй эхлүүлж хэд хэдэн session хадгалсны дараа энд бодит
-                completion pattern гарна.
+                Pomodoro-оо төлөвлөгөөтэй эхлүүлж хэд хэдэн session хадгалсны
+                дараа энд бодит completion pattern гарна.
               </span>
             </div>
           )}

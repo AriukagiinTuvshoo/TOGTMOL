@@ -235,7 +235,6 @@ export function intensity(day: DailySummary | undefined) {
   return m > 60 ? 4 : m > 40 ? 3 : m > 20 ? 2 : m > 0 ? 1 : 0;
 }
 
-
 export function streakFreezeCount(settings: StudyData["settings"]): number {
   const value = settings.extras.streakFreezeCount;
   return typeof value === "number" && Number.isInteger(value)
@@ -269,14 +268,13 @@ export function streakWithFreezes(
     freezesRemaining: reserve - used,
   };
 }
-export function longestStreakWithFreezes(
-  dates: Iterable<string>,
-  freezes = 2,
-) {
+export function longestStreakWithFreezes(dates: Iterable<string>, freezes = 2) {
   const sorted = [...new Set(dates)].sort(),
     reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
   if (!sorted.length) return 0;
-  let left = 0, gaps = 0, best = 1;
+  let left = 0,
+    gaps = 0,
+    best = 1;
   for (let right = 1; right < sorted.length; right++) {
     gaps += Math.max(
       0,
@@ -289,10 +287,7 @@ export function longestStreakWithFreezes(
       );
       left++;
     }
-    best = Math.max(
-      best,
-      datesBetween(sorted[left], sorted[right]).length,
-    );
+    best = Math.max(best, datesBetween(sorted[left], sorted[right]).length);
   }
   return best;
 }
@@ -317,18 +312,14 @@ export function rollingSevenDayReport(index: StudyIndex, today = dateKey()) {
       previousSeconds > 0
         ? ((seconds - previousSeconds) / previousSeconds) * 100
         : null,
-    studyDays: currentDates.filter(
-      (ds) => index.days.get(ds)?.subjects.size,
-    ).length,
+    studyDays: currentDates.filter((ds) => index.days.get(ds)?.subjects.size)
+      .length,
     previousStudyDays: previousDates.filter(
       (ds) => index.days.get(ds)?.subjects.size,
     ).length,
   };
 }
-export function subjectBalance(
-  stats: PeriodStats,
-  minSeconds = 2 * 60,
-) {
+export function subjectBalance(stats: PeriodStats, minSeconds = 2 * 60) {
   const rows = [...stats.bySubject]
     .filter(([, seconds]) => seconds >= minSeconds)
     .sort((a, b) => b[1] - a[1]);

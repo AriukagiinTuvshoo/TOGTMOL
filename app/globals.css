@@ -3714,18 +3714,32 @@ main {
   height: 260px;
 }
 @keyframes skeleton-shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 @media (max-width: 650px) {
-  .app-skeleton { min-height: 300px; }
-  .skeleton-metrics { grid-template-columns: 1fr 1fr; }
-  .skeleton-grid { grid-template-columns: 1fr; }
+  .app-skeleton {
+    min-height: 300px;
+  }
+  .skeleton-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
   .skeleton-panel,
-  .skeleton-panel-large { height: 150px; }
+  .skeleton-panel-large {
+    height: 150px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-block { animation: none; }
+  .skeleton-block {
+    animation: none;
+  }
 }
 
 /* PWA install invitation */
@@ -3781,7 +3795,9 @@ main {
     bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     width: auto;
   }
-  .pwa-install-prompt p { font-size: 10px; }
+  .pwa-install-prompt p {
+    font-size: 10px;
+  }
 }
 
 .room-reward-progress {
@@ -4035,10 +4051,18 @@ main {
   text-align: right;
   padding: 2px 0;
 }
-.stats-heatmap-weekdays span:nth-child(1) { grid-row: 1; }
-.stats-heatmap-weekdays span:nth-child(2) { grid-row: 3; }
-.stats-heatmap-weekdays span:nth-child(3) { grid-row: 5; }
-.stats-heatmap-weekdays span:nth-child(4) { grid-row: 7; }
+.stats-heatmap-weekdays span:nth-child(1) {
+  grid-row: 1;
+}
+.stats-heatmap-weekdays span:nth-child(2) {
+  grid-row: 3;
+}
+.stats-heatmap-weekdays span:nth-child(3) {
+  grid-row: 5;
+}
+.stats-heatmap-weekdays span:nth-child(4) {
+  grid-row: 7;
+}
 .stats-heatmap-grid {
   display: grid;
   grid-auto-flow: column;
@@ -4058,11 +4082,21 @@ main {
 .stats-heat-cell.empty {
   background: transparent;
 }
-.stats-heat-cell.level-0 { background: var(--surface-muted); }
-.stats-heat-cell.level-1 { background: color-mix(in srgb, var(--moss) 28%, var(--surface-muted)); }
-.stats-heat-cell.level-2 { background: color-mix(in srgb, var(--moss) 48%, var(--surface-muted)); }
-.stats-heat-cell.level-3 { background: color-mix(in srgb, var(--moss) 70%, var(--surface-muted)); }
-.stats-heat-cell.level-4 { background: var(--moss); }
+.stats-heat-cell.level-0 {
+  background: var(--surface-muted);
+}
+.stats-heat-cell.level-1 {
+  background: color-mix(in srgb, var(--moss) 28%, var(--surface-muted));
+}
+.stats-heat-cell.level-2 {
+  background: color-mix(in srgb, var(--moss) 48%, var(--surface-muted));
+}
+.stats-heat-cell.level-3 {
+  background: color-mix(in srgb, var(--moss) 70%, var(--surface-muted));
+}
+.stats-heat-cell.level-4 {
+  background: var(--moss);
+}
 .stats-heat-cell.today {
   border-color: var(--text);
   box-shadow: 0 0 0 1px var(--text);

@@ -166,10 +166,14 @@ export function KnowledgeEditor({
             />
           </label>
         </div>
-        {(kind === "note" || kind === "deck" || kind === "link") && (
-          kind === "note" ? (
+        {(kind === "note" || kind === "deck" || kind === "link") &&
+          (kind === "note" ? (
             <div className="knowledge-markdown-editor">
-              <div className="markdown-editor-tabs" role="tablist" aria-label="Тэмдэглэл засварлах">
+              <div
+                className="markdown-editor-tabs"
+                role="tablist"
+                aria-label="Тэмдэглэл засварлах"
+              >
                 <button
                   type="button"
                   className={preview ? "button" : "button primary"}
@@ -196,19 +200,25 @@ export function KnowledgeEditor({
                   rows={12}
                   maxLength={50000}
                   aria-label="Тэмдэглэл"
-                  placeholder={"# Гарчиг\n\n**Чухал санаа**\n\n- Нэг зүйл\n- Хоёр зүйл\n\n\x60\x60\x60python\nprint('hello')\n\x60\x60\x60"}
+                  placeholder={
+                    "# Гарчиг\n\n**Чухал санаа**\n\n- Нэг зүйл\n- Хоёр зүйл\n\n\x60\x60\x60python\nprint('hello')\n\x60\x60\x60"
+                  }
                 />
               ) : (
                 <div className="markdown-preview-panel">
                   {body.trim() ? (
                     <MarkdownView value={body} />
                   ) : (
-                    <p className="tiny muted">Энд Markdown урьдчилж харагдана.</p>
+                    <p className="tiny muted">
+                      Энд Markdown урьдчилж харагдана.
+                    </p>
                   )}
                 </div>
               )}
               <p className="tiny muted">
-                Markdown: # гарчиг · **тод** · *налуу* · - жагсаалт · 1. жагсаалт · &gt; ишлэл · \x60код\x60 · fenced code block · холбоос.
+                Markdown: # гарчиг · **тод** · *налуу* · - жагсаалт · 1.
+                жагсаалт · &gt; ишлэл · \x60код\x60 · fenced code block ·
+                холбоос.
               </p>
             </div>
           ) : (
@@ -221,8 +231,7 @@ export function KnowledgeEditor({
                 maxLength={50000}
               />
             </label>
-          )
-        )}
+          ))}
         {kind === "note" && (
           <>
             <label>

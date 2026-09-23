@@ -51,7 +51,6 @@ export function localCardDrafts(
   ];
 }
 
-
 export interface QuizDraft {
   type: "choice" | "boolean" | "short";
   prompt: string;
