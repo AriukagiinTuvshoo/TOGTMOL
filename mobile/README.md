@@ -73,6 +73,10 @@ Android — `mobile/android/app/src/main/AndroidManifest.xml` дахь main acti
 
 Supabase Dashboard → Authentication → URL Configuration → Redirect URLs-д `togtmol://auth/callback`-ийг нэм. Google provider ашиглаж байгаа бол provider-ийн callback flow мөн энэ callback-ийг зөвшөөрөхөөр тохируулна.
 
+## Device QA
+
+Real-device test matrix and expected results: [`../docs/MOBILE_QA.md`](../docs/MOBILE_QA.md).
+
 ## Release-ийн өмнө заавал хийх зүйл
 
 1. Production web domain-оо тогтоож `CAPACITOR_SERVER_URL`-д ашиглах.
