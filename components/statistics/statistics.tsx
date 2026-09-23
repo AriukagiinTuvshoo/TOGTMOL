@@ -1,7 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
-import { periodStats } from "@/lib/calculations/analytics";
+import {
+  longestStreakWithFreezes,
+  periodStats,
+  streakFreezeCount,
+} from "@/lib/calculations/analytics";
 import {
   dateLabel,
   formatTime,
@@ -14,6 +18,7 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
+import { DecisionDashboard } from "./decision-dashboard";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
@@ -64,6 +69,7 @@ export function Statistics() {
     ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
   return (
     <div className="stack">
+      <DecisionDashboard />
       <div className="filter-row">
         <div className="segmented">
           {(["today", "week", "month", 7, 30, 90, 365, "all"] as const).map(
@@ -146,7 +152,10 @@ export function Statistics() {
           label="Хамгийн урт дараалал"
           value={
             <>
-              {stats.longestStreak}
+              {longestStreakWithFreezes(
+                stats.days.filter((d) => d.subjects.size).map((d) => d.date),
+                streakFreezeCount(data.settings),
+              )}
               <small>өдөр</small>
             </>
           }
