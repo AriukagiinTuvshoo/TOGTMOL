@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "verify:supabase:production": "node scripts/verify-supabase-production.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",
