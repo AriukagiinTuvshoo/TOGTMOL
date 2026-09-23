@@ -185,7 +185,7 @@ function Shell() {
               onClick={() => go(n.view)}
             >
               <Icon name={n.icon} />
-              {t(n.key)}
+              {t(n.key as TranslationKey)}
               {n.view === "assistant" && (
                 <span className="nav-tag" aria-hidden="true">
                   LOCAL
@@ -364,7 +364,7 @@ function Shell() {
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
-                {t(n.key)}
+                {t(n.key as TranslationKey)}
               </button>
             ))}
           </nav>
@@ -384,7 +384,7 @@ function Shell() {
             onClick={() => go(n.view as View)}
           >
             <Icon name={n.icon} size={21} />
-            <span>{t(n.key)}</span>
+            <span>{t(n.key as TranslationKey)}</span>
           </button>
         ))}
         <button aria-expanded={more} onClick={() => setMore(!more)}>
