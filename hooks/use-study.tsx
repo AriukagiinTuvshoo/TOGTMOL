@@ -40,22 +40,17 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       store.getServerSnapshot,
     );
   const [view, setView] = useState<View>("overview"),
-    [today, setToday] = useState(() =>
-      studyDate(
-        new Date(),
-        dayBoundary(store.getSnapshot().data.settings),
-        calendarTimeZone(store.getSnapshot().data),
-      ),
-    ),
+    [nowTick, setNowTick] = useState(() => Date.now()),
     [notice, setNotice] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
   const [undo, setUndo] = useState<(() => Promise<void>) | null>(null);
   const { subjects, sessions, entries, settings } = state.data;
   const boundary = dayBoundary(settings);
   const timeZone = calendarTimeZone(state.data);
-  useEffect(() => {
-    setToday(studyDate(new Date(), boundary, timeZone));
-  }, [boundary, timeZone]);
+  const today = useMemo(
+    () => studyDate(new Date(nowTick), boundary, timeZone),
+    [nowTick, boundary, timeZone],
+  );
   const index = useMemo(
     () =>
       buildIndex({ subjects, sessions, entries } as StudyData, today, boundary),
@@ -64,27 +59,11 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void store.initialize();
     const refresh = () => {
-      setToday(
-        studyDate(
-          new Date(),
-          dayBoundary(store.getSnapshot().data.settings),
-          calendarTimeZone(store.getSnapshot().data),
-        ),
-      );
+      setNowTick(Date.now());
       void store.reload().catch(store.reportError);
     };
     window.addEventListener("focus", refresh);
-    const id = setInterval(
-      () =>
-        setToday(
-          studyDate(
-          new Date(),
-          dayBoundary(store.getSnapshot().data.settings),
-          calendarTimeZone(store.getSnapshot().data),
-        ),
-        ),
-      30000,
-    );
+    const id = setInterval(() => setNowTick(Date.now()), 30000);
     return () => {
       clearInterval(id);
       window.removeEventListener("focus", refresh);
