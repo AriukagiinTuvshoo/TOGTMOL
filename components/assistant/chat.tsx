@@ -263,14 +263,14 @@ export function BondookChat() {
         )}
         <div className="chat-quick-actions">
           {[
-            "Зорилго төлөвлөе",
-            "Долоо хоногоо харъя",
-            "Өнөөдөр юу хийх вэ?",
-            "Тэмдэглэлээ дүгнэе",
-            "Хуваарь маань бодитой юу?",
-            "Картаа давтъя",
-            "Энэ сэдвийг энгийнээр тайлбарла",
-            "Шалгалтын өмнөх 7 хоногийн давтлагын төлөвлөгөө гарга",
+            t("assistant.plan"),
+            t("assistant.week"),
+            t("assistant.today"),
+            t("assistant.reviewNotes"),
+            t("assistant.realistic"),
+            t("assistant.cards"),
+            t("assistant.explain"),
+            t("assistant.examPlan"),
           ].map((q) => (
             <button
               className="button small"
@@ -368,11 +368,11 @@ export function BondookChat() {
           }}
         >
           <input
-            aria-label="Бондоокт бичих"
+            aria-label={t("assistant.send")}
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={1500}
-            placeholder="Жишээ: Энэ долоо хоног ямар байсан бэ?"
+            placeholder={language === "en" ? t("assistant.sendPlaceholderEn") : t("assistant.sendPlaceholder")}
             disabled={busy || changingAI}
           />
           <button
@@ -384,9 +384,7 @@ export function BondookChat() {
           </button>
         </form>
         <p className="tiny muted">
-          {online
-            ? "{t("assistant.onlineWarning")}"
-            : "{t("assistant.localDescription")}"}{" "}
+          {online ? t("assistant.onlineWarning") : t("assistant.localDescription")}{" "}
           Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана.
         </p>
       </section>
