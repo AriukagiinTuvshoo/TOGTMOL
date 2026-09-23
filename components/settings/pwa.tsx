@@ -12,7 +12,7 @@ interface InstallEvent extends Event {
 }
 let promptEvent: InstallEvent | null = null;
 export function PwaManager() {
-  const { data, store, setNotice } = useStudy();
+  const { data, store, setNotice, view } = useStudy();
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production")
       void navigator.serviceWorker
@@ -88,7 +88,57 @@ export function PwaManager() {
       clearInterval(id);
     };
   }, [store, data.settings, setNotice]);
-  return null;
+  return <InstallPrompt hidden={view === "settings"} />;
+}
+
+function InstallPrompt({ hidden = false }: { hidden?: boolean }) {
+  const [available, setAvailable] = useState(false),
+    [dismissed, setDismissed] = useState(false),
+    { setNotice } = useStudy();
+  useEffect(() => {
+    const update = () => setAvailable(Boolean(promptEvent));
+    update();
+    window.addEventListener("togtmol-install-ready", update);
+    return () => window.removeEventListener("togtmol-install-ready", update);
+  }, []);
+  if (hidden || dismissed || !available) return null;
+  return (
+    <aside className="pwa-install-prompt" aria-label="Тогтмол апп суулгах урилга">
+      <span className="pwa-install-icon" aria-hidden="true">
+        <Icon name="download" size={18} />
+      </span>
+      <div>
+        <strong>Тогтмол-оо суулгаарай</strong>
+        <p>Нүүр дэлгэцээс хурдан нээгээд offline үед ч аппын суурь хэсгийг ашиглаарай.</p>
+      </div>
+      <div className="pwa-install-actions">
+        <button
+          className="button primary small"
+          onClick={async () => {
+            if (!promptEvent) return;
+            await promptEvent.prompt();
+            const choice = await promptEvent.userChoice;
+            promptEvent = null;
+            setAvailable(false);
+            setNotice(
+              choice.outcome === "accepted"
+                ? "Тогтмол суулгалтыг эхлүүллээ."
+                : "Суулгалтыг дараа нь Тохиргоо хэсгээс эхлүүлж болно.",
+            );
+          }}
+        >
+          Суулгах
+        </button>
+        <button
+          className="icon-button"
+          aria-label="Суулгах урилгыг хаах"
+          onClick={() => setDismissed(true)}
+        >
+          <Icon name="close" size={17} />
+        </button>
+      </div>
+    </aside>
+  );
 }
 export function InstallButton() {
   const [available, setAvailable] = useState(false),
