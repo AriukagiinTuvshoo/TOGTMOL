@@ -344,6 +344,10 @@ function Shell() {
             <Icon name="leaf" size={15} />
             <span>Өнөөдөр бага байсан ч ахиц.</span>
             <span>Тогтмол v6.0</span>
+            <span className="legal-links">
+              <a href="/privacy">Нууцлал</a>
+              <a href="/terms">Нөхцөл</a>
+            </span>
           </footer>
         </main>
       </div>
