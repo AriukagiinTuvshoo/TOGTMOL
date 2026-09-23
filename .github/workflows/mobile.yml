@@ -26,7 +26,6 @@ jobs:
           node-version: 24
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx cap --version
-      - run: npx cap doctor
 
   native-skeleton:
     if: github.event_name == 'pull_request' && github.head_ref == 'setup/capacitor-mobile-wrapper'
@@ -76,3 +75,33 @@ jobs:
           git rm -f .github/workflows/native-bootstrap.yml || true
           git commit -m "feat: bootstrap native Capacitor projects [skip-native-bootstrap]"
           git push origin "HEAD:$BRANCH"
+
+  android-build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build Android debug APK
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+  ios-tooling:
+    if: github.event_name == 'pull_request'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npx cap doctor
