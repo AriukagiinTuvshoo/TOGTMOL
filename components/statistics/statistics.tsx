@@ -17,7 +17,7 @@ import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { calendarTimeZone, calendarWeekStartsOn, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
 export function Statistics() {
   const { data, index, today } = useStudy(),
-    weekStartsOn = calendarWeekStartsOn(data);
+    weekStartsOn = calendarWeekStartsOn(data),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -36,7 +36,7 @@ export function Statistics() {
         today,
         subject || undefined,
       ),
-    [index, period, today, subject],
+    [index, period, today, subject, weekStartsOn],
   );
   const groups = new Map<string, number>();
   const knowledge = knowledgeStatistics(
