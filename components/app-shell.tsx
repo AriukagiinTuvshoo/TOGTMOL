@@ -67,7 +67,7 @@ const titles: Record<View, string> = {
   privacy: "Нууцлал ба өгөгдөл",
 };
 function Shell() {
-  const { view, navigate, today, store, notice, run, undo, selectedRecord } =
+  const { view, navigate, today, store, notice, run, undo, selectedRecord, data } =
       useStudy(),
     state = useStoreState(),
     { status, user } = useAccount(),
