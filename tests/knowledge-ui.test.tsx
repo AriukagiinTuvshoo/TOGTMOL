@@ -56,7 +56,7 @@ function navigate(name: string) {
   );
 }
 describe("knowledge flows", () => {
-  it("creates a searchable note, opens it with Ctrl K, soft-deletes and restores using undo", async () => {
+  it("creates a searchable note, opens it with Ctrl K, soft-deletes and restores from trash", async () => {
     await boot();
     navigate("Миний мэдлэг");
     const add = await screen.findByRole("group", { name: "Мэдлэг нэмэх" });
@@ -95,7 +95,12 @@ describe("knowledge flows", () => {
     fireEvent.click(
       within(detail).getByRole("button", { name: "Хогийн саванд шилжүүлэх" }),
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Буцаах" }));
+    fireEvent.click(
+      within(
+        screen.getByRole("navigation", { name: "Мэдлэгийн төрөл" }),
+      ).getByRole("button", { name: "Хогийн сав" }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Сэргээх" }));
     await waitFor(async () => {
       const repo = new Repository();
       const saved = await repo.load("guest");
@@ -193,9 +198,16 @@ describe("knowledge flows", () => {
     );
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: "AI боловсруулалтыг унтраах" }),
-      ).toBeDisabled(),
+        screen.getByText("Онлайн Бондоокт зөвшөөрөл өгөөгүй."),
+      ).toBeVisible(),
     );
+    const repo = new Repository();
+    await waitFor(async () => {
+      expect((await repo.load("guest"))?.data.settings.extras.aiEnabled).toBe(
+        false,
+      );
+    });
+    await repo.close();
     navigate("Суралцах туслах");
     await waitFor(() =>
       expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
