@@ -597,7 +597,13 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
           >
             <Icon name="edit" size={15} />
-            {showNote ? "{language === "en" ? "Hide note" : "Тэмдэглэл хураах"}" : "{language === "en" ? "Take a note" : "Тэмдэглэл бичих"}"}
+            {showNote
+              ? language === "en"
+                ? "Hide note"
+                : "Тэмдэглэл хураах"
+              : language === "en"
+                ? "Take a note"
+                : "Тэмдэглэл бичих"}
           </button>
         )}
         {compact &&
@@ -657,7 +663,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         <aside className="stack">
           <section className="card">
             <div className="eyebrow">{language === "en" ? "CAPTURE WHAT YOU LEARN" : "СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ"}</div>
-            <h2>Өнөөдрийн тэмдэглэл</h2>
+            <h2>{language === "en" ? "Today’s note" : "Өнөөдрийн тэмдэглэл"}</h2>
             <label className="sr-only" htmlFor="timer-note">
               {language === "en" ? "What did you learn?" : "Юу сурсан бэ?"}
             </label>
@@ -697,19 +703,23 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             )}
             <p className="tiny muted">
               {t
-                ? "Тэмдэглэл түр хадгалагдана. Save result дарж түүхдээ оруулна."
-                : "Timer эхэлсний дараа тэмдэглэл бичээрэй."}
+                ? language === "en"
+                  ? "The note is auto-saved. Use Save result to add it to your history."
+                  : "Тэмдэглэл түр хадгалагдана. Save result дарж түүхдээ оруулна."
+                : language === "en"
+                  ? "Start the timer before writing a note."
+                  : "Timer эхэлсний дараа тэмдэглэл бичээрэй."}
             </p>
           </section>
           {!compact && (
             <section className="quote-card">
               <Icon name="leaf" size={30} />
               <p>
-                Тогтмол байдал
+                {language === "en" ? "Consistency" : "Тогтмол байдал"}
                 <br />
-                жижиг алхмаас эхэлдэг.
+                {language === "en" ? "starts with small steps." : "жижиг алхмаас эхэлдэг."}
               </p>
-              <span>НЭГ ӨДӨР. НЭГ АЛХАМ.</span>
+              <span>{language === "en" ? "ONE DAY. ONE STEP." : "НЭГ ӨДӨР. НЭГ АЛХАМ."}</span>
             </section>
           )}
         </aside>
