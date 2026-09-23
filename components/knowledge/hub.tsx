@@ -291,6 +291,14 @@ export function KnowledgeHub() {
             <Empty
               title="Хэмжилт олдсонгүй"
               description="Хичээлээ дуусгаж хадгалахад энд харагдана."
+              action={
+                <button
+                  className="button primary"
+                  onClick={() => navigate("timer")}
+                >
+                  Эндээс эхлэх <Icon name="play" size={16} />
+                </button>
+              }
             />
           )}
         </section>
