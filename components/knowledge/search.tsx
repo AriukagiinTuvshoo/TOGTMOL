@@ -112,10 +112,11 @@ const COMMANDS: {
 function matchesCommand(
   command: (typeof COMMANDS)[number],
   query: string,
+  labelText: string,
   language: "mn" | "en",
 ) {
   const text = [
-    command.label,
+    labelText,
     language === "en" ? command.hintEn : command.hintMn,
     ...command.keywords,
   ]
@@ -148,9 +149,11 @@ export function GlobalSearch() {
   );
   const deferred = useDeferredValue(query);
   const commands = useMemo(
-    () => COMMANDS.filter((command) => matchesCommand(command, deferred, language)),
-    [deferred, language],
-    [deferred],
+    () =>
+      COMMANDS.filter((command) =>
+        matchesCommand(command, deferred, t(command.label), language),
+      ),
+    [deferred, language, t],
   );
   const results = searchResults(index, deferred, {}, 40);
 
@@ -194,18 +197,15 @@ export function GlobalSearch() {
       <button
         className="global-search-button"
         onClick={() => setOpen(true)}
-        aria-label="Бүх мэдээллээс хайх"
+        aria-label={t("search.open")}
         aria-keyshortcuts="Meta+K Control+K"
       >
         <Icon name="search" size={18} />
-        <span>Хайх</span>
+        <span>{t("common.search")}</span>
         <kbd>⌘ / Ctrl K</kbd>
       </button>
       {open && (
-        <Modal
-          title="Шуурхай команд ба хайлт"
-          onClose={closePalette}
-        >
+        <Modal title={t("search.quick")} onClose={closePalette}>
           <div className="command-palette-hint">
             <span>⌘K / Ctrl K</span>
             <small>{t("search.hint")}</small>
@@ -223,7 +223,7 @@ export function GlobalSearch() {
           </label>
 
           {commands.length > 0 && (
-            <section className="command-palette-section" aria-label="Шуурхай команд">
+            <section className="command-palette-section" aria-label={t("search.quickCommands")}>
               <div className="command-palette-section-title">{t("search.quickCommands")}</div>
               <div className="command-palette-commands" role="listbox">
                 {commands.map((command, index) => (
@@ -274,10 +274,7 @@ export function GlobalSearch() {
                 </button>
               ))}
               {!results.length && (
-                <p className="command-palette-no-results">
-                  Хайлтад тохирох бичлэг алга. Дээрх командаас нэгийг сонгоод
-                  шууд нээгээрэй.
-                </p>
+                <p className="command-palette-no-results">{t("search.noResults")}</p>
               )}
             </div>
           </section>
