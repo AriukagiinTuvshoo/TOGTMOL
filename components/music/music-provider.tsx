@@ -27,10 +27,22 @@ import { uid } from "@/lib/constants";
 import type { MusicSource } from "@/types/study";
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
-const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm)$/i;
+const AUDIO_EXTENSIONS =
+  /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm|mp4)$/i;
 
 function isAudioFile(file: File) {
-  return file.type.startsWith("audio/") || AUDIO_EXTENSIONS.test(file.name);
+  return (
+    file.type.startsWith("audio/") ||
+    file.type === "video/mp4" ||
+    AUDIO_EXTENSIONS.test(file.name)
+  );
+}
+
+function isMp4Media(target: MusicSource) {
+  return (
+    target.mimeType === "video/mp4" ||
+    /\.mp4(?:$|[?#])/i.test(target.audioUrl ?? "")
+  );
 }
 
 function sourceTrack(
@@ -117,7 +129,7 @@ function useMusicController() {
   const ambient = useRef<AmbientPlayer | null>(null);
   const youtube = useRef<YTPlayer | null>(null);
   const adapter = useRef<MusicAdapter | null>(null);
-  const nativeAudio = useRef<HTMLAudioElement | null>(null);
+  const nativeAudio = useRef<HTMLMediaElement | null>(null);
   const nativeSourceId = useRef<string | null>(null);
   const nativeObjectURL = useRef<string | null>(null);
 
@@ -153,9 +165,34 @@ function useMusicController() {
     setError(message);
   };
 
-  const ensureNativeAudio = () => {
-    if (nativeAudio.current) return nativeAudio.current;
-    const element = new Audio();
+  const ensureNativeAudio = (target?: MusicSource) => {
+    const wantVideo = target ? isMp4Media(target) : false;
+    if (nativeAudio.current) {
+      const existingIsVideo =
+        nativeAudio.current instanceof HTMLVideoElement;
+      if (existingIsVideo === wantVideo) return nativeAudio.current;
+      try {
+        nativeAudio.current.pause();
+      } catch {}
+      nativeAudio.current.removeAttribute("src");
+      nativeAudio.current.load();
+      nativeAudio.current = null;
+    }
+    const element = wantVideo
+      ? document.createElement("video")
+      : new Audio();
+    if (wantVideo) {
+      element.playsInline = true;
+      element.controls = false;
+      element.setAttribute("aria-hidden", "true");
+      element.style.position = "fixed";
+      element.style.width = "1px";
+      element.style.height = "1px";
+      element.style.opacity = "0";
+      element.style.pointerEvents = "none";
+      element.style.left = "-10000px";
+      document.body.appendChild(element);
+    }
     element.preload = "metadata";
     try {
       const audioSession = (
@@ -183,7 +220,7 @@ function useMusicController() {
     resumePosition: number,
   ) => {
     if (target.kind !== "audio") throw Error("Аудио эх сурвалж буруу.");
-    const element = ensureNativeAudio();
+    const element = ensureNativeAudio(target);
     const targetId = target.id;
     let nextURL = target.audioUrl ?? "";
     if (target.audioStorageKey) {
@@ -760,6 +797,9 @@ function useMusicController() {
         nativeAudio.current?.pause();
         nativeAudio.current?.removeAttribute("src");
         nativeAudio.current?.load();
+        if (nativeAudio.current instanceof HTMLVideoElement) {
+          nativeAudio.current.remove();
+        }
       } catch {}
       revokeNativeURL();
       nativeSourceId.current = null;
