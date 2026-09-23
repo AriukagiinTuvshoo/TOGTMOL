@@ -374,7 +374,13 @@ export function StudyCalendar({
               })}
             {!scheduleSessions.length && (
               <div className="calendar-empty-state">
-                📭 Одоогоор session бүртгэгдээгүй байна.
+                <p>📭 Одоогоор session бүртгэгдээгүй байна.</p>
+                <button
+                  className="button primary small"
+                  onClick={() => navigate("timer")}
+                >
+                  Эндээс эхлэх
+                </button>
               </div>
             )}
           </div>
