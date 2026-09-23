@@ -175,7 +175,7 @@ function Shell() {
           </span>
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
-        <nav aria-label="Үндсэн цэс">
+        <nav aria-label={t("shell.mySpace")}>
           {NAV.map((n) => (
             <button
               key={n.view}
@@ -230,7 +230,7 @@ function Shell() {
           </div>
           <div className="topbar-right">
             {state.ready && (
-              <ModuleBoundary name="Хайлт">
+              <ModuleBoundary name={t("common.search")}>
                 <GlobalSearch />
               </ModuleBoundary>
             )}
@@ -357,24 +357,24 @@ function Shell() {
             onClick={() => setMore(false)}
             aria-label="Нэмэлт цэс хаах"
           />
-          <nav aria-label="Нэмэлт цэс">
+          <nav aria-label={t("nav.more")}>
             {NAV.filter(
               (n) => !["overview", "knowledge", "assistant"].includes(n.view),
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
-                {n.label}
+                {t(n.key as never)}
               </button>
             ))}
           </nav>
         </div>
       )}
-      <nav className="mobile-nav" aria-label="Гар утасны цэс">
+      <nav className="mobile-nav" aria-label={t("nav.more")}>
         {[
-          { view: "overview", label: "Нүүр", icon: "home" },
-          { view: "knowledge", label: "Мэдлэг", icon: "book" },
-          { view: "timer", label: "Төвлөрөх", icon: "play" },
-          { view: "assistant", label: "Бондоок", icon: "spark" },
+          { view: "overview", key: "nav.home", icon: "home" },
+          { view: "knowledge", key: "nav.knowledgeShort", icon: "book" },
+          { view: "timer", key: "nav.focus", icon: "play" },
+          { view: "assistant", key: "nav.bondook", icon: "spark" },
         ].map((n) => (
           <button
             key={n.view}
@@ -383,12 +383,12 @@ function Shell() {
             onClick={() => go(n.view as View)}
           >
             <Icon name={n.icon} size={21} />
-            <span>{n.label}</span>
+            <span>{t(n.key as never)}</span>
           </button>
         ))}
         <button aria-expanded={more} onClick={() => setMore(!more)}>
           <Icon name="more" size={21} />
-          <span>Бусад</span>
+          <span>{t("nav.more")}</span>
         </button>
       </nav>
       <div className="toast-region" aria-live="polite" aria-atomic="true">
