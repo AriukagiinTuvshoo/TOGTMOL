@@ -26,6 +26,8 @@ jobs:
           node-version: 24
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npx cap --version
+      - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync android
+      - run: npx cap doctor
 
   native-skeleton:
     if: github.event_name == 'pull_request' && github.head_ref == 'setup/capacitor-mobile-wrapper'
@@ -88,6 +90,7 @@ jobs:
         with:
           node-version: 24
       - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync android
       - name: Build Android debug APK
         working-directory: mobile/android
         run: ./gradlew assembleDebug --no-daemon
@@ -104,4 +107,5 @@ jobs:
         with:
           node-version: 24
       - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: CAPACITOR_SERVER_URL=https://togtmol.vercel.app npx cap sync ios
       - run: npx cap doctor
