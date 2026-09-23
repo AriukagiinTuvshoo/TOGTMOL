@@ -452,7 +452,11 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).toBeChecked(),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
+  const weekButton = screen.getByRole("button", {
+    name: "Долоо хоногоо харъя",
+  });
+  await waitFor(() => expect(weekButton).toBeEnabled());
+  fireEvent.click(weekButton);
 
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
