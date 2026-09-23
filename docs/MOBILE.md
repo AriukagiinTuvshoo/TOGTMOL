@@ -29,6 +29,8 @@ Native deep-link registration is now checked in: iOS registers `togtmol` in `Inf
 
 ## Phase 3 — device QA
 
+Detailed test cases and expected results are in [`docs/MOBILE_QA.md`](./MOBILE_QA.md).
+
 Verify on real devices:
 
 - email signup/confirmation/login/recovery
