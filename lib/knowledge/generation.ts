@@ -82,7 +82,7 @@ export function parseQuizDrafts(input: unknown): QuizDraft[] {
     const options = Array.isArray(q.options)
       ? q.options
           .filter((v: unknown): v is string => typeof v === "string")
-          .map((v) => v.trim())
+          .map((v: string) => v.trim())
           .filter(Boolean)
       : [];
     if (
