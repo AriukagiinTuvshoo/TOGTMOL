@@ -14,6 +14,8 @@ import { RecoveryPanel } from "./settings/recovery";
 import { GlobalSearch } from "./knowledge/search";
 import { StudyRoom } from "./world/study-room";
 import { MusicPlayer, MusicProvider } from "./music/music-player";
+import { LanguageProvider, useI18n } from "./i18n/language-provider";
+import { LanguageSwitcher } from "./i18n/language-switcher";
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
   { loading: () => <p role="status">Мэдлэгийн санг нээж байна…</p> },
@@ -38,35 +40,36 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
-const NAV: { view: View; label: string; icon: string }[] = [
-  { view: "overview", label: "Миний өрөө", icon: "home" },
-  { view: "knowledge", label: "Миний мэдлэг", icon: "book" },
-  { view: "calendar", label: "Календарь", icon: "calendar" },
-  { view: "subjects", label: "Хичээлүүд", icon: "book" },
-  { view: "statistics", label: "Статистик", icon: "chart" },
-  { view: "goals", label: "Зорилго", icon: "target" },
-  { view: "achievements", label: "Амжилт", icon: "award" },
-  { view: "assistant", label: "Суралцах туслах", icon: "spark" },
-  { view: "room", label: "Өрөөний загвар", icon: "sun" },
-  { view: "privacy", label: "Нууцлал ба өгөгдөл", icon: "shield" },
-  { view: "settings", label: "Тохиргоо", icon: "settings" },
+const NAV: { view: View; key: string; icon: string }[] = [
+  { view: "overview", key: "nav.overview", icon: "home" },
+  { view: "knowledge", key: "nav.knowledge", icon: "book" },
+  { view: "calendar", key: "nav.calendar", icon: "calendar" },
+  { view: "subjects", key: "nav.subjects", icon: "book" },
+  { view: "statistics", key: "nav.statistics", icon: "chart" },
+  { view: "goals", key: "nav.goals", icon: "target" },
+  { view: "achievements", key: "nav.achievements", icon: "award" },
+  { view: "assistant", key: "nav.assistant", icon: "spark" },
+  { view: "room", key: "nav.room", icon: "sun" },
+  { view: "privacy", key: "nav.privacy", icon: "shield" },
+  { view: "settings", key: "nav.settings", icon: "settings" },
 ];
-const titles: Record<View, string> = {
-  overview: "Миний өдөр",
-  timer: "Төвлөрөх цаг",
-  calendar: "Суралцах календарь",
-  subjects: "Миний хичээлүүд",
-  statistics: "Таны ахиц, тоогоор",
-  goals: "Миний зорилго",
-  achievements: "Таны жижиг ялалтууд",
-  assistant: "Суралцах туслах",
-  settings: "Өөрийн хэмнэлээр",
-  room: "Таны жижиг ертөнц",
-  focus: "Төвлөрөх орон зай",
-  knowledge: "Миний мэдлэг",
-  privacy: "Нууцлал ба өгөгдөл",
+const TITLE_KEYS: Record<View, string> = {
+  overview: "page.overview",
+  timer: "page.timer",
+  calendar: "page.calendar",
+  subjects: "page.subjects",
+  statistics: "page.statistics",
+  goals: "page.goals",
+  achievements: "page.achievements",
+  assistant: "page.assistant",
+  settings: "page.settings",
+  room: "page.room",
+  focus: "page.focus",
+  knowledge: "page.knowledge",
+  privacy: "page.privacy",
 };
 function Shell() {
+  const { t } = useI18n();
   const {
       view,
       navigate,
@@ -171,7 +174,7 @@ function Shell() {
             тогтмол<span className="brand-version">STUDY WORLD · 06</span>
           </span>
         </button>
-        <div className="nav-caption">МИНИЙ ОРОН ЗАЙ</div>
+        <div className="nav-caption">{t("shell.mySpace")}</div>
         <nav aria-label="Үндсэн цэс">
           {NAV.map((n) => (
             <button
@@ -210,7 +213,7 @@ function Shell() {
                   : (user?.email?.split("@")[0] ?? "Миний бүртгэл")}
               </strong>
               <small>
-                {state.namespace === "guest" ? "Локал горим" : "Бүртгэлтэй"}
+                {state.namespace === "guest" ? t("shell.localStorage") : t("shell.account")}
               </small>
             </span>
             <Icon name="settings" size={17} />
@@ -222,7 +225,7 @@ function Shell() {
           <div className="breadcrumbs">
             <span className="mobile-brand">тогтмол</span>
             <span className="desktop-breadcrumb">
-              Миний орон зай <span>/</span> {titles[view]}
+              {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view] as never)}
             </span>
           </div>
           <div className="topbar-right">
@@ -241,7 +244,7 @@ function Shell() {
             </span>
             <button
               className="icon-button"
-              aria-label="Тохиргоо нээх"
+              aria-label={t("shell.settings")}
               onClick={() => go("settings")}
             >
               <Icon name="user" size={20} />
@@ -254,7 +257,7 @@ function Shell() {
           >
             <div>
               <span className="eyebrow">{today.replaceAll("-", ".")}</span>
-              <h1>{titles[view]}</h1>
+              <h1>{t(TITLE_KEYS[view] as never)}</h1>
             </div>
             <TimerWatch />
           </div>
@@ -342,7 +345,7 @@ function Shell() {
           )}
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
-            <span>Өнөөдөр бага байсан ч ахиц.</span>
+            <span>{t("shell.footer1")}</span>
             <span>Тогтмол v6.0</span>
           </footer>
         </main>
