@@ -16,6 +16,7 @@ import { StudyRoom } from "./world/study-room";
 import { MusicPlayer, MusicProvider } from "./music/music-player";
 import { LanguageProvider, useI18n } from "./i18n/language-provider";
 import { LanguageSwitcher } from "./i18n/language-switcher";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
   { loading: () => <p role="status">{t("common.loading")}</p> },
@@ -40,7 +41,7 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
-const NAV: { view: View; key: string; icon: string }[] = [
+const NAV: { view: View; key: TranslationKey; icon: string }[] = [
   { view: "overview", key: "nav.overview", icon: "home" },
   { view: "knowledge", key: "nav.knowledge", icon: "book" },
   { view: "calendar", key: "nav.calendar", icon: "calendar" },
@@ -53,7 +54,7 @@ const NAV: { view: View; key: string; icon: string }[] = [
   { view: "privacy", key: "nav.privacy", icon: "shield" },
   { view: "settings", key: "nav.settings", icon: "settings" },
 ];
-const TITLE_KEYS: Record<View, string> = {
+const TITLE_KEYS: Record<View, TranslationKey> = {
   overview: "page.overview",
   timer: "page.timer",
   calendar: "page.calendar",
@@ -225,7 +226,7 @@ function Shell() {
           <div className="breadcrumbs">
             <span className="mobile-brand">тогтмол</span>
             <span className="desktop-breadcrumb">
-              {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view] as never)}
+              {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view])}
             </span>
           </div>
           <div className="topbar-right">
@@ -257,7 +258,7 @@ function Shell() {
           >
             <div>
               <span className="eyebrow">{today.replaceAll("-", ".")}</span>
-              <h1>{t(TITLE_KEYS[view] as never)}</h1>
+              <h1>{t(TITLE_KEYS[view])}</h1>
             </div>
             <TimerWatch />
           </div>
@@ -346,7 +347,7 @@ function Shell() {
           <footer className="page-footer">
             <Icon name="leaf" size={15} />
             <span>{t("shell.footer1")}</span>
-            <span>Тогтмол v6.0</span>
+            <span>TOGTMOL v7</span>
           </footer>
         </main>
       </div>
@@ -363,7 +364,7 @@ function Shell() {
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
-                {t(n.key as never)}
+                {t(n.key)}
               </button>
             ))}
           </nav>
@@ -383,7 +384,7 @@ function Shell() {
             onClick={() => go(n.view as View)}
           >
             <Icon name={n.icon} size={21} />
-            <span>{t(n.key as never)}</span>
+            <span>{t(n.key)}</span>
           </button>
         ))}
         <button aria-expanded={more} onClick={() => setMore(!more)}>
