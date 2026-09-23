@@ -234,3 +234,145 @@ export function intensity(day: DailySummary | undefined) {
   const m = (day?.seconds ?? 0) / 60;
   return m > 60 ? 4 : m > 40 ? 3 : m > 20 ? 2 : m > 0 ? 1 : 0;
 }
+export function streakFreezeCount(settings: StudyData["settings"]): number {
+  const value = settings.extras.streakFreezeCount;
+  return typeof value === "number" && Number.isInteger(value)
+    ? Math.max(1, Math.min(2, value))
+    : 2;
+}
+export function streakWithFreezes(
+  dates: Set<string>,
+  today: string,
+  freezes = 2,
+) {
+  const reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
+  let current = today,
+    streak = 0,
+    used = 0;
+  const oldest = [...dates].sort()[0];
+  if (!oldest) return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
+  while (current >= oldest) {
+    if (dates.has(current)) {
+      streak++;
+    } else if (used < reserve) {
+      used++;
+      streak++;
+    } else {
+      break;
+    }
+    current = shiftDate(current, -1);
+  }
+  if (streak <= used)
+    return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
+  return {
+    streak,
+    freezesUsed: used,
+    freezesRemaining: reserve - used,
+  };
+}
+export function longestStreakWithFreezes(
+  dates: Iterable<string>,
+  freezes = 2,
+) {
+  const sorted = [...new Set(dates)].sort(),
+    reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
+  if (!sorted.length) return 0;
+  let left = 0,
+    gaps = 0,
+    best = 1;
+  for (let right = 1; right < sorted.length; right++) {
+    gaps += Math.max(
+      0,
+      datesBetween(sorted[right - 1], sorted[right]).length - 2,
+    );
+    while (gaps > reserve && left < right) {
+      gaps -= Math.max(
+        0,
+        datesBetween(sorted[left], sorted[left + 1]).length - 2,
+      );
+      left++;
+    }
+    best = Math.max(
+      best,
+      datesBetween(sorted[left], sorted[right]).length,
+    );
+  }
+  return best;
+}
+export function rollingSevenDayReport(index: StudyIndex, today = dateKey()) {
+  const currentStart = shiftDate(today, -6),
+    previousEnd = shiftDate(today, -7),
+    previousStart = shiftDate(today, -13),
+    currentDates = datesBetween(currentStart, today),
+    previousDates = datesBetween(previousStart, previousEnd),
+    seconds = currentDates.reduce(
+      (n, ds) => n + (index.days.get(ds)?.seconds ?? 0),
+      0,
+    ),
+    previousSeconds = previousDates.reduce(
+      (n, ds) => n + (index.days.get(ds)?.seconds ?? 0),
+      0,
+    );
+  return {
+    seconds,
+    previousSeconds,
+    change:
+      previousSeconds > 0
+        ? ((seconds - previousSeconds) / previousSeconds) * 100
+        : null,
+    studyDays: currentDates.filter(
+      (ds) => index.days.get(ds)?.subjects.size,
+    ).length,
+    previousStudyDays: previousDates.filter(
+      (ds) => index.days.get(ds)?.subjects.size,
+    ).length,
+  };
+}
+export function subjectBalance(
+  stats: PeriodStats,
+  minSeconds = 2 * 60,
+) {
+  const rows = [...stats.bySubject]
+    .filter(([, seconds]) => seconds >= minSeconds)
+    .sort((a, b) => b[1] - a[1]);
+  if (stats.seconds < minSeconds || rows.length < 2)
+    return {
+      warning: false,
+      topShare: rows[0] ? (rows[0][1] / stats.seconds) * 100 : 0,
+      topSubject: rows[0]?.[0] ?? null,
+      subjects: rows,
+    };
+  const topShare = (rows[0][1] / stats.seconds) * 100;
+  return {
+    warning: topShare >= 65,
+    topShare,
+    topSubject: rows[0][0],
+    subjects: rows,
+  };
+}
+export function lateSessionPattern(index: StudyIndex) {
+  const candidates = index.sessions.filter((s) => {
+    const h = new Date(s.startEpoch).getHours();
+    return h >= 21 || h < 5;
+  });
+  const planned = candidates
+    .map((s) => ({
+      session: s,
+      plannedSeconds:
+        typeof s.extras.plannedDurationSec === "number" &&
+        Number.isFinite(s.extras.plannedDurationSec)
+          ? s.extras.plannedDurationSec
+          : 0,
+    }))
+    .filter((x) => x.plannedSeconds > 0);
+  const unfinished = planned.filter(
+    (x) => x.session.durationSec + 15 < x.plannedSeconds,
+  ).length;
+  return {
+    candidates: candidates.length,
+    measured: planned.length,
+    unfinished,
+    unfinishedPercent:
+      planned.length > 0 ? (unfinished / planned.length) * 100 : null,
+  };
+}
