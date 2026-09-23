@@ -149,15 +149,9 @@ export function QuizSession({
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
-  const quizRetry = knowledgeIndex(data.knowledge, today).quizRetryQueue.filter(
-    (q) =>
-      !data.knowledge.some(
-        (r) =>
-          r.kind === "attempt" &&
-          r.quizId === quiz.id &&
-          r.answers.some((a) => a.question.id === q.id && a.correct),
-      ),
-  );
+  const quizRetry = knowledgeIndex(data.knowledge, today).quizRetryQueue
+    .filter((item) => item.quizId === quiz.id)
+    .map((item) => item.question);
   const retryIds = new Set(quiz.questions.map((q) => q.id));
   const retryQuestions = quizRetry.filter((q) => !retryIds.has(q.id));
   const practiceQuiz: StudyQuiz =
