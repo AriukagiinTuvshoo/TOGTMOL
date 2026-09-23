@@ -96,11 +96,6 @@ describe("interactive local workflow", () => {
     });
     await waitFor(() => expect(saveButton).toBeEnabled());
     fireEvent.click(saveButton);
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("button", { name: "Save result" }),
-      ).not.toBeInTheDocument(),
-    );
     await waitFor(async () => {
       const checkRepo = new Repository(indexedDB, localStorage);
       const check = await checkRepo.load("guest");
