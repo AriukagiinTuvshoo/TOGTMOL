@@ -62,12 +62,11 @@ body {
 }
 
 .sidebar nav button.active {
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--moss-soft) 92%, transparent),
-      color-mix(in srgb, var(--surface) 90%, transparent)
-    );
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--moss-soft) 92%, transparent),
+    color-mix(in srgb, var(--surface) 90%, transparent)
+  );
   border-color: color-mix(in srgb, var(--moss) 25%, var(--border));
   box-shadow: 0 8px 24px color-mix(in srgb, var(--moss) 10%, transparent);
 }
@@ -117,12 +116,11 @@ body {
 .daily-strip,
 .statistics-decision-head,
 .decision-card {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--surface) 96%, transparent),
-      color-mix(in srgb, var(--surface-muted) 76%, transparent)
-    );
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface) 96%, transparent),
+    color-mix(in srgb, var(--surface-muted) 76%, transparent)
+  );
 }
 
 .card,
