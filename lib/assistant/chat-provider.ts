@@ -12,6 +12,7 @@ import {
 import { coachInsights } from "./coach";
 import { goalDetails, milestoneProgress } from "@/lib/world/milestones";
 import { goalProgress } from "@/lib/world/progress";
+import type { Language } from "@/lib/i18n/config";
 export interface ChatReply {
   text: string;
   action?: "plan" | "goals" | "timer" | "knowledge";
@@ -21,6 +22,7 @@ export interface ChatContext {
   data: StudyData;
   index: StudyIndex;
   today: string;
+  language?: Language;
 }
 export interface ChatProvider {
   kind: "local" | "ai";
@@ -28,8 +30,9 @@ export interface ChatProvider {
 }
 export function localReply(
   message: string,
-  { data, index, today }: ChatContext,
+  { data, index, today, language = "mn" }: ChatContext,
 ): ChatReply {
+  if (language === "en") return localReplyEnglish(message, { data, index, today, language });
   const q = message.toLocaleLowerCase(),
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
@@ -124,6 +127,93 @@ export function localReply(
       )}\n\nЗорилго төлөвлөх, долоо хоногоо харах, тэмдэглэлээ дүгнэхээс сонгоорой.`,
   };
 }
+function localReplyEnglish(
+  message: string,
+  { data, index, today }: ChatContext,
+): ChatReply {
+  const q = message.toLowerCase(),
+    w = weeklyReport(index, today),
+    stats = periodStats(index, 7, today);
+  if (/card|flashcard|quiz|review/.test(q)) {
+    const practice = knowledgeIndex(data.knowledge, today);
+    return {
+      text: `You have ${practice.cards.length} flashcards in your Knowledge Hub. ${practice.reviewQueue.length} are ready to review today. Review answers before saving generated cards.`,
+      action: "knowledge",
+    };
+  }
+  if (/realistic|schedule|pace/.test(q)) {
+    const review = coachInsights(data, index, today);
+    return {
+      text: review.length
+        ? review.map((i) => `${i.title}\\n${i.body}`).join("\\n\\n")
+        : "There is not enough active goal or study data to compare your schedule yet. Start with a realistic amount of time for your available days.",
+      action: "goals",
+    };
+  }
+  if (/goal|plan|want.*learn|want.*intermediate/.test(q))
+    return {
+      text: "Let's connect a goal to a subject and choose a realistic amount of study time. I can suggest small steps; you can review and edit them before saving.",
+      action: "plan",
+      planPrompt: message.slice(0, 200),
+    };
+  if (/note|reflection|what.*learn|review/.test(q)) {
+    const notes = recentNotes(data, today);
+    return {
+      text: notes.length
+        ? `Last 7 days: ${notes.length} notes.\\n\\n${notes.map((n) => `${n.date} · ${n.note.slice(0, 600)}`).join("\\n\\n")}\\n\\nWhat would you like to continue next? These are your notes; I am not measuring your level.`
+        : "No notes yet. Want to leave one thing you learned today?",
+      action: "knowledge",
+    };
+  }
+  if (/week|progress|stats/.test(q)) {
+    const currentWeek = periodStats(
+      index,
+      datesBetween(weekStart(today), today).length,
+      today,
+    );
+    const distribution = [...currentWeek.bySubject]
+      .filter(([, seconds]) => seconds > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(
+        ([id, seconds]) =>
+          `${index.subjects.get(id)?.name ?? "Subject"}: ${formatTime(seconds)}`,
+      )
+      .join("\\n");
+    const completed = data.tasks.filter(
+      (t) =>
+        !t.deletedAt &&
+        t.completed &&
+        String(t.extras.completedOn ?? t.date) >= weekStart(today) &&
+        String(t.extras.completedOn ?? t.date) <= today,
+    ).length;
+    return {
+      text: `This week: ${formatTime(w.seconds)} across ${w.studyDays} study days.\\n${data.goals.weeklyHours}-hour goal: ${Math.min(100, Math.round((w.seconds / (data.goals.weeklyHours * 3600)) * 100))}%.\\n\\n${distribution}\\n${completed} tasks completed · average session ${formatTime(currentWeek.averageSession)}.\\n\\n${w.change === null ? "There is not enough previous-week data for a comparison." : `That is ${Math.abs(w.change).toFixed(0)}% ${w.change >= 0 ? "more" : "less"} than the same days last week.`}\\nEvery day does not have to look the same. Choose the next small step that fits you.`,
+    };
+  }
+  if (/today|recommend|suggest|next|do/.test(q)) {
+    const plans = suggestPlan(data, index, today, 25);
+    return {
+      text: plans.length
+        ? `${plans.map((p) => `${p.title} · ${p.minutes} minutes. ${p.reason}`).join("\\n")}\\n\\nA smaller session does not mean weaker learning. Choose the topic you need today.`
+        : "Add a subject and start with one small 5–25 minute step.",
+      action: plans.length ? "timer" : "goals",
+    };
+  }
+  if (/tired|rest|break/.test(q))
+    return {
+      text: "Taking a short break is okay. Get some water, rest your eyes, and come back with a small step when you are ready.",
+    };
+  if (/hello|hi|hey/.test(q))
+    return {
+      text: stats.sessionCount
+        ? `Hi, I'm Bondook. You have ${stats.sessionCount} study sessions saved in the last 7 days.`
+        : "Hi, I'm Bondook. Let's choose one small step for today.",
+    };
+  return {
+    text: `I'm in local mode, so I won't pretend to answer open questions like a full AI. I can work with your real study history: ${insights(index, today).slice(0, 2).map((i) => `${i.title}. ${i.body}`).join("\\n\\n")}\\n\\nTry planning a goal, reviewing your week, or reviewing your notes.`,
+  };
+}
+
 export const localChatProvider: ChatProvider = {
   kind: "local",
   reply: async (message, context) => localReply(message, context),
@@ -211,6 +301,7 @@ export function aiContext(
 export function createAIChatProvider(
   token: () => Promise<string | null>,
   includeNotes = false,
+  language: Language = "mn",
 ): ChatProvider {
   return {
     kind: "ai",
@@ -230,6 +321,7 @@ export function createAIChatProvider(
         JSON.stringify({
           message,
           context: wantsPersonal ? contextData : { today: context.today },
+          language,
         });
       for (const list of [
         contextData.subjects,
