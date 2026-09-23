@@ -1,11 +1,14 @@
 "use client";
 import dynamic from "next/dynamic";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { StudyProvider, useStudy, useStoreState } from "@/hooks/use-study";
 import { AccountProvider, useAccount } from "@/hooks/use-account";
 import type { View } from "@/types/study";
 import { Icon } from "./ui/icon";
 import { AppSkeleton } from "./ui/app-skeleton";
+import { actions } from "@/lib/persistence/actions";
+import { elapsed } from "@/lib/calculations/timer";
+import { enableSound } from "@/lib/notifications";
 import { ModuleBoundary } from "./ui/module-boundary";
 import { RecoveryPanel } from "./settings/recovery";
 import { GlobalSearch } from "./knowledge/search";
@@ -73,6 +76,77 @@ function Shell() {
     navigate(v);
     setMore(false);
   };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== " " || event.ctrlKey || event.altKey || event.metaKey)
+        return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          "input, textarea, select, button, a, [contenteditable='true']",
+        )
+      )
+        return;
+      if (document.querySelector("dialog[open]")) return;
+      const snapshot = store.getSnapshot();
+      if (!snapshot.ready || snapshot.busy) return;
+      event.preventDefault();
+      void (async () => {
+        const current = store.getSnapshot().data.activeTimer;
+        if (!current) {
+          const subject = store
+            .getSnapshot()
+            .data.subjects.find((item) => !item.deletedAt && !item.archived);
+          if (!subject) {
+            navigate("subjects");
+            setNotice("Эхлээд нэг хичээл нэмье.");
+            return;
+          }
+          try {
+            await enableSound();
+          } catch {
+            // Keyboard start must not be blocked by browser audio policy.
+          }
+          if (
+            await run(() =>
+              store.mutate(
+                actions.start(
+                  subject.id,
+                  data.settings.defaultTimer,
+                  "focus",
+                  data.settings.defaultTimer === "pomodoro"
+                    ? data.settings.focusMinutes
+                    : null,
+                ),
+              ),
+            )
+          )
+            navigate("focus");
+          return;
+        }
+        if (current.status === "review") {
+          navigate("timer");
+          return;
+        }
+        const deadlineReached =
+          current.running &&
+          current.targetMs !== null &&
+          elapsed(current, Date.now()) >= current.targetMs;
+        await run(() =>
+          store.mutate(
+            deadlineReached
+              ? actions.finish()
+              : current.running
+                ? actions.pause()
+                : actions.resume(),
+          ),
+        );
+      })();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [data.settings, navigate, run, setNotice, store]);
   return (
     <div className={`app-shell ${view === "focus" ? "is-focus" : ""}`}>
       <a className="skip-link" href="#main-content">
