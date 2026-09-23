@@ -8,6 +8,7 @@ import {
   parseDate,
 } from "@/lib/calculations/dates";
 import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
+import { currentStreakWithFreezes, streakFreezeLimit } from "@/lib/calculations/decision";
 import { SHORT_DAYS, WEEKDAYS } from "@/lib/constants";
 import { Empty, Metric, Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
@@ -20,7 +21,8 @@ export function Overview() {
   const { data, index, today, navigate } = useStudy(),
     week = weeklyReport(index, today),
     subjects = data.subjects.filter((s) => !s.deletedAt && !s.archived),
-    streak = currentStreak(new Set(index.sortedDates), today),
+    freezeLimit = streakFreezeLimit(data.settings),
+    streak = currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit).streak,
     progress = companionProgress(data, today),
     dailyTargetMinutes =
       data.goals.dailyMinutes ??
