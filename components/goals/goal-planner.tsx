@@ -344,7 +344,6 @@ export function PlanWizard({
             minutesPerDay: draft.minutesPerDay,
           },
           language,
-          },
         }),
         signal: controller.signal,
       });
