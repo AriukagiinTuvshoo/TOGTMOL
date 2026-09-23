@@ -7,8 +7,10 @@ import { weeklyReport } from "@/lib/calculations/analytics";
 import { formatTime } from "@/lib/calculations/dates";
 import { Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { useI18n } from "@/components/i18n/language-provider";
 export function Goals() {
   const { data, index, today, store, run } = useStudy(),
+    { language } = useI18n(),
     [hours, setHours] = useState(String(data.goals.weeklyHours)),
     [days, setDays] = useState(String(data.goals.weeklyDays)),
     [daily, setDaily] = useState(String(data.goals.dailyMinutes ?? "")),
@@ -20,13 +22,13 @@ export function Goals() {
     .reduce((n, [, d]) => n + d.seconds, 0);
   const cards = [
     {
-      title: "Долоо хоногийн цаг",
+      title: language === "en" ? "Weekly hours" : "Долоо хоногийн цаг",
       value: w.seconds,
       target: data.goals.weeklyHours * 3600,
       text: `${formatTime(w.seconds)} / ${data.goals.weeklyHours}ц`,
     },
     {
-      title: "Долоо хоногийн өдрүүд",
+      title: language === "en" ? "Weekly study days" : "Долоо хоногийн өдрүүд",
       value: w.studyDays,
       target: data.goals.weeklyDays,
       text: `${w.studyDays} / ${data.goals.weeklyDays} өдөр`,
@@ -34,7 +36,7 @@ export function Goals() {
     ...(data.goals.dailyMinutes
       ? [
           {
-            title: "Өнөөдрийн зорилго",
+            title: language === "en" ? "Today's goal" : "Өнөөдрийн зорилго",
             value: index.days.get(today)?.seconds ?? 0,
             target: data.goals.dailyMinutes * 60,
             text: `${formatTime(index.days.get(today)?.seconds ?? 0)} / ${data.goals.dailyMinutes}м`,
@@ -44,7 +46,7 @@ export function Goals() {
     ...(data.goals.monthlyHours
       ? [
           {
-            title: "Энэ сарын зорилго",
+            title: language === "en" ? "Monthly goal" : "Энэ сарын зорилго",
             value: monthSeconds,
             target: data.goals.monthlyHours * 3600,
             text: `${formatTime(monthSeconds)} / ${data.goals.monthlyHours}ц`,
@@ -56,7 +58,7 @@ export function Goals() {
     <div className="stack">
       <GoalPlanner />
       <details className="card" open>
-        <summary>Нийт суралцах хэмнэл, зорилго</summary>
+        <summary>{language === "en" ? "Study rhythm and goals" : "Нийт суралцах хэмнэл, зорилго"}</summary>
         <div className="two-columns">
           <div className="stack">
             {cards.map((c) => (
@@ -70,16 +72,16 @@ export function Goals() {
                 <Progress value={(c.value / c.target) * 100} label={c.title} />
                 <p className="muted">
                   {c.value >= c.target
-                    ? "Зорилгодоо хүрлээ. Өөртөө баяр хүргээрэй."
-                    : "Өөрийн хэмнэлээр, нэг алхам нэг удаа."}
+                    ? language === "en" ? "You reached your goal. Give yourself credit." : "Зорилгодоо хүрлээ. Өөртөө баяр хүргээрэй."
+                    : language === "en" ? "At your own pace, one step at a time." : "Өөрийн хэмнэлээр, нэг алхам нэг удаа."}
                 </p>
               </section>
             ))}
           </div>
           <section className="card align-start">
             <SectionTitle
-              title="Өөртөө тохируулъя"
-              subtitle="Зорилго тань чиглүүлнэ. Дарамт болох шаардлагагүй."
+              title={language === "en" ? "Make it fit you" : "Өөртөө тохируулъя"}
+              subtitle={language === "en" ? "Goals can guide you without becoming pressure." : "Зорилго тань чиглүүлнэ. Дарамт болох шаардлагагүй."}
             />
             <form
               className="form-stack"
@@ -97,7 +99,7 @@ export function Goals() {
                           monthlyHours: monthly ? Number(monthly) : null,
                         }),
                       ),
-                    "Зорилго шинэчлэгдлээ.",
+                    language === "en" ? "Goals updated." : "Зорилго шинэчлэгдлээ.",
                   )
                 ) {
                 }
@@ -105,7 +107,7 @@ export function Goals() {
               }}
             >
               <label>
-                Долоо хоногт суралцах цаг
+                {language === "en" ? "Study hours per week" : "Долоо хоногт суралцах цаг"}
                 <input
                   type="number"
                   min={0.1}
@@ -117,7 +119,7 @@ export function Goals() {
                 />
               </label>
               <label>
-                Долоо хоногт суралцах өдөр
+                {language === "en" ? "Study days per week" : "Долоо хоногт суралцах өдөр"}
                 <input
                   type="number"
                   min={1}
@@ -129,29 +131,29 @@ export function Goals() {
                 />
               </label>
               <label>
-                Өдөрт суралцах минут (заавал биш)
+                {language === "en" ? "Study minutes per day (optional)" : "Өдөрт суралцах минут (заавал биш)"}
                 <input
                   type="number"
                   min={1}
                   max={1440}
                   value={daily}
                   onChange={(e) => setDaily(e.target.value)}
-                  placeholder="Тохируулаагүй"
+                  placeholder={language === "en" ? "Not set" : "Тохируулаагүй"}
                 />
               </label>
               <label>
-                Сард суралцах цаг (заавал биш)
+                {language === "en" ? "Study hours per month (optional)" : "Сард суралцах цаг (заавал биш)"}
                 <input
                   type="number"
                   min={1}
                   max={744}
                   value={monthly}
                   onChange={(e) => setMonthly(e.target.value)}
-                  placeholder="Тохируулаагүй"
+                  placeholder={language === "en" ? "Not set" : "Тохируулаагүй"}
                 />
               </label>
               <button className="button primary" disabled={busy}>
-                Зорилго хадгалах
+                {language === "en" ? "Save goals" : "Зорилго хадгалах"}
               </button>
             </form>
           </section>
