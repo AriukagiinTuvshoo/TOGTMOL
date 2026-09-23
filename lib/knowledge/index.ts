@@ -1,5 +1,8 @@
 import type { StudyData, View } from "@/types/study";
 import type { Flashcard, KnowledgeRecord } from "@/types/knowledge";
+import type { QuizQuestion } from "@/types/knowledge";
+
+type QuizQuestionSnapshot = { quizId: string; question: QuizQuestion | null };
 import { studyDate } from "@/lib/calculations/dates";
 import { dayBoundary } from "@/lib/preferences";
 export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
@@ -34,6 +37,30 @@ export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
       c.schedule.interval > 0 &&
       c.schedule.dueOn <= today,
   );
+  const reviewQueue = [...due, ...relearning, ...fresh];
+  const quizRetryByQuestion = new Map<string, QuizQuestionSnapshot>();
+  const attempts = active
+    .filter((r): r is import("@/types/knowledge").QuizAttempt => r.kind === "attempt")
+    .sort((a, b) => b.createdAt - a.createdAt);
+  for (const attempt of attempts) {
+    for (const answer of attempt.answers) {
+      if (!quizRetryByQuestion.has(answer.question.id) && !answer.correct)
+        quizRetryByQuestion.set(answer.question.id, {
+          quizId: attempt.quizId,
+          question: answer.question,
+        });
+      else if (!quizRetryByQuestion.has(answer.question.id) && answer.correct)
+        quizRetryByQuestion.set(answer.question.id, {
+          quizId: attempt.quizId,
+          question: null,
+        });
+    }
+  }
+  const quizRetryQueue = [...quizRetryByQuestion.entries()]
+    .filter(([, v]) => v.question)
+    .map(([, v]) => v.question!)
+    .filter((q) => q !== null);
+
   return {
     active,
     byId,
@@ -41,7 +68,8 @@ export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
     cardsByDeck,
     due: [...due, ...relearning],
     fresh,
-    reviewQueue: [...due, ...relearning, ...fresh],
+    reviewQueue,
+    quizRetryQueue,
     notes: active.filter((r) => r.kind === "note"),
     decks: active.filter((r) => r.kind === "deck"),
     reviews: active.filter((r) => r.kind === "review"),
