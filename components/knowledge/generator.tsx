@@ -12,8 +12,10 @@ import {
 import { addCards, recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { prepareImage } from "@/lib/knowledge/images";
 import type { Flashcard, FlashcardDeck } from "@/types/knowledge";
+import { useI18n } from "@/components/i18n/language-provider";
 export function CardGenerator({ onClose }: { onClose: () => void }) {
   const { data, store, run, today } = useStudy();
+  const { language } = useI18n();
   const [title, setTitle] = useState("Миний давтлага"),
     [subject, setSubject] = useState(""),
     [source, setSource] = useState(""),
@@ -86,6 +88,7 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
             text,
             count,
             image: shareImage ? image : null,
+            language,
           }),
           signal: controller.signal,
         });
