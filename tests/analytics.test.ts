@@ -175,6 +175,18 @@ describe("calendar and statistics", () => {
     });
     expect(lateSessionPattern(buildIndex(d, "2026-09-15")).unfinishedPercent).toBeCloseTo(66.6667);
   });
+  it("does not spend a freeze on an unfinished current day", () => {
+    const result = streakWithFreezes(
+      new Set(["2026-09-14"]),
+      "2026-09-15",
+      2,
+    );
+    expect(result).toMatchObject({
+      streak: 1,
+      freezesUsed: 0,
+      freezesRemaining: 2,
+    });
+  });
   it("preserves unlocked achievements when history is edited", () => {
     let d = fixture();
     d.sessions[0].durationSec = 36000;
