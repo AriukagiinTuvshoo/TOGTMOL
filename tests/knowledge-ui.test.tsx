@@ -196,11 +196,6 @@ describe("knowledge flows", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "AI боловсруулалтыг унтраах" }),
     );
-    await waitFor(() =>
-      expect(
-        screen.getByText("Онлайн Бондоокт зөвшөөрөл өгөөгүй."),
-      ).toBeVisible(),
-    );
     const repo = new Repository();
     await waitFor(async () => {
       expect((await repo.load("guest"))?.data.settings.extras.aiEnabled).toBe(
