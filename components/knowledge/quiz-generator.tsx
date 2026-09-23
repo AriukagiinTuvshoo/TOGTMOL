@@ -54,7 +54,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
       const session = client
         ? (await client.auth.getSession()).data.session
         : null;
-      if (!session || namespace !== \`account:\${session.user.id}\`)
+      if (!session || namespace !== `account:${session.user.id}`)
         throw Error(
           "Онлайн Бондоокийг ашиглахын тулд бүртгэлээрээ нэвтэрнэ үү.",
         );
@@ -67,7 +67,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: \`Bearer \${session.access_token}\`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ text, count }),
           signal: controller.signal,
@@ -132,7 +132,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                   if (id === "subject") {
                     setText(
                       notes
-                        .map((r) => (r.kind === "note" ? \`\${r.title}\\n\${r.body}\` : ""))
+                        .map((r) => (r.kind === "note" ? `${r.title}\\n${r.body}` : ""))
                         .join("\\n\\n")
                         .slice(0, 12000),
                     );
