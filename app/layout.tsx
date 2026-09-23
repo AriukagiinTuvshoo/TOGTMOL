@@ -5,9 +5,9 @@ import "./knowledge.css";
 import "./neon.css";
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://togtmol.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://togtmol.tuvshoo0331.workers.dev",
   ),
-  title: "Тогтмол v6 — Бондооктой хамт суралцъя",
+  title: "Тогтмол v7 — Бондооктой хамт суралцъя",
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",
@@ -21,10 +21,10 @@ export const metadata: Metadata = {
       "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
     images: [
       {
-        url: "/icons/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "Тогтмол аппын лого",
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Тогтмол — Бондооктой хамт суралцъя",
       },
     ],
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: "Тогтмол — Бондооктой хамт суралцъя",
     description:
       "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай.",
-    images: ["/icons/icon-512.png"],
+    images: ["/opengraph-image"],
   },
 };
 export const viewport: Viewport = {
