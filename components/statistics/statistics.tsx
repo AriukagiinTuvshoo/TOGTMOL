@@ -289,7 +289,7 @@ export function Statistics() {
           <span className="eyebrow">ЗАН ҮЙЛИЙН PATTERN</span>
           {patterns.length ? (
             patterns.map((pattern) => (
-              <div className={`pattern-result ${pattern.tone`} key={pattern.id}>
+              <div className={`pattern-result ${pattern.tone}`}} key={pattern.id}>
                 <strong>{pattern.title}</strong>
                 <p>{pattern.body}</p>
               </div>
