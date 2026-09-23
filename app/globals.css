@@ -3783,3 +3783,7 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .calendar-day-cell { transition: none; }
 }
+
+.deadline-countdown-card { border-color: color-mix(in srgb, var(--danger) 22%, var(--border)); }
+.deadline-countdown-value { display: block; margin-top: 4px; font-size: clamp(28px, 4vw, 46px); line-height: 1; letter-spacing: -1.6px; font-variant-numeric: tabular-nums; color: var(--danger); }
+.deadline-countdown-card .section-heading::after { background: linear-gradient(90deg, var(--danger), transparent); }
