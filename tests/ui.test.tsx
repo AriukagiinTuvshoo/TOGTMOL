@@ -163,7 +163,6 @@ it("renders decision statistics with heatmap, freeze control and persistent exam
   fireEvent.change(screen.getByLabelText("Нэр"), {
     target: { value: "JLPT N1" },
   });
-  const decision = screen.getByRole("article", { name: "" });
   fireEvent.click(
     screen.getByRole("button", { name: "Хадгалах" }),
   );
