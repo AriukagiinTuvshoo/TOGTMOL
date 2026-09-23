@@ -1,6 +1,8 @@
 import type { Settings, StudyData, StudyIndex } from "@/types/study";
 import { parseDate, shiftDate, weekStart } from "./dates";
-import { intensity } from "./analytics";
+function heatmapLevel(minutes: number) {
+  return minutes > 60 ? 4 : minutes > 40 ? 3 : minutes > 20 ? 2 : minutes > 0 ? 1 : 0;
+}
 
 export const DEFAULT_STREAK_FREEZES = 2;
 
@@ -120,7 +122,7 @@ export function annualHeatmap(
       week.push({
         date,
         minutes,
-        level: inYear ? intensity(summary) : 0,
+        level: inYear ? heatmapLevel(minutes) : 0,
         inYear,
       });
     }
