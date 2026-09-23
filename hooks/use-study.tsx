@@ -70,10 +70,6 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     };
   }, [store]);
   useEffect(() => {
-    const tick = setTimeout(() => setToday(studyDate(new Date(), boundary)), 0);
-    return () => clearTimeout(tick);
-  }, [boundary]);
-  useEffect(() => {
     if (!settings.sound) return;
     const prime = () => {
       void enableSound().catch(() => {});
