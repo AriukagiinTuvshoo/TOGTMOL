@@ -21,6 +21,7 @@ import {
   type MusicPreferences,
 } from "@/lib/music/preferences";
 import { fixture } from "./fixtures";
+import type { StudyData } from "@/types/study";
 const local = vi.hoisted(() => ({
   play: vi.fn(),
   pause: vi.fn(),
@@ -141,10 +142,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
-async function boot(kind: "video" | "playlist" = "video") {
+async function boot(
+  kind: "video" | "playlist" = "video",
+  queue?: StudyData["musicSources"],
+) {
   const data = fixture();
   data.settings.sound = false;
-  data.musicSources = [
+  data.musicSources = queue ?? [
     {
       id: "youtube-test",
       kind,
@@ -176,10 +180,7 @@ async function load() {
   return players.at(-1)!;
 }
 async function start() {
-  const playButton = within(dock()).queryByRole("button", {
-    name: "Хөгжим тоглуулах",
-  });
-  if (playButton) fireEvent.click(playButton);
+  click("Хөгжим тоглуулах");
   await waitFor(() =>
     expect(dock()).toHaveAttribute("data-playback", "playing"),
   );
@@ -199,6 +200,54 @@ async function savedPreference() {
   return saved?.data.settings.extras.musicPreferences as MusicPreferences;
 }
 describe("persistent music dock", () => {
+  it("plays saved YouTube links in order and supports previous/next navigation", async () => {
+    const queue: StudyData["musicSources"] = [
+      {
+        id: "youtube-test",
+        kind: "video",
+        youtubeId: "abcdefghijk",
+        title: "First track",
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        extras: {},
+      },
+      {
+        id: "youtube-second",
+        kind: "video",
+        youtubeId: "zyxwvutsrqp",
+        title: "Second track",
+        createdAt: 2,
+        updatedAt: 2,
+        deletedAt: null,
+        extras: {},
+      },
+    ];
+    await boot("video", queue);
+    const first = await load();
+    click("Дараагийн хөгжим");
+    await waitFor(() => expect(players).toHaveLength(2));
+    expect(
+      dock().querySelector(".saved-music li:nth-child(2) button"),
+    ).toHaveAttribute("aria-pressed", "true");
+    click("Өмнөх хөгжим");
+    await waitFor(() => expect(players).toHaveLength(3));
+    expect(
+      dock().querySelector(".saved-music li:first-child button"),
+    ).toHaveAttribute("aria-pressed", "true");
+    click("Дараагийн хөгжим");
+    await waitFor(() => expect(players).toHaveLength(4));
+    const second = players.at(-1)!;
+    await start();
+    act(() => second.emit(0));
+    await waitFor(() => expect(players).toHaveLength(5));
+    expect(
+      dock().querySelector(".saved-music li:first-child button"),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(players.at(-1)?.playVideo).toHaveBeenCalled();
+    expect(first.pauseVideo).toHaveBeenCalled();
+  });
+
   it("minimizes and expands repeatedly without stopping or recreating the same iframe", async () => {
     await boot();
     const player = await load();
@@ -320,10 +369,7 @@ describe("persistent music dock", () => {
     expect(restored.setVolume).toHaveBeenCalledWith(65);
     expect(dock()).toHaveAttribute("data-open", "false");
     expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(
-      within(dock()).getByRole("button", { name: "Хөгжим тоглуулах" }),
-    ).toBeVisible();
+    expect(screen.getByText("Үргэлжлүүлэхэд Play дарна уу")).toBeVisible();
   });
   it("does not pause on visibility/intersection changes or a mobile-size resize", async () => {
     const observe = vi.fn();
@@ -343,7 +389,7 @@ describe("persistent music dock", () => {
     vi.stubGlobal("innerWidth", 375);
     fireEvent(window, new Event("resize"));
     expect(observe).not.toHaveBeenCalled();
-    for (const name of ["Хөгжим түр зогсоох", "Хөгжим нээх"])
+    for (const name of ["Хөгжим түр зогсоох", "Хөгжим зогсоох", "Хөгжим нээх"])
       expect(within(dock()).getByRole("button", { name })).toBeVisible();
     expect(
       within(dock()).getByRole("slider", { name: "Дууны түвшин" }),
@@ -366,7 +412,7 @@ describe("persistent music dock", () => {
       screen.getByRole("heading", { name: "Миний хичээлүүд" }),
     ).toBeVisible();
     failConstruction = false;
-    click("Дахин оролдох");
+    click("Дахин ачаалах");
     await screen.findByTitle("Test YouTube");
     const player = players[0];
     await start();
@@ -441,7 +487,7 @@ describe("persistent music dock", () => {
     expect(await screen.findByText(/YouTube-г ачаалж чадсангүй/)).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     window.YT = { Player };
-    click("Дахин оролдох");
+    click("Дахин ачаалах");
     await screen.findByTitle("Test YouTube");
     await start();
     expect(players).toHaveLength(1);
@@ -458,6 +504,7 @@ describe("persistent music dock", () => {
         screen.getByRole("navigation", { name: "Гар утасны цэс" }),
       ).getByRole("button", { name: "Төвлөрөх" }),
     );
+    await screen.findByRole("heading", { name: "Төвлөрөх цаг" });
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Start study" })).toBeEnabled(),
     );
@@ -474,7 +521,9 @@ describe("persistent music dock", () => {
     await screen.findByRole("button", { name: "Pause" });
     now += 10000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Save result" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" }),
+    );
     await screen.findByText(/Хичээлээ хадгаллаа/);
     expect(dock()).toHaveAttribute("data-playback", "playing");
     expect(screen.getByTitle("Test YouTube")).toBe(player.iframe);
@@ -532,7 +581,7 @@ describe("persistent music dock", () => {
     await boot();
     click("Хөгжим нээх");
     fireEvent.click(
-      within(dock()).getByRole("button", { name: /RainТайван борооны чимээ/ }),
+      within(dock()).getByRole("button", { name: /Rainy window.*Борооны/ }),
     );
     await start();
     expect(local.play).toHaveBeenLastCalledWith("rain");

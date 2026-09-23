@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClock, useStoreState, useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
 import { clock, timeLabel } from "@/lib/calculations/dates";
@@ -76,76 +76,8 @@ export function TimerWatch() {
     void playTimerCountdown(data.settings, countdown);
   }, [countdown, t, data.settings, mutedTimer]);
   const wakeStatus = useWakeLock(
-    Boolean(t?.running && data.settings.extras.wakeLock !== false),
+    Boolean(t?.running && data.settings.extras.wakeLock),
   );
-
-  const completeTimer = useCallback(
-    async (expectedId: string, expectedDeadline?: number) => {
-      if (finishing.current) return;
-      const current = store.getSnapshot().data.activeTimer;
-      if (
-        !current ||
-        current.id !== expectedId ||
-        !current.running ||
-        current.status !== "active" ||
-        current.targetMs === null
-      )
-        return;
-      const deadline =
-        Number.isFinite(expectedDeadline) && expectedDeadline !== undefined
-          ? expectedDeadline
-          : current.runningSince === null
-            ? Date.now()
-            : current.runningSince +
-              Math.max(0, current.targetMs - current.accumulatedMs);
-      finishing.current = true;
-      const phase = current.phase;
-      const runningSince = current.runningSince;
-      const ok = await run(() => store.mutate(actions.finish(deadline)));
-      finishing.current = false;
-      if (!ok) return;
-      const message =
-        phase === "focus"
-          ? "Хичээл дууслаа. Хугацаа статистикт хадгалагдлаа."
-          : "Амралт дууслаа.";
-      setNotice(message);
-      setAlert({
-        kind: "complete",
-        timerId: expectedId,
-        runningSince,
-      });
-      void notifyUser(
-        message,
-        store.getSnapshot().data.settings,
-        `togtmol-timer-${expectedId}`,
-      );
-    },
-    [run, setNotice, store],
-  );
-
-  // One-shot deadline wakeup. The elapsed value is always derived from the
-  // stored timestamps, so background-tab throttling cannot make the timer
-  // drift or count "missed" seconds.
-  useEffect(() => {
-    if (!t?.running || t.status !== "active" || t.targetMs === null) return;
-
-    const timerId = t.id;
-    const deadline =
-      t.runningSince === null
-        ? Date.now()
-        : t.runningSince + Math.max(0, t.targetMs - t.accumulatedMs);
-    const remaining = deadline - Date.now();
-
-    // If the tab/render was resumed exactly at or after the deadline,
-    // complete immediately. The deadline is deterministic, so this also
-    // handles suspended/background tabs without depending on another render.
-    const timeout = window.setTimeout(
-      () => void completeTimer(timerId, deadline),
-      remaining <= 0 ? 0 : Math.min(remaining + 60, 2147483647),
-    );
-
-    return () => window.clearTimeout(timeout);
-  }, [t, completeTimer]);
 
   useEffect(() => {
     if (!t?.running || t.targetMs === null || t.status !== "active") return;
@@ -174,7 +106,6 @@ export function TimerWatch() {
         label,
         data.settings,
         `togtmol-timer-warning-${t.id}`,
-        warningSeconds,
       );
     }
   }, [t, now, data.settings]);
@@ -189,6 +120,34 @@ export function TimerWatch() {
     if (elapsed(t, now) < Math.max(0, t.targetMs - warningSeconds * 1000))
       warningTriggered.current = false;
   }, [t, now, data.settings]);
+
+  useEffect(() => {
+    if (
+      t?.running &&
+      t.targetMs !== null &&
+      elapsed(t, now) >= t.targetMs &&
+      t.status === "active" &&
+      !finishing.current
+    ) {
+      finishing.current = true;
+      void run(() => store.mutate(actions.finish())).then((ok) => {
+        finishing.current = false;
+        if (ok && store.getSnapshot().data.activeTimer?.id === t.id) {
+          const message =
+            t.phase === "focus"
+              ? "Хичээл дууслаа. Үр дүнгээ хадгалаарай."
+              : "Амралт дууслаа.";
+          setNotice(message);
+          setAlert({
+            kind: "complete",
+            timerId: t.id,
+            runningSince: t.runningSince,
+          });
+          void notifyUser(message, data.settings, `togtmol-timer-${t.id}`);
+        }
+      });
+    }
+  }, [t, now, store, run, data.settings, setNotice]);
 
   const stopAlertSound = () => {
     stopTimerAlertSound();
@@ -210,10 +169,6 @@ export function TimerWatch() {
           onReview={() => {
             stopAlertSound();
             navigate("focus");
-          }}
-          onExit={() => {
-            stopAlertSound();
-            navigate("overview");
           }}
         />
       )}
@@ -242,18 +197,27 @@ export function TimerWatch() {
       >
         <span className={t.running ? "live-dot" : ""} />
         <Icon name={t.status === "review" ? "check" : "clock"} size={16} />
-        {t.status === "review" ? "Үр дүнгээ хадгалах" : clock(elapsed(t, now))}
+        {t.status === "review" ? "Хадгалаагүй хичээл" : clock(elapsed(t, now))}
         <Icon name="arrow" size={16} />
       </button>
     </>
   );
 }
-export function StudyTimer({ compact = false }: { compact?: boolean }) {
+export function StudyTimer({
+  compact = false,
+  recentlySaved = false,
+  onSessionSaved,
+  onSessionStarted,
+}: {
+  compact?: boolean;
+  recentlySaved?: boolean;
+  onSessionSaved?: () => void;
+  onSessionStarted?: () => void;
+}) {
   const { data, store, run, navigate, index } = useStudy(),
     { busy } = useStoreState(),
     t = data.activeTimer,
     now = useClock(Boolean(t?.running));
-  const tId = t?.id;
   const [subjectId, setSubjectId] = useState(
     t?.subjectId ??
       data.subjects.find((s) => !s.deletedAt && !s.archived)?.id ??
@@ -265,20 +229,9 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [completionChoice, setCompletionChoice] = useState<{
-      timerId: string | undefined;
-      checked: boolean;
-    }>({ timerId: undefined, checked: true }),
-    [notePanel, setNotePanel] = useState<{
-      timerId: string | undefined;
-      open: boolean;
-    }>({ timerId: undefined, open: false });
-  // These UI choices are scoped to the active timer. A different timer ID
-  // naturally falls back to the default without synchronously setting state in an effect.
-  const complete =
-    completionChoice.timerId === tId ? completionChoice.checked : true;
-  const showNote = notePanel.timerId === tId ? notePanel.open : false;
-
+    [complete, setComplete] = useState(true),
+    [showNote, setShowNote] = useState(false);
+  const tId = t?.id;
   useEffect(() => {
     if (!tId) return;
     const id = setTimeout(() => {
@@ -329,10 +282,34 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         ),
       )
     ) {
+      onSessionStarted?.();
       setNote("");
       navigate("focus");
     }
   };
+  if (!t && compact && recentlySaved) {
+    return (
+      <section
+        className="card timer-card timer-session-saved"
+        aria-live="polite"
+      >
+        <div className="eyebrow">
+          <Icon name="check" size={16} /> ХИЧЭЭЛ ХАДГАЛАГДЛАА
+        </div>
+        <h2>Сайн ажиллалаа!</h2>
+        <p className="muted">Таны суралцсан хугацаа түүхэнд нэмэгдлээ.</p>
+        <div className="button-row center">
+          <button className="button primary" onClick={() => navigate("timer")}>
+            Дараагийн хичээл
+            <Icon name="arrow" size={16} />
+          </button>
+          <button className="button" onClick={() => navigate("overview")}>
+            Өрөө рүү буцах
+          </button>
+        </div>
+      </section>
+    );
+  }
   return (
     <div className={`timer-layout ${compact ? "timer-compact" : ""}`}>
       <section
@@ -493,7 +470,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
             t.phase === "focus" ? (
               <button
                 className="button primary large"
-                disabled={busy || ms <= 0}
+                disabled={busy || ms < 5000}
                 onClick={async () => {
                   if (
                     await run(
@@ -502,6 +479,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                     )
                   ) {
                     clearTimerDraft(store.getSnapshot().namespace, t.id);
+                    onSessionSaved?.();
                     setNote("");
                     if (t.mode === "pomodoro") {
                       setMode("pomodoro");
@@ -512,7 +490,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 }}
               >
                 <Icon name="check" />
-                Save result
+                {busy ? "Хадгалж байна…" : "Үр дүнгээ хадгалах"}
               </button>
             ) : (
               <button
@@ -534,20 +512,11 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 className="button"
                 disabled={busy}
                 onClick={() =>
-                  run(() => {
-                    const current = store.getSnapshot().data.activeTimer;
-                    const deadlineReached =
-                      current?.running &&
-                      current.targetMs !== null &&
-                      elapsed(current, Date.now()) >= current.targetMs;
-                    return store.mutate(
-                      deadlineReached
-                        ? actions.finish()
-                        : t.running
-                          ? actions.pause()
-                          : actions.resume(),
-                    );
-                  })
+                  run(() =>
+                    store.mutate(
+                      t.running ? actions.pause() : actions.resume(),
+                    ),
+                  )
                 }
               >
                 <Icon name={t.running ? "pause" : "play"} />
@@ -578,8 +547,8 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
         </div>
         {t?.status === "review" && t.phase === "focus" && ms < 5000 && (
           <p className="muted">
-            Багахан хугацаа байсан ч хэмжсэн хэсгийг хадгална. Дахин эхлүүлэх
-            бол Цуцлах товчийг ашиглаарай.
+            5 секундээс богино хэмжилтийг хадгалахгүй. Дахин эхлүүлэхийн тулд
+            цуцална уу.
           </p>
         )}
         {t && (
@@ -592,66 +561,14 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
           <button
             className="text-button"
             aria-expanded={showNote}
-            onClick={() => setNotePanel({ timerId: tId, open: !showNote })}
+            onClick={() => setShowNote(!showNote)}
           >
             <Icon name="edit" size={15} />
             {showNote ? "Тэмдэглэл хураах" : "Тэмдэглэл бичих"}
           </button>
         )}
-        {compact &&
-          t?.phase === "focus" &&
-          t.status !== "review" &&
-          showNote && (
-            <section className="timer-inline-note" aria-label="Focus тэмдэглэл">
-              <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
-              <h3>Өнөөдрийн тэмдэглэл</h3>
-              <label className="sr-only" htmlFor="timer-note-inline">
-                Юу сурсан бэ?
-              </label>
-              <textarea
-                id="timer-note-inline"
-                className="note-input"
-                value={note}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setNote(value);
-                  if (t)
-                    try {
-                      writeTimerDraft(
-                        store.getSnapshot().namespace,
-                        t.id,
-                        value,
-                      );
-                    } catch (error) {
-                      store.reportError(error);
-                    }
-                }}
-                placeholder="Юуг ойлгосон бэ? Дараа нь юунаас үргэлжлүүлэх вэ?"
-                rows={7}
-                maxLength={10000}
-              />
-              {t?.taskId && (
-                <label className="check-label">
-                  <input
-                    type="checkbox"
-                    checked={complete}
-                    onChange={(e) =>
-                      setCompletionChoice({
-                        timerId: tId,
-                        checked: e.target.checked,
-                      })
-                    }
-                  />
-                  Хадгалаад төлөвлөгөөг биелсэнд тооцох
-                </label>
-              )}
-              <p className="tiny muted">
-                Тэмдэглэл timer үргэлжилж байх үед автоматаар түр хадгалагдана.
-              </p>
-            </section>
-          )}
       </section>
-      {(!compact || t?.status === "review") && (
+      {(!compact || showNote || t?.status === "review") && (
         <aside className="stack">
           <section className="card">
             <div className="eyebrow">СУРАЛЦСАН ЗҮЙЛЭЭ ҮЛДЭЭЕ</div>
@@ -683,12 +600,7 @@ export function StudyTimer({ compact = false }: { compact?: boolean }) {
                 <input
                   type="checkbox"
                   checked={complete}
-                  onChange={(e) =>
-                    setCompletionChoice({
-                      timerId: tId,
-                      checked: e.target.checked,
-                    })
-                  }
+                  onChange={(e) => setComplete(e.target.checked)}
                 />
                 Хадгалаад төлөвлөгөөг биелсэнд тооцох
               </label>

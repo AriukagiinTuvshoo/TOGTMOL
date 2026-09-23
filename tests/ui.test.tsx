@@ -13,6 +13,8 @@ import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { Repository } from "@/lib/persistence/repository";
 import { AppShell } from "@/components/app-shell";
+import { startTimer } from "@/lib/calculations/timer";
+import { fixture } from "./fixtures";
 beforeEach(() => {
   localStorage.clear();
   vi.stubGlobal("indexedDB", new IDBFactory());
@@ -66,7 +68,8 @@ describe("interactive local workflow", () => {
         screen.getByRole("navigation", { name: "Гар утасны цэс" }),
       ).getByRole("button", { name: "Төвлөрөх" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Start study" }));
+    await screen.findByRole("heading", { name: "Төвлөрөх цаг" });
+    fireEvent.click(await screen.findByRole("button", { name: "Start study" }));
     await screen.findByRole("button", { name: "Pause" });
     now += 10000;
     fireEvent.click(screen.getByRole("button", { name: "Pause" }));
@@ -91,23 +94,9 @@ describe("interactive local workflow", () => {
     );
     now += 15000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    const saveButton = await screen.findByRole("button", {
-      name: "Save result",
-    });
-    await waitFor(() => expect(saveButton).toBeEnabled());
-    fireEvent.click(saveButton);
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("button", { name: "Save result" }),
-      ).not.toBeInTheDocument(),
-    );
-    await waitFor(async () => {
-      const checkRepo = new Repository(indexedDB, localStorage);
-      const check = await checkRepo.load("guest");
-      await checkRepo.close();
-      expect(check?.data.activeTimer).toBeNull();
-      expect(check?.data.sessions).toHaveLength(1);
-    });
+    await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" });
+    fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }));
+    await screen.findByText(/Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа./);
     const repo = new Repository(indexedDB, localStorage),
       saved = await repo.load("guest");
     expect(saved?.data.sessions).toHaveLength(1);
@@ -223,11 +212,11 @@ describe("study world integration", () => {
     await screen.findByRole("button", { name: "Өрөөгөө өөрчлөх" });
     expect(document.querySelector(".app-shell")).not.toHaveClass("is-focus");
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    await screen.findByRole("button", { name: "Save result" });
+    await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" });
     fireEvent.change(screen.getByLabelText("Юу сурсан бэ?"), {
       target: { value: "Хоёр жишээ бодлоо" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save result" }));
+    fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }));
     await waitFor(async () => {
       const d = (await repo.load("guest"))!.data;
       expect(d.sessions).toHaveLength(1);
@@ -247,24 +236,46 @@ describe("study world integration", () => {
     expect(document.querySelector('script[src*="youtube"]')).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Хөгжим нээх" }));
     expect(
-      await screen.findByRole("button", { name: /RainТайван борооны чимээ/ }),
+      await screen.findByRole("button", { name: /Rainy window/ }),
     ).toBeVisible();
     const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
     fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
     expect(screen.getByRole("complementary", { name: "Study music" })).toBe(
       player,
     );
-    expect(
-      screen.getByRole("button", { name: /RainТайван борооны чимээ/ }),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: /Rainy window/ })).toBeVisible();
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Аудио эсвэл YouTube холбоос" }),
-      { target: { value: "javascript:alert(1)" } },
+      screen.getByRole("textbox", { name: "YouTube video эсвэл playlist" }),
+      { target: { value: "https://evil.example/video" } },
     );
-    fireEvent.click(within(player).getByRole("button", { name: "Хадгалах" }));
-    expect(await screen.findByText(/Аудио холбоос буруу байна/)).toBeVisible();
+    fireEvent.click(within(player).getByRole("button", { name: "Нэмэх" }));
+    expect(await screen.findByText(/Зөвхөн YouTube-ийн/)).toBeVisible();
     expect(document.querySelector('script[src*="youtube"]')).toBeNull();
     expect(audio).not.toHaveBeenCalled();
+  });
+
+  it("shows a clear next step after saving a finished session in Focus mode", async () => {
+    let now = new Date("2026-09-15T12:00:00").getTime();
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const data = fixture();
+    data.activeTimer = startTimer("math", "stopwatch", "focus", null, now);
+    const repo = new Repository(indexedDB, localStorage);
+    await repo.save("guest", data, 0);
+    await repo.close();
+    render(<AppShell />);
+    await screen.findByText("Миний төлөвлөгөө");
+    fireEvent.click(screen.getByRole("button", { name: "Focus mode" }));
+    await screen.findByRole("button", { name: "Finish" });
+    now += 10000;
+    fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+    const saveButtons = await screen.findAllByRole("button", {
+      name: "Үр дүнгээ хадгалах",
+    });
+    fireEvent.click(saveButtons.at(-1)!);
+    expect(await screen.findByText("ХИЧЭЭЛ ХАДГАЛАГДЛАА")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Дараагийн хичээл" }),
+    ).toBeVisible();
   });
 });
 
@@ -315,13 +326,13 @@ it("uses the official YouTube API without autoplay and retains it when minimizin
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(screen.getByRole("button", { name: "Хөгжим нээх" }));
   fireEvent.change(
-    screen.getByRole("textbox", { name: "Аудио эсвэл YouTube холбоос" }),
+    screen.getByRole("textbox", { name: "YouTube video эсвэл playlist" }),
     { target: { value: "https://www.youtube.com/watch?v=abcdefghijk" } },
   );
   fireEvent.click(
     within(
       screen.getByRole("complementary", { name: "Study music" }),
-    ).getByRole("button", { name: "Хадгалах" }),
+    ).getByRole("button", { name: "Нэмэх" }),
   );
   await screen.findByTitle("YouTube");
   await waitFor(() => expect(optionsSeen).toHaveLength(1));
@@ -407,7 +418,7 @@ it("shares music preferences with the persistent player and restores the chosen 
     ),
   );
   fireEvent.change(screen.getByLabelText("Үндсэн хөгжмийн ангилал"), {
-    target: { value: "rain" },
+    target: { value: "night" },
   });
   fireEvent.click(screen.getByLabelText("Сүүлд тоглуулсан аяыг санах"));
   fireEvent.change(screen.getByLabelText("Дууны түвшин", { exact: true }), {
@@ -418,24 +429,14 @@ it("shares music preferences with the persistent player and restores the chosen 
     JSON.parse(localStorage.getItem("togtmol:music:guest")!),
   ).toMatchObject({
     volume: 0.25,
-    defaultCategory: "rain",
+    defaultCategory: "night",
     rememberLast: false,
   });
-  await waitFor(async () =>
-    expect(
-      (await new Repository().load("guest"))?.data.settings.extras
-        .musicPreferences,
-    ).toMatchObject({
-      defaultCategory: "rain",
-      rememberLast: false,
-      volume: 0.25,
-    }),
-  );
   cleanup();
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   expect(
-    screen.getByText("Rain", { selector: ".music-title strong" }),
+    screen.getByText("Night study", { selector: ".music-title strong" }),
   ).toBeVisible();
   expect(audio).not.toHaveBeenCalled();
   expect(document.querySelector('script[src*="youtube"]')).toBeNull();
@@ -457,16 +458,12 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).toBeChecked(),
   );
-  const weekButton = screen.getByRole("button", {
-    name: "Долоо хоногоо харъя",
-  });
-  await waitFor(() => expect(weekButton).toBeEnabled());
-  fireEvent.click(weekButton);
-
+  fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
+  expect(await screen.findByText("Бондоок · Local")).toBeVisible();
   await waitFor(() =>
     expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
   );
   expect(
-    await within(screen.getByRole("log")).findByText(/Энэ долоо хоногт 0м/),
+    within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();
 });

@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStudy, useClock } from "@/hooks/use-study";
 import {
   companionProgress,
   companionState,
   greeting,
 } from "@/lib/world/progress";
-import { clock, formatTime } from "@/lib/calculations/dates";
+import { clock, currentStreak, formatTime } from "@/lib/calculations/dates";
 import { actions } from "@/lib/persistence/actions";
 import { RoomScene } from "./room-scene";
 import { StudyTimer } from "@/components/timer/study-timer";
@@ -15,34 +15,24 @@ import { DailyKnowledge } from "@/components/dashboard/daily-knowledge";
 import { flexibleStreak } from "@/lib/calculations/dates";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
 import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
-import { ROOM_REWARDS } from "@/lib/world/config";
+import { ACCESSORIES } from "@/lib/world/config";
 import { knowledgeIndex } from "@/lib/knowledge/index";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
-import {
-  streakFreezeCount,
-  streakWithFreezes,
-} from "@/lib/calculations/analytics";
 export function StudyRoom({ focus = false }: { focus?: boolean }) {
   const { data, index, today, navigate, run, store } = useStudy(),
     now = useClock(false);
+  const [timerSaved, setTimerSaved] = useState(false);
   const state = companionState(data, index, today),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
-  const nextUnlock = ROOM_REWARDS.find(
-    (reward) => progress.studyHours < reward.requiredHours,
-  );
+  const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
   const reviewCount = knowledgeIndex(data.knowledge, today).reviewQueue.length;
   const todaySeconds = index.days.get(today)?.seconds ?? 0,
     daily =
       data.goals.dailyMinutes ??
       Math.round((data.goals.weeklyHours * 60) / data.goals.weeklyDays),
-    freezeCount = streakFreezeCount(data.settings),
-    streak = streakWithFreezes(
-      new Set(index.sortedDates),
-      today,
-      freezeCount,
-    ).streak;
+    streak = currentStreak(new Set(index.sortedDates), today);
   const recovery = flexibleStreak(
     new Set(index.sortedDates),
     today,
@@ -58,28 +48,6 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     window.addEventListener("keydown", exit);
     return () => window.removeEventListener("keydown", exit);
   }, [focus, navigate]);
-
-  if (focus)
-    return (
-      <div className="focus-timer-screen" aria-label="Focus mode">
-        <div className="focus-timer-brand">тогтмол · FOCUS</div>
-        <button
-          className="focus-exit-button"
-          onClick={() => navigate("overview")}
-          aria-label="Focus-оос гарах"
-        >
-          <Icon name="close" size={18} />
-          Гарах
-        </button>
-        <div className="focus-timer-stage">
-          <StudyTimer
-            key={`focus:${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
-            compact
-          />
-        </div>
-        <p className="focus-hint">Esc · Focus-оос гарах</p>
-      </div>
-    );
   return (
     <div className={`study-world ${focus ? "focus-world" : ""}`}>
       <div className="world-heading">
@@ -139,59 +107,6 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           </button>
         </section>
       )}
-      <section className="home-stat-grid" aria-label="Өнөөдрийн товч мэдээлэл">
-        <article className="home-stat-card">
-          <span className="home-stat-icon">🔥</span>
-          <div>
-            <small>DAY STREAK</small>
-            <strong>
-              {streak} <em>өдөр</em>
-            </strong>
-            <p>{streak ? "Хэмнэлээ үргэлжлүүл" : "Өнөөдөр эхэл"}</p>
-          </div>
-        </article>
-        <article className="home-stat-card">
-          <span className="home-stat-icon">✦</span>
-          <div>
-            <small>LEVEL</small>
-            <strong>Lv. {progress.level}</strong>
-            <p>{progress.intoLevel}/100 XP</p>
-          </div>
-        </article>
-        <article className="home-stat-card">
-          <span className="home-stat-icon">XP</span>
-          <div>
-            <small>XP</small>
-            <strong>{progress.xp}</strong>
-            <p>Өнөөдөр +{progress.todayXP} XP</p>
-          </div>
-        </article>
-        <article className="home-stat-card home-stat-goal">
-          <span
-            className="home-stat-ring"
-            style={
-              {
-                "--goal":
-                  (daily > 0
-                    ? Math.min(100, (todaySeconds / (daily * 60)) * 100)
-                    : 0) + "%",
-              } as React.CSSProperties
-            }
-          >
-            <b>
-              {daily > 0
-                ? Math.round(Math.min(100, (todaySeconds / (daily * 60)) * 100))
-                : 0}
-              %
-            </b>
-          </span>
-          <div>
-            <small>DAILY GOAL</small>
-            <strong>{formatTime(todaySeconds)}</strong>
-            <p>{daily} мин target</p>
-          </div>
-        </article>
-      </section>
       <section className="room-stage" aria-label="Study Room">
         <div className="room-art">
           <RoomScene world={world} state={state} />
@@ -219,6 +134,9 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
         <StudyTimer
           key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
           compact
+          recentlySaved={focus && timerSaved}
+          onSessionSaved={() => setTimerSaved(true)}
+          onSessionStarted={() => setTimerSaved(false)}
         />
       </section>
       <div className="daily-strip">
@@ -302,11 +220,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
                 <div className="next-unlock">
                   <Icon name="leaf" size={18} />
                   <span>
-                    Дараагийн шагнал: <strong>{nextUnlock.name}</strong> ·{" "}
-                    {(nextUnlock.requiredHours - progress.studyHours).toFixed(
-                      1,
-                    )}{" "}
-                    цаг үлдлээ
+                    Дараагийн чимэглэл: <strong>{nextUnlock.name}</strong>
                   </span>
                 </div>
               )}
