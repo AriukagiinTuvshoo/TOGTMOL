@@ -26,6 +26,7 @@ export function currentStreakWithFreezes(
   const oldest = [...dates].sort()[0];
   if (!oldest) return { streak: 0, usedFreezes: 0 };
   let cursor = dates.has(today) ? today : shiftDate(today, -1);
+  if (!dates.has(cursor)) return { streak: 0, usedFreezes: 0 };
   let streak = 0;
   let usedFreezes = 0;
   const limit = Math.max(0, Math.floor(freezeLimit));
