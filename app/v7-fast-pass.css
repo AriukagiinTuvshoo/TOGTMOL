@@ -1,0 +1,300 @@
+/* TOGTMOL V7 fast premium pass.
+ * Visual-only layer: preserves existing feature CSS, state, persistence and themes.
+ */
+
+:root {
+  --tg-radius-xl: 22px;
+  --tg-radius-lg: 18px;
+  --tg-radius-md: 14px;
+  --tg-glass: color-mix(in srgb, var(--surface) 82%, transparent);
+  --tg-glass-strong: color-mix(in srgb, var(--surface) 94%, transparent);
+  --tg-glow: 0 18px 60px color-mix(in srgb, var(--moss) 12%, transparent);
+  --tg-shadow-soft: 0 12px 40px color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--moss) 10%, transparent), transparent 26%),
+    radial-gradient(circle at 96% 8%, color-mix(in srgb, var(--yellow) 8%, transparent), transparent 22%),
+    var(--bg);
+}
+
+.app-shell {
+  min-height: 100dvh;
+}
+
+.sidebar {
+  margin: 14px 0 14px 14px;
+  height: calc(100dvh - 28px);
+  top: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border-radius: var(--tg-radius-xl);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  box-shadow: var(--tg-shadow-soft);
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+}
+
+.sidebar nav {
+  gap: 6px;
+}
+
+.sidebar nav button {
+  min-height: 44px;
+  border-radius: var(--tg-radius-md);
+  border: 1px solid transparent;
+}
+
+.sidebar nav button:hover {
+  background: color-mix(in srgb, var(--moss-soft) 76%, transparent);
+}
+
+.sidebar nav button.active {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--moss-soft) 92%, transparent),
+      color-mix(in srgb, var(--surface) 90%, transparent)
+    );
+  border-color: color-mix(in srgb, var(--moss) 25%, var(--border));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--moss) 10%, transparent);
+}
+
+.app-main {
+  min-width: 0;
+}
+
+.topbar {
+  margin: 14px 16px 0;
+  min-height: 62px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--tg-radius-lg);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  box-shadow: 0 10px 34px color-mix(in srgb, var(--text) 6%, transparent);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.app-main > main {
+  padding-top: 8px;
+}
+
+.page-top {
+  padding: 18px 4px 16px;
+}
+
+.page-top h1 {
+  letter-spacing: -1px;
+}
+
+.card,
+.metric,
+.home-primary-cta,
+.daily-strip,
+.room-stage,
+.statistics-decision-head,
+.decision-card,
+.subject-category-card {
+  border-radius: var(--tg-radius-lg);
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  box-shadow: var(--tg-shadow-soft);
+}
+
+.card,
+.metric,
+.daily-strip,
+.statistics-decision-head,
+.decision-card {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--surface) 96%, transparent),
+      color-mix(in srgb, var(--surface-muted) 76%, transparent)
+    );
+}
+
+.card,
+.metric {
+  overflow: clip;
+}
+
+.button,
+.icon-button,
+.text-button {
+  border-radius: 12px;
+}
+
+.button.primary,
+.primary-button,
+.home-primary-cta {
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--moss) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 20%, transparent);
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--tg-radius-xl);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -80px;
+  top: -110px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--moss) 18%, transparent),
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card,
+.home-primary-cta,
+.goal-card,
+.focus-card,
+.insight-box,
+.study-row,
+.recent-item {
+  border-radius: var(--tg-radius-md);
+}
+
+.focus-card {
+  box-shadow:
+    0 18px 45px color-mix(in srgb, var(--moss) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
+}
+
+input,
+select,
+textarea {
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: color-mix(in srgb, var(--moss) 34%, var(--border));
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
+.mobile-nav {
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+}
+
+.mobile-nav button {
+  min-height: 54px;
+}
+
+.toast {
+  border-radius: 14px;
+  box-shadow: 0 18px 50px color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    margin-left: 10px;
+    margin-top: 10px;
+    height: calc(100dvh - 20px);
+    top: 10px;
+  }
+
+  .topbar {
+    margin: 10px 12px 0;
+  }
+
+  .page-top {
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background:
+      radial-gradient(circle at 50% -8%, color-mix(in srgb, var(--moss) 11%, transparent), transparent 32%),
+      var(--bg);
+  }
+
+  .topbar {
+    margin: 8px 10px 0;
+    min-height: 56px;
+    border-radius: 16px;
+  }
+
+  .app-main > main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .page-top {
+    padding: 14px 2px 12px;
+  }
+
+  .card,
+  .metric,
+  .statistics-decision-head,
+  .decision-card {
+    border-radius: 16px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    margin: 7px 8px 0;
+  }
+
+  .app-main > main {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .page-top h1 {
+    font-size: 25px;
+  }
+
+  .card,
+  .metric,
+  .statistics-decision-head,
+  .decision-card {
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .topbar,
+  .mobile-nav,
+  .card,
+  .metric,
+  .focus-card,
+  .home-primary-cta {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}
