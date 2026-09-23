@@ -1,6 +1,7 @@
-import { uid } from "@/lib/constants";
 import { dayBoundary } from "@/lib/preferences";
-import { parseDate, studyDate } from "@/lib/calculations/dates";
+import { datesBetween, parseDate, shiftDate, studyDate } from "@/lib/calculations/dates";
+import { uid } from "@/lib/constants";
+import { validCalendarTime, withCalendarDeadlines } from "@/lib/calculations/calendar";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
@@ -587,6 +588,153 @@ export const actions = {
                     : { ...t.extras, milestoneId },
               }
             : t,
+        ),
+      };
+    },
+  addRecurringTasks:
+    (input: {
+      subjectId: string;
+      title: string;
+      startDate: string;
+      endDate: string;
+      weekdays: number[];
+      startTime: string | null;
+      minutes: number;
+      goalId?: string | null;
+      milestoneId?: string | null;
+    }) =>
+    (data: StudyData): StudyData => {
+      subject(data, input.subjectId);
+      validDate(input.startDate);
+      validDate(input.endDate);
+      if (input.endDate < input.startDate) throw Error("Дуусах огноо эхлэхээс өмнө байна.");
+      if (!input.weekdays.length || input.weekdays.some((d) => d < 0 || d > 6))
+        throw Error("Давтагдах өдрөө сонгоно уу.");
+      if (!Number.isFinite(input.minutes) || input.minutes < 1 || input.minutes > 1440)
+        throw Error("Төлөвлөсөн хугацаа 1–1440 минут байна.");
+      if (input.startTime !== null && !validCalendarTime(input.startTime))
+        throw Error("Эхлэх цагийг шалгана уу.");
+      const dates = datesBetween(input.startDate, input.endDate);
+      if (dates.length > 366) throw Error("Нэг давталтын хүрээ 366 өдрөөс их байж болохгүй.");
+      const goal = data.studyGoals.find(
+        (g) => g.id === input.goalId && !g.deletedAt && g.subjectId === input.subjectId,
+      );
+      if (input.goalId && !goal) throw Error("Хичээлтэй тохирох зорилго сонгоно уу.");
+      if (
+        input.milestoneId &&
+        (!goal || !goalDetails(goal).milestones.some((m) => m.id === input.milestoneId))
+      )
+        throw Error("Зорилгын үе шатыг шалгана уу.");
+      const now = Date.now(), seriesId = uid("series");
+      const additions = dates
+        .filter((ds) => input.weekdays.includes(parseDate(ds)!.getDay()))
+        .map((date) => ({
+          ...record("task", now),
+          subjectId: input.subjectId,
+          date,
+          minutes: input.minutes,
+          title: input.title.trim().slice(0, 200),
+          completed: false,
+          startTime: input.startTime,
+          goalId: input.goalId ?? null,
+          extras: {
+            ...(input.milestoneId ? { milestoneId: input.milestoneId } : {}),
+            seriesId,
+            recurrence: {
+              weekdays: [...input.weekdays].sort((a, b) => a - b),
+              startDate: input.startDate,
+              endDate: input.endDate,
+              startTime: input.startTime,
+            },
+          },
+        }));
+      if (!additions.length) throw Error("Сонгосон хугацаанд давтагдах өдөр олдсонгүй.");
+      return { ...data, tasks: [...data.tasks, ...additions] };
+    },
+  addDeadline:
+    (input: { title: string; subjectId: string; date: string; time: string; notes?: string }) =>
+    (data: StudyData): StudyData => {
+      subject(data, input.subjectId);
+      validDate(input.date);
+      if (!input.title.trim() || input.title.trim().length > 200 || !validCalendarTime(input.time))
+        throw Error("Deadline-ийн нэр, огноо, цагийг шалгана уу.");
+      const now = Date.now();
+      const current = data.extras.calendarDeadlines;
+      const deadlines = Array.isArray(current) ? current : [];
+      return withCalendarDeadlines(data, [
+        ...deadlines,
+        {
+          id: uid("deadline"),
+          title: input.title.trim().slice(0, 200),
+          subjectId: input.subjectId,
+          date: input.date,
+          time: input.time,
+          notes: (input.notes ?? "").trim().slice(0, 2000),
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+        },
+      ] as never);
+    },
+  deleteDeadline:
+    (id: string) =>
+    (data: StudyData): StudyData => {
+      const deadlines = Array.isArray(data.extras.calendarDeadlines)
+        ? data.extras.calendarDeadlines
+        : [];
+      const now = Date.now();
+      return withCalendarDeadlines(
+        data,
+        deadlines.map((d) =>
+          d && typeof d === "object" && (d as Record<string, unknown>).id === id
+            ? { ...(d as Record<string, unknown>), deletedAt: now, updatedAt: now }
+            : d,
+        ) as never,
+      );
+    },
+  moveSession:
+    (id: string, newDate: string, expected: number) =>
+    (data: StudyData): StudyData => {
+      const old = data.sessions.find((s) => s.id === id && !s.deletedAt);
+      if (!old) throw Error("Session олдсонгүй.");
+      if (old.updatedAt !== expected) throw Error("Session өөрчлөгдсөн байна. Дахин оролдоно уу.");
+      validDate(newDate);
+      const from = parseDate(old.date), to = parseDate(newDate);
+      if (!from || !to) throw Error("Огноо буруу.");
+      if (newDate > studyDate(new Date(), dayBoundary(data.settings)))
+        throw Error("Session-ийг ирээдүйн өдөр рүү зөөж болохгүй.");
+      const delta = to.getTime() - from.getTime();
+      const shiftEpoch = (epoch: number) => {
+        const d = new Date(epoch);
+        const target = new Date(to);
+        target.setHours(d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+        return target.getTime();
+      };
+      const now = Date.now();
+      return {
+        ...data,
+        sessions: data.sessions.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                date: newDate,
+                startEpoch: shiftEpoch(s.startEpoch),
+                endEpoch: shiftEpoch(s.endEpoch),
+                segments: s.segments.map((span) => ({ start: span.start + delta, end: span.end + delta })),
+                updatedAt: now,
+                manuallyEdited: true,
+                extras: {
+                  ...s.extras,
+                  originalTiming: s.extras.originalTiming ?? {
+                    date: s.date,
+                    durationSec: s.durationSec,
+                    startEpoch: s.startEpoch,
+                    endEpoch: s.endEpoch,
+                    segments: s.segments,
+                  },
+                },
+              }
+            : s,
         ),
       };
     },
