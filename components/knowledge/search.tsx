@@ -27,6 +27,7 @@ export function GlobalSearch() {
         className="global-search-button"
         onClick={() => setOpen(true)}
         aria-label="Бүх мэдээллээс хайх"
+        aria-keyshortcuts="Meta+K Control+K"
       >
         <Icon name="search" size={18} />
         <span>Хайх</span>
