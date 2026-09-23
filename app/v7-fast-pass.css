@@ -18,8 +18,16 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--moss) 10%, transparent), transparent 26%),
-    radial-gradient(circle at 96% 8%, color-mix(in srgb, var(--yellow) 8%, transparent), transparent 22%),
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--moss) 10%, transparent),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 96% 8%,
+      color-mix(in srgb, var(--yellow) 8%, transparent),
+      transparent 22%
+    ),
     var(--bg);
 }
 
@@ -233,7 +241,11 @@ a:focus-visible {
 @media (max-width: 768px) {
   body {
     background:
-      radial-gradient(circle at 50% -8%, color-mix(in srgb, var(--moss) 11%, transparent), transparent 32%),
+      radial-gradient(
+        circle at 50% -8%,
+        color-mix(in srgb, var(--moss) 11%, transparent),
+        transparent 32%
+      ),
       var(--bg);
   }
 
