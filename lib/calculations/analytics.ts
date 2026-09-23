@@ -246,7 +246,7 @@ export function streakWithFreezes(
   freezes = 2,
 ) {
   const reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
-  let current = today,
+  let current = dates.has(today) ? today : shiftDate(today, -1),
     streak = 0,
     used = 0;
   const oldest = [...dates].sort()[0];
