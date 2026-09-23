@@ -164,7 +164,7 @@ function Shell() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [data.settings, navigate, run, setNotice, store]);
+  }, [data.settings, navigate, run, setNotice, store, t]);
   return (
     <div className={`app-shell ${view === "focus" ? "is-focus" : ""}`}>
       <a className="skip-link" href="#main-content">
