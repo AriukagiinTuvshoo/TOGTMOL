@@ -51,14 +51,17 @@ export function DonutChart({
   total: number;
   label: string;
 }) {
-  let cursor = 0;
-  const stops = items
-    .filter((item) => item.value > 0)
-    .map((item) => {
-      const start = cursor;
-      cursor += (item.value / Math.max(1, total)) * 100;
-      return `${item.color} ${start}% ${cursor}%`;
-    });
+  const visibleItems = items.filter((item) => item.value > 0);
+  const stops = visibleItems.map((item, index) => {
+    const start =
+      (visibleItems
+        .slice(0, index)
+        .reduce((sum, current) => sum + current.value, 0) /
+        Math.max(1, total)) *
+      100;
+    const end = start + (item.value / Math.max(1, total)) * 100;
+    return `${item.color} ${start}% ${end}%`;
+  });
   const background = stops.length
     ? `conic-gradient(${stops.join(", ")})`
     : "var(--surface-muted)";
