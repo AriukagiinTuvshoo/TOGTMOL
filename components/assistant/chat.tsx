@@ -12,6 +12,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 import { readMessages, type BondookMessage } from "@/lib/assistant/history";
 import { uid } from "@/lib/constants";
+import { useI18n } from "@/components/i18n/language-provider";
 export function BondookChat() {
   const { data, index, today, navigate, store, run } = useStudy(),
     [text, setText] = useState(""),
@@ -26,6 +27,7 @@ export function BondookChat() {
     end = useRef<HTMLDivElement>(null),
     request = useRef(0),
     disposed = useRef(false);
+  const { language, t } = useI18n();
   const online = !forceLocal && data.settings.extras.aiEnabled === true;
   const includeNotes = data.settings.extras.aiIncludeNotes === true;
   const messages = useMemo(
