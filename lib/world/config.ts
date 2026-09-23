@@ -140,6 +140,32 @@ export const ACCESSORIES: { id: Accessory; name: string; level: number }[] = [
   { id: "star", name: "Од", level: 2 },
   { id: "flower", name: "Цэцэг", level: 3 },
 ];
+export const ROOM_REWARDS = [
+  {
+    id: "botanical_poster",
+    name: "Ургамлын ханын зураг",
+    requiredHours: 5,
+    achievementId: null,
+  },
+  {
+    id: "bookshelf",
+    name: "Номын тавиур",
+    requiredHours: 10,
+    achievementId: "hours_10",
+  },
+  {
+    id: "star",
+    name: "Од",
+    requiredHours: 10,
+    achievementId: "hours_10",
+  },
+  {
+    id: "flower",
+    name: "Цэцэг",
+    requiredHours: 25,
+    achievementId: null,
+  },
+] as const;
 export function defaultWorld(): WorldSettings {
   return {
     design: "cozy",
