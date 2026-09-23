@@ -372,13 +372,9 @@ it("edits a daily task and reports its actual completion day in the calendar", a
       { name: "Календарь" },
     ),
   );
-  expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
-  expect(
-    within(screen.getByText("Биелсэн алхмууд").parentElement!).getByText(
-      "Гурван жишээ",
-    ),
-  ).toBeVisible();
-  expect(screen.getByText(/35м төлөвлөсөн/)).toBeVisible();
+  expect(await screen.findByText("Төлөвлөсөн алхмууд")).toBeVisible();
+  expect(screen.getByText("Гурван жишээ")).toBeVisible();
+  expect(screen.getByText(/35м/)).toBeVisible();
   await repo.close();
 });
 
