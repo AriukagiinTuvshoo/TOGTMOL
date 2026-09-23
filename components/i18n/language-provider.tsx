@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   isLanguage,
@@ -38,14 +38,32 @@ type LanguageContextValue = {
 };
 
 const Context = createContext<LanguageContextValue | null>(null);
+const listeners = new Set<() => void>();
+
+function currentLanguage(): Language {
+  if (typeof window === "undefined") return "mn";
+  return readLanguage(window.localStorage) ?? "mn";
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getServerLanguage() {
+  return "mn" as const;
+}
+
+function notifyLanguageChange() {
+  for (const listener of listeners) listener();
+}
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("mn");
-
-  useEffect(() => {
-    const stored = readLanguage(window.localStorage);
-    if (stored) setLanguageState(stored);
-  }, []);
+  const language = useSyncExternalStore(
+    subscribe,
+    currentLanguage,
+    getServerLanguage,
+  );
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -61,9 +79,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const onStorage = (event: StorageEvent) => {
       if (
         event.key === "togtmol-language" &&
-        isLanguage(event.newValue)
+        (event.newValue === null || isLanguage(event.newValue))
       ) {
-        setLanguageState(event.newValue);
+        notifyLanguageChange();
       }
     };
     window.addEventListener("storage", onStorage);
@@ -71,11 +89,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLanguage = useCallback((next: Language) => {
-    setLanguageState(next);
     saveLanguage(
       next,
       typeof window === "undefined" ? undefined : window.localStorage,
     );
+    notifyLanguageChange();
   }, []);
 
   const value = useMemo<LanguageContextValue>(
