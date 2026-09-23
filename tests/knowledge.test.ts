@@ -172,6 +172,32 @@ describe("retrieval practice", () => {
     ).toMatchObject({ interval: 1, repetitions: 1, dueOn: "2026-09-16" });
     expect(studyDate(new Date(early), 4)).toBe("2026-09-15");
   });
+  it("puts wrong quiz questions into the next retry queue and clears them after a later correct answer", () => {
+    let data = knowledgeFixture();
+    const first = gradeQuiz(quiz(), { q1: "1", q2: "Үнэн", q3: "WRONG" }, NOW);
+    data = saveQuizAttempt(first, NOW)(data);
+    expect(
+      knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          quizId: "quiz-1",
+          question: expect.objectContaining({ id: "q1" }),
+        }),
+        expect.objectContaining({
+          quizId: "quiz-1",
+          question: expect.objectContaining({ id: "q3" }),
+        }),
+      ]),
+    );
+    const second = gradeQuiz(quiz(), { q1: "4", q2: "Худал", q3: "3.14" }, NOW + 1);
+    data = saveQuizAttempt(second, NOW)(data);
+    const retries = knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue
+      .filter((q) => q.quizId === "quiz-1")
+      .map((q) => q.question.id);
+    expect(retries).not.toContain("q1");
+    expect(retries).not.toContain("q3");
+  });
   it("grades choice, true/false and normalized short answers, preserves question snapshots", () => {
     const data = knowledgeFixture(),
       attempt = gradeQuiz(quiz(), { q1: "4", q2: "Үнэн", q3: "  DEF  " }, NOW);
