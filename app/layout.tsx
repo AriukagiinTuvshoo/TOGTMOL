@@ -4,6 +4,9 @@ import "./world.css";
 import "./knowledge.css";
 import "./neon.css";
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://togtmol.vercel.app",
+  ),
   title: "Тогтмол v6 — Бондооктой хамт суралцъя",
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
