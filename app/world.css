@@ -2039,3 +2039,20 @@ details.card[open] > summary {
     transition: none;
   }
 }
+
+/* Keep the focus controls above the timer card on small screens. */
+.focus-timer-brand,
+.focus-exit-button,
+.focus-hint {
+  z-index: 40;
+}
+.focus-exit-button {
+  touch-action: manipulation;
+}
+@media (max-width: 620px) {
+  .focus-exit-button {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 40;
+  }
+}
