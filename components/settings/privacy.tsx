@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { useAccount } from "@/hooks/use-account";
-import { Modal, downloadJson, SectionTitle } from "@/components/ui/common";
+import { Modal, downloadJson } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
 import { DataSettings } from "./settings";
 export function PrivacyCenter() {
