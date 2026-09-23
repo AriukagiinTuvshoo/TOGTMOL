@@ -1,0 +1,59 @@
+name: Cloudflare Workers validation
+
+on:
+  push:
+    paths:
+      - "app/**"
+      - "components/**"
+      - "hooks/**"
+      - "lib/**"
+      - "public/**"
+      - "scripts/**"
+      - "open-next.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "wrangler.jsonc"
+      - ".github/workflows/cloudflare.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "components/**"
+      - "hooks/**"
+      - "lib/**"
+      - "public/**"
+      - "scripts/**"
+      - "open-next.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "wrangler.jsonc"
+      - ".github/workflows/cloudflare.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  workers-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:worker
+
+      - name: Validate generated Worker output
+        run: |
+          test -f .open-next/worker.js
+          test -d .open-next/assets
+          test -f public/sw.js
+          test -f public/precache-manifest.json
+
+      - name: Validate Wrangler configuration
+        run: npx wrangler deploy --dry-run
