@@ -2,6 +2,9 @@ name: Validate study app
 on:
   push:
   pull_request:
+concurrency:
+  group: togtmol-check-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
