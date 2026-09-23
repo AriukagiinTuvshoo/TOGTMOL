@@ -158,3 +158,36 @@
 .timer-compact .timer-card.timer-design-ring .timer-orbit::after {
   display: block;
 }
+
+.timer-inline-note {
+  width: min(560px, 100%);
+  margin: 14px auto 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-muted);
+  text-align: left;
+  box-sizing: border-box;
+}
+.timer-inline-note h3 {
+  margin: 5px 0 10px;
+  font-size: 14px;
+}
+.timer-inline-note .note-input {
+  width: 100%;
+  min-height: 150px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.timer-inline-note .tiny {
+  margin: 8px 0 0;
+}
+@media (max-width: 620px) {
+  .timer-inline-note {
+    padding: 13px;
+    border-radius: 14px;
+  }
+  .timer-inline-note .note-input {
+    min-height: 132px;
+  }
+}
