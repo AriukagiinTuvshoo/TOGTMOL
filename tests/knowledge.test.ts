@@ -17,7 +17,7 @@ import {
   searchResults,
 } from "@/lib/knowledge/index";
 import { safeLink, imageData } from "@/lib/knowledge/validation";
-import { localCardDrafts, parseCardDrafts } from "@/lib/knowledge/generation";
+import { localCardDrafts, parseCardDrafts, parseQuizDrafts, localQuizDrafts } from "@/lib/knowledge/generation";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { studyDate, flexibleStreak } from "@/lib/calculations/dates";
 import { reminderMessage } from "@/lib/reminders";
@@ -228,6 +228,43 @@ describe("retrieval practice", () => {
       parsePlanProposal({ title: "Төлөвлөгөө", weeks: 999 }),
     ).toThrow();
     expect(knowledgeFixture().knowledge).toHaveLength(5);
+  });
+  it("validates AI quiz drafts and supports the local study-material format", () => {
+    const questions = [
+      {
+        type: "choice",
+        prompt: "Python-ийн функцийн түлхүүр үг?",
+        options: ["def", "for", "if"],
+        answer: "def",
+        explanation: "Функцийг def-ээр зарлана.",
+      },
+      {
+        type: "boolean",
+        prompt: "2 нь 1-ээс их үү?",
+        options: [],
+        answer: "Үнэн",
+        explanation: "2 > 1.",
+      },
+    ];
+    expect(parseQuizDrafts({ questions })).toHaveLength(2);
+    expect(localQuizDrafts("Функц: Дахин ашиглах кодын хэсэг", 1)[0]).toMatchObject({
+      type: "short",
+      prompt: "Функц гэж юу вэ?",
+      answer: "Дахин ашиглах кодын хэсэг",
+    });
+    expect(() =>
+      parseQuizDrafts({
+        questions: [
+          {
+            type: "choice",
+            prompt: "Асуулт",
+            options: ["A", "B"],
+            answer: "C",
+            explanation: "",
+          },
+        ],
+      }),
+    ).toThrow();
   });
   it("awards actual card creation, retains achievements after soft deletion and supports recovery days", () => {
     let data = knowledgeFixture();
