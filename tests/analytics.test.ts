@@ -4,6 +4,10 @@ import {
   buildIndex,
   periodStats,
   weeklyReport,
+  lateSessionPattern,
+  rollingSevenDayReport,
+  streakWithFreezes,
+  subjectBalance,
 } from "@/lib/calculations/analytics";
 import {
   dateKey,
@@ -15,7 +19,7 @@ import {
 } from "@/lib/calculations/dates";
 import { unlock } from "@/lib/calculations/achievements";
 import { actions } from "@/lib/persistence/actions";
-import { fixture, NOW, session } from "./fixtures";
+import { fixture, NOW, session, subject } from "./fixtures";
 afterEach(() => vi.restoreAllMocks());
 describe("calendar and statistics", () => {
   it("handles month/year/leap boundaries without UTC date shifts", () => {
@@ -81,6 +85,95 @@ describe("calendar and statistics", () => {
     expect(w.previousFull).toBe(9000);
     expect(w.previousComparable).toBe(1800);
     expect(weeklyReport(buildIndex(fixture()), "2026-09-15").change).toBeNull();
+  });
+  it("uses freeze reserves to bridge missed days without creating a streak from freezes alone", () => {
+    expect(
+      streakWithFreezes(new Set(["2026-09-12", "2026-09-14"]), "2026-09-15", 2),
+    ).toMatchObject({
+      streak: 2,
+      freezesUsed: 1,
+      freezesRemaining: 1,
+    });
+    expect(
+      streakWithFreezes(
+        new Set(["2026-09-11", "2026-09-13", "2026-09-15"]),
+        "2026-09-15",
+        2,
+      ),
+    ).toMatchObject({
+      streak: 5,
+      freezesUsed: 2,
+      freezesRemaining: 0,
+    });
+    expect(
+      streakWithFreezes(new Set(["2026-09-12"]), "2026-09-15", 2).streak,
+    ).toBe(0);
+    expect(
+      streakWithFreezes(
+        new Set(["2026-09-12", "2026-09-14"]),
+        "2026-09-15",
+        1,
+      ),
+    ).toMatchObject({
+      streak: 2,
+      freezesUsed: 1,
+      freezesRemaining: 0,
+    });
+  });
+  it("compares rolling seven-day windows and flags concentrated subject time", () => {
+    const d = fixture();
+    d.subjects.push(subject("js", "JavaScript"));
+    d.sessions = [
+      session({ date: "2026-09-10", durationSec: 3600 }),
+      session({ id: "js", subjectId: "js", date: "2026-09-11", durationSec: 1200 }),
+      session({ id: "old", date: "2026-09-03", durationSec: 1800 }),
+    ];
+    const index = buildIndex(d, "2026-09-15");
+    expect(rollingSevenDayReport(index, "2026-09-15")).toMatchObject({
+      seconds: 4800,
+      previousSeconds: 1800,
+    });
+    expect(rollingSevenDayReport(index, "2026-09-15").change).toBeCloseTo(
+      166.6667,
+      3,
+    );
+    const balance = subjectBalance(periodStats(index, 7, "2026-09-15"));
+    expect(balance.warning).toBe(true);
+    expect(balance.topSubject).toBe("math");
+    expect(balance.topShare).toBeCloseTo(75);
+  });
+  it("detects unfinished late-night planned Pomodoro sessions from saved target metadata", () => {
+    const late = new Date(2026, 8, 15, 21, 30).getTime();
+    const d = fixture();
+    d.sessions = [
+      session({
+        id: "late-1",
+        startEpoch: late,
+        endEpoch: late + 15 * 60000,
+        durationSec: 900,
+        extras: { plannedDurationSec: 1800 },
+      }),
+      session({
+        id: "late-2",
+        startEpoch: late + 3600000,
+        endEpoch: late + 3600000 + 30 * 60000,
+        durationSec: 1800,
+        extras: { plannedDurationSec: 1800 },
+      }),
+      session({
+        id: "late-3",
+        startEpoch: late + 7200000,
+        endEpoch: late + 7200000 + 20 * 60000,
+        durationSec: 1200,
+        extras: { plannedDurationSec: 1800 },
+      }),
+    ];
+    expect(lateSessionPattern(buildIndex(d, "2026-09-15"))).toMatchObject({
+      candidates: 3,
+      measured: 3,
+      unfinished: 2,
+    });
+    expect(lateSessionPattern(buildIndex(d, "2026-09-15")).unfinishedPercent).toBeCloseTo(66.6667);
   });
   it("preserves unlocked achievements when history is edited", () => {
     let d = fixture();
