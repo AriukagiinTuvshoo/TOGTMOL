@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { StoredImage } from "@/components/ui/stored-image";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -100,7 +100,7 @@ export function StudyCalendar({
   const sessionsOn = (ds: string) => visibleSessions.filter((s) => s.date === ds);
   const deadlinesOn = (ds: string) => deadlines.filter((d) => d.date === ds);
 
-  const moveSelection = useCallback((delta: number) => {
+  const moveSelection = (delta: number) => {
     const next =
       calendarView === "month"
         ? (() => {
@@ -118,7 +118,7 @@ export function StudyCalendar({
     } else {
       setSelected(next);
     }
-  }, [calendarView, month, selected, selectedWeekStart]);
+  };
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -133,7 +133,20 @@ export function StudyCalendar({
         return;
       if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault();
-      moveSelection(event.key === "ArrowLeft" ? -1 : 1);
+      const delta = event.key === "ArrowLeft" ? -1 : 1;
+      if (calendarView === "month") {
+        const d = parseDate(month + "-01");
+        if (!d) return;
+        d.setMonth(d.getMonth() + delta);
+        const next = dateKey(d);
+        setMonth(next.slice(0, 7));
+        setSelected(next);
+      } else if (calendarView === "week") {
+        const next = shiftDate(selectedWeekStart, delta * 7);
+        setSelected(next);
+      } else {
+        setSelected(shiftDate(selected, delta));
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
