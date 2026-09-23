@@ -58,18 +58,18 @@ const ROOM_NAME_EN: Record<string, string> = {
   "Нүдний шил": "Glasses",
   "Од": "Star",
   "Цэцэг": "Flower",
-  "{language === "en" ? "Light wood" : "Цайвар мод"}": "Light wood",
+  "Цайвар мод": "Light wood",
   "Цагаан": "White",
-  "{language === "en" ? "Dark wood" : "Бараан мод"}": "Dark wood",
-  "{language === "en" ? "Linen" : "Маалинган"}": "Linen",
-  "{language === "en" ? "Green" : "Ногоон"}": "Green",
-  "{language === "en" ? "Soft pink" : "Бүдэг ягаан"}": "Soft pink",
-  "{language === "en" ? "Landscape" : "Байгаль"}": "Landscape",
-  "{language === "en" ? "No poster" : "Зураггүй"}": "No poster",
-  "{language === "en" ? "Scarf" : "Ороолт"}": "Scarf",
-  "{language === "en" ? "Vest" : "Хантааз"}": "Vest",
-  "{language === "en" ? "Match activity" : "Үйлдэлтэйгээ хамт"}": "Match activity",
-  "{language === "en" ? "Smiling" : "Инээмсэглэсэн"}": "Smiling",
+  "Бараан мод": "Dark wood",
+  "Маалинган": "Linen",
+  "Ногоон": "Green",
+  "Бүдэг ягаан": "Soft pink",
+  "Байгаль": "Landscape",
+  "Зураггүй": "No poster",
+  "Ороолт": "Scarf",
+  "Хантааз": "Vest",
+  "Үйлдэлтэйгээ хамт": "Match activity",
+  "Инээмсэглэсэн": "Smiling",
   "Тайван": "Calm",
 };
 const roomText = (value: string, language: "mn" | "en") =>
@@ -88,6 +88,7 @@ const ROOM_DESCRIPTION_EN: Record<string, string> = {
 };
 const roomDescription = (value: string, language: "mn" | "en") =>
   language === "en" ? ROOM_DESCRIPTION_EN[value] ?? value : value;
+
 export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
     { language } = useI18n(),
@@ -197,46 +198,46 @@ export function CustomizeRoom() {
             </fieldset>
             <div className="form-grid furniture-options">
               <label>
-                Ширээ
+                {language === "en" ? "Desk" : "Ширээ"}
                 <select
                   value={furniture.desk}
                   onChange={(e) =>
                     furnish({ desk: e.target.value as Furniture["desk"] })
                   }
                 >
-                  <option value="oak">Цайвар мод</option>
-                  <option value="white">Цагаан</option>
-                  <option value="walnut">Бараан мод</option>
+                  <option value="oak">{language === "en" ? "Light wood" : "Цайвар мод"}</option>
+                  <option value="white">{language === "en" ? "White" : "Цагаан"}</option>
+                  <option value="walnut">{language === "en" ? "Dark wood" : "Бараан мод"}</option>
                 </select>
               </label>
               <label>
-                Сандал
+                {language === "en" ? "Chair" : "Сандал"}
                 <select
                   value={furniture.chair}
                   onChange={(e) =>
                     furnish({ chair: e.target.value as Furniture["chair"] })
                   }
                 >
-                  <option value="linen">Маалинган</option>
-                  <option value="sage">Ногоон</option>
-                  <option value="rose">Бүдэг ягаан</option>
+                  <option value="linen">{language === "en" ? "Linen" : "Маалинган"}</option>
+                  <option value="sage">{language === "en" ? "Green" : "Ногоон"}</option>
+                  <option value="rose">{language === "en" ? "Soft pink" : "Бүдэг ягаан"}</option>
                 </select>
               </label>
               <label>
-                Ханын зураг
+                {language === "en" ? "Wall poster" : "Ханын зураг"}
                 <select
                   value={furniture.poster}
                   onChange={(e) =>
                     furnish({ poster: e.target.value as Furniture["poster"] })
                   }
                 >
-                  <option value="landscape">Байгаль</option>
-                  <option value="none">Зураггүй</option>
+                  <option value="landscape">{language === "en" ? "Landscape" : "Байгаль"}</option>
+                  <option value="none">{language === "en" ? "No poster" : "Зураггүй"}</option>
                   <option
                     value="botanical"
                     disabled={!unlockedRewards.has("botanical_poster")}
                   >
-                    Ургамлын зураг · 5 цаг
+                    {language === "en" ? "Botanical poster · 5 h" : "Ургамлын зураг · 5 цаг"}
                   </option>
                 </select>
               </label>
@@ -249,7 +250,7 @@ export function CustomizeRoom() {
                   }
                   onChange={(e) => furnish({ bookshelf: e.target.checked })}
                 />
-                Номын тавиур · 10 цаг
+                {language === "en" ? "Bookshelf · 10 h" : "Номын тавиур · 10 цаг"}
               </label>
             </div>
           </section>
@@ -270,7 +271,7 @@ export function CustomizeRoom() {
             </div>
             <div className="form-grid">
               <label>
-                Хувцас
+                {language === "en" ? "Outfit" : "Хувцас"}
                 <select
                   value={world.outfit}
                   onChange={(e) =>
@@ -279,13 +280,13 @@ export function CustomizeRoom() {
                     })
                   }
                 >
-                  <option value="scarf">Ороолт</option>
-                  <option value="vest">Хантааз</option>
-                  <option value="none">Энгийн</option>
+                  <option value="scarf">{language === "en" ? "Scarf" : "Ороолт"}</option>
+                  <option value="vest">{language === "en" ? "Vest" : "Хантааз"}</option>
+                  <option value="none">{language === "en" ? "Simple" : "Энгийн"}</option>
                 </select>
               </label>
               <label>
-                Илэрхийлэл
+                {language === "en" ? "Expression" : "Илэрхийлэл"}
                 <select
                   value={world.expression}
                   onChange={(e) =>
@@ -294,9 +295,9 @@ export function CustomizeRoom() {
                     })
                   }
                 >
-                  <option value="auto">Үйлдэлтэйгээ хамт</option>
-                  <option value="smile">Инээмсэглэсэн</option>
-                  <option value="calm">Тайван</option>
+                  <option value="auto">{language === "en" ? "Match activity" : "Үйлдэлтэйгээ хамт"}</option>
+                  <option value="smile">{language === "en" ? "Smiling" : "Инээмсэглэсэн"}</option>
+                  <option value="calm">{language === "en" ? "Calm" : "Тайван"}</option>
                 </select>
               </label>
             </div>
