@@ -615,6 +615,8 @@ export const actions = {
         throw Error("Төлөвлөсөн хугацаа 1–1440 минут байна.");
       if (input.startTime !== null && !validCalendarTime(input.startTime))
         throw Error("Эхлэх цагийг шалгана уу.");
+      if (!input.title.trim() || input.title.trim().length > 200)
+        throw Error("Төлөвлөгөөний нэрийг шалгана уу.");
       const dates = datesBetween(input.startDate, input.endDate);
       if (dates.length > 366) throw Error("Нэг давталтын хүрээ 366 өдрөөс их байж болохгүй.");
       const goal = data.studyGoals.find(
