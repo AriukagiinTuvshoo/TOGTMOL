@@ -102,7 +102,6 @@ export function KnowledgeHub() {
       const removed = await run(
         () => store.mutate(removeKnowledge(r.id)),
         "Хогийн саванд шилжүүллээ. Буцааж сэргээж болно.",
-        true,
       );
       if (removed) setSelected(null);
     }
