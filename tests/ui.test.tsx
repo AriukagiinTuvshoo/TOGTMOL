@@ -465,3 +465,54 @@ it("falls back to a labelled local reply when online AI has no configured accoun
     within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();
 });
+
+
+describe("command palette", () => {
+  it("opens with Cmd/Ctrl+K and navigates with keyboard", async () => {
+    render(<AppShell />);
+    await screen.findByText("Миний төлөвлөгөө");
+
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+    expect(
+      await screen.findByRole("dialog", { name: "Шуурхай команд ба хайлт" }),
+    ).toBeVisible();
+
+    const input = screen.getByRole("textbox", {
+      name: "Команд эсвэл мэдээлэл хайх",
+    });
+    fireEvent.change(input, { target: { value: "календарь" } });
+    expect(
+      screen.getByRole("option", { name: /Календарь/ }),
+    ).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    await screen.findByRole("button", { name: "7 хоног" });
+    expect(
+      screen.queryByRole("dialog", { name: "Шуурхай команд ба хайлт" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("moves through commands with ArrowDown and ArrowUp", async () => {
+    render(<AppShell />);
+    await screen.findByText("Миний төлөвлөгөө");
+
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    await screen.findByRole("dialog", { name: "Шуурхай команд ба хайлт" });
+
+    const input = screen.getByRole("textbox", {
+      name: "Команд эсвэл мэдээлэл хайх",
+    });
+    const options = screen.getAllByRole("option");
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+});
