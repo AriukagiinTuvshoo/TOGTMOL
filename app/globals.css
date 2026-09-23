@@ -4065,3 +4065,23 @@ main {
     inset: 30px;
   }
 }
+
+.subject-balance-row {
+  flex-wrap: wrap;
+}
+.subject-balance-row > span:last-of-type {
+  margin-left: auto;
+}
+.subject-balance-progress {
+  flex-basis: 100%;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+.subject-balance-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  max-width: 100%;
+}
