@@ -9,6 +9,7 @@ import {
   COMPANIONS,
   DESIGNS,
   DESK_ITEMS,
+  ROOM_REWARDS,
 } from "@/lib/world/config";
 import { companionProgress } from "@/lib/world/progress";
 import {
@@ -26,6 +27,13 @@ export function CustomizeRoom() {
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
   const [showAllRooms, setShowAllRooms] = useState(false);
+  const unlockedRewards = useMemo(
+    () => new Set(progress.roomRewards.map((reward) => reward.id)),
+    [progress.roomRewards],
+  );
+  const nextReward = ROOM_REWARDS.find(
+    (reward) => progress.studyHours < reward.requiredHours,
+  );
   const furniture = roomFurniture(world);
   const furnish = (patch: Partial<Furniture>) =>
     run(() =>
@@ -157,7 +165,7 @@ export function CustomizeRoom() {
                 >
                   <option value="landscape">Байгаль</option>
                   <option value="none">Зураггүй</option>
-                  <option value="botanical" disabled={progress.level < 2}>
+                  <option value="botanical" disabled={!unlockedRewards.has("botanical_poster")}>
                     Ургамлын зураг · 2-р түвшин
                   </option>
                 </select>
@@ -166,7 +174,7 @@ export function CustomizeRoom() {
                 <input
                   type="checkbox"
                   checked={furniture.bookshelf}
-                  disabled={progress.level < 3 && !furniture.bookshelf}
+                  disabled={!unlockedRewards.has("bookshelf") && !furniture.bookshelf}
                   onChange={(e) => furnish({ bookshelf: e.target.checked })}
                 />
                 Номын тавиур · 3-р түвшин
@@ -226,18 +234,49 @@ export function CustomizeRoom() {
                 <button
                   key={a.id}
                   className="button small"
-                  disabled={progress.level < a.level}
+                  disabled={
+                    !unlockedRewards.has(a.id) && !["none", "leaf", "glasses"].includes(a.id)
+                  }
                   aria-pressed={world.accessory === a.id}
                   onClick={() => update({ accessory: a.id })}
                 >
                   {a.name}
-                  {progress.level < a.level ? ` · Lv. ${a.level}` : ""}
+                  {!unlockedRewards.has(a.id) &&
+                  !["none", "leaf", "glasses"].includes(a.id)
+                    ? ` · ${ROOM_REWARDS.find((reward) => reward.id === a.id)?.requiredHours ?? "?"}ц`
+                    : ""}
                 </button>
               ))}
             </fieldset>
+            <div className="room-reward-progress">
+              <strong>Өрөөний шагнал</strong>
+              <span>
+                Нийт {progress.studyHours.toFixed(1)} цаг суралцжээ.
+                {nextReward
+                  ? ` Дараагийнх: ${nextReward.name} · ${nextReward.requiredHours} цаг.`
+                  : " Бүх шагналаа нээлээ."}
+              </span>
+              <div
+                className="progress"
+                role="progressbar"
+                aria-label="Дараагийн өрөөний шагналын ахиц"
+                aria-valuemin={0}
+                aria-valuemax={nextReward?.requiredHours ?? 100}
+                aria-valuenow={Math.min(
+                  progress.studyHours,
+                  nextReward?.requiredHours ?? 100,
+                )}
+              >
+                <span
+                  style={{
+                    width: `${nextReward ? Math.min(100, (progress.studyHours / nextReward.requiredHours) * 100) : 100}%`,
+                  }}
+                />
+              </div>
+            </div>
             <p className="tiny muted">
-              Бүх хамтрагч, өрөө анхнаасаа нээлттэй. Од, цэцэг нь суралцах явцад
-              нэмэгдэнэ.
+              Өмнөх өрөөний тохиргоо хэвээр хадгалагдана. Шинэ зүйлсийг
+              суралцсан цагаар нээнэ.
             </p>
           </section>
         </div>
