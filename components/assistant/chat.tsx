@@ -12,6 +12,7 @@ import { getSupabase } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 import { readMessages, type BondookMessage } from "@/lib/assistant/history";
 import { uid } from "@/lib/constants";
+import { VoiceInput } from "./voice-input";
 export function BondookChat() {
   const { data, index, today, navigate, store, run } = useStudy(),
     [text, setText] = useState(""),
@@ -174,6 +175,20 @@ export function BondookChat() {
     } finally {
       if (!disposed.current && request.current === token) setBusy(false);
     }
+  };
+  const getVoiceAccessToken = async () => {
+    const namespace = store.getSnapshot().namespace;
+    const client = await getSupabase();
+    const session = client
+      ? (await client.auth.getSession()).data.session
+      : null;
+    if (
+      !session?.access_token ||
+      namespace !== `account:${session.user.id}` ||
+      store.getSnapshot().namespace !== namespace
+    )
+      return null;
+    return session.access_token;
   };
   return (
     <div className="stack">
@@ -362,16 +377,31 @@ export function BondookChat() {
             void send(text);
           }}
         >
-          <input
-            aria-label="Бондоокт бичих"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={1500}
-            placeholder="Жишээ: Энэ долоо хоног ямар байсан бэ?"
-            disabled={busy || changingAI}
-          />
+          <div className="chat-compose-inputs">
+            <textarea
+              aria-label="Бондоокт бичих"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={3000}
+              rows={2}
+              placeholder="Жишээ: Энэ долоо хоног ямар байсан бэ?"
+              disabled={busy || changingAI}
+            />
+            <VoiceInput
+              disabled={busy || changingAI}
+              getAccessToken={getVoiceAccessToken}
+              onTranscript={(transcript) => {
+                const combined = [text.trim(), transcript.trim()]
+                  .filter(Boolean)
+                  .join(" ");
+                if (combined.length > 3000) return false;
+                setText(combined);
+                return true;
+              }}
+            />
+          </div>
           <button
-            className="button primary"
+            className="button primary chat-send"
             aria-label="Бондоокт илгээх"
             disabled={busy || changingAI || !text.trim()}
           >

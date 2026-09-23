@@ -70,7 +70,7 @@ export async function handleBondookRequest(
     (kind === "chat" || kind === "plan") &&
     (typeof input?.message !== "string" ||
       !input.message.trim() ||
-      input.message.length > 1500 ||
+      input.message.length > 3000 ||
       !input.context ||
       typeof input.context !== "object" ||
       Array.isArray(input.context))

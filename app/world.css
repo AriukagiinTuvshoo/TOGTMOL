@@ -818,12 +818,51 @@ input[type="checkbox"] {
 }
 .chat-compose {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
   margin: 10px 0;
 }
-.chat-compose input {
+.chat-compose-inputs {
   flex: 1;
   min-width: 0;
+}
+.chat-compose textarea {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  max-height: 160px;
+  resize: vertical;
+}
+.chat-send {
+  min-width: 48px;
+  min-height: 48px;
+}
+.voice-input {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+.voice-consent {
+  align-items: flex-start;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.voice-consent input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.voice-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.voice-controls .button {
+  min-height: 44px;
+}
+.voice-status {
+  margin: 0;
+  min-height: 18px;
 }
 .ai-consent {
   border: 1px solid var(--border);
@@ -1856,7 +1895,20 @@ details.card[open] > summary {
     font-size: 20px;
   }
   .chat-compose {
-    gap: 6px;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .chat-compose-inputs {
+    min-width: 0;
+  }
+  .chat-compose textarea {
+    min-height: 64px;
+  }
+  .voice-controls .button {
+    flex: 1 1 auto;
+  }
+  .voice-consent {
+    font-size: 10px;
   }
   .modal {
     max-width: calc(100vw - 16px);
