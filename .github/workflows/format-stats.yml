@@ -1,0 +1,29 @@
+name: Format statistics branch
+on:
+  push:
+    branches:
+      - stats-decision-dashboard-v3
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write app/globals.css components/dashboard/overview.tsx components/statistics/charts.tsx components/statistics/statistics.tsx lib/calculations/analytics.ts lib/calculations/decision.ts lib/world/progress.ts tests/analytics.test.ts tests/ui.test.tsx
+      - name: Commit formatting changes
+        run: |
+          if git diff --quiet; then
+            echo "Already formatted."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/globals.css components/dashboard/overview.tsx components/statistics/charts.tsx components/statistics/statistics.tsx lib/calculations/analytics.ts lib/calculations/decision.ts lib/world/progress.ts tests/analytics.test.ts tests/ui.test.tsx
+          git commit -m "style(stats): format decision dashboard"
+          git push
