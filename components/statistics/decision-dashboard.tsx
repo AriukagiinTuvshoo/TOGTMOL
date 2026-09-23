@@ -318,6 +318,15 @@ export function DecisionDashboard() {
                         <strong>{subject?.name ?? "Бусад"}</strong>
                       </div>
                       <span>{share.toFixed(0)}% · {formatTime(seconds)}</span>
+                      <div className="subject-balance-progress">
+                        <span
+                          style={{
+                            width: share + "%",
+                            background:
+                              subject?.color ?? "var(--surface-3)",
+                          }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
