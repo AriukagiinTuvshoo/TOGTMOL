@@ -149,11 +149,29 @@ export function QuizSession({
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
+  const quizRetry = knowledgeIndex(data.knowledge, today).quizRetryQueue.filter(
+    (q) =>
+      !data.knowledge.some(
+        (r) =>
+          r.kind === "attempt" &&
+          r.quizId === quiz.id &&
+          r.answers.some((a) => a.question.id === q.id && a.correct),
+      ),
+  );
+  const retryIds = new Set(quiz.questions.map((q) => q.id));
+  const retryQuestions = quizRetry.filter((q) => !retryIds.has(q.id));
+  const practiceQuiz: StudyQuiz =
+    retryQuestions.length > 0
+      ? {
+          ...quiz,
+          questions: [...quiz.questions, ...retryQuestions],
+        }
+      : quiz;
   const [responses, setResponses] = useState<Record<string, string>>({}),
     [result, setResult] = useState<QuizAttempt | null>(null),
     [savedCards, setSavedCards] = useState(false);
   const submit = async () => {
-    const attempt = gradeQuiz(quiz, responses);
+    const attempt = gradeQuiz(practiceQuiz, responses);
     attempt.date = today;
     if (
       await run(
@@ -198,6 +216,15 @@ export function QuizSession({
   };
   return (
     <Modal title={quiz.title} onClose={onClose}>
+      {practiceQuiz.questions.length > quiz.questions.length && !result && (
+        <div className="ai-consent">
+          <strong>🔁 Өмнөх алдаатай асуулт</strong>
+          <p className="tiny muted">
+            Энэ quiz-ийн өмнөх буруу хариултуудыг автоматаар дахин орууллаа.
+            Зөв хариулсны дараа дахин жагсаалтад орохгүй.
+          </p>
+        </div>
+      )}
       {result ? (
         <div className="form-stack">
           <div className="quiz-score">
