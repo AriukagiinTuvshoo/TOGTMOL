@@ -43,6 +43,7 @@ npm run open:android
 Native project-ийг шинээр үүсгэх шаардлагатай бол эхлээд тухайн platform folder-ийг устгаад дараа нь `npm run add:ios` эсвэл `npm run add:android` ажиллуулна.
 
 iOS build/signing нь macOS + Xcode дээр, Android build/signing нь Android Studio/Android SDK дээр хийгдэнэ.
+Android Gradle project нь Java 21 ашигладаг тул Android build орчинд JDK 21 тохируулсан байх ёстой.
 
 ## App identity
 
@@ -76,7 +77,7 @@ Supabase Dashboard → Authentication → URL Configuration → Redirect URLs-д
 
 1. Production web domain-оо тогтоож `CAPACITOR_SERVER_URL`-д ашиглах.
 2. Supabase Auth redirect configuration-д `togtmol://auth/callback` болон production web callback-ийг зөвшөөрөх.
-3. iOS bundle display name, signing team, deployment target, privacy manifests-ийг Xcode дээр шалгах.
+3. iOS bundle display name, signing team, deployment target, app privacy settings болон signing-ийг Xcode дээр шалгах.
 4. Android application ID, signing key, target SDK болон Play App Signing-ийг Android Studio/Play Console дээр тохируулах.
 5. Release version: iOS `1.0.0`, Android `1.0.0`.
 6. Бодит iPhone болон Android төхөөрөмж дээр login, offline/PWA, sync, timer, YouTube, privacy delete урсгалуудыг шалгах.
