@@ -9,7 +9,12 @@ export function CapacitorAuthBridge() {
   const { setNotice } = useStudy();
 
   useEffect(() => {
-    const client = getSupabase();
+    let client;
+    try {
+      client = getSupabase();
+    } catch {
+      return;
+    }
     if (!client) return;
 
     let active = true;
