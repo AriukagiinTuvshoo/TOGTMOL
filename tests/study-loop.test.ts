@@ -168,6 +168,7 @@ describe("v4.1 goal milestones and task lifecycle", () => {
     data = actions.toggleTask(task.id)(data);
     expect(milestoneProgress(data, goal, today)[0].seconds).toBe(0);
     data = actions.start("math", "pomodoro", "focus", 25, task.id)(data);
+    expect(data.activeTimer?.extras.plannedDurationSec).toBe(1500);
     expect(() => actions.deleteTask(task.id)(data)).toThrow();
     now += 60000;
     data = actions.pause()(data);
