@@ -229,7 +229,7 @@ function Shell() {
               {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view])}
             </span>
           </div>
-          <div className="topbar-right">
+          <div className="topbar-right">\n            {state.ready && <LanguageSwitcher compact />}
             {state.ready && (
               <ModuleBoundary name={t("common.search")}>
                 <GlobalSearch />
@@ -418,10 +418,12 @@ function Shell() {
 }
 export function AppShell() {
   return (
-    <StudyProvider>
-      <AccountProvider>
-        <Shell />
-      </AccountProvider>
-    </StudyProvider>
+    <LanguageProvider>
+      <StudyProvider>
+        <AccountProvider>
+          <Shell />
+        </AccountProvider>
+      </StudyProvider>
+    </LanguageProvider>
   );
 }
