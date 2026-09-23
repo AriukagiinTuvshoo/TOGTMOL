@@ -1,6 +1,7 @@
 "use client";
 import { useStudy } from "@/hooks/use-study";
 import { dayBoundary } from "@/lib/preferences";
+import { calendarTimeZone, listTimeZones } from "@/lib/calculations/calendar";
 import { TimerSoundSettings } from "./timer-sound-settings";
 export function StudyPreferences() {
   const { data, store, run } = useStudy();
@@ -53,6 +54,34 @@ export function StudyPreferences() {
         Төхөөрөмжийн цагийн бүсийг ашиглана. Жишээ нь 04:00 сонговол шөнийн
         02:00-ийн хэмжилт өмнөх суралцах өдөрт тооцогдоно. Гараар сонгосон
         огноотой бичлэг хэвээр үлдэнэ.
+      </p>
+      <label>
+        Долоо хоног эхлэх өдөр
+        <select
+          value={data.settings.extras.weekStartsOn === "sunday" ? "sunday" : "monday"}
+          onChange={(e) => void update("weekStartsOn", e.target.value)}
+        >
+          <option value="monday">Даваа гараг</option>
+          <option value="sunday">Ням гараг</option>
+        </select>
+      </label>
+      <p className="tiny muted">
+        Календарь болон долоо хоногийн харагдац энэ сонголтыг дагана.
+      </p>
+      <label>
+        Календарийн цагийн бүс
+        <select
+          value={calendarTimeZone(data)}
+          onChange={(e) => void update("timeZone", e.target.value)}
+        >
+          {listTimeZones().map((zone) => (
+            <option key={zone} value={zone}>{zone}</option>
+          ))}
+        </select>
+      </label>
+      <p className="tiny muted">
+        Төлөвлөсөн цаг, deadline, timer-ийн суралцах өдрийг энэ timezone-д
+        тооцно. Одоогийн системийн бүс: {calendarTimeZone(data)}.
       </p>
       <label>
         Дараалалдаа зөвшөөрөх амралтын өдөр
