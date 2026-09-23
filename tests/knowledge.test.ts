@@ -190,7 +190,7 @@ describe("retrieval practice", () => {
         }),
       ]),
     );
-    const second = gradeQuiz(quiz(), { q1: "4", q2: "Худал", q3: "3.14" }, NOW + 1);
+    const second = gradeQuiz(quiz(), { q1: "4", q2: "Худал", q3: "def" }, NOW + 1);
     data = saveQuizAttempt(second, NOW)(data);
     const retries = knowledgeIndex(data.knowledge, "2026-09-15").quizRetryQueue
       .filter((q) => q.quizId === "quiz-1")
