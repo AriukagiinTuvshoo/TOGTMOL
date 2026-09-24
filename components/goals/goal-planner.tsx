@@ -281,6 +281,7 @@ export function PlanWizard({
   initial?: string;
 }) {
   const { data, today, store, run, navigate } = useStudy(),
+    { language } = useI18n(),
     [text, setText] = useState(initial),
     [input, setInput] = useState<PlanInput | null>(
       initial ? inferPlan(initial, data, today) : null,
@@ -342,6 +343,7 @@ export function PlanWizard({
             daysPerWeek: draft.daysPerWeek,
             minutesPerDay: draft.minutesPerDay,
           },
+          language,
         }),
         signal: controller.signal,
       });

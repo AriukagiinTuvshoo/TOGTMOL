@@ -2,8 +2,10 @@
 import { useStudy } from "@/hooks/use-study";
 import { dayBoundary } from "@/lib/preferences";
 import { TimerSoundSettings } from "./timer-sound-settings";
+import { useI18n } from "@/components/i18n/language-provider";
 export function StudyPreferences() {
   const { data, store, run } = useStudy();
+  const { language, t } = useI18n();
   const update = (key: string, value: unknown) =>
     run(
       () =>
@@ -19,15 +21,15 @@ export function StudyPreferences() {
     );
   return (
     <section className="card form-stack">
-      <span className="eyebrow">ӨӨРИЙН ХЭМНЭЛ</span>
-      <h2>Хугацаа ба сануулга</h2>
+      <span className="eyebrow">{t("settings.ownRhythm")}</span>
+      <h2>{language === "en" ? "Time & reminders" : "Хугацаа ба сануулга"}</h2>
       <label className="check-label">
         <input
           type="checkbox"
           checked={data.settings.extras.wakeLock !== false}
           onChange={(e) => void update("wakeLock", e.target.checked)}
         />
-        Timer ажиллаж байх үед дэлгэцийг сэрүүн байлгах
+        {language === "en" ? "Keep the screen awake while the timer runs" : "Timer ажиллаж байх үед дэлгэцийг сэрүүн байлгах"}
       </label>
       <p className="tiny muted">
         Браузер зөвшөөрсөн үед ажиллана. Цонх далдрах, цэнэг бага байх үед
@@ -35,7 +37,7 @@ export function StudyPreferences() {
       </p>
       <TimerSoundSettings />
       <label>
-        Суралцах өдөр эхлэх цаг
+        {language === "en" ? "Study day start time" : "Суралцах өдөр эхлэх цаг"}
         <select
           value={dayBoundary(data.settings)}
           onChange={(e) =>
@@ -55,14 +57,14 @@ export function StudyPreferences() {
         огноотой бичлэг хэвээр үлдэнэ.
       </p>
       <label>
-        Дараалалдаа зөвшөөрөх амралтын өдөр
+        {language === "en" ? "Grace days for your streak" : "Дараалалдаа зөвшөөрөх амралтын өдөр"}
         <select
           value={Number(data.settings.extras.graceDays ?? 1)}
           onChange={(e) => void update("graceDays", Number(e.target.value))}
         >
-          <option value={0}>Амралтын өдөр тооцохгүй</option>
-          <option value={1}>1 өдөр</option>
-          <option value={2}>2 өдөр</option>
+          <option value={0}>{language === "en" ? "No grace day" : "Амралтын өдөр тооцохгүй"}</option>
+          <option value={1}>{language === "en" ? "1 day" : "1 өдөр"}</option>
+          <option value={2}>{language === "en" ? "2 days" : "2 өдөр"}</option>
         </select>
       </label>
       <p className="tiny muted">
@@ -70,11 +72,11 @@ export function StudyPreferences() {
         харагдана.
       </p>
       <fieldset>
-        <legend>Өдрийн сануулгад оруулах зүйл</legend>
+        <legend>{language === "en" ? "Include in daily reminders" : "Өдрийн сануулгад оруулах зүйл"}</legend>
         {[
-          ["remindPlan", "Өдрийн төлөвлөгөө"],
-          ["remindCards", "Давтах карт"],
-          ["remindGoals", "Дөхөж буй зорилгын хугацаа"],
+          ["remindPlan", language === "en" ? "Daily plan" : "Өдрийн төлөвлөгөө"],
+          ["remindCards", language === "en" ? "Flashcard review" : "Давтах карт"],
+          ["remindGoals", language === "en" ? "Upcoming goal deadlines" : "Дөхөж буй зорилгын хугацаа"],
         ].map(([key, label]) => (
           <label className="check-label" key={key}>
             <input

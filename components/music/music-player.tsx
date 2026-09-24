@@ -2,19 +2,19 @@
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AMBIENTS } from "@/lib/music/catalog";
-import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { youtubeURL } from "@/lib/music/youtube";
 import { Icon } from "@/components/ui/icon";
 import { useMusic } from "./music-provider";
 import "./music.css";
 import type { MusicSource } from "@/types/study";
+import { useI18n } from "@/components/i18n/language-provider";
 export { MusicProvider } from "./music-provider";
 
 const YouTubeEmbed = dynamic(
   () => import("./youtube-embed").then((m) => m.YouTubeEmbed),
   {
     ssr: false,
-    loading: () => <p role="status">Бичлэгийг ачаалж байна…</p>,
+    loading: () => <p role="status">Loading player…</p>,
   },
 );
 
@@ -24,15 +24,20 @@ function isYouTubeSource(
   return source.kind === "video" || source.kind === "playlist";
 }
 
-function sourceKind(source: MusicSource) {
+function sourceKind(source: MusicSource, language: "mn" | "en") {
   if (source.kind === "audio")
-    return source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос";
+    return source.audioStorageKey
+      ? language === "en"
+        ? "Device file"
+        : "Төхөөрөмжийн файл"
+      : language === "en"
+        ? "Audio URL"
+        : "Аудио холбоос";
   return "YouTube";
 }
 
 export function MusicPlayer() {
   const {
-    data,
     volume,
     muted,
     savePreference,
@@ -52,7 +57,6 @@ export function MusicPlayer() {
     sources,
     selected,
     source,
-    isAmbient,
     name,
     select,
     minimize,
@@ -68,6 +72,7 @@ export function MusicPlayer() {
     onError,
   } = useMusic();
   const dock = useRef<HTMLElement>(null);
+  const { language } = useI18n();
 
   useEffect(() => {
     const element = dock.current;
@@ -96,7 +101,7 @@ export function MusicPlayer() {
     <aside
       ref={dock}
       className={`music-player music-dock ${open ? "music-expanded" : ""}`}
-      aria-label="Study music"
+      aria-label={language === "en" ? "Study music" : "Суралцах хөгжим"}
       data-open={open}
       data-kind={source?.kind ?? "ambient"}
       data-playback={playback}
@@ -114,10 +119,10 @@ export function MusicPlayer() {
             <strong>{name}</strong>
             <small>
               {playing
-                ? "Тоглож байна"
+                ? language === "en" ? "Playing" : "Тоглож байна"
                 : playback === "paused"
-                  ? "Түр зогссон"
-                  : "Хөгжим сонгоод эхлүүлнэ"}
+                  ? language === "en" ? "Paused" : "Түр зогссон"
+                  : language === "en" ? "Choose music to start" : "Хөгжим сонгоод эхлүүлнэ"}
             </small>
           </span>
         </button>
@@ -125,14 +130,14 @@ export function MusicPlayer() {
         <div className="music-controls">
           <button
             className="icon-button music-step"
-            aria-label="Өмнөх хөгжим"
+            aria-label={language === "en" ? "Previous track" : "Өмнөх хөгжим"}
             onClick={() => next(-1)}
           >
             <Icon name="previous" size={18} />
           </button>
           <button
             className="icon-button music-play"
-            aria-label={playing ? "Хөгжим түр зогсоох" : "Хөгжим тоглуулах"}
+            aria-label={playing ? (language === "en" ? "Pause music" : "Хөгжим түр зогсоох") : (language === "en" ? "Play music" : "Хөгжим тоглуулах")}
             onClick={toggle}
             disabled={busy}
           >
@@ -140,14 +145,14 @@ export function MusicPlayer() {
           </button>
           <button
             className="icon-button music-step"
-            aria-label="Дараагийн хөгжим"
+            aria-label={language === "en" ? "Next track" : "Дараагийн хөгжим"}
             onClick={() => next(1)}
           >
             <Icon name="next" size={18} />
           </button>
           <button
             className="icon-button music-stop"
-            aria-label="Хөгжим зогсоох"
+            aria-label={language === "en" ? "Stop music" : "Хөгжим зогсоох"}
             onClick={stop}
             disabled={!playing && playback === "stopped"}
           >
@@ -155,7 +160,7 @@ export function MusicPlayer() {
           </button>
           <button
             className="icon-button"
-            aria-label={muted ? "Дууг нээх" : "Дууг хаах"}
+            aria-label={muted ? (language === "en" ? "Unmute" : "Дууг нээх") : (language === "en" ? "Mute" : "Дууг хаах")}
             aria-pressed={muted}
             onClick={() => void savePreference({ muted: !muted })}
           >
@@ -163,7 +168,7 @@ export function MusicPlayer() {
           </button>
           <input
             className="music-volume"
-            aria-label="Дууны түвшин"
+            aria-label={language === "en" ? "Volume" : "Дууны түвшин"}
             type="range"
             min="0"
             max="1"
@@ -175,7 +180,7 @@ export function MusicPlayer() {
           />
           <button
             className="icon-button"
-            aria-label={open ? "Хөгжим багасгах" : "Хөгжим нээх"}
+            aria-label={open ? (language === "en" ? "Minimize music" : "Хөгжим багасгах") : (language === "en" ? "Open music" : "Хөгжим нээх")}
             aria-expanded={open}
             onClick={() => (open ? minimize() : setOpen(true))}
           >
@@ -188,7 +193,7 @@ export function MusicPlayer() {
         <p className="music-error" role="status">
           {error}
           <button className="text-button" onClick={retry}>
-            Дахин оролдох
+            {language === "en" ? "Retry" : "Дахин оролдох"}
           </button>
         </p>
       )}
@@ -197,9 +202,9 @@ export function MusicPlayer() {
         <section className="music-library" hidden={!open}>
           <div className="music-library-heading">
             <div>
-              <span className="eyebrow">МИНИЙ ХӨГЖМИЙН САН</span>
+              <span className="eyebrow">{language === "en" ? "MY MUSIC LIBRARY" : "МИНИЙ ХӨГЖМИЙН САН"}</span>
               <p className="tiny muted">
-                Цөөн, хэрэгтэй аялгуу. Өөрийн дуугаа бас хадгалж болно.
+                {language === "en" ? "A small useful library. You can save your own tracks too." : "Цөөн, хэрэгтэй аялгуу. Өөрийн дуугаа бас хадгалж болно."}
               </p>
             </div>
             <span className="music-count">
@@ -252,7 +257,7 @@ export function MusicPlayer() {
                 </span>
               </label>
               <span className="tiny muted">
-                80 MB хүртэл · MP3 болон MP4 · төхөөрөмж дээр хадгална
+                {language === "en" ? "Up to 80 MB · MP3 and MP4 · stored on this device" : "80 MB хүртэл · MP3 болон MP4 · төхөөрөмж дээр хадгална"}
               </span>
             </div>
 
@@ -264,7 +269,7 @@ export function MusicPlayer() {
               }}
             >
               <label>
-                Аудио эсвэл YouTube холбоос
+                {language === "en" ? "Audio or YouTube URL" : "Аудио эсвэл YouTube холбоос"}
                 <input
                   type="url"
                   required
@@ -276,14 +281,14 @@ export function MusicPlayer() {
               </label>
               <div className="button-row">
                 <input
-                  aria-label="Хөгжмийн нэр"
+                  aria-label={language === "en" ? "Track name" : "Хөгжмийн нэр"}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Нэр өгөх"
+                  placeholder={language === "en" ? "Name it" : "Нэр өгөх"}
                   maxLength={120}
                 />
                 <button className="button" disabled={busy}>
-                  Хадгалах
+                  {language === "en" ? "Save" : "Хадгалах"}
                 </button>
               </div>
             </form>
@@ -291,7 +296,7 @@ export function MusicPlayer() {
 
           {sources.length > 0 && (
             <div className="saved-music">
-              <span className="eyebrow">ХАДГАЛСАН</span>
+              <span className="eyebrow">{language === "en" ? "SAVED" : "ХАДГАЛСАН"}</span>
               <ul>
                 {sources.map((s) => (
                   <li key={s.id}>
@@ -306,7 +311,7 @@ export function MusicPlayer() {
                       />
                       <span>
                         <strong>{s.title}</strong>
-                        <small>{sourceKind(s)}</small>
+                        <small>{sourceKind(s, language)}</small>
                       </span>
                     </button>
                     <button
@@ -339,7 +344,7 @@ export function MusicPlayer() {
                 <Icon name="music" size={36} />
               </span>
               <div>
-                <span className="eyebrow">{sourceKind(source)}</span>
+                <span className="eyebrow">{sourceKind(source, language)}</span>
                 <h3>{name}</h3>
                 <p className="muted">
                   {playing

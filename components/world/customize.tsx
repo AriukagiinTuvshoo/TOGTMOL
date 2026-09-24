@@ -22,8 +22,82 @@ import { RoomScene } from "./room-scene";
 import { CompanionAvatar } from "./companion";
 import { SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
+import { useI18n } from "@/components/i18n/language-provider";
+const ROOM_NAME_EN: Record<string, string> = {
+  "Үнэг": "Fox",
+  "Муур": "Cat",
+  "Баавгай": "Bear",
+  "Туулай": "Rabbit",
+  "Оцон шувуу": "Penguin",
+  "Нохой": "Dog",
+  "Дулаахан өрөө": "Cozy room",
+  "Шөнийн өрөө": "Night room",
+  "Бороотой цонх": "Rainy window",
+  "Номын сан": "Library",
+  "Ой": "Forest",
+  "Кафе": "Café",
+  "Цэвэрхэн өрөө": "Minimal room",
+  "Сансар": "Space",
+  "Япон өрөө": "Japanese room",
+  "Хоккайдо": "Hokkaido",
+  "Далайн эрэг": "Ocean",
+  "Өдөр": "Day",
+  "Орой": "Evening",
+  "Шөнө": "Night",
+  "Бороо": "Rain",
+  "Цас": "Snow",
+  "Зөөврийн компьютер": "Laptop",
+  "Ном": "Books",
+  "Дэвтэр": "Notebook",
+  "Кофе": "Coffee",
+  "Цай": "Tea",
+  "Ургамал": "Plant",
+  "Гэрэл": "Lamp",
+  "Энгийн": "Simple",
+  "Навч": "Leaf",
+  "Нүдний шил": "Glasses",
+  "Од": "Star",
+  "Цэцэг": "Flower",
+  "Цайвар мод": "Light wood",
+  "Цагаан": "White",
+  "Бараан мод": "Dark wood",
+  "Маалинган": "Linen",
+  "Ногоон": "Green",
+  "Бүдэг ягаан": "Soft pink",
+  "Байгаль": "Landscape",
+  "Зураггүй": "No poster",
+  "Ороолт": "Scarf",
+  "Хантааз": "Vest",
+  "Үйлдэлтэйгээ хамт": "Match activity",
+  "Инээмсэглэсэн": "Smiling",
+  "Тайван": "Calm",
+};
+const roomText = (value: string, language: "mn" | "en") =>
+  language === "en" ? ROOM_NAME_EN[value] ?? value : value;
+const ROOM_DESCRIPTION_EN: Record<string, string> = {
+  "Дулаахан гэрэл · модон ширээ · зөөлөн хэлбэр": "Warm light · wooden desk · soft shapes",
+  "Цэвэрхэн шугам · цэлгэр зай · нам гүм": "Clean lines · open space · quiet",
+  "Одтой тэнгэр · гүн хөх · ширээний гэрэл": "Starry sky · deep blue · desk lamp",
+  "Ногоон ой · ургамал · байгалийн хэмнэл": "Green forest · plants · natural rhythm",
+  "Сакура · цаасан хаалт · тайван ягаан": "Sakura · paper screens · calm pink",
+  "Борооны хэмнэл · хотын цонх · цайны ширээ": "Rain rhythm · city window · tea table",
+  "Оддын орбит · гүн хөх · сансрын ажиглалт": "Star orbit · deep blue · space view",
+  "Цаст уул · модон байшин · дулаахан гэрэл": "Snowy mountains · wooden cabin · warm light",
+  "Номын тавиур · хүрэн мод · унших булан": "Bookshelves · brown wood · reading corner",
+  "Далайн давалгаа · цагаан ширээ · цэлгэр хөх": "Ocean waves · white desk · open blue",
+};
+const roomDescription = (value: string, language: "mn" | "en") =>
+  language === "en" ? ROOM_DESCRIPTION_EN[value] ?? value : value;
+const ROOM_REWARD_EN: Record<string, string> = {
+  "Ургамлын ханын зураг": "Botanical poster",
+  "Номын тавиур": "Bookshelf",
+  "Од": "Star",
+  "Цэцэг": "Flower",
+};
+
 export function CustomizeRoom() {
   const { data, store, run, navigate, today } = useStudy(),
+    { language } = useI18n(),
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
   const [showAllRooms, setShowAllRooms] = useState(false);
@@ -52,14 +126,14 @@ export function CustomizeRoom() {
   return (
     <div className="stack room-customizer">
       <SectionTitle
-        title="Таны жижиг ертөнц"
-        subtitle="Өрөө, Бондоок, гэрэл — өөртөө тухтайг сонгоорой."
+        title={language === "en" ? "Your little world" : "Таны жижиг ертөнц"}
+        subtitle={language === "en" ? "Choose a room, Bondook, and lighting that feel comfortable." : "Өрөө, Бондоок, гэрэл — өөртөө тухтайг сонгоорой."}
         action={
           <button
             className="button primary"
             onClick={() => navigate("overview")}
           >
-            Өрөөндөө очих
+            {language === "en" ? "Go to room" : "Өрөөндөө очих"}
           </button>
         }
       />
@@ -67,15 +141,15 @@ export function CustomizeRoom() {
         <div className="customizer-preview">
           <RoomScene world={world} />
           <p>
-            Бондоок · Lv. {progress.level} · {progress.xp} XP
+            Bondook · Lv. {progress.level} · {progress.xp} XP
           </p>
         </div>
         <div className="stack">
           <section className="card">
-            <h2>Өрөөний орчин</h2>
+            <h2>{language === "en" ? "Room environment" : "Өрөөний орчин"}</h2>
             <div className="form-grid">
               <label>
-                Арын орчин
+                {language === "en" ? "Background" : "Арын орчин"}
                 <select
                   value={world.background}
                   onChange={(e) =>
@@ -86,13 +160,13 @@ export function CustomizeRoom() {
                 >
                   {BACKGROUNDS.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.name}
+                      {roomText(b.name, language)}
                     </option>
                   ))}
                 </select>
               </label>
               <label>
-                Гэрэл, цаг агаар
+                {language === "en" ? "Lighting & weather" : "Гэрэл, цаг агаар"}
                 <select
                   value={world.atmosphere}
                   onChange={(e) =>
@@ -103,14 +177,14 @@ export function CustomizeRoom() {
                 >
                   {ATMOSPHERES.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.name}
+                      {roomText(b.name, language)}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
             <fieldset className="desk-options">
-              <legend>Ширээн дээр</legend>
+              <legend>{language === "en" ? "On the desk" : "Ширээн дээр"}</legend>
               {DESK_ITEMS.map((i) => (
                 <label key={i.id}>
                   <input
@@ -124,52 +198,52 @@ export function CustomizeRoom() {
                       })
                     }
                   />
-                  {i.name}
+                  {roomText(i.name, language)}
                 </label>
               ))}
             </fieldset>
             <div className="form-grid furniture-options">
               <label>
-                Ширээ
+                {language === "en" ? "Desk" : "Ширээ"}
                 <select
                   value={furniture.desk}
                   onChange={(e) =>
                     furnish({ desk: e.target.value as Furniture["desk"] })
                   }
                 >
-                  <option value="oak">Цайвар мод</option>
-                  <option value="white">Цагаан</option>
-                  <option value="walnut">Бараан мод</option>
+                  <option value="oak">{language === "en" ? "Light wood" : "Цайвар мод"}</option>
+                  <option value="white">{language === "en" ? "White" : "Цагаан"}</option>
+                  <option value="walnut">{language === "en" ? "Dark wood" : "Бараан мод"}</option>
                 </select>
               </label>
               <label>
-                Сандал
+                {language === "en" ? "Chair" : "Сандал"}
                 <select
                   value={furniture.chair}
                   onChange={(e) =>
                     furnish({ chair: e.target.value as Furniture["chair"] })
                   }
                 >
-                  <option value="linen">Маалинган</option>
-                  <option value="sage">Ногоон</option>
-                  <option value="rose">Бүдэг ягаан</option>
+                  <option value="linen">{language === "en" ? "Linen" : "Маалинган"}</option>
+                  <option value="sage">{language === "en" ? "Green" : "Ногоон"}</option>
+                  <option value="rose">{language === "en" ? "Soft pink" : "Бүдэг ягаан"}</option>
                 </select>
               </label>
               <label>
-                Ханын зураг
+                {language === "en" ? "Wall poster" : "Ханын зураг"}
                 <select
                   value={furniture.poster}
                   onChange={(e) =>
                     furnish({ poster: e.target.value as Furniture["poster"] })
                   }
                 >
-                  <option value="landscape">Байгаль</option>
-                  <option value="none">Зураггүй</option>
+                  <option value="landscape">{language === "en" ? "Landscape" : "Байгаль"}</option>
+                  <option value="none">{language === "en" ? "No poster" : "Зураггүй"}</option>
                   <option
                     value="botanical"
                     disabled={!unlockedRewards.has("botanical_poster")}
                   >
-                    Ургамлын зураг · 5 цаг
+                    {language === "en" ? "Botanical poster · 5 h" : "Ургамлын зураг · 5 цаг"}
                   </option>
                 </select>
               </label>
@@ -182,12 +256,12 @@ export function CustomizeRoom() {
                   }
                   onChange={(e) => furnish({ bookshelf: e.target.checked })}
                 />
-                Номын тавиур · 10 цаг
+                {language === "en" ? "Bookshelf · 10 h" : "Номын тавиур · 10 цаг"}
               </label>
             </div>
           </section>
           <section className="card">
-            <h2>Бондоокийн төрх</h2>
+            <h2>{language === "en" ? "Bondook's look" : "Бондоокийн төрх"}</h2>
             <div className="companion-options">
               {COMPANIONS.map((c) => (
                 <button
@@ -197,13 +271,13 @@ export function CustomizeRoom() {
                   onClick={() => update({ companion: c.id })}
                 >
                   <CompanionAvatar world={{ ...world, companion: c.id }} />
-                  <span>{c.name}</span>
+                  <span>{roomText(c.name, language)}</span>
                 </button>
               ))}
             </div>
             <div className="form-grid">
               <label>
-                Хувцас
+                {language === "en" ? "Outfit" : "Хувцас"}
                 <select
                   value={world.outfit}
                   onChange={(e) =>
@@ -212,13 +286,13 @@ export function CustomizeRoom() {
                     })
                   }
                 >
-                  <option value="scarf">Ороолт</option>
-                  <option value="vest">Хантааз</option>
-                  <option value="none">Энгийн</option>
+                  <option value="scarf">{language === "en" ? "Scarf" : "Ороолт"}</option>
+                  <option value="vest">{language === "en" ? "Vest" : "Хантааз"}</option>
+                  <option value="none">{language === "en" ? "Simple" : "Энгийн"}</option>
                 </select>
               </label>
               <label>
-                Илэрхийлэл
+                {language === "en" ? "Expression" : "Илэрхийлэл"}
                 <select
                   value={world.expression}
                   onChange={(e) =>
@@ -227,14 +301,14 @@ export function CustomizeRoom() {
                     })
                   }
                 >
-                  <option value="auto">Үйлдэлтэйгээ хамт</option>
-                  <option value="smile">Инээмсэглэсэн</option>
-                  <option value="calm">Тайван</option>
+                  <option value="auto">{language === "en" ? "Match activity" : "Үйлдэлтэйгээ хамт"}</option>
+                  <option value="smile">{language === "en" ? "Smiling" : "Инээмсэглэсэн"}</option>
+                  <option value="calm">{language === "en" ? "Calm" : "Тайван"}</option>
                 </select>
               </label>
             </div>
             <fieldset className="accessory-options">
-              <legend>Жижиг чимэглэл</legend>
+              <legend>{language === "en" ? "Small decorations" : "Жижиг чимэглэл"}</legend>
               {ACCESSORIES.map((a) => {
                 const reward = ROOM_REWARDS.find((item) => item.id === a.id);
                 return (
@@ -247,26 +321,32 @@ export function CustomizeRoom() {
                     aria-pressed={world.accessory === a.id}
                     onClick={() => update({ accessory: a.id })}
                   >
-                    {a.name}
+                    {roomText(a.name, language)}
                     {reward && !unlockedRewards.has(reward.id)
-                      ? ` · ${reward.requiredHours}ц`
+                      ? ` · ${reward.requiredHours}${language === "en" ? " h" : "ц"}`
                       : ""}
                   </button>
                 );
               })}
             </fieldset>
             <div className="room-reward-progress">
-              <strong>Өрөөний шагнал</strong>
+              <strong>{language === "en" ? "Room rewards" : "Өрөөний шагнал"}</strong>
               <span>
-                Нийт {progress.studyHours.toFixed(1)} цаг суралцжээ.
+                {language === "en"
+                  ? `Total study time: ${progress.studyHours.toFixed(1)} hours.`
+                  : `Нийт ${progress.studyHours.toFixed(1)} цаг суралцжээ.`}
                 {nextReward
-                  ? ` Дараагийнх: ${nextReward.name} · ${nextReward.requiredHours} цаг.`
-                  : " Бүх шагналаа нээлээ."}
+                  ? language === "en"
+                    ? ` Next: ${ROOM_REWARD_EN[nextReward.name] ?? nextReward.name} · ${nextReward.requiredHours} h.`
+                    : ` Дараагийнх: ${nextReward.name} · ${nextReward.requiredHours} цаг.`
+                  : language === "en"
+                    ? " All rewards unlocked."
+                    : " Бүх шагналаа нээлээ."}
               </span>
               <div
                 className="progress"
                 role="progressbar"
-                aria-label="Дараагийн өрөөний шагналын ахиц"
+                aria-label={language === "en" ? "Progress to next room reward" : "Дараагийн өрөөний шагналын ахиц"}
                 aria-valuemin={0}
                 aria-valuemax={nextReward?.requiredHours ?? 100}
                 aria-valuenow={Math.min(
@@ -282,16 +362,17 @@ export function CustomizeRoom() {
               </div>
             </div>
             <p className="tiny muted">
-              Өмнөх өрөөний тохиргоо хэвээр хадгалагдана. Шинэ зүйлсийг
-              суралцсан цагаар нээнэ.
+              {language === "en"
+                ? "Your room settings stay saved. New items unlock as you study."
+                : "Өмнөх өрөөний тохиргоо хэвээр хадгалагдана. Шинэ зүйлсийг суралцсан цагаар нээнэ."}
             </p>
           </section>
         </div>
       </div>
       <section className="card">
         <SectionTitle
-          title="Таван өөр уур амьсгал"
-          subtitle="Theme солиход өрөө, Бондоок, гэрэл болон хуудасны загвар хамт өөрчлөгдөнө."
+          title={language === "en" ? "Ten room themes" : "Арван өөр уур амьсгал"}
+          subtitle={language === "en" ? "Changing a theme updates the room, Bondook, lighting, and page style together." : "Theme солиход өрөө, Бондоок, гэрэл болон хуудасны загвар хамт өөрчлөгдөнө."}
         />
         <div className="theme-gallery">
           {(showAllRooms ? DESIGNS : DESIGNS.slice(0, 4)).map((d) => (
@@ -319,9 +400,9 @@ export function CustomizeRoom() {
                 }}
               />
               <strong>{d.name}</strong>
-              <span>{d.description}</span>
+              <span>{roomDescription(d.description, language)}</span>
               {world.design === d.id && (
-                <span className="theme-selected">Сонгосон</span>
+                <span className="theme-selected">{language === "en" ? "Selected" : "Сонгосон"}</span>
               )}
             </button>
           ))}
@@ -332,7 +413,13 @@ export function CustomizeRoom() {
           aria-expanded={showAllRooms}
           onClick={() => setShowAllRooms((current) => !current)}
         >
-          {showAllRooms ? "Үндсэн 4 өрөөг харуулах" : "Бусад өрөө (6)"}
+          {showAllRooms
+            ? language === "en"
+              ? "Show main 4 rooms"
+              : "Үндсэн 4 өрөөг харуулах"
+            : language === "en"
+              ? "Other rooms (6)"
+              : "Бусад өрөө (6)"}
           <Icon name={showAllRooms ? "chevron-up" : "chevron-down"} size={16} />
         </button>
       </section>

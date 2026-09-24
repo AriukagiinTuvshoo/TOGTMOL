@@ -14,8 +14,8 @@ import type { QuizQuestion, StudyQuiz } from "@/types/knowledge";
 import { useI18n } from "@/components/i18n/language-provider";
 
 export function QuizGenerator({ onClose }: { onClose: () => void }) {
-  const { language } = useI18n();
   const { data, store, run } = useStudy();
+  const { language } = useI18n();
   const [title, setTitle] = useState("Бондоок · Миний сорил"),
     [subject, setSubject] = useState(""),
     [source, setSource] = useState(""),

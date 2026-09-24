@@ -14,8 +14,8 @@ import { Icon } from "@/components/ui/icon";
 import { AccountPanel } from "./account-panel";
 import { InstallButton } from "./pwa";
 import { MusicSettings } from "./music-settings";
-import { useI18n } from "@/components/i18n/language-provider";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useI18n } from "@/components/i18n/language-provider";
 
 const UI_THEMES = [
   {
@@ -39,6 +39,7 @@ const UI_THEMES = [
 ] as const;
 export function Settings() {
   const { data, store, run, navigate } = useStudy(),
+    { t } = useI18n(),
     { namespace } = useStoreState();
   const [focus, setFocus] = useState(String(data.settings.focusMinutes)),
     [short, setShort] = useState(String(data.settings.shortBreakMinutes)),
@@ -53,13 +54,21 @@ export function Settings() {
     <div className="settings-grid">
       <div className="stack">
         <section className="card">
-          <SectionTitle title="Харагдах байдал" subtitle="Танд тухтай орчин." />
+          <SectionTitle
+            title={t("settings.language.title")}
+            subtitle={t("settings.language.subtitle")}
+          />
+          <LanguageSwitcher />
+          <p className="tiny muted">{t("settings.language.helper")}</p>
+        </section>
+        <section className="card">
+          <SectionTitle title={t("settings.appearance")} subtitle={t("settings.appearance.subtitle")} />
           <div className="theme-options">
             {(
               [
-                ["system", "Систем", "sun"],
-                ["light", "Гэрэлтэй", "sun"],
-                ["dark", "Бараан", "moon"],
+                ["system", t("settings.system"), "sun"],
+                ["light", t("settings.light"), "sun"],
+                ["dark", t("settings.dark"), "moon"],
               ] as [Theme, string, string][]
             ).map(([theme, label, icon]) => (
               <button
@@ -74,13 +83,13 @@ export function Settings() {
               </button>
             ))}
           </div>
-          <div className="ui-theme-picker" aria-label="Аппын өнгөний theme">
+          <div className="ui-theme-picker" aria-label={t("settings.appTheme")}>
             <div className="ui-theme-picker-head">
               <div>
                 <span className="eyebrow">APP THEME</span>
-                <p>Интерфэйсийн өнгөний хэв маягаа сонгоно.</p>
+                <p>{t("settings.appTheme")}</p>
               </div>
-              <span className="ui-theme-current">v6</span>
+              <span className="ui-theme-current">v7</span>
             </div>
             <div className="ui-theme-grid">
               {UI_THEMES.map((uiTheme) => {
@@ -132,12 +141,12 @@ export function Settings() {
             className="text-button settings-link"
             onClick={() => navigate("room")}
           >
-            Өрөөний загвар, хамтрагчаа сонгох <Icon name="arrow" size={16} />
+            {t("nav.room")} · <span>{t("nav.room")}</span> <Icon name="arrow" size={16} />
           </button>
         </section>
         <MusicSettings />
         <section className="card">
-          <SectionTitle title="Timer-ийн хэмнэл" />
+          <SectionTitle title={t("settings.timerRhythm")} />
           <form
             className="form-stack"
             onSubmit={(e) => {
@@ -221,7 +230,7 @@ export function Settings() {
           </button>
         </section>
         <section className="card">
-          <SectionTitle title="Сануулах ба offline" />
+          <SectionTitle title={t("settings.reminderOffline")} />
           <div className="form-stack">
             <label className="check-label">
               <input
@@ -324,7 +333,7 @@ export function Settings() {
       <div className="stack">
         <StudyPreferences />
         <button className="button" onClick={() => navigate("privacy")}>
-          Нууцлал ба өгөгдлийн төв →
+          {t("settings.dataPrivacy")} →
         </button>
         <AccountPanel />
         <DataSettings key={namespace} />

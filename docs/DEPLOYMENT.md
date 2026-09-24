@@ -1,6 +1,6 @@
-# Supabase + Vercel deployment
+# Cloudflare Workers + Supabase + Vercel deployment
 
-The project runs locally without credentials. These steps configure a real deployment. Source repository: [AriukagiinTuvshoo/TOGTMOL](https://github.com/AriukagiinTuvshoo/TOGTMOL). No hosted Supabase project has been modified.
+The primary production target is the Cloudflare Worker `togtmol` at `https://togtmol.tuvshoo0331.workers.dev/`. Vercel and Netlify are useful preview/secondary targets. The project also runs locally without credentials. These steps configure a real deployment. Source repository: [AriukagiinTuvshoo/TOGTMOL](https://github.com/AriukagiinTuvshoo/TOGTMOL). No hosted Supabase project has been modified.
 
 ## 1. Prepare the repository
 
@@ -27,7 +27,13 @@ The app uses PKCE. Email confirmation, recovery, and Google redirect back to the
 
 For public release, configure reliable auth email delivery and review the project's auth rate limits. Test actual confirmation and recovery emails.
 
-## 3. Configure local environment and Vercel
+## 3. Configure Cloudflare Workers
+
+The checked-in `wrangler.jsonc` deploys the OpenNext worker as `togtmol` from `.open-next/worker.js` with assets in `.open-next/assets`. Do not add a service binding that points `WORKER_SELF_REFERENCE` at `togtmol-study-os`; the package name and Worker name are intentionally different. Before deployment, verify the generated `.open-next/worker.js` exists and that the Wrangler target name is `togtmol`. The production origin for this release is `https://togtmol.tuvshoo0331.workers.dev/`.
+
+Use the installed Wrangler/OpenNext commands shown by the repository scripts rather than inventing a new framework adapter. Do not claim a Cloudflare deployment succeeded until the Worker version is actually published and the exact URL responds.
+
+## 4. Configure local environment and Vercel
 
 Copy `.env.example` to `.env.local` and supply:
 
@@ -42,7 +48,7 @@ Import the chosen repository in Vercel. Framework: **Next.js**. Install command:
 
 Do not replace the build command with `next build` alone: the second step generates the offline manifest and service worker. Service worker scope is `/`; this release expects a root-domain deployment rather than a URL subdirectory.
 
-## 4. Validate the real deployment
+## 5. Validate the real deployment
 
 Use two test accounts and two browser profiles/devices:
 
@@ -57,7 +63,7 @@ Use two test accounts and two browser profiles/devices:
 
 In Supabase, run security/performance advisors after applying the migration and investigate any project-specific findings. The delivered PGlite tests validate the schema's RLS and transaction semantics; they do not substitute for hosted configuration validation.
 
-## 5. Optional online Bondook
+## 6. Optional online Bondook
 
 Local insights need no AI service. To enable the optional paid provider, configure **server-only** `OPENAI_API_KEY`, `OPENAI_MODEL` (a Responses API model available to your account; card images additionally require image input and structured-output support), and `BONDOOK_AI_ALLOWED_USER_IDS` (comma-separated allowed Supabase user UUIDs). All must be present. Never prefix them with `NEXT_PUBLIC_`. This release does not pick a paid model or provision credentials automatically.
 
@@ -67,15 +73,15 @@ Users explicitly enable online mode. The app sends their question and limited st
 
 On the real deployment, test an allowed account, a denied account, no token, offline/error fallback, and a provider request. The delivered tests use fake credentials and a mocked provider; no paid request has been made.
 
-## 6. Cloud erasure and stale devices
+## 7. Cloud erasure and stale devices
 
 The Privacy screen requires a typed confirmation, disables sync, saves a local backup of the remote snapshot, then calls `delete_cloud_study_data` with the current user and cloud revision. The RPC removes that user’s study rows while retaining the auth account and a minimal revision/reset-epoch marker. Other devices must explicitly acknowledge that epoch before re-uploading old local history. Existing devices keep their local copies and backups; this is not a remote wipe of every device.
 
 Test this with two accounts and two devices. Also verify that disabling sync prevents subsequent uploads and that local/account recovery targets the correct namespace.
 
-## 7. Music and YouTube
+## 8. Music and YouTube
 
-Nine original browser soundscapes are included in the production assets and require no external music host. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. One official player with controls is retained across app views and expand/minimize changes. The floating mini-player keeps the video visible (at least 200 × 200 px), with Play/Pause, Volume, Expand and Stop. The app does not call pause on visibility or intersection changes. Browser/OS/YouTube behavior may still suspend playback in the background or on screen lock. Media Session play/pause/next/previous/stop handlers are registered where supported; they do not grant background playback or bypass iframe restrictions. See [the music-only fix and verification](MUSIC.md). Do not add hidden YouTube audio, ad blocking or downloads.
+Nine original browser soundscapes are included in the production assets and require no external music host. Playback always needs a user action. YouTube code is loaded only after selecting a user-added YouTube source in the open music panel; YouTube assets are not cached by the service worker. User-added MP3 and MP4 files are supported; MP4 playback uses the media element's audio track and does not extract or download audio. One official player with controls is retained across app views and expand/minimize changes. The floating mini-player keeps the video visible (at least 200 × 200 px), with Play/Pause, Volume, Expand and Stop. The app does not call pause on visibility or intersection changes. Browser/OS/YouTube behavior may still suspend playback in the background or on screen lock. Media Session play/pause/next/previous/stop handlers are registered where supported; they do not grant background playback or bypass iframe restrictions. See [the music-only fix and verification](MUSIC.md). Do not add hidden YouTube audio, ad blocking or downloads.
 
 Test a real video and playlist on the deployed origin, including autoplay blocking, unavailable/embedding-disabled videos, volume, previous/next and mobile tap behavior. Preserve `Referrer-Policy: strict-origin-when-cross-origin`; YouTube needs origin identification.
 
