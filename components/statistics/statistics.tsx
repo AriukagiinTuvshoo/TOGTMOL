@@ -18,7 +18,7 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
-import { DecisionDashboard } from "./decision-dashboard";
+import { CurrentDecisionCenter } from "./current-decision-center";
 import { useI18n } from "@/components/i18n/language-provider";
 export function Statistics() {
   const { data, index, today } = useStudy(),
@@ -71,7 +71,7 @@ export function Statistics() {
     ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
   return (
     <div className="stack">
-      <DecisionDashboard />
+      <CurrentDecisionCenter />
       <div className="filter-row">
         <div className="segmented">
           {(["today", "week", "month", 7, 30, 90, 365, "all"] as const).map(
