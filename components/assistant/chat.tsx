@@ -109,22 +109,31 @@ export function BondookChat() {
         namespace,
       );
       const provider = online
-        ? createAIChatProvider(async () => {
-            if (store.getSnapshot().data.settings.extras.aiEnabled !== true)
-              throw Error("Онлайн AI зөвшөөрөл унтраалттай байна.");
-            const client = await getSupabase();
-            const session = client
-              ? (await client.auth.getSession()).data.session
-              : null;
-            if (
-              store.getSnapshot().namespace !== namespace ||
-              namespace !== `account:${session?.user.id}`
-            )
-              return null;
-            return session?.access_token ?? null;
-          }, includeNotes, language)
+        ? createAIChatProvider(
+            async () => {
+              if (store.getSnapshot().data.settings.extras.aiEnabled !== true)
+                throw Error("Онлайн AI зөвшөөрөл унтраалттай байна.");
+              const client = await getSupabase();
+              const session = client
+                ? (await client.auth.getSession()).data.session
+                : null;
+              if (
+                store.getSnapshot().namespace !== namespace ||
+                namespace !== `account:${session?.user.id}`
+              )
+                return null;
+              return session?.access_token ?? null;
+            },
+            includeNotes,
+            language,
+          )
         : localChatProvider;
-      const reply = await provider.reply(prompt, { data, index, today, language });
+      const reply = await provider.reply(prompt, {
+        data,
+        index,
+        today,
+        language,
+      });
       if (
         !disposed.current &&
         request.current === token &&
@@ -182,8 +191,15 @@ export function BondookChat() {
   const getVoiceAccessToken = async () => {
     const namespace = store.getSnapshot().namespace;
     const client = await getSupabase();
-    const session = client ? (await client.auth.getSession()).data.session : null;
-    if (!session?.access_token || namespace !== `account:${session.user.id}` || store.getSnapshot().namespace !== namespace) return null;
+    const session = client
+      ? (await client.auth.getSession()).data.session
+      : null;
+    if (
+      !session?.access_token ||
+      namespace !== `account:${session.user.id}` ||
+      store.getSnapshot().namespace !== namespace
+    )
+      return null;
     return session.access_token;
   };
 
@@ -219,9 +235,7 @@ export function BondookChat() {
             {t("assistant.enableOnline")}
           </label>
           {!online && (
-            <span className="tiny muted">
-              {t("assistant.localPrivacy")}
-            </span>
+            <span className="tiny muted">{t("assistant.localPrivacy")}</span>
           )}
           {online && (
             <label className="check-label">
@@ -266,7 +280,9 @@ export function BondookChat() {
                 className="button small"
                 onClick={() => setConsent(false)}
               >
-                {language === "en" ? "Use on this device" : "Төхөөрөмж дээр ашиглах"}
+                {language === "en"
+                  ? "Use on this device"
+                  : "Төхөөрөмж дээр ашиглах"}
               </button>
             </div>
           </div>
@@ -395,7 +411,9 @@ export function BondookChat() {
               disabled={busy || changingAI}
               getAccessToken={getVoiceAccessToken}
               onTranscript={(transcript) => {
-                const combined = [text.trim(), transcript.trim()].filter(Boolean).join(" ");
+                const combined = [text.trim(), transcript.trim()]
+                  .filter(Boolean)
+                  .join(" ");
                 if (combined.length > 3000) return false;
                 setText(combined);
                 return true;
@@ -411,7 +429,9 @@ export function BondookChat() {
           </button>
         </form>
         <p className="tiny muted">
-          {online ? t("assistant.onlineWarning") : t("assistant.localDescription")}{" "}
+          {online
+            ? t("assistant.onlineWarning")
+            : t("assistant.localDescription")}{" "}
           {language === "en"
             ? "Conversation history is stored with your study data and included in JSON backups."
             : "Ярилцлага таны өгөгдөлтэй хамт хадгалагдаж, JSON нөөцөд багтана."}

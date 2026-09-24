@@ -29,7 +29,9 @@ export function StudyPreferences() {
           checked={data.settings.extras.wakeLock !== false}
           onChange={(e) => void update("wakeLock", e.target.checked)}
         />
-        {language === "en" ? "Keep the screen awake while the timer runs" : "Timer ажиллаж байх үед дэлгэцийг сэрүүн байлгах"}
+        {language === "en"
+          ? "Keep the screen awake while the timer runs"
+          : "Timer ажиллаж байх үед дэлгэцийг сэрүүн байлгах"}
       </label>
       <p className="tiny muted">
         Браузер зөвшөөрсөн үед ажиллана. Цонх далдрах, цэнэг бага байх үед
@@ -57,12 +59,16 @@ export function StudyPreferences() {
         огноотой бичлэг хэвээр үлдэнэ.
       </p>
       <label>
-        {language === "en" ? "Grace days for your streak" : "Дараалалдаа зөвшөөрөх амралтын өдөр"}
+        {language === "en"
+          ? "Grace days for your streak"
+          : "Дараалалдаа зөвшөөрөх амралтын өдөр"}
         <select
           value={Number(data.settings.extras.graceDays ?? 1)}
           onChange={(e) => void update("graceDays", Number(e.target.value))}
         >
-          <option value={0}>{language === "en" ? "No grace day" : "Амралтын өдөр тооцохгүй"}</option>
+          <option value={0}>
+            {language === "en" ? "No grace day" : "Амралтын өдөр тооцохгүй"}
+          </option>
           <option value={1}>{language === "en" ? "1 day" : "1 өдөр"}</option>
           <option value={2}>{language === "en" ? "2 days" : "2 өдөр"}</option>
         </select>
@@ -72,11 +78,26 @@ export function StudyPreferences() {
         харагдана.
       </p>
       <fieldset>
-        <legend>{language === "en" ? "Include in daily reminders" : "Өдрийн сануулгад оруулах зүйл"}</legend>
+        <legend>
+          {language === "en"
+            ? "Include in daily reminders"
+            : "Өдрийн сануулгад оруулах зүйл"}
+        </legend>
         {[
-          ["remindPlan", language === "en" ? "Daily plan" : "Өдрийн төлөвлөгөө"],
-          ["remindCards", language === "en" ? "Flashcard review" : "Давтах карт"],
-          ["remindGoals", language === "en" ? "Upcoming goal deadlines" : "Дөхөж буй зорилгын хугацаа"],
+          [
+            "remindPlan",
+            language === "en" ? "Daily plan" : "Өдрийн төлөвлөгөө",
+          ],
+          [
+            "remindCards",
+            language === "en" ? "Flashcard review" : "Давтах карт",
+          ],
+          [
+            "remindGoals",
+            language === "en"
+              ? "Upcoming goal deadlines"
+              : "Дөхөж буй зорилгын хугацаа",
+          ],
         ].map(([key, label]) => (
           <label className="check-label" key={key}>
             <input

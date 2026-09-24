@@ -24,7 +24,11 @@ export function MusicSettings() {
     <section className="card">
       <SectionTitle
         title={language === "en" ? "Music" : "Хөгжим"}
-        subtitle={language === "en" ? "Choose sounds and music that fit your study." : "Өөрт тохирсон ая, чимээгээ сонгоорой."}
+        subtitle={
+          language === "en"
+            ? "Choose sounds and music that fit your study."
+            : "Өөрт тохирсон ая, чимээгээ сонгоорой."
+        }
       />
       {error && (
         <p role="status" className="music-error">
@@ -33,7 +37,9 @@ export function MusicSettings() {
       )}
       <div className="form-stack">
         <label>
-          {language === "en" ? "Default music category" : "Үндсэн хөгжмийн ангилал"}
+          {language === "en"
+            ? "Default music category"
+            : "Үндсэн хөгжмийн ангилал"}
           <select
             value={preference.defaultCategory}
             onChange={(e) =>
@@ -43,7 +49,11 @@ export function MusicSettings() {
               })
             }
           >
-            <option value="theme">{language === "en" ? "Match room theme" : "Өрөөний загварт тохируулах"}</option>
+            <option value="theme">
+              {language === "en"
+                ? "Match room theme"
+                : "Өрөөний загварт тохируулах"}
+            </option>
             <option value="night">Night study</option>
             {AMBIENTS.map((a) => (
               <option key={a.id} value={a.id}>
@@ -53,7 +63,8 @@ export function MusicSettings() {
           </select>
         </label>
         <label>
-          {language === "en" ? "Volume" : "Дууны түвшин"} · {Math.round(preference.volume * 100)}%
+          {language === "en" ? "Volume" : "Дууны түвшин"} ·{" "}
+          {Math.round(preference.volume * 100)}%
           <input
             type="range"
             min={0}
@@ -69,7 +80,9 @@ export function MusicSettings() {
             checked={preference.rememberLast}
             onChange={(e) => change({ rememberLast: e.target.checked })}
           />
-          {language === "en" ? "Remember last played sound" : "Сүүлд тоглуулсан аяыг санах"}
+          {language === "en"
+            ? "Remember last played sound"
+            : "Сүүлд тоглуулсан аяыг санах"}
         </label>
         <p className="tiny muted">
           {language === "en"

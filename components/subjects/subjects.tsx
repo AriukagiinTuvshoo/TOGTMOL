@@ -126,10 +126,13 @@ const SUBJECT_TRACK_EN: Record<string, string> = {
   "school-history": "History",
   "school-geography": "Geography",
 };
-const subjectCategoryName = (id: string, name: string, language: "mn" | "en") =>
-  language === "en" ? SUBJECT_CATEGORY_EN[id] ?? name : name;
+const subjectCategoryName = (
+  id: string,
+  name: string,
+  language: "mn" | "en",
+) => (language === "en" ? (SUBJECT_CATEGORY_EN[id] ?? name) : name);
 const subjectTrackName = (id: string, name: string, language: "mn" | "en") =>
-  language === "en" ? SUBJECT_TRACK_EN[id] ?? name : name;
+  language === "en" ? (SUBJECT_TRACK_EN[id] ?? name) : name;
 
 export function Subjects() {
   const { data, index, today, store, run, navigate } = useStudy(),
@@ -218,11 +221,22 @@ export function Subjects() {
           </button>
         </section>
         <div className="metrics four">
-          <Metric label={language === "en" ? "Total time" : "Нийт хугацаа"} value={formatTime(all.seconds)} />
-          <Metric label={language === "en" ? "Study days" : "Суралцсан өдөр"} value={all.studyDays} />
-          <Metric label={language === "en" ? "Sessions" : "Нийт хичээл"} value={all.sessionCount} />
           <Metric
-            label={language === "en" ? "Average session" : "Нэг хичээлийн дундаж"}
+            label={language === "en" ? "Total time" : "Нийт хугацаа"}
+            value={formatTime(all.seconds)}
+          />
+          <Metric
+            label={language === "en" ? "Study days" : "Суралцсан өдөр"}
+            value={all.studyDays}
+          />
+          <Metric
+            label={language === "en" ? "Sessions" : "Нийт хичээл"}
+            value={all.sessionCount}
+          />
+          <Metric
+            label={
+              language === "en" ? "Average session" : "Нэг хичээлийн дундаж"
+            }
             value={formatTime(all.averageSession)}
           />
         </div>
@@ -256,7 +270,9 @@ export function Subjects() {
         </div>
         <StudyCalendar subjectId={subject.id} />
         <section className="card">
-          <SectionTitle title={language === "en" ? "Recent sessions" : "Сүүлийн хичээлүүд"} />
+          <SectionTitle
+            title={language === "en" ? "Recent sessions" : "Сүүлийн хичээлүүд"}
+          />
           <SessionList sessions={index.bySubject.get(subject.id) ?? []} />
         </section>
         {editing && (
@@ -288,8 +304,14 @@ export function Subjects() {
       <section className="subject-catalog">
         <div className="subject-catalog-head">
           <div>
-            <span className="eyebrow">{language === "en" ? "SUBJECT CATALOG" : "ХИЧЭЭЛИЙН СОНГОЛТ"}</span>
-            <h1>{language === "en" ? "What do you want to learn?" : "Юу сурах вэ?"}</h1>
+            <span className="eyebrow">
+              {language === "en" ? "SUBJECT CATALOG" : "ХИЧЭЭЛИЙН СОНГОЛТ"}
+            </span>
+            <h1>
+              {language === "en"
+                ? "What do you want to learn?"
+                : "Юу сурах вэ?"}
+            </h1>
             <p>
               {language === "en"
                 ? "Choose a direction to see related subjects in one place."
@@ -321,7 +343,9 @@ export function Subjects() {
                 </span>
                 <span>
                   <strong>{subjectCategoryName(c.id, c.name, language)}</strong>
-                  <small>{count} {language === "en" ? "subjects" : "хичээл"}</small>
+                  <small>
+                    {count} {language === "en" ? "subjects" : "хичээл"}
+                  </small>
                 </span>
                 <Icon name="chevron" size={16} />
               </button>
@@ -351,7 +375,9 @@ export function Subjects() {
                   onClick={() => setTrack(t.id)}
                 >
                   <strong>{subjectTrackName(t.id, t.name, language)}</strong>
-                  <small>{count} {language === "en" ? "subjects" : "хичээл"}</small>
+                  <small>
+                    {count} {language === "en" ? "subjects" : "хичээл"}
+                  </small>
                 </button>
               );
             })}
@@ -380,12 +406,16 @@ export function Subjects() {
                   <h2>{s.name}</h2>
                   <span className="muted">
                     {s.archived ? "Архив · " : ""}
-                    {sessions.length} {language === "en" ? "sessions" : "хичээл"} ·{" "}
-                    {index.subjectDays.get(s.id)?.size ?? 0} {language === "en" ? "days" : "өдөр"}
+                    {sessions.length}{" "}
+                    {language === "en" ? "sessions" : "хичээл"} ·{" "}
+                    {index.subjectDays.get(s.id)?.size ?? 0}{" "}
+                    {language === "en" ? "days" : "өдөр"}
                   </span>
                   <div className="subject-card-bottom">
                     <strong>{formatTime(stats.seconds)}</strong>
-                    <span>{language === "en" ? "last 7 days" : "сүүлийн 7 өдөр"}</span>
+                    <span>
+                      {language === "en" ? "last 7 days" : "сүүлийн 7 өдөр"}
+                    </span>
                   </div>
                   <div className="mini-week">
                     {stats.days.map((d) => (
@@ -407,14 +437,24 @@ export function Subjects() {
         ) : (
           <section className="card">
             <Empty
-              title={language === "en" ? "What do you want to learn?" : "Юу сурахыг хүсэж байна вэ?"}
-              description={language === "en" ? "Languages, math, code… Add what you want to learn." : "Хэл, математик, код… Өөрийн сонирхлыг энд нэмээрэй."}
+              title={
+                language === "en"
+                  ? "What do you want to learn?"
+                  : "Юу сурахыг хүсэж байна вэ?"
+              }
+              description={
+                language === "en"
+                  ? "Languages, math, code… Add what you want to learn."
+                  : "Хэл, математик, код… Өөрийн сонирхлыг энд нэмээрэй."
+              }
               action={
                 <button
                   className="button primary"
                   onClick={() => setEditing("new")}
                 >
-                  {language === "en" ? "Add your first subject" : "Анхны хичээлээ нэмэх"}
+                  {language === "en"
+                    ? "Add your first subject"
+                    : "Анхны хичээлээ нэмэх"}
                 </button>
               }
             />
@@ -467,7 +507,18 @@ function SubjectForm({
   const selectedCategory = categories.find((c) => c.id === category),
     categoryTracks = selectedCategory?.tracks ?? [];
   return (
-    <Modal title={s ? (language === "en" ? "Edit subject" : "Хичээлээ засах") : (language === "en" ? "New subject" : "Шинэ хичээл")} onClose={onClose}>
+    <Modal
+      title={
+        s
+          ? language === "en"
+            ? "Edit subject"
+            : "Хичээлээ засах"
+          : language === "en"
+            ? "New subject"
+            : "Шинэ хичээл"
+      }
+      onClose={onClose}
+    >
       <form
         className="form-stack"
         onSubmit={async (e) => {
@@ -508,7 +559,9 @@ function SubjectForm({
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={100}
-            placeholder={language === "en" ? "Example: Japanese" : "Жишээ: Япон хэл"}
+            placeholder={
+              language === "en" ? "Example: Japanese" : "Жишээ: Япон хэл"
+            }
           />
         </label>
         <label>
@@ -531,7 +584,9 @@ function SubjectForm({
           <label>
             {language === "en" ? "Track / direction" : "Мэргэжил / чиглэл"}
             <select value={track} onChange={(e) => setTrack(e.target.value)}>
-              <option value="">{language === "en" ? "General / other" : "Ерөнхий / бусад"}</option>
+              <option value="">
+                {language === "en" ? "General / other" : "Ерөнхий / бусад"}
+              </option>
               {categoryTracks.map((t) => (
                 <option key={t.id} value={t.id}>
                   {subjectTrackName(t.id, t.name, language)}
@@ -570,7 +625,9 @@ function SubjectForm({
               checked={archived}
               onChange={(e) => setArchived(e.target.checked)}
             />
-            {language === "en" ? "Archive (history and statistics stay)" : "Архивлах (түүх, статистик хадгалагдана)"}
+            {language === "en"
+              ? "Archive (history and statistics stay)"
+              : "Архивлах (түүх, статистик хадгалагдана)"}
           </label>
         )}
         <div className="button-row">

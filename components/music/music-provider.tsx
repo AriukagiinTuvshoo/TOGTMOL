@@ -547,7 +547,10 @@ function useMusicController() {
       try {
         parsedYouTube = parseYouTube(input);
       } catch (error) {
-        youtubeError = error instanceof Error ? error : Error("YouTube холбоос буруу байна.");
+        youtubeError =
+          error instanceof Error
+            ? error
+            : Error("YouTube холбоос буруу байна.");
       }
 
       if (parsedYouTube) {

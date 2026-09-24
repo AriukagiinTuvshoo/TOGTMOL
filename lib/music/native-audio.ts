@@ -18,7 +18,11 @@ export function parseAudioURL(input: string): string {
     url.port
   )
     throw Error("Аудио холбоос буруу байна.");
-  if (!/\.(mp3|m4a|mp4|wav|ogg|oga|opus|aac|flac|webm)(?:$|[?#])/i.test(url.pathname + url.search))
+  if (
+    !/\.(mp3|m4a|mp4|wav|ogg|oga|opus|aac|flac|webm)(?:$|[?#])/i.test(
+      url.pathname + url.search,
+    )
+  )
     throw Error("Зөвхөн аудио файлын холбоос оруулна уу.");
   return url.toString();
 }

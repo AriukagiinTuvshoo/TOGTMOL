@@ -62,12 +62,20 @@ export function StudyCalendar({
           : "🌿";
   const dayMoodText =
     selectedMinutes >= 60
-      ? language === "en" ? "Strong progress today!" : "Өнөөдрийн хүчтэй ахиц!"
+      ? language === "en"
+        ? "Strong progress today!"
+        : "Өнөөдрийн хүчтэй ахиц!"
       : selectedMinutes >= 30
-        ? language === "en" ? "Nice focus!" : "Гоё төвлөрчээ!"
+        ? language === "en"
+          ? "Nice focus!"
+          : "Гоё төвлөрчээ!"
         : selectedMinutes > 0
-          ? language === "en" ? "Small progress is still progress." : "Жижиг ахиц ч ахиц."
-          : language === "en" ? "You can start again here." : "Эндээс дахин эхэлж болно.";
+          ? language === "en"
+            ? "Small progress is still progress."
+            : "Жижиг ахиц ч ахиц."
+          : language === "en"
+            ? "You can start again here."
+            : "Эндээс дахин эхэлж болно.";
   const cell = (ds: string | null, i: number) =>
     ds ? (
       <button
@@ -146,8 +154,14 @@ export function StudyCalendar({
         <div className="calendar-smart-head">
           <div>
             <span className="eyebrow">📅 YOUR STUDY RHYTHM</span>
-            <h2>{language === "en" ? "Your study rhythm" : "Таны суралцах хэмнэл"}</h2>
-            <p>{language === "en" ? "See daily study time, subjects, and small wins in one place." : "Өдөр бүрийн цаг, хичээл, жижиг ахицыг нэг дороос хараарай."}</p>
+            <h2>
+              {language === "en" ? "Your study rhythm" : "Таны суралцах хэмнэл"}
+            </h2>
+            <p>
+              {language === "en"
+                ? "See daily study time, subjects, and small wins in one place."
+                : "Өдөр бүрийн цаг, хичээл, жижиг ахицыг нэг дороос хараарай."}
+            </p>
           </div>
           <div className="calendar-smart-buddy" aria-hidden="true">
             🤖✨
@@ -179,7 +193,9 @@ export function StudyCalendar({
           <div>
             <span>⏱️</span>
             <strong>{formatTime(day?.seconds ?? 0)}</strong>
-            <small>{language === "en" ? "selected day" : "сонгосон өдөр"}</small>
+            <small>
+              {language === "en" ? "selected day" : "сонгосон өдөр"}
+            </small>
           </div>
           <div>
             <span>📚</span>
@@ -234,7 +250,9 @@ export function StudyCalendar({
               <button
                 className="icon-button bordered"
                 onClick={() => moveSelectedWeek(-1)}
-                aria-label={language === "en" ? "Previous week" : "Өмнөх 7 хоног"}
+                aria-label={
+                  language === "en" ? "Previous week" : "Өмнөх 7 хоног"
+                }
               >
                 ‹
               </button>
@@ -244,7 +262,9 @@ export function StudyCalendar({
               <button
                 className="icon-button bordered"
                 onClick={() => moveSelectedWeek(1)}
-                aria-label={language === "en" ? "Next week" : "Дараагийн 7 хоног"}
+                aria-label={
+                  language === "en" ? "Next week" : "Дараагийн 7 хоног"
+                }
               >
                 ›
               </button>
@@ -465,7 +485,9 @@ export function StudyCalendar({
             <span key={n} className={`legend-cell level-${n}`} />
           ))}
           <span>{language === "en" ? "More" : "Их"}</span>
-          <small>0 · ≤20 · ≤40 · ≤60 · 60+ {language === "en" ? "minutes" : "минут"}</small>
+          <small>
+            0 · ≤20 · ≤40 · ≤60 · 60+ {language === "en" ? "minutes" : "минут"}
+          </small>
           <small>Цэгтэй нүд: хугацаа хэмжээгүй өдрийн тэмдэглэл</small>
         </div>
       </section>
@@ -517,8 +539,16 @@ export function StudyCalendar({
         <div className="calendar-planned-tasks">
           <div className="calendar-subsection-head">
             <div>
-              <h3>{language === "en" ? "📌 Plan for this day" : "📌 Энэ өдрийн төлөвлөгөө"}</h3>
-              <p>{language === "en" ? "Timed steps appear on the calendar." : "Цагтай алхмууд календарь дээр харагдана."}</p>
+              <h3>
+                {language === "en"
+                  ? "📌 Plan for this day"
+                  : "📌 Энэ өдрийн төлөвлөгөө"}
+              </h3>
+              <p>
+                {language === "en"
+                  ? "Timed steps appear on the calendar."
+                  : "Цагтай алхмууд календарь дээр харагдана."}
+              </p>
             </div>
             <button
               className="button small"
@@ -568,7 +598,9 @@ export function StudyCalendar({
           )}
         </div>
         <div className="manual-marks">
-          <h3>{language === "en" ? "Mark as studied" : "Суралцсан гэж тэмдэглэх"}</h3>
+          <h3>
+            {language === "en" ? "Mark as studied" : "Суралцсан гэж тэмдэглэх"}
+          </h3>
           <p className="tiny muted">
             Хугацаа хэмжээгүй байсан ч өдрөө тэмдэглэж болно. Timer-ийн
             бичлэгүүд тусдаа хадгалагдана.
@@ -611,7 +643,9 @@ export function StudyCalendar({
       )}
       {dayKnowledge.length > 0 && (
         <section className="card">
-          <h2>{language === "en" ? "Knowledge for this day" : "Энэ өдрийн мэдлэг"}</h2>
+          <h2>
+            {language === "en" ? "Knowledge for this day" : "Энэ өдрийн мэдлэг"}
+          </h2>
           <div className="calendar-knowledge">
             {dayKnowledge.slice(0, 40).map((r) => (
               <button key={r.id} onClick={() => navigate("knowledge", r.id)}>
