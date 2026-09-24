@@ -170,6 +170,10 @@ export function TimerWatch() {
             stopAlertSound();
             navigate("focus");
           }}
+          onExit={() => {
+            stopAlertSound();
+            navigate("overview");
+          }}
         />
       )}
       {countdown !== null && !alert && (
