@@ -7,10 +7,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   format:
-    if: !startsWith(github.event.head_commit.message, 'chore(format):')
+    if: github.event.head_commit.message != 'chore(format): normalize test file formatting'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -23,13 +24,26 @@ jobs:
       - run: npm ci
       - run: npx prettier --write tests/knowledge-ui.test.tsx tests/music-player.test.tsx tests/ui.test.tsx
       - name: Commit formatted files
+        id: commit
         run: |
           if git diff --quiet; then
-            echo "Already formatted."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c format/production-tests
           git add tests/knowledge-ui.test.tsx tests/music-player.test.tsx tests/ui.test.tsx
           git commit -m "chore(format): normalize test file formatting"
-          git push origin HEAD:fix/production-build-stability
+          git push --set-upstream origin format/production-tests
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Open formatting pull request
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base fix/production-build-stability \
+            --head format/production-tests \
+            --title "chore: format production test files" \
+            --body "Automated Prettier 3.9.6 formatting for the three files required by format:check."
