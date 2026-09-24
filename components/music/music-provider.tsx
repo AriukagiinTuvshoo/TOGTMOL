@@ -55,8 +55,8 @@ function useMusicController() {
             AMBIENTS.find((a) => `ambient:${a.id}` === selection)?.name ??
             "Хөгжим сонгох",
           artist: source ? "YouTube" : "Тогтмол",
-          videoId: source?.kind === "video" ? source.youtubeId : null,
-          url: source ? youtubeURL(source) : "",
+          videoId: youtubeSource?.kind === "video" ? youtubeSource.youtubeId : null,
+          url: youtubeSource ? youtubeURL(youtubeSource) : "",
         },
       }
     );
@@ -84,6 +84,8 @@ function useMusicController() {
   const sources = data.musicSources.filter((s) => !s.deletedAt);
   const selected = session.selection,
     source = sources.find((s) => s.id === selected),
+    youtubeSource =
+      source && source.kind !== "audio" ? source : undefined,
     isAmbient = selected.startsWith("ambient:");
   const { volume, muted } = preference;
   const commit = (patch: Partial<MusicSession>) => {
@@ -229,7 +231,7 @@ function useMusicController() {
           "Хөгжим",
         artist: target ? "YouTube" : "Тогтмол",
         videoId: target?.kind === "video" ? target.youtubeId : null,
-        url: target ? youtubeURL(target) : "",
+        url: target && target.kind !== "audio" ? youtubeURL(target) : "",
       },
     });
     setActivated(true);
