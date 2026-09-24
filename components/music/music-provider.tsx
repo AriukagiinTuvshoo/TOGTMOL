@@ -30,7 +30,11 @@ const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
 const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm|mp4)$/i;
 
 function isAudioFile(file: File) {
-  return (file.type.startsWith("audio/") || file.type === "video/mp4") || AUDIO_EXTENSIONS.test(file.name);
+  return (
+    file.type.startsWith("audio/") ||
+    file.type === "video/mp4" ||
+    AUDIO_EXTENSIONS.test(file.name)
+  );
 }
 
 function sourceTrack(
