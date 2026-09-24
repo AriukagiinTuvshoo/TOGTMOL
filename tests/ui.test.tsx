@@ -45,7 +45,7 @@ describe("interactive local workflow", () => {
     vi.spyOn(Date, "now").mockImplementation(() => now);
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
+    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
     fireEvent.click(within(nav).getByRole("button", { name: "Хичээлүүд" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Анхны хичээлээ нэмэх" }),
@@ -124,7 +124,7 @@ describe("interactive local workflow", () => {
   it("renders all navigation surfaces with real empty states and persistent theme changes", async () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
+    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
     fireEvent.click(within(nav).getByRole("button", { name: "Статистик" }));
     expect(
       await screen.findByText("Тогтмол байдал", { exact: true }),
@@ -191,7 +191,7 @@ describe("study world integration", () => {
     await repo.save("guest", { ...fixture(), sessions: [] }, 0);
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
+    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
     fireEvent.click(within(nav).getByRole("button", { name: "Зорилго" }));
     fireEvent.click(screen.getByRole("button", { name: "Шинэ зорилго" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Таны зорилго" }), {
@@ -249,7 +249,7 @@ describe("study world integration", () => {
     expect(
       await screen.findByRole("button", { name: /RainТайван борооны чимээ/ }),
     ).toBeVisible();
-    const nav = screen.getByRole("navigation", { name: "Үндсэн цэс" });
+    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
     fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
     expect(screen.getByRole("complementary", { name: "Study music" })).toBe(
       player,
@@ -376,7 +376,7 @@ it("edits a daily task and reports its actual completion day in the calendar", a
     ),
   );
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
       "button",
       { name: "Календарь" },
     ),
@@ -401,7 +401,7 @@ it("shares music preferences with the persistent player and restores the chosen 
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
       "button",
       { name: "Тохиргоо" },
     ),
@@ -445,7 +445,7 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
       "button",
       { name: "Суралцах туслах" },
     ),
