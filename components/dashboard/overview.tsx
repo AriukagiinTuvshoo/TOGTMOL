@@ -9,9 +9,8 @@ import {
 import {
   periodStats,
   weeklyReport,
-  streakFreezeCount,
-  streakWithFreezes,
 } from "@/lib/calculations/analytics";
+import { streakFreezeCount, streakWithFreezes } from "@/lib/calculations/decision";
 import { SHORT_DAYS, WEEKDAYS } from "@/lib/constants";
 import { Empty, Metric, Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
