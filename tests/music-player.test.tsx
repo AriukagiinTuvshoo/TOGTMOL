@@ -186,7 +186,7 @@ async function start() {
 }
 function navigate(name: string) {
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
       "button",
       { name },
     ),
@@ -238,7 +238,7 @@ describe("persistent music dock", () => {
       await waitFor(() =>
         expect(
           within(
-            screen.getByRole("navigation", { name: "Үндсэн цэс" }),
+            screen.getByRole("navigation", { name: "Миний орон зай" }),
           ).getByRole("button", { name: page }),
         ).toHaveAttribute("aria-current", "page"),
       );
