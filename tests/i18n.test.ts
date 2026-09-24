@@ -42,7 +42,7 @@ describe("bilingual language system", () => {
   it("formats month and numbers by the selected locale", () => {
     const date = new Date("2026-09-23T00:00:00Z");
     expect(formatMonth(date, "en")).toContain("September");
-    expect(formatMonth(date, "mn")).toContain("9");
+    expect(formatMonth(date, "mn")).toContain("есдүгээр");
     expect(formatNumber(1234567, "en")).toContain(",");
   });
 });

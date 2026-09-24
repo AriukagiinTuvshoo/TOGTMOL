@@ -492,6 +492,7 @@ function useMusicController() {
     else if (state === 2 && actual.current !== "stopped") mark("paused");
     else if (state === 0) {
       if (
+        actual.current === "playing" &&
         source?.kind === "video" &&
         currentSources().filter((item) => item.kind === "video").length > 1
       ) {
@@ -557,7 +558,6 @@ function useMusicController() {
     setBusy(false);
     setActivated(true);
     setAttempt((a) => a + 1);
-    void play();
   };
 
   const addURL = async () => {
@@ -618,7 +618,13 @@ function useMusicController() {
         return;
       }
 
-      const audioUrl = parseAudioURL(input);
+      const parsedAudioURL = new URL(parseAudioURL(input));
+      if (!AUDIO_EXTENSIONS.test(parsedAudioURL.pathname)) {
+        throw new Error(
+          "Зөвхөн YouTube-ийн видео/playlist эсвэл аудио файлын холбоос нэмнэ үү.",
+        );
+      }
+      const audioUrl = parsedAudioURL.toString();
       const old = currentSources().find(
         (s) => s.kind === "audio" && s.audioUrl === audioUrl,
       );

@@ -344,7 +344,7 @@ export function MusicPlayer() {
                 <p className="muted">
                   {playing
                     ? "Дэмждэг браузер, төхөөрөмж дээр background-аар үргэлжилнэ."
-                    : "Үргэлжлүүлэхэд Play дарна уу"}
+                    : "Үргэлжлүүлэхэд Play дарна уу."}
                 </p>
               </div>
             </div>
