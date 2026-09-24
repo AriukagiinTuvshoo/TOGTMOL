@@ -375,7 +375,7 @@ function Shell() {
           </nav>
         </div>
       )}
-      <nav className="mobile-nav" aria-label={t("nav.more")}>
+      <nav className="mobile-nav" aria-label="Гар утасны цэс">
         {[
           { view: "overview", label: t("nav.home"), icon: "home" },
           { view: "knowledge", label: t("nav.knowledgeShort"), icon: "book" },

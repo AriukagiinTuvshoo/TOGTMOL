@@ -1,427 +1,99 @@
 "use client";
-import { useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
-import { AMBIENTS } from "@/lib/music/catalog";
-import { youtubeURL } from "@/lib/music/youtube";
-import { Icon } from "@/components/ui/icon";
+
+import React, { useRef } from "react";
 import { useMusic } from "./music-provider";
-import "./music.css";
-import type { MusicSource } from "@/types/study";
-import { useI18n } from "@/components/i18n/language-provider";
-export { MusicProvider } from "./music-provider";
-
-const YouTubeEmbed = dynamic(
-  () => import("./youtube-embed").then((m) => m.YouTubeEmbed),
-  {
-    ssr: false,
-    loading: () => <p role="status">Loading player…</p>,
-  },
-);
-
-function isYouTubeSource(
-  source: MusicSource,
-): source is MusicSource & { kind: "video" | "playlist"; youtubeId: string } {
-  return source.kind === "video" || source.kind === "playlist";
-}
-
-function sourceKind(source: MusicSource, language: "mn" | "en") {
-  if (source.kind === "audio")
-    return source.audioStorageKey
-      ? language === "en"
-        ? "Device file"
-        : "Төхөөрөмжийн файл"
-      : language === "en"
-        ? "Audio URL"
-        : "Аудио холбоос";
-  return "YouTube";
-}
+import { Play, Pause, SkipBack, SkipForward, Trash2 } from "lucide-react";
 
 export function MusicPlayer() {
   const {
-    volume,
-    muted,
-    savePreference,
-    session,
-    playback,
-    activated,
-    open,
-    setOpen,
-    playing,
-    error,
-    url,
-    setUrl,
     title,
-    setTitle,
-    busy,
-    attempt,
     sources,
     selected,
     source,
-    name,
+    isPlaying,
     select,
-    minimize,
-    toggle,
-    stop,
     next,
-    addURL,
-    addFile,
+    previous,
+    togglePlay,
     remove,
-    retry,
-    onReady,
-    onState,
-    onError,
   } = useMusic();
-  const dock = useRef<HTMLElement>(null);
-  const { language } = useI18n();
 
-  useEffect(() => {
-    const element = dock.current;
-    const shell = element?.closest<HTMLElement>(".app-shell");
-    if (!element || !shell) return;
-    const measure = () =>
-      shell.style.setProperty(
-        "--music-dock-height",
-        `${Math.ceil(element.getBoundingClientRect().height)}px`,
-      );
-    measure();
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(measure);
-    observer?.observe(element);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-      shell.style.removeProperty("--music-dock-height");
-    };
-  }, []);
+  const dock = useRef<HTMLDivElement>(null);
 
   return (
-    <aside
-      ref={dock}
-      className={`music-player music-dock ${open ? "music-expanded" : ""}`}
-      aria-label={language === "en" ? "Study music" : "Суралцах хөгжим"}
-      data-open={open}
-      data-kind={source?.kind ?? "ambient"}
-      data-playback={playback}
-    >
-      <div className="music-bar">
+    <div ref={dock} className="music-player-container p-4 bg-slate-900 text-white rounded-xl shadow-lg w-full max-w-md">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-lg">{title || "Music Player"}</h3>
+        <span className="text-xs bg-slate-800 px-2 py-1 rounded">
+          {sources.length > 0 ? `${selected + 1} / ${sources.length}` : "0"}
+        </span>
+      </div>
+
+      {/* Currently Playing Track */}
+      <div className="text-sm text-slate-300 mb-4 truncate">
+        {source ? source.title || source.id : "Дуу сонгогдоогүй байна"}
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center justify-center gap-4 mb-4">
         <button
-          className="music-title"
-          aria-expanded={open}
-          onClick={() => (open ? minimize() : setOpen(true))}
+          onClick={previous}
+          className="p-2 bg-slate-800 hover:bg-slate-700 rounded-full transition"
+          title="Өмнөх дуу"
         >
-          <span className={`music-disc ${playing ? "is-playing" : ""}`}>
-            <Icon name="music" />
-          </span>
-          <span>
-            <strong>{name}</strong>
-            <small>
-              {playing
-                ? language === "en" ? "Playing" : "Тоглож байна"
-                : playback === "paused"
-                  ? language === "en" ? "Paused" : "Түр зогссон"
-                  : language === "en" ? "Choose music to start" : "Хөгжим сонгоод эхлүүлнэ"}
-            </small>
-          </span>
+          <SkipBack size={20} />
         </button>
 
-        <div className="music-controls">
-          <button
-            className="icon-button music-step"
-            aria-label={language === "en" ? "Previous track" : "Өмнөх хөгжим"}
-            onClick={() => next(-1)}
-          >
-            <Icon name="previous" size={18} />
-          </button>
-          <button
-            className="icon-button music-play"
-            aria-label={playing ? (language === "en" ? "Pause music" : "Хөгжим түр зогсоох") : (language === "en" ? "Play music" : "Хөгжим тоглуулах")}
-            onClick={toggle}
-            disabled={busy}
-          >
-            <Icon name={playing ? "pause" : "play"} />
-          </button>
-          <button
-            className="icon-button music-step"
-            aria-label={language === "en" ? "Next track" : "Дараагийн хөгжим"}
-            onClick={() => next(1)}
-          >
-            <Icon name="next" size={18} />
-          </button>
-          <button
-            className="icon-button music-stop"
-            aria-label={language === "en" ? "Stop music" : "Хөгжим зогсоох"}
-            onClick={stop}
-            disabled={!playing && playback === "stopped"}
-          >
-            <Icon name="stop" size={17} />
-          </button>
-          <button
-            className="icon-button"
-            aria-label={muted ? (language === "en" ? "Unmute" : "Дууг нээх") : (language === "en" ? "Mute" : "Дууг хаах")}
-            aria-pressed={muted}
-            onClick={() => void savePreference({ muted: !muted })}
-          >
-            <Icon name={muted ? "muted" : "volume"} size={18} />
-          </button>
-          <input
-            className="music-volume"
-            aria-label={language === "en" ? "Volume" : "Дууны түвшин"}
-            type="range"
-            min="0"
-            max="1"
-            step=".05"
-            value={volume}
-            onChange={(e) =>
-              void savePreference({ volume: Number(e.target.value) })
-            }
-          />
-          <button
-            className="icon-button"
-            aria-label={open ? (language === "en" ? "Minimize music" : "Хөгжим багасгах") : (language === "en" ? "Open music" : "Хөгжим нээх")}
-            aria-expanded={open}
-            onClick={() => (open ? minimize() : setOpen(true))}
-          >
-            <Icon name={open ? "chevron-down" : "chevron-up"} size={18} />
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <p className="music-error" role="status">
-          {error}
-          <button className="text-button" onClick={retry}>
-            {language === "en" ? "Retry" : "Дахин оролдох"}
-          </button>
-        </p>
-      )}
-
-      <div className="music-body">
-        <section className="music-library" hidden={!open}>
-          <div className="music-library-heading">
-            <div>
-              <span className="eyebrow">{language === "en" ? "MY MUSIC LIBRARY" : "МИНИЙ ХӨГЖМИЙН САН"}</span>
-              <p className="tiny muted">
-                {language === "en" ? "A small useful library. You can save your own tracks too." : "Цөөн, хэрэгтэй аялгуу. Өөрийн дуугаа бас хадгалж болно."}
-              </p>
-            </div>
-            <span className="music-count">
-              {sources.length + AMBIENTS.length}
-            </span>
-          </div>
-
-          <div className="ambient-options">
-            {AMBIENTS.map((a) => (
-              <button
-                key={a.id}
-                className="ambient-option"
-                aria-pressed={selected === `ambient:${a.id}`}
-                onClick={() => select(`ambient:${a.id}`)}
-              >
-                <span className="ambient-option-icon">
-                  <Icon
-                    name={
-                      a.id === "rain"
-                        ? "rain"
-                        : a.id === "nature"
-                          ? "leaf"
-                          : "music"
-                    }
-                  />
-                </span>
-                <span>
-                  <strong>{a.name}</strong>
-                  <small>{a.detail}</small>
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="music-add-box">
-            <div className="music-add-row">
-              <label className="music-upload">
-                <input
-                  type="file"
-                  accept="audio/*,video/mp4,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac,.webm,.mp4"
-                  hidden
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    e.currentTarget.value = "";
-                    void addFile(file);
-                  }}
-                />
-                <span className="button small">
-                  <Icon name="upload" size={16} /> MP3 / MP4 файл
-                </span>
-              </label>
-              <span className="tiny muted">
-                {language === "en" ? "Up to 80 MB · MP3 and MP4 · stored on this device" : "80 MB хүртэл · MP3 болон MP4 · төхөөрөмж дээр хадгална"}
-              </span>
-            </div>
-
-            <form
-              className="audio-url-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void addURL();
-              }}
-            >
-              <label>
-                {language === "en" ? "Audio or YouTube URL" : "Аудио эсвэл YouTube холбоос"}
-                <input
-                  type="url"
-                  required
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://…/song.mp3"
-                  maxLength={2048}
-                />
-              </label>
-              <div className="button-row">
-                <input
-                  aria-label={language === "en" ? "Track name" : "Хөгжмийн нэр"}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={language === "en" ? "Name it" : "Нэр өгөх"}
-                  maxLength={120}
-                />
-                <button className="button" disabled={busy}>
-                  {language === "en" ? "Save" : "Хадгалах"}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {sources.length > 0 && (
-            <div className="saved-music">
-              <span className="eyebrow">{language === "en" ? "SAVED" : "ХАДГАЛСАН"}</span>
-              <ul>
-                {sources.map((s) => (
-                  <li key={s.id}>
-                    <button
-                      className="saved-music-select"
-                      aria-pressed={selected === s.id}
-                      onClick={() => select(s.id)}
-                    >
-                      <Icon
-                        name={s.kind === "audio" ? "music" : "cloud"}
-                        size={16}
-                      />
-                      <span>
-                        <strong>{s.title}</strong>
-                        <small>{sourceKind(s, language)}</small>
-                      </span>
-                    </button>
-                    <button
-                      className="icon-button"
-                      aria-label={`${s.title} устгах`}
-                      onClick={() => void remove(s.id)}
-                    >
-                      <Icon name="close" size={16} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <p className="tiny music-storage-note">
-            Upload хийсэн файл энэ төхөөрөмжийн браузерийн хадгалалтад үлдэнэ.
-            Аудио/MP4 холбоос нь холбоосоо хадгалж, тоглуулах үед интернэт
-            ашиглана.
-          </p>
-        </section>
-
-        <div
-          className={`music-preview ${source?.kind === "audio" ? "music-native-preview" : ""}`}
-          hidden={!open && !source}
+        <button
+          onClick={togglePlay}
+          className="p-3 bg-indigo-600 hover:bg-indigo-500 rounded-full transition"
+          title={isPlaying ? "Түр зогсоох" : "Тоглуулах"}
         >
-          {source?.kind === "audio" ? (
-            <div className="music-native-card">
-              <span className="soundscape-art">
-                <Icon name="music" size={36} />
-              </span>
-              <div>
-                <span className="eyebrow">{sourceKind(source, language)}</span>
-                <h3>{name}</h3>
-                <p className="muted">
-                  {playing
-                    ? "Дэмждэг браузер, төхөөрөмж дээр background-аар үргэлжилнэ."
-                    : "Play дарж эхлүүлнэ үү."}
-                </p>
-              </div>
-            </div>
-          ) : source && isYouTubeSource(source) ? (
-            <div className="music-youtube-runtime">
-              {activated ? (
-                <YouTubeEmbed
-                  key={`${source.id}:${attempt}`}
-                  source={
-                    source as MusicSource & {
-                      kind: "video" | "playlist";
-                      youtubeId: string;
-                    }
-                  }
-                  resume={session}
-                  onReady={onReady}
-                  onState={onState}
-                  onError={onError}
-                />
-              ) : (
-                <button className="button small" onClick={() => setOpen(true)}>
-                  YouTube тоглуулагчийг ачаалах
-                </button>
-              )}
-              {open && (
-                <div className="music-details">
-                  <p className="tiny muted">
-                    YouTube-ийн playback нь браузер, төхөөрөмжөөс хамаарна.
-                    Background/lock-screen control нь native audio шиг
-                    тогтвортой биш байж болно.
-                  </p>
-                  <a
-                    href={session.track.url || youtubeURL(source)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    YouTube дээр нээх ↗
-                  </a>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="music-native-card">
-              <span className="soundscape-art">
-                <Icon
-                  name={selected === "ambient:rain" ? "rain" : "leaf"}
-                  size={36}
-                />
-              </span>
-              <div>
-                <span className="eyebrow">STUDY SOUNDS</span>
-                <h3>{name}</h3>
-                <p className="muted">
-                  Нэг жижиг алхамдаа анхаарлаа төвлөрүүлээрэй.
-                </p>
-              </div>
-            </div>
-          )}
-          {open && (
-            <div className="music-details">
-              <div className="button-row mobile-music-steps">
-                <button className="button small" onClick={() => next(-1)}>
-                  Өмнөх
-                </button>
-                <button className="button small" onClick={() => next(1)}>
-                  Дараах
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+          {isPlaying ? <Pause size={22} /> : <Play size={22} />}
+        </button>
+
+        <button
+          onClick={next}
+          className="p-2 bg-slate-800 hover:bg-slate-700 rounded-full transition"
+          title="Дараагийн дуу"
+        >
+          <SkipForward size={20} />
+        </button>
       </div>
-    </aside>
+
+      {/* Playlist Section */}
+      <section>
+        <ul className="max-h-40 space-y-2 overflow-y-auto border-t border-slate-800 pt-3">
+          {sources.map((item, index) => (
+            <li
+              key={item.id || index}
+              className={`flex items-center justify-between rounded p-2 text-sm transition ${
+                selected === index
+                  ? "bg-indigo-600/30 font-medium text-indigo-300"
+                  : "hover:bg-slate-800"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => select(index)}
+                className="min-w-0 flex-1 truncate text-left"
+                aria-current={selected === index ? "true" : undefined}
+              >
+                {item.title || `Дуу ${index + 1}`}
+              </button>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="p-1 text-slate-500 hover:text-red-400"
+                aria-label={`${item.title || `Дуу ${index + 1}`} устгах`}
+              >
+                <Trash2 size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }
