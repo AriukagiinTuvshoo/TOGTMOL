@@ -14,14 +14,58 @@ function heatmapLevel(minutes: number) {
 
 export const DEFAULT_STREAK_FREEZES = 2;
 
-export function streakFreezeLimit(settings: Settings): number {
-  const value = settings.extras.streakFreezeLimit;
+export function streakFreezeCount(settings: Settings): number {
+  const value =
+    typeof settings.extras.streakFreezeLimit === "number"
+      ? settings.extras.streakFreezeLimit
+      : settings.extras.streakFreezeCount;
   return typeof value === "number" &&
     Number.isInteger(value) &&
     value >= 0 &&
     value <= 2
     ? value
     : DEFAULT_STREAK_FREEZES;
+}
+export const streakFreezeLimit = streakFreezeCount;
+
+export function streakWithFreezes(
+  dates: Set<string>,
+  today: string,
+  freezeCount = DEFAULT_STREAK_FREEZES,
+) {
+  const reserve = Math.max(0, Math.min(2, Math.floor(freezeCount)));
+  let current = dates.has(today) ? today : shiftDate(today, -1);
+  let streak = 0;
+  let used = 0;
+  const oldest = [...dates].sort()[0];
+  if (!oldest || !dates.has(current))
+    return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
+
+  while (current >= oldest) {
+    if (dates.has(current)) streak++;
+    else if (used < reserve) {
+      used++;
+      streak++;
+    } else break;
+    current = shiftDate(current, -1);
+  }
+  if (streak <= used)
+    return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
+
+  return {
+    streak,
+    freezesUsed: used,
+    freezesRemaining: reserve - used,
+  };
+}
+
+export function currentStreakWithFreezes(
+  dates: Set<string>,
+  today: string,
+  freezeLimit = DEFAULT_STREAK_FREEZES,
+): StreakWithFreezes {
+  const state = streakWithFreezes(dates, today, freezeLimit);
+  return { streak: state.streak, usedFreezes: state.freezesUsed };
 }
 
 export interface StreakWithFreezes {
@@ -147,83 +191,3 @@ export function annualHeatmap(index: StudyIndex, year: number): AnnualHeatmap {
   };
 }
 
-export interface BehaviorAttempt {
-  id: string;
-  subjectId: string;
-  startEpoch: number;
-  discardedAt: number;
-  accumulatedSec: number;
-  targetSec: number | null;
-}
-
-// Only explicitly discarded timers become abandonment signals.
-function behaviorAttempts(data: StudyData): BehaviorAttempt[] {
-  const raw = data.extras.behaviorAttempts;
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((value): value is BehaviorAttempt => {
-    if (!value || typeof value !== "object") return false;
-    const item = value as Record<string, unknown>;
-    return (
-      typeof item.id === "string" &&
-      typeof item.subjectId === "string" &&
-      Number.isFinite(item.startEpoch) &&
-      Number.isFinite(item.discardedAt) &&
-      Number.isFinite(item.accumulatedSec) &&
-      (item.targetSec === null || Number.isFinite(item.targetSec))
-    );
-  });
-}
-
-export interface BehaviorPattern {
-  id: string;
-  tone: "attention" | "positive";
-  title: string;
-  body: string;
-  count: number;
-}
-
-export function behaviorPatterns(
-  data: StudyData,
-  index: StudyIndex,
-  minimumAttempts = 4,
-): BehaviorPattern[] {
-  const completed = index.sessions
-    .filter((session) => session.startEpoch > 0)
-    .map((session) => ({
-      startEpoch: session.startEpoch,
-      abandoned: false,
-    }));
-  const abandoned = behaviorAttempts(data).map((attempt) => ({
-    startEpoch: attempt.startEpoch,
-    abandoned: true,
-  }));
-  const all = [...completed, ...abandoned];
-  if (all.length < minimumAttempts) return [];
-
-  const late = all.filter((item) => new Date(item.startEpoch).getHours() >= 21);
-  if (late.length < minimumAttempts) return [];
-
-  const lateAbandoned = late.filter((item) => item.abandoned).length;
-  const rate = Math.round((lateAbandoned / late.length) * 100);
-
-  if (lateAbandoned === 0)
-    return [
-      {
-        id: "late-starts-complete",
-        tone: "positive",
-        title: "21:00-с хойших эхлэл тогтвортой байна",
-        body: `Энэ цагийн ${late.length} эхлэлээс одоогоор дуусгалгүй орхисон нь алга.`,
-        count: late.length,
-      },
-    ];
-
-  return [
-    {
-      id: "late-starts-abandoned",
-      tone: "attention",
-      title: "Оройн эхлэл дээр тасалдах хандлага байна",
-      body: `21:00-с хойш эхэлсэн ${late.length} session-ээс ${lateAbandoned} нь дуусгалгүй орхигдсон (${rate}%). Оройн session-ээ богино зорилтоор эхлүүлэхийг туршаарай.`,
-      count: late.length,
-    },
-  ];
-}
