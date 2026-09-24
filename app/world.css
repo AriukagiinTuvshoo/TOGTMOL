@@ -1940,9 +1940,6 @@ details.card[open] > summary {
 .focus-timer-stage .timer-layout {
   display: block;
 }
-.focus-timer-stage .timer-layout > aside {
-  display: none;
-}
 .focus-timer-stage .timer-card {
   width: 100%;
   min-height: min(640px, calc(100dvh - 120px));
@@ -1951,7 +1948,17 @@ details.card[open] > summary {
   align-content: center;
   padding: 42px 24px;
   border: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: 0 30px 100px #1b2a1b14;
+}
+.focus-timer-stage .timer-card > .eyebrow,
+.focus-timer-stage .timer-card > h2,
+.focus-timer-stage .timer-card > p.muted {
+  display: block;
+}
+.focus-timer-stage .timer-layout > aside {
+  width: 100%;
+  margin: 18px auto 0;
 }
 .focus-timer-stage .timer-card > .eyebrow,
 .focus-timer-stage .timer-card > h2,
