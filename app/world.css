@@ -1990,6 +1990,7 @@ details.card[open] > summary {
 }
 .focus-timer-stage .timer-config {
   width: min(560px, 100%);
+  max-width: none;
 }
 .focus-timer-stage .timer-orbit {
   width: min(430px, 72vw);
