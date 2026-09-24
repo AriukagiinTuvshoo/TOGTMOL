@@ -456,7 +456,13 @@ describe("persistent music dock", () => {
     vi.stubGlobal("innerWidth", 375);
     fireEvent(window, new Event("resize"));
     expect(observe).not.toHaveBeenCalled();
-    for (const name of ["Хөгжим түр зогсоох", "Хөгжим зогсоох", "Хөгжим нээх"])
+    for (const name of [
+      "Өмнөх хөгжим",
+      "Хөгжим түр зогсоох",
+      "Дараагийн хөгжим",
+      "Хөгжим зогсоох",
+      "Хөгжим нээх",
+    ])
       expect(within(dock()).getByRole("button", { name })).toBeVisible();
     expect(
       within(dock()).getByRole("slider", { name: "Дууны түвшин" }),

@@ -1223,15 +1223,21 @@ details.card[open] > summary {
     width: 30px;
     height: 30px;
   }
+  .music-title {
+    flex: 1;
+    min-width: 0;
+  }
   .music-controls {
-    gap: 1px;
+    gap: 0;
   }
   .music-controls .icon-button {
-    min-width: 34px;
+    min-width: 30px;
     min-height: 36px;
-    padding: 5px;
+    padding: 4px;
   }
-  .music-step,
+  .music-step {
+    display: inline-flex;
+  }
   .music-volume {
     display: none;
   }
