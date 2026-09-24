@@ -117,7 +117,9 @@ export function MusicPlayer() {
                 ? "Тоглож байна"
                 : playback === "paused"
                   ? "Түр зогссон"
-                  : "Хөгжим сонгоод эхлүүлнэ"}
+                  : session.playback === "playing"
+                    ? "Үргэлжлүүлэхэд Play дарна уу"
+                    : "Хөгжим сонгоод эхлүүлнэ"}
             </small>
           </span>
         </button>
@@ -188,7 +190,7 @@ export function MusicPlayer() {
         <p className="music-error" role="status">
           {error}
           <button className="text-button" onClick={retry}>
-            Дахин оролдох
+            Дахин ачаалах
           </button>
         </p>
       )}
@@ -264,15 +266,19 @@ export function MusicPlayer() {
               }}
             >
               <label>
-                Аудио эсвэл YouTube холбоос
+                YouTube video эсвэл playlist
                 <input
+                  aria-label="YouTube video эсвэл playlist"
                   type="url"
                   required
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://…/song.mp3"
+                  placeholder="YouTube эсвэл аудио холбоос оруулна уу"
                   maxLength={2048}
                 />
+                <span className="tiny muted">
+                  YouTube video/playlist болон шууд аудио холбоос дэмжинэ.
+                </span>
               </label>
               <div className="button-row">
                 <input
@@ -283,7 +289,7 @@ export function MusicPlayer() {
                   maxLength={120}
                 />
                 <button className="button" disabled={busy}>
-                  Хадгалах
+                  Нэмэх
                 </button>
               </div>
             </form>
