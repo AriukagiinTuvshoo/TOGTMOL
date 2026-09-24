@@ -3,6 +3,7 @@ import "./globals.css";
 import "./world.css";
 import "./knowledge.css";
 import "./neon.css";
+import "./legal.css";
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://togtmol.tuvshoo0331.workers.dev",

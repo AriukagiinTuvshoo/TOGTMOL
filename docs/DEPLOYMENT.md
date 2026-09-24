@@ -109,3 +109,12 @@ Test a real video and playlist on the deployed origin, including autoplay blocki
 - [Screen Wake Lock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API)
 - [OpenAI image input](https://developers.openai.com/api/docs/guides/images-vision)
 - [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+
+
+### Production Supabase smoke test
+
+The normal TOGTMOL user flow does not require a service-role key. For a real production-account check, use a dedicated test account and run `npm run verify:supabase:production` with the smoke-test environment variables from `.env.example`. The script signs in, verifies the authenticated user, performs an RLS-protected read, calls `pull_study_data`, and checks that the returned snapshot is schema version 5 without mutating study data or consuming Bondook quota.
+
+### Legal pages for store release
+
+Public legal pages are available at `/privacy` and `/terms`. Set `NEXT_PUBLIC_LEGAL_CONTACT_EMAIL` before store submission so the public contact is correct.

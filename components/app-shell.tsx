@@ -353,7 +353,7 @@ function Shell() {
             <Icon name="leaf" size={15} />
             <span>{t("shell.footer1")}</span>
             <span>TOGTMOL v7</span>
-          </footer>
+          <span className="legal-links"><a href="/privacy">Нууцлал</a><a href="/terms">Нөхцөл</a></span></footer>
         </main>
       </div>
       {more && (
