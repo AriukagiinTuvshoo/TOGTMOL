@@ -1,4 +1,4 @@
-import type { Settings, StudyData, StudyIndex } from "@/types/study";
+import type { Settings, StudyIndex } from "@/types/study";
 import { parseDate, shiftDate, weekStart } from "./dates";
 function heatmapLevel(minutes: number) {
   return minutes > 60
@@ -59,15 +59,6 @@ export function streakWithFreezes(
   };
 }
 
-export function currentStreakWithFreezes(
-  dates: Set<string>,
-  today: string,
-  freezeLimit = DEFAULT_STREAK_FREEZES,
-): StreakWithFreezes {
-  const state = streakWithFreezes(dates, today, freezeLimit);
-  return { streak: state.streak, usedFreezes: state.freezesUsed };
-}
-
 export interface StreakWithFreezes {
   streak: number;
   usedFreezes: number;
@@ -78,26 +69,8 @@ export function currentStreakWithFreezes(
   today: string,
   freezeLimit = DEFAULT_STREAK_FREEZES,
 ): StreakWithFreezes {
-  const oldest = [...dates].sort()[0];
-  if (!oldest) return { streak: 0, usedFreezes: 0 };
-  let cursor = dates.has(today) ? today : shiftDate(today, -1);
-  if (!dates.has(cursor)) return { streak: 0, usedFreezes: 0 };
-  let streak = 0;
-  let usedFreezes = 0;
-  const limit = Math.max(0, Math.floor(freezeLimit));
-
-  while (cursor >= oldest) {
-    if (dates.has(cursor)) {
-      streak++;
-    } else if (usedFreezes < limit) {
-      usedFreezes++;
-      streak++;
-    } else {
-      break;
-    }
-    cursor = shiftDate(cursor, -1);
-  }
-  return { streak, usedFreezes };
+  const state = streakWithFreezes(dates, today, freezeLimit);
+  return { streak: state.streak, usedFreezes: state.freezesUsed };
 }
 
 function dayDistance(from: string, to: string): number {
