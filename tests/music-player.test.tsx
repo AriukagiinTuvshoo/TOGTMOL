@@ -646,7 +646,9 @@ describe("persistent music dock", () => {
     const input = dock().querySelector('input[type="file"]');
     expect(input?.getAttribute("accept")).toContain(".mp4");
     fireEvent.change(input!, {
-      target: {\n        files: [new File(["audio"], "third.mp4", { type: "video/mp4" })],\n      },
+      target: {
+        files: [new File(["audio"], "third.mp4", { type: "video/mp4" })],
+      },
     });
     await waitFor(() =>
       expect(dock().querySelector(".saved-music")).toHaveTextContent("third"),
