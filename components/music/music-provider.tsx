@@ -515,11 +515,12 @@ function useMusicController() {
     const input = url.trim();
     if (!input) return;
     try {
-      let parsedYouTube;
+      let parsedYouTube: ReturnType<typeof parseYouTube> | null = null;
+      let youtubeError: Error | null = null;
       try {
         parsedYouTube = parseYouTube(input);
-      } catch {
-        parsedYouTube = null;
+      } catch (error) {
+        youtubeError = error instanceof Error ? error : Error("YouTube холбоос буруу байна.");
       }
 
       if (parsedYouTube) {
@@ -569,7 +570,12 @@ function useMusicController() {
         return;
       }
 
-      const audioUrl = parseAudioURL(input);
+      let audioUrl: string;
+      try {
+        audioUrl = parseAudioURL(input);
+      } catch {
+        throw youtubeError ?? Error("Холбоос буруу байна.");
+      }
       const old = currentSources().find(
         (s) => s.kind === "audio" && s.audioUrl === audioUrl,
       );
