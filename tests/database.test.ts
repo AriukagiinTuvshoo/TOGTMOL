@@ -273,7 +273,16 @@ describe("v4 cloud extensions", () => {
     const beforeGoals = (
       await db.query("select * from public.study_goals")
     ).rows.length;
-    expect(beforeGoals).toBeGreaterThanOrEqual(0);
+    await expect(
+      db.query("select public.push_study_data($1,2,$2::jsonb)", [
+        A,
+        JSON.stringify({ ...fixture(), schemaVersion: 3 }),
+      ]),
+    ).rejects.toThrow("Unsupported schema");
+    const afterGoals = (
+      await db.query("select * from public.study_goals")
+    ).rows.length;
+    expect(afterGoals).toBe(beforeGoals);
   });
   it("enforces a durable per-user daily AI cap that cannot be reset by clients", async () => {
     await asUser(A);
