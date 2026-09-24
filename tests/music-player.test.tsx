@@ -594,6 +594,87 @@ describe("persistent music dock", () => {
     click("Хөгжим зогсоох");
     await waitFor(() => expect(local.stop).toHaveBeenCalledTimes(1));
   });
+  it("uploads MP4 audio, supports previous/next, and advances when a track ends", async () => {
+    class MockAudio extends EventTarget {
+      static instances: MockAudio[] = [];
+      preload = "";
+      src = "";
+      currentTime = 0;
+      duration = 60;
+      readyState = 1;
+      volume = 1;
+      load = vi.fn();
+      play = vi.fn(() => {
+        this.dispatchEvent(new Event("play"));
+        return Promise.resolve();
+      });
+      pause = vi.fn(() => this.dispatchEvent(new Event("pause")));
+      constructor() {
+        super();
+        MockAudio.instances.push(this);
+      }
+    }
+    vi.stubGlobal("Audio", MockAudio);
+    const queue: StudyData["musicSources"] = [
+      {
+        id: "youtube-test",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://example.test/first.mp4",
+        mimeType: "video/mp4",
+        title: "First MP4",
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        extras: {},
+      },
+      {
+        id: "second-mp4",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://example.test/second.mp4",
+        mimeType: "video/mp4",
+        title: "Second MP4",
+        createdAt: 2,
+        updatedAt: 2,
+        deletedAt: null,
+        extras: {},
+      },
+    ];
+    await boot("video", queue);
+    click("Хөгжим нээх");
+    const input = dock().querySelector('input[type="file"]');
+    expect(input?.getAttribute("accept")).toContain(".mp4");
+    fireEvent.change(input!, {
+      target: {
+        files: [new File(["audio"], "third.mp4", { type: "video/mp4" })],
+      },
+    });
+    await waitFor(() =>
+      expect(dock().querySelector(".saved-music")).toHaveTextContent("third"),
+    );
+    fireEvent.click(
+      dock().querySelector(".saved-music li:first-child .saved-music-select")!,
+    );
+    await start();
+    const audio = MockAudio.instances.at(-1)!;
+    expect(audio.src).toBe("https://example.test/first.mp4");
+
+    click("Дараагийн хөгжим");
+    await waitFor(() =>
+      expect(audio.src).toBe("https://example.test/second.mp4"),
+    );
+    click("Өмнөх хөгжим");
+    await waitFor(() =>
+      expect(audio.src).toBe("https://example.test/first.mp4"),
+    );
+    act(() => audio.dispatchEvent(new Event("ended")));
+    await waitFor(() =>
+      expect(audio.src).toBe("https://example.test/second.mp4"),
+    );
+    expect(audio.play).toHaveBeenCalledTimes(4);
+  });
+
   it("contains a music render failure within the floating fallback", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     function BrokenMusic(): React.ReactNode {

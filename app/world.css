@@ -519,9 +519,10 @@ input[type="checkbox"] {
   padding: 35px 30px 115px;
 }
 .is-focus .music-player {
-  left: 50%;
+  left: auto;
+  right: 24px;
   width: min(860px, calc(100% - 48px));
-  transform: translateX(-50%);
+  transform: none;
 }
 .focus-world .world-heading {
   margin-bottom: 8px;
@@ -1089,6 +1090,9 @@ details.card[open] > summary {
     max-height: 65dvh;
   }
   .is-focus .music-player {
+    left: 14px;
+    right: 14px;
+    width: auto;
     bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
   .is-focus .app-main {
@@ -1265,7 +1269,11 @@ details.card[open] > summary {
     font-size: 9px;
   }
   .is-focus .music-player {
-    width: calc(100% - 18px);
+    left: 9px;
+    right: 9px;
+  }
+  .focus-hint {
+    display: none;
   }
   .is-focus #main-content {
     padding: 22px 16px 120px;
@@ -1894,16 +1902,13 @@ details.card[open] > summary {
   min-height: 100dvh;
   padding: 0;
 }
-.is-focus .music-player {
-  display: none;
-}
 .focus-timer-screen {
   position: relative;
   display: grid;
   place-items: center;
   min-height: 100dvh;
   min-height: 100svh;
-  padding: 32px;
+  padding: 32px 32px calc(100px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
   background:
     radial-gradient(circle at 50% 35%, var(--moss-soft), transparent 42%),
@@ -1943,9 +1948,6 @@ details.card[open] > summary {
 .focus-timer-stage .timer-layout {
   display: block;
 }
-.focus-timer-stage .timer-layout > aside {
-  display: none;
-}
 .focus-timer-stage .timer-card {
   width: 100%;
   min-height: min(640px, calc(100dvh - 120px));
@@ -1954,7 +1956,17 @@ details.card[open] > summary {
   align-content: center;
   padding: 42px 24px;
   border: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: 0 30px 100px #1b2a1b14;
+}
+.focus-timer-stage .timer-card > .eyebrow,
+.focus-timer-stage .timer-card > h2,
+.focus-timer-stage .timer-card > p.muted {
+  display: block;
+}
+.focus-timer-stage .timer-layout > aside {
+  width: 100%;
+  margin: 18px auto 0;
 }
 .focus-timer-stage .timer-card > .eyebrow,
 .focus-timer-stage .timer-card > h2,
@@ -1978,6 +1990,7 @@ details.card[open] > summary {
 }
 .focus-timer-stage .timer-config {
   width: min(560px, 100%);
+  max-width: none;
 }
 .focus-timer-stage .timer-orbit {
   width: min(430px, 72vw);
@@ -1996,8 +2009,7 @@ details.card[open] > summary {
 .focus-hint {
   position: absolute;
   bottom: max(16px, env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
+  left: 24px;
   margin: 0;
   color: var(--muted);
   font-size: 10px;
@@ -2018,7 +2030,7 @@ details.card[open] > summary {
     font-size: 11px;
   }
   .focus-timer-stage .timer-card {
-    min-height: calc(100dvh - 76px);
+    min-height: calc(100dvh - 176px);
     padding: 34px 14px 42px;
     border-radius: 22px;
   }

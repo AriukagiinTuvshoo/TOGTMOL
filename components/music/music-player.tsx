@@ -241,7 +241,7 @@ export function MusicPlayer() {
               <label className="music-upload">
                 <input
                   type="file"
-                  accept="audio/*,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac,.webm"
+                  accept="audio/*,video/mp4,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac,.webm,.mp4"
                   hidden
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null;

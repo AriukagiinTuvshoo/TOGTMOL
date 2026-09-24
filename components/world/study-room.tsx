@@ -39,6 +39,10 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     Math.max(0, Math.min(2, Number(data.settings.extras.graceDays ?? 1))),
   );
   const last = [...index.sessions].sort((a, b) => b.endEpoch - a.endEpoch)[0];
+  const timerKey = [
+    data.activeTimer?.id ?? "new",
+    store.getSnapshot().namespace,
+  ].join(":");
   useEffect(() => {
     if (!focus) return;
     const exit = (e: KeyboardEvent) => {
@@ -48,8 +52,31 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     window.addEventListener("keydown", exit);
     return () => window.removeEventListener("keydown", exit);
   }, [focus, navigate]);
+  if (focus) {
+    return (
+      <section className="focus-timer-screen" aria-label="Төвлөрөх цаг">
+        <span className="focus-timer-brand">ТОГТМОЛ · FOCUS</span>
+        <button
+          className="focus-exit-button"
+          onClick={() => navigate("overview")}
+        >
+          <Icon name="close" size={16} /> Focus-оос гарах
+        </button>
+        <div className="focus-timer-stage">
+          <StudyTimer
+            key={timerKey}
+            compact
+            recentlySaved={timerSaved}
+            onSessionSaved={() => setTimerSaved(true)}
+            onSessionStarted={() => setTimerSaved(false)}
+          />
+        </div>
+        <p className="focus-hint">Esc · Focus-оос гарах</p>
+      </section>
+    );
+  }
   return (
-    <div className={`study-world ${focus ? "focus-world" : ""}`}>
+    <div className="study-world">
       <div className="world-heading">
         <div>
           <span className="eyebrow">
@@ -132,7 +159,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           </div>
         </div>
         <StudyTimer
-          key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+          key={timerKey}
           compact
           recentlySaved={focus && timerSaved}
           onSessionSaved={() => setTimerSaved(true)}
