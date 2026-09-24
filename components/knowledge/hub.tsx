@@ -42,16 +42,6 @@ const tabs: [KnowledgeView, string][] = [
   ["session", "Хичээлийн түүх"],
   ["trash", "Хогийн сав"],
 ];
-const LABEL_EN: Record<string, string> = {
-  note: "Note",
-  deck: "Deck",
-  card: "Card",
-  review: "Review",
-  quiz: "Quiz",
-  attempt: "Quiz history",
-  link: "Link",
-  session: "Session",
-};
 const TAB_EN: Record<string, string> = {
   all: "All",
   note: "Notes",
