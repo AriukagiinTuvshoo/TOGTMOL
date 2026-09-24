@@ -43,10 +43,18 @@ export function PrivacyCenter() {
       <section className="privacy-overview">
         <div className="privacy-header card">
           <div>
-            <span className="eyebrow">{language === "en" ? "PRIVACY · DATA" : "НУУЦЛАЛ · ӨГӨГДӨЛ"}</span>
-            <h1>{language === "en" ? "Your data. Your control." : "Таны өгөгдөл. Таны хяналт."}</h1>
+            <span className="eyebrow">
+              {language === "en" ? "PRIVACY · DATA" : "НУУЦЛАЛ · ӨГӨГДӨЛ"}
+            </span>
+            <h1>
+              {language === "en"
+                ? "Your data. Your control."
+                : "Таны өгөгдөл. Таны хяналт."}
+            </h1>
             <p>
-              {language === "en" ? "See where your data is stored, what is synced, and how to manage backups in one place." : "Өгөгдөл хаана хадгалагдаж байгаа, юу синк хийгдэж байгаа болон нөөцөө хэрхэн удирдахыг нэг дороос харна."}
+              {language === "en"
+                ? "See where your data is stored, what is synced, and how to manage backups in one place."
+                : "Өгөгдөл хаана хадгалагдаж байгаа, юу синк хийгдэж байгаа болон нөөцөө хэрхэн удирдахыг нэг дороос харна."}
             </p>
           </div>
           <div className="privacy-status-orb" aria-hidden="true">
@@ -58,20 +66,34 @@ export function PrivacyCenter() {
         <section className="card privacy-status-card">
           <div className="privacy-section-head">
             <div>
-              <span className="eyebrow">{language === "en" ? "DATA STATUS" : "ӨГӨГДЛИЙН ТӨЛӨВ"}</span>
-              <h2>{language === "en" ? "Current storage status" : "Одоогийн хадгалалтын төлөв"}</h2>
+              <span className="eyebrow">
+                {language === "en" ? "DATA STATUS" : "ӨГӨГДЛИЙН ТӨЛӨВ"}
+              </span>
+              <h2>
+                {language === "en"
+                  ? "Current storage status"
+                  : "Одоогийн хадгалалтын төлөв"}
+              </h2>
             </div>
             <span
               className={
                 account.syncEnabled ? "privacy-chip on" : "privacy-chip"
               }
             >
-              {account.syncEnabled ? (language === "en" ? "SYNC ON" : "СИНК АСААЛТТАЙ") : (language === "en" ? "LOCAL MODE" : "ЛОКАЛ ГОРИМ")}
+              {account.syncEnabled
+                ? language === "en"
+                  ? "SYNC ON"
+                  : "СИНК АСААЛТТАЙ"
+                : language === "en"
+                  ? "LOCAL MODE"
+                  : "ЛОКАЛ ГОРИМ"}
             </span>
           </div>
           <dl className="detail-list privacy-details">
             <div>
-              <dt>{language === "en" ? "Stored here" : "Энд хадгалагдаж буй зүйл"}</dt>
+              <dt>
+                {language === "en" ? "Stored here" : "Энд хадгалагдаж буй зүйл"}
+              </dt>
               <dd>
                 {data.sessions.filter((s) => !s.deletedAt).length} хэмжилт ·{" "}
                 {data.knowledge.filter((r) => !r.deletedAt).length} мэдлэгийн
@@ -79,31 +101,55 @@ export function PrivacyCenter() {
               </dd>
             </div>
             <div>
-              <dt>{language === "en" ? "Primary storage" : "Үндсэн хадгалалт"}</dt>
+              <dt>
+                {language === "en" ? "Primary storage" : "Үндсэн хадгалалт"}
+              </dt>
               <dd>
                 {store.repository.fallback
-                  ? language === "en" ? "Browser fallback storage" : "Энэ браузерын жижиг хадгалалт"
-                  : language === "en" ? "This device’s IndexedDB database" : "Энэ төхөөрөмжийн IndexedDB өгөгдлийн сан"}
+                  ? language === "en"
+                    ? "Browser fallback storage"
+                    : "Энэ браузерын жижиг хадгалалт"
+                  : language === "en"
+                    ? "This device’s IndexedDB database"
+                    : "Энэ төхөөрөмжийн IndexedDB өгөгдлийн сан"}
               </dd>
             </div>
             <div>
               <dt>{language === "en" ? "Cloud sync" : "Үүлэн синк"}</dt>
               <dd>
                 {account.syncEnabled
-                  ? language === "en" ? "On · private account" : "Асаалттай · хувийн бүртгэл"
-                  : language === "en" ? "Off" : "Унтраалттай"}
+                  ? language === "en"
+                    ? "On · private account"
+                    : "Асаалттай · хувийн бүртгэл"
+                  : language === "en"
+                    ? "Off"
+                    : "Унтраалттай"}
               </dd>
             </div>
             <div>
-              <dt>{language === "en" ? "Online Bondook consent" : "Онлайн Бондоокийн зөвшөөрөл"}</dt>
-              <dd>{ai ? language === "en" ? "On" : "Асаасан" : language === "en" ? "Not enabled" : "Өгөгдөөгүй"}</dd>
+              <dt>
+                {language === "en"
+                  ? "Online Bondook consent"
+                  : "Онлайн Бондоокийн зөвшөөрөл"}
+              </dt>
+              <dd>
+                {ai
+                  ? language === "en"
+                    ? "On"
+                    : "Асаасан"
+                  : language === "en"
+                    ? "Not enabled"
+                    : "Өгөгдөөгүй"}
+              </dd>
             </div>
             <div>
               <dt>{language === "en" ? "Last sync" : "Сүүлд синк хийсэн"}</dt>
               <dd>
                 {synced
                   ? new Date(synced).toLocaleString("mn-MN")
-                  : language === "en" ? "None yet" : "Хийгээгүй"}
+                  : language === "en"
+                    ? "None yet"
+                    : "Хийгээгүй"}
               </dd>
             </div>
             <div>
@@ -111,7 +157,9 @@ export function PrivacyCenter() {
               <dd>
                 {backup
                   ? new Date(backup).toLocaleString("mn-MN")
-                  : language === "en" ? "None yet" : "Одоогоор үүсээгүй"}
+                  : language === "en"
+                    ? "None yet"
+                    : "Одоогоор үүсээгүй"}
               </dd>
             </div>
           </dl>
@@ -120,23 +168,30 @@ export function PrivacyCenter() {
               className="button primary"
               disabled={busy || working}
               onClick={() =>
-                void run(async () => {
-                  const snapshot = store.exportData();
-                  const b = await store.repository.backup(
-                    namespace,
-                    language === "en" ? "User-created full backup" : "Өөрийн үүсгэсэн бүрэн нөөц",
-                    JSON.stringify(snapshot),
-                  );
-                  downloadJson(
-                    snapshot,
-                    `togtmol-v5-${new Date().toISOString().slice(0, 10)}.json`,
-                  );
-                  setBackup(b.createdAt);
-                  await store.repository.setMetadata(
-                    `last-export:${namespace}`,
-                    b.createdAt,
-                  );
-                }, language === "en" ? "Full backup created." : "Бүрэн нөөц үүсгэлээ.")
+                void run(
+                  async () => {
+                    const snapshot = store.exportData();
+                    const b = await store.repository.backup(
+                      namespace,
+                      language === "en"
+                        ? "User-created full backup"
+                        : "Өөрийн үүсгэсэн бүрэн нөөц",
+                      JSON.stringify(snapshot),
+                    );
+                    downloadJson(
+                      snapshot,
+                      `togtmol-v5-${new Date().toISOString().slice(0, 10)}.json`,
+                    );
+                    setBackup(b.createdAt);
+                    await store.repository.setMetadata(
+                      `last-export:${namespace}`,
+                      b.createdAt,
+                    );
+                  },
+                  language === "en"
+                    ? "Full backup created."
+                    : "Бүрэн нөөц үүсгэлээ.",
+                )
               }
             >
               <Icon name="download" size={17} />
@@ -144,14 +199,18 @@ export function PrivacyCenter() {
             </button>
           </div>
           <p className="tiny muted">
-            {language === "en" ? "The backup saves your current data as JSON. Use it to move data to another device." : "Нөөц файл нь энэ төхөөрөмж дээрх одоогийн өгөгдлийг бүхэлд нь JSON хэлбэрээр хадгална. Бусад төхөөрөмж рүү шилжихдээ энэ файлыг ашиглаж болно."}
+            {language === "en"
+              ? "The backup saves your current data as JSON. Use it to move data to another device."
+              : "Нөөц файл нь энэ төхөөрөмж дээрх одоогийн өгөгдлийг бүхэлд нь JSON хэлбэрээр хадгална. Бусад төхөөрөмж рүү шилжихдээ энэ файлыг ашиглаж болно."}
           </p>
           {!account.user && (
             <button
               className="text-button"
               onClick={() => navigate("settings")}
             >
-              {language === "en" ? "Account & connection settings →" : "Бүртгэл, холболтын тохиргоо →"}
+              {language === "en"
+                ? "Account & connection settings →"
+                : "Бүртгэл, холболтын тохиргоо →"}
             </button>
           )}
         </section>
@@ -160,15 +219,23 @@ export function PrivacyCenter() {
         <div className="privacy-section-head">
           <div>
             <span className="eyebrow">CONTROL CENTER</span>
-            <h2>{language === "en" ? "Consent & backups" : "Зөвшөөрөл ба нөөц"}</h2>
-            <p>{language === "en" ? "Manage online services and local data separately." : "Онлайн үйлчилгээ болон локал өгөгдлөө тусад нь удирдана."}</p>
+            <h2>
+              {language === "en" ? "Consent & backups" : "Зөвшөөрөл ба нөөц"}
+            </h2>
+            <p>
+              {language === "en"
+                ? "Manage online services and local data separately."
+                : "Онлайн үйлчилгээ болон локал өгөгдлөө тусад нь удирдана."}
+            </p>
           </div>
         </div>
         <div className="privacy-action-grid">
           <article>
             <span className="privacy-action-icon">◈</span>
             <div>
-              <strong>{language === "en" ? "AI processing" : "AI боловсруулалт"}</strong>
+              <strong>
+                {language === "en" ? "AI processing" : "AI боловсруулалт"}
+              </strong>
               <p>
                 {ai
                   ? "Онлайн Бондоок ашиглах зөвшөөрөл асаалттай."
@@ -197,7 +264,9 @@ export function PrivacyCenter() {
                 )
               }
             >
-              {language === "en" ? "Disable AI processing" : "AI боловсруулалтыг унтраах"}
+              {language === "en"
+                ? "Disable AI processing"
+                : "AI боловсруулалтыг унтраах"}
             </button>
           </article>
           <article>
@@ -215,7 +284,12 @@ export function PrivacyCenter() {
                 className="button small"
                 disabled={busy || working}
                 onClick={() =>
-                  void run(account.disableSync, language === "en" ? "Cloud sync disabled." : "Үүлэн синк унтраалаа.")
+                  void run(
+                    account.disableSync,
+                    language === "en"
+                      ? "Cloud sync disabled."
+                      : "Үүлэн синк унтраалаа.",
+                  )
                 }
               >
                 Унтраах
@@ -233,7 +307,11 @@ export function PrivacyCenter() {
           <article>
             <span className="privacy-action-icon">↥</span>
             <div>
-              <strong>{language === "en" ? "Automatic backup reminders" : "Автомат нөөцийн сануулга"}</strong>
+              <strong>
+                {language === "en"
+                  ? "Automatic backup reminders"
+                  : "Автомат нөөцийн сануулга"}
+              </strong>
               <p>
                 {data.settings.extras.backupReminder === true
                   ? "14 хоног тутам нөөц сануулна."
@@ -278,7 +356,9 @@ export function PrivacyCenter() {
                 болон бусад бүртгэл устахгүй.
               </p>
             </div>
-            <span className="privacy-chip danger">{language === "en" ? "NOTICE" : "АНХААР"}</span>
+            <span className="privacy-chip danger">
+              {language === "en" ? "NOTICE" : "АНХААР"}
+            </span>
           </div>
           <button
             className="button danger-text"
@@ -333,7 +413,9 @@ export function PrivacyCenter() {
               Зөвхөн энэ бүртгэлийн үүлэнд хадгалсан суралцах түүхэд үйлчилнэ.
             </p>
           </div>
-          <span className="privacy-chip danger">{language === "en" ? "DELETION" : "УСТГАЛТ"}</span>
+          <span className="privacy-chip danger">
+            {language === "en" ? "DELETION" : "УСТГАЛТ"}
+          </span>
         </div>
         <p>
           Хичээл, хэмжилт, тэмдэглэл, зураг, карт, сорил, зорилго болон үүлэн

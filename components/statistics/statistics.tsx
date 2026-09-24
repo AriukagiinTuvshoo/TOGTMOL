@@ -82,13 +82,21 @@ export function Statistics() {
                 onClick={() => setPeriod(n)}
               >
                 {n === "all"
-                  ? language === "en" ? "All" : "Бүгд"
+                  ? language === "en"
+                    ? "All"
+                    : "Бүгд"
                   : n === "today"
-                    ? language === "en" ? "Today" : "Өнөөдөр"
+                    ? language === "en"
+                      ? "Today"
+                      : "Өнөөдөр"
                     : n === "week"
-                      ? language === "en" ? "This week" : "Энэ долоо хоног"
+                      ? language === "en"
+                        ? "This week"
+                        : "Энэ долоо хоног"
                       : n === "month"
-                        ? language === "en" ? "This month" : "Энэ сар"
+                        ? language === "en"
+                          ? "This month"
+                          : "Энэ сар"
                         : `${n} өдөр`}
               </button>
             ),
@@ -96,27 +104,42 @@ export function Statistics() {
         </div>
         <SubjectSelect all value={subject} onChange={setSubject} />
       </div>
-      <section className="card" aria-label={language === "en" ? "Knowledge progress" : "Мэдлэгийн ахиц"}>
+      <section
+        className="card"
+        aria-label={language === "en" ? "Knowledge progress" : "Мэдлэгийн ахиц"}
+      >
         <SectionTitle
-          title={language === "en" ? "Knowledge recall" : "Эргэн санасан мэдлэг"}
-          subtitle={language === "en" ? "Notes, reviews, and quizzes in the selected period" : "Сонгосон хугацаанд үлдээсэн тэмдэглэл, давтлага, сорил"}
+          title={
+            language === "en" ? "Knowledge recall" : "Эргэн санасан мэдлэг"
+          }
+          subtitle={
+            language === "en"
+              ? "Notes, reviews, and quizzes in the selected period"
+              : "Сонгосон хугацаанд үлдээсэн тэмдэглэл, давтлага, сорил"
+          }
         />
         <div className="knowledge-stats">
           <div>
-            {language === "en" ? "Notes" : "Тэмдэглэл"}<strong>{knowledge.notes}</strong>
+            {language === "en" ? "Notes" : "Тэмдэглэл"}
+            <strong>{knowledge.notes}</strong>
           </div>
           <div>
-            {language === "en" ? "New cards" : "Шинэ карт"}<strong>{knowledge.cards}</strong>
+            {language === "en" ? "New cards" : "Шинэ карт"}
+            <strong>{knowledge.cards}</strong>
           </div>
           <div>
-            {language === "en" ? "Reviews" : "Давтлага"}<strong>{knowledge.reviews}</strong>
+            {language === "en" ? "Reviews" : "Давтлага"}
+            <strong>{knowledge.reviews}</strong>
             <small>{knowledge.uniqueReviewed} өөр карт</small>
           </div>
           <div>
-            {language === "en" ? "Quizzes" : "Сорил"}<strong>{knowledge.attempts}</strong>
+            {language === "en" ? "Quizzes" : "Сорил"}
+            <strong>{knowledge.attempts}</strong>
             <small>
               {knowledge.quizAccuracy === null
-                ? language === "en" ? "No answers" : "Хариулт алга"
+                ? language === "en"
+                  ? "No answers"
+                  : "Хариулт алга"
                 : `${knowledge.quizAccuracy}% зөв хариулт`}
             </small>
           </div>
@@ -128,7 +151,10 @@ export function Statistics() {
         </p>
       </section>
       <div className="metrics four">
-        <Metric label={language === "en" ? "Total time" : "Нийт хугацаа"} value={formatTime(stats.seconds)} />
+        <Metric
+          label={language === "en" ? "Total time" : "Нийт хугацаа"}
+          value={formatTime(stats.seconds)}
+        />
         <Metric
           label={language === "en" ? "Daily average" : "Өдрийн дундаж"}
           value={formatTime(stats.averageDaily)}
@@ -163,7 +189,9 @@ export function Statistics() {
           }
         />
         <Metric
-          label={language === "en" ? "Most active day" : "Хамгийн идэвхтэй өдөр"}
+          label={
+            language === "en" ? "Most active day" : "Хамгийн идэвхтэй өдөр"
+          }
           value={stats.bestDay ? dateLabel(stats.bestDay, today) : "—"}
         />
         <Metric
@@ -178,7 +206,9 @@ export function Statistics() {
       </div>
       <section
         className="card statistics-highlights"
-        aria-label={language === "en" ? "Additional metrics" : "Нэмэлт үзүүлэлт"}
+        aria-label={
+          language === "en" ? "Additional metrics" : "Нэмэлт үзүүлэлт"
+        }
       >
         <div>
           <span>Одоогийн дараалал</span>
@@ -222,7 +252,11 @@ export function Statistics() {
       <div className="two-columns">
         <section className="card">
           <SectionTitle
-            title={language === "en" ? "Subject distribution" : "Хичээлийн хуваарилалт"}
+            title={
+              language === "en"
+                ? "Subject distribution"
+                : "Хичээлийн хуваарилалт"
+            }
             subtitle={
               stats.topSubject
                 ? `Илүү цаг зориулсан: ${index.subjects.get(stats.topSubject)?.name}`
@@ -259,20 +293,32 @@ export function Statistics() {
         <section className="card">
           <SectionTitle
             title={language === "en" ? "What time of day?" : "Өдрийн аль цагт?"}
-            subtitle={language === "en" ? "Pauses and breaks are excluded." : "Pause болон амралтыг оруулаагүй."}
+            subtitle={
+              language === "en"
+                ? "Pauses and breaks are excluded."
+                : "Pause болон амралтыг оруулаагүй."
+            }
           />
           <BarChart
             values={stats.hours}
             labels={stats.hours.map((_, i) =>
               i % 4 === 0 ? String(i).padStart(2, "0") : "",
             )}
-            label={language === "en" ? "Time by hour" : "Цаг тус бүрийн хугацаа"}
+            label={
+              language === "en" ? "Time by hour" : "Цаг тус бүрийн хугацаа"
+            }
           />
         </section>
       </div>
       <Insights />
       <section className="card">
-        <SectionTitle title={language === "en" ? "Sessions in selected period" : "Сонгосон хугацааны хичээлүүд"} />
+        <SectionTitle
+          title={
+            language === "en"
+              ? "Sessions in selected period"
+              : "Сонгосон хугацааны хичээлүүд"
+          }
+        />
         <SessionList
           sessions={index.sessions.filter((s) => ids.has(s.id))}
           limit={10}

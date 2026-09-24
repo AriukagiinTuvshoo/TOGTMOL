@@ -67,7 +67,6 @@ In Supabase, run security/performance advisors after applying the migration and 
 
 Local insights need no AI service. To enable the optional paid provider, configure **server-only** `OPENAI_API_KEY`, `OPENAI_MODEL` (a Responses API model available to your account; card images additionally require image input and structured-output support), and `BONDOOK_AI_ALLOWED_USER_IDS` (comma-separated allowed Supabase user UUIDs). All must be present. Never prefix them with `NEXT_PUBLIC_`. This release does not pick a paid model or provision credentials automatically.
 
-
 To enable Mongolian voice input in Bondook, set the **server-only** `CHIMEGE_API_TOKEN`. The optional `CHIMEGE_ALLOWED_USER_IDS` list controls which authenticated users may use it; when empty, the existing `BONDOOK_AI_ALLOWED_USER_IDS` list is reused. Voice transcription shares the existing 20/day UTC online-request quota. Audio is captured only after the user checks the consent box, converted in the browser to mono 16 kHz WAV, capped at 60 seconds, and sent only to the Chimege endpoint. The resulting transcript is inserted into the editable chat field and is not submitted to Bondook automatically. Never expose `CHIMEGE_API_TOKEN` through `NEXT_PUBLIC_*`; store it as a Cloudflare Worker secret.
 
 The `/api/bondook`, `/api/bondook/cards` and `/api/bondook/plan` routes verify the user's Supabase access token, require the server allowlist and consume an atomic per-user 20/day UTC quota in `private.togi_usage` before calling the provider. Anonymous requests cannot spend provider credit. Failed upstream requests still count toward the daily cap. This quota does not replace the provider account's own spending limits.
@@ -109,7 +108,6 @@ Test a real video and playlist on the deployed origin, including autoplay blocki
 - [Screen Wake Lock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API)
 - [OpenAI image input](https://developers.openai.com/api/docs/guides/images-vision)
 - [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-
 
 ### Production Supabase smoke test
 

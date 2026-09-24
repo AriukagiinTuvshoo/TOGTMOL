@@ -68,10 +68,7 @@ const { data: signedIn, error: signInError } =
   });
 
 if (signInError || !signedIn.user) {
-  fail(
-    signInError?.message ??
-      "The test account could not sign in.",
-  );
+  fail(signInError?.message ?? "The test account could not sign in.");
   process.exit();
 }
 
@@ -82,10 +79,7 @@ if (userError || !userData.user) {
   process.exit();
 }
 
-if (
-  requireConfirmedEmail &&
-  !userData.user.email_confirmed_at
-) {
+if (requireConfirmedEmail && !userData.user.email_confirmed_at) {
   await client.auth.signOut();
   fail(
     "The test account is not email-confirmed. Confirm the production account, then rerun the smoke test.",

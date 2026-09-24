@@ -58,7 +58,11 @@ export function Goals() {
     <div className="stack">
       <GoalPlanner />
       <details className="card" open>
-        <summary>{language === "en" ? "Study rhythm and goals" : "Нийт суралцах хэмнэл, зорилго"}</summary>
+        <summary>
+          {language === "en"
+            ? "Study rhythm and goals"
+            : "Нийт суралцах хэмнэл, зорилго"}
+        </summary>
         <div className="two-columns">
           <div className="stack">
             {cards.map((c) => (
@@ -72,16 +76,26 @@ export function Goals() {
                 <Progress value={(c.value / c.target) * 100} label={c.title} />
                 <p className="muted">
                   {c.value >= c.target
-                    ? language === "en" ? "You reached your goal. Give yourself credit." : "Зорилгодоо хүрлээ. Өөртөө баяр хүргээрэй."
-                    : language === "en" ? "At your own pace, one step at a time." : "Өөрийн хэмнэлээр, нэг алхам нэг удаа."}
+                    ? language === "en"
+                      ? "You reached your goal. Give yourself credit."
+                      : "Зорилгодоо хүрлээ. Өөртөө баяр хүргээрэй."
+                    : language === "en"
+                      ? "At your own pace, one step at a time."
+                      : "Өөрийн хэмнэлээр, нэг алхам нэг удаа."}
                 </p>
               </section>
             ))}
           </div>
           <section className="card align-start">
             <SectionTitle
-              title={language === "en" ? "Make it fit you" : "Өөртөө тохируулъя"}
-              subtitle={language === "en" ? "Goals can guide you without becoming pressure." : "Зорилго тань чиглүүлнэ. Дарамт болох шаардлагагүй."}
+              title={
+                language === "en" ? "Make it fit you" : "Өөртөө тохируулъя"
+              }
+              subtitle={
+                language === "en"
+                  ? "Goals can guide you without becoming pressure."
+                  : "Зорилго тань чиглүүлнэ. Дарамт болох шаардлагагүй."
+              }
             />
             <form
               className="form-stack"
@@ -99,7 +113,9 @@ export function Goals() {
                           monthlyHours: monthly ? Number(monthly) : null,
                         }),
                       ),
-                    language === "en" ? "Goals updated." : "Зорилго шинэчлэгдлээ.",
+                    language === "en"
+                      ? "Goals updated."
+                      : "Зорилго шинэчлэгдлээ.",
                   )
                 ) {
                 }
@@ -107,7 +123,9 @@ export function Goals() {
               }}
             >
               <label>
-                {language === "en" ? "Study hours per week" : "Долоо хоногт суралцах цаг"}
+                {language === "en"
+                  ? "Study hours per week"
+                  : "Долоо хоногт суралцах цаг"}
                 <input
                   type="number"
                   min={0.1}
@@ -119,7 +137,9 @@ export function Goals() {
                 />
               </label>
               <label>
-                {language === "en" ? "Study days per week" : "Долоо хоногт суралцах өдөр"}
+                {language === "en"
+                  ? "Study days per week"
+                  : "Долоо хоногт суралцах өдөр"}
                 <input
                   type="number"
                   min={1}
@@ -131,7 +151,9 @@ export function Goals() {
                 />
               </label>
               <label>
-                {language === "en" ? "Study minutes per day (optional)" : "Өдөрт суралцах минут (заавал биш)"}
+                {language === "en"
+                  ? "Study minutes per day (optional)"
+                  : "Өдөрт суралцах минут (заавал биш)"}
                 <input
                   type="number"
                   min={1}
@@ -142,7 +164,9 @@ export function Goals() {
                 />
               </label>
               <label>
-                {language === "en" ? "Study hours per month (optional)" : "Сард суралцах цаг (заавал биш)"}
+                {language === "en"
+                  ? "Study hours per month (optional)"
+                  : "Сард суралцах цаг (заавал биш)"}
                 <input
                   type="number"
                   min={1}

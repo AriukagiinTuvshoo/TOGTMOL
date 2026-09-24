@@ -387,10 +387,9 @@ it("edits a daily task and reports its actual completion day in the calendar", a
     ),
   );
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
-      "button",
-      { name: "Календарь" },
-    ),
+    within(
+      screen.getByRole("navigation", { name: "Миний орон зай" }),
+    ).getByRole("button", { name: "Календарь" }),
   );
   expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
   expect(
@@ -412,10 +411,9 @@ it("shares music preferences with the persistent player and restores the chosen 
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
-      "button",
-      { name: "Тохиргоо" },
-    ),
+    within(
+      screen.getByRole("navigation", { name: "Миний орон зай" }),
+    ).getByRole("button", { name: "Тохиргоо" }),
   );
   fireEvent.change(screen.getByLabelText("Үндсэн хөгжмийн ангилал"), {
     target: { value: "night" },
@@ -446,10 +444,9 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
-      "button",
-      { name: "Суралцах туслах" },
-    ),
+    within(
+      screen.getByRole("navigation", { name: "Миний орон зай" }),
+    ).getByRole("button", { name: "Суралцах туслах" }),
   );
   await screen.findByLabelText("Онлайн AI ашиглах");
   fireEvent.click(screen.getByLabelText("Онлайн AI ашиглах"));

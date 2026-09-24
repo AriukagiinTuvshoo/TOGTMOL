@@ -31,7 +31,10 @@ export function LegalPage({
             тогтмол
           </Link>
           <nav aria-label="Хууль зүйн хуудас">
-            <Link href="/privacy" className={kind === "privacy" ? "active" : ""}>
+            <Link
+              href="/privacy"
+              className={kind === "privacy" ? "active" : ""}
+            >
               Нууцлал
             </Link>
             <Link href="/terms" className={kind === "terms" ? "active" : ""}>

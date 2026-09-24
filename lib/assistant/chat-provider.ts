@@ -32,7 +32,8 @@ export function localReply(
   message: string,
   { data, index, today, language = "mn" }: ChatContext,
 ): ChatReply {
-  if (language === "en") return localReplyEnglish(message, { data, index, today, language });
+  if (language === "en")
+    return localReplyEnglish(message, { data, index, today, language });
   const q = message.toLocaleLowerCase(),
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
@@ -210,7 +211,15 @@ function localReplyEnglish(
         : "Hi, I'm Bondook. Let's choose one small step for today.",
     };
   return {
-    text: `I'm in local mode, so I won't pretend to answer open questions like a full AI. I can work with your real study history: ${insights(index, today).slice(0, 2).map((i) => `${i.title}. ${i.body}`).join("\\n\\n")}\\n\\nTry planning a goal, reviewing your week, or reviewing your notes.`,
+    text: `I'm in local mode, so I won't pretend to answer open questions like a full AI. I can work with your real study history: ${insights(
+      index,
+      today,
+    )
+      .slice(0, 2)
+      .map((i) => `${i.title}. ${i.body}`)
+      .join(
+        "\\n\\n",
+      )}\\n\\nTry planning a goal, reviewing your week, or reviewing your notes.`,
   };
 }
 
