@@ -614,7 +614,6 @@ describe("persistent music dock", () => {
         MockAudio.instances.push(this);
       }
     }
-    MockAudio.instances = [];
     vi.stubGlobal("Audio", MockAudio);
     const queue: StudyData["musicSources"] = [
       {
@@ -645,9 +644,9 @@ describe("persistent music dock", () => {
     await boot("video", queue);
     click("Хөгжим нээх");
     const input = dock().querySelector('input[type="file"]');
-    expect(input).toHaveAttribute("accept", expect.stringContaining(".mp4"));
+    expect(input?.getAttribute("accept")).toContain(".mp4");
     fireEvent.change(input!, {
-      target: { files: [new File(["audio"], "third.mp4", { type: "video/mp4" })] },
+      target: {\n        files: [new File(["audio"], "third.mp4", { type: "video/mp4" })],\n      },
     });
     await waitFor(() =>
       expect(dock().querySelector(".saved-music")).toHaveTextContent("third"),
@@ -656,7 +655,7 @@ describe("persistent music dock", () => {
       dock().querySelector(".saved-music li:first-child .saved-music-select")!,
     );
     await start();
-    const audio = MockAudio.instances[0];
+    const audio = MockAudio.instances.at(-1)!;
     expect(audio.src).toBe("https://example.test/first.mp4");
 
     click("Дараагийн хөгжим");
