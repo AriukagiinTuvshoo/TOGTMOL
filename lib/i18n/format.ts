@@ -16,10 +16,13 @@ export function formatDate(
 }
 
 export function formatMonth(value: Date | number | string, language: Language) {
+  const date = new Date(value);
+  if (language === "mn")
+    return `${date.getFullYear()} оны ${date.getMonth() + 1}-р сар`;
   return new Intl.DateTimeFormat(locale(language), {
     year: "numeric",
-    month: language === "mn" ? "numeric" : "long",
-  }).format(new Date(value));
+    month: "long",
+  }).format(date);
 }
 
 export function formatWeekday(
