@@ -453,10 +453,23 @@ function useMusicController() {
 
   const onState = (state: number) => {
     if (!mounted.current) return;
-    if (state === 1) mark("playing");
-    else if (state === 2 && actual.current !== "stopped") mark("paused");
-    else if (state === 0) mark("stopped");
-    else return;
+    if (state === 1) {
+      mark("playing");
+    } else if (state === 2 && actual.current !== "stopped") {
+      mark("paused");
+    } else if (state === 0) {
+      const current = currentSources().find(
+        (item) => item.id === latest.current.selection,
+      );
+      // A standalone video ending advances the saved queue. YouTube playlists
+      // manage their own internal track progression.
+      if (current?.kind === "video") {
+        setBusy(false);
+        next(1);
+        return;
+      }
+      mark("stopped");
+    } else return;
     setBusy(false);
     commit({ ...capture(), playback: actual.current });
   };
