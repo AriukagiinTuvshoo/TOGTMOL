@@ -15,7 +15,10 @@ import {
   shiftDate,
   weekStart,
 } from "./dates";
-import { currentStreakWithFreezes } from "./decision";
+import {
+  currentStreakWithFreezes,
+  longestStreakWithFreezes,
+} from "./decision";
 export function emptyDay(date: string): DailySummary {
   return {
     date,
@@ -245,63 +248,12 @@ export function intensity(day: DailySummary | undefined) {
   const m = (day?.seconds ?? 0) / 60;
   return m > 60 ? 4 : m > 40 ? 3 : m > 20 ? 2 : m > 0 ? 1 : 0;
 }
+export {
+  longestStreakWithFreezes,
+  streakFreezeCount,
+  streakWithFreezes,
+} from "./decision";
 
-export function streakFreezeCount(settings: StudyData["settings"]): number {
-  const value = settings.extras.streakFreezeCount;
-  return typeof value === "number" && Number.isInteger(value)
-    ? Math.max(1, Math.min(2, value))
-    : 2;
-}
-export function streakWithFreezes(
-  dates: Set<string>,
-  today: string,
-  freezes = 2,
-) {
-  const reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
-  let current = dates.has(today) ? today : shiftDate(today, -1),
-    streak = 0,
-    used = 0;
-  const oldest = [...dates].sort()[0];
-  if (!oldest) return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
-  while (current >= oldest) {
-    if (dates.has(current)) streak++;
-    else if (used < reserve) {
-      used++;
-      streak++;
-    } else break;
-    current = shiftDate(current, -1);
-  }
-  if (streak <= used)
-    return { streak: 0, freezesUsed: 0, freezesRemaining: reserve };
-  return {
-    streak,
-    freezesUsed: used,
-    freezesRemaining: reserve - used,
-  };
-}
-export function longestStreakWithFreezes(dates: Iterable<string>, freezes = 2) {
-  const sorted = [...new Set(dates)].sort(),
-    reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
-  if (!sorted.length) return 0;
-  let left = 0,
-    gaps = 0,
-    best = 1;
-  for (let right = 1; right < sorted.length; right++) {
-    gaps += Math.max(
-      0,
-      datesBetween(sorted[right - 1], sorted[right]).length - 2,
-    );
-    while (gaps > reserve && left < right) {
-      gaps -= Math.max(
-        0,
-        datesBetween(sorted[left], sorted[left + 1]).length - 2,
-      );
-      left++;
-    }
-    best = Math.max(best, datesBetween(sorted[left], sorted[right]).length);
-  }
-  return best;
-}
 export function rollingSevenDayReport(index: StudyIndex, today = dateKey()) {
   const currentStart = shiftDate(today, -6),
     previousEnd = shiftDate(today, -7),
