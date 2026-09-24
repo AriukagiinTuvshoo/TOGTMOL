@@ -1,30 +1,53 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useStudy } from "@/hooks/use-study";
+import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
 import {
-  longestStreakWithFreezes,
-  periodStats,
-  streakFreezeCount,
-} from "@/lib/calculations/analytics";
+  annualHeatmap,
+  behaviorPatterns,
+  currentStreakWithFreezes,
+  streakFreezeLimit,
+} from "@/lib/calculations/decision";
 import {
   dateLabel,
-  formatTime,
-  weekStart,
   datesBetween,
+  formatTime,
+  parseDate,
   shiftDate,
+  weekStart,
 } from "@/lib/calculations/dates";
 import { Metric, SectionTitle, SubjectSelect } from "@/components/ui/common";
 import { SessionList } from "@/components/ui/session-list";
-import { BarChart } from "./charts";
+import { AnnualHeatmap, BarChart, DonutChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
-import { DecisionDashboard } from "./decision-dashboard";
+import { actions } from "@/lib/persistence/actions";
+import { Icon } from "@/components/ui/icon";
+
+function examValues(data: ReturnType<typeof useStudy>["data"]) {
+  const date =
+    typeof data.settings.extras.statisticsExamDate === "string"
+      ? data.settings.extras.statisticsExamDate
+      : "";
+  const title =
+    typeof data.settings.extras.statisticsExamTitle === "string"
+      ? data.settings.extras.statisticsExamTitle
+      : "Шалгалт";
+  return {
+    date: parseDate(date) ? date : "",
+    title: title.trim().slice(0, 80) || "Шалгалт",
+  };
+}
+
 export function Statistics() {
-  const { data, index, today } = useStudy(),
+  const { data, index, today, store, run } = useStudy(),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
-    [subject, setSubject] = useState("");
+    [subject, setSubject] = useState(""),
+    exam = examValues(data),
+    [examDateInput, setExamDateInput] = useState(exam.date),
+    [examTitleInput, setExamTitleInput] = useState(exam.title);
   const stats = useMemo(
     () =>
       periodStats(
@@ -38,10 +61,31 @@ export function Statistics() {
               : period,
         today,
         subject || undefined,
+        streakFreezeLimit(data.settings),
       ),
-    [index, period, today, subject],
+    [index, period, today, subject, data.settings],
   );
-  const groups = new Map<string, number>();
+  const global7 = useMemo(() => periodStats(index, 7, today), [index, today]);
+  const previous7 = useMemo(
+    () => periodStats(index, 7, shiftDate(today, -7)),
+    [index, today],
+  );
+  const delta7 =
+    previous7.seconds > 0
+      ? ((global7.seconds - previous7.seconds) / previous7.seconds) * 100
+      : null;
+  const week = useMemo(() => weeklyReport(index, today), [index, today]);
+  const freezeLimit = streakFreezeLimit(data.settings);
+  const freeze = useMemo(
+    () =>
+      currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit),
+    [index.sortedDates, today, freezeLimit],
+  );
+  const patterns = useMemo(() => behaviorPatterns(data, index), [data, index]);
+  const heatmap = useMemo(
+    () => annualHeatmap(index, Number(today.slice(0, 4))),
+    [index, today],
+  );
   const knowledge = knowledgeStatistics(
     data,
     period === "all"
@@ -56,6 +100,7 @@ export function Statistics() {
     today,
     subject,
   );
+  const groups = new Map<string, number>();
   for (const d of stats.days) {
     const key =
       stats.days.length > 90
@@ -66,10 +111,61 @@ export function Statistics() {
     groups.set(key, (groups.get(key) ?? 0) + d.seconds);
   }
   const buckets = [...groups].slice(-36),
-    ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
+    ids = new Set(stats.days.flatMap((d) => [...d.sessions])),
+    subjectEntries = [...stats.bySubject]
+      .filter(([, value]) => value > 0)
+      .sort((a, b) => b[1] - a[1]),
+    topSubjectShare =
+      stats.seconds > 0 && subjectEntries.length
+        ? subjectEntries[0][1] / stats.seconds
+        : 0,
+    balanceWarning = subjectEntries.length >= 2 && topSubjectShare >= 0.65,
+    examDiff = exam.date
+      ? Math.round(
+          (parseDate(exam.date)!.getTime() - parseDate(today)!.getTime()) /
+            86400000,
+        )
+      : null;
+  const saveExam = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!examDateInput) {
+      await run(
+        () =>
+          store.mutate(
+            actions.settings({
+              extras: {
+                ...data.settings.extras,
+                statisticsExamDate: "",
+                statisticsExamTitle:
+                  examTitleInput.trim().slice(0, 80) || "Шалгалт",
+              },
+            }),
+          ),
+        "Countdown-ыг цэвэрлэлээ.",
+      );
+      return;
+    }
+    if (!parseDate(examDateInput))
+      return run(async () => {
+        throw Error("Шалгалтын огноо буруу байна.");
+      });
+    await run(
+      () =>
+        store.mutate(
+          actions.settings({
+            extras: {
+              ...data.settings.extras,
+              statisticsExamDate: examDateInput,
+              statisticsExamTitle:
+                examTitleInput.trim().slice(0, 80) || "Шалгалт",
+            },
+          }),
+        ),
+      "Шалгалтын countdown хадгалагдлаа.",
+    );
+  };
   return (
     <div className="stack">
-      <DecisionDashboard />
       <div className="filter-row">
         <div className="segmented">
           {(["today", "week", "month", 7, 30, 90, 365, "all"] as const).map(
@@ -94,7 +190,192 @@ export function Statistics() {
         </div>
         <SubjectSelect all value={subject} onChange={setSubject} />
       </div>
-      <section className="card" aria-label="Мэдлэгийн ахиц">
+
+      <section className="decision-grid" aria-label="Шийдвэрийн төв">
+        <article className="card decision-card">
+          <div className="decision-icon">
+            <Icon name="chart" size={17} />
+          </div>
+          <span className="eyebrow">7 ӨДРИЙН ХАРЬЦУУЛАЛТ</span>
+          <strong>{formatTime(global7.seconds)}</strong>
+          <p>
+            {delta7 === null
+              ? "Өмнөх 7 хоногт хэмжилт байхгүй."
+              : `${delta7 >= 0 ? "+" : "−"}${Math.abs(delta7).toFixed(0)}% · өмнөхөөс ${formatTime(Math.abs(global7.seconds - previous7.seconds))} ${delta7 >= 0 ? "илүү" : "бага"}`}
+          </p>
+          <small>Сүүлийн 7 өдөр ↔ өмнөх 7 өдөр</small>
+        </article>
+
+        <article className="card decision-card exam-card">
+          <div className="decision-icon">
+            <Icon name="target" size={17} />
+          </div>
+          <span className="eyebrow">COUNTDOWN</span>
+          <strong>
+            {examDiff === null
+              ? "—"
+              : examDiff > 0
+                ? `${examDiff} өдөр`
+                : examDiff === 0
+                  ? "ӨНӨӨДӨР"
+                  : `${Math.abs(examDiff)} өдөр өнгөрсөн`}
+          </strong>
+          <p>
+            {examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}
+          </p>
+          <form className="exam-form" onSubmit={saveExam}>
+            <label>
+              Шалгалтын өдөр
+              <input
+                type="date"
+                value={examDateInput}
+                onChange={(e) => setExamDateInput(e.target.value)}
+              />
+            </label>
+            <label>
+              Шалгалтын нэр
+              <input
+                value={examTitleInput}
+                onChange={(e) => setExamTitleInput(e.target.value)}
+                maxLength={80}
+              />
+            </label>
+            <button className="button small">Хадгалах</button>
+          </form>
+        </article>
+
+        <article className="card decision-card freeze-card">
+          <div className="decision-icon">
+            <Icon name="leaf" size={17} />
+          </div>
+          <span className="eyebrow">STREAK FREEZE</span>
+          <strong>{freeze.streak} өдөр</strong>
+          <p>
+            Нөөц: {Math.max(0, freezeLimit - freeze.usedFreezes)} /{" "}
+            {freezeLimit}
+          </p>
+          <label className="freeze-control">
+            Хамгаалалтын өдөр
+            <select
+              value={freezeLimit}
+              onChange={(e) =>
+                void run(
+                  () =>
+                    store.mutate(
+                      actions.settings({
+                        extras: {
+                          ...data.settings.extras,
+                          streakFreezeLimit: Number(e.target.value),
+                        },
+                      }),
+                    ),
+                  "Streak freeze шинэчлэгдлээ.",
+                )
+              }
+            >
+              <option value={1}>1 өдөр</option>
+              <option value={2}>2 өдөр</option>
+            </select>
+          </label>
+          <small>
+            {freeze.usedFreezes
+              ? `${freeze.usedFreezes} хамгаалалт хэрэглэгдсэн.`
+              : "Одоогоор хамгаалалт хэрэглээгүй."}
+          </small>
+        </article>
+
+        <article className="card decision-card pattern-card">
+          <div className="decision-icon">
+            <Icon name="spark" size={17} />
+          </div>
+          <span className="eyebrow">ЗАН ҮЙЛИЙН PATTERN</span>
+          {patterns.length ? (
+            patterns.map((pattern) => (
+              <div
+                className={`pattern-result ${pattern.tone}`}
+                key={pattern.id}
+              >
+                <strong>{pattern.title}</strong>
+                <p>{pattern.body}</p>
+              </div>
+            ))
+          ) : (
+            <>
+              <strong>Хангалттай өгөгдөл цуглуулж байна</strong>
+              <p>
+                21:00-с хойших эхлэл, дуусгалгүй орхилтыг 4+ тохиолдлын дараа
+                харьцуулж эхэлнэ.
+              </p>
+            </>
+          )}
+        </article>
+      </section>
+
+      <section className="card stats-heatmap-card">
+        <SectionTitle
+          title={`${heatmap.year} оны суралцах heatmap`}
+          subtitle={`${heatmap.activeDays} идэвхтэй өдөр · ${formatTime(heatmap.totalMinutes * 60)} нийт суралцсан`}
+        />
+        <AnnualHeatmap weeks={heatmap.weeks} year={heatmap.year} />
+      </section>
+
+      <section className="card">
+        <SectionTitle
+          title="Хичээл бүрийн хуваарилалт"
+          subtitle={
+            balanceWarning
+              ? `Анхаарах дохио: ${index.subjects.get(subjectEntries[0][0])?.name ?? "нэг хичээл"} нийт хугацааны ${Math.round(topSubjectShare * 100)}%-ийг эзэлж байна.`
+              : "Нийт суралцах хугацааг хичээл бүрээр харьцуул."
+          }
+        />
+        {balanceWarning && (
+          <div className="balance-warning" role="status">
+            <Icon name="info" size={16} />
+            <span>
+              Хуваарилалт төвлөрсөн байна. Бусад зорилтот хичээлүүдийн долоо
+              хоногийн хэмжилтээ бас шалгаарай.
+            </span>
+          </div>
+        )}
+        <div className="subject-chart-layout">
+          <DonutChart
+            items={subjectEntries.map(([id, value]) => ({
+              id,
+              name: index.subjects.get(id)?.name ?? "Устсан хичээл",
+              value,
+              color: index.subjects.get(id)?.color ?? "var(--moss)",
+            }))}
+            total={stats.seconds}
+            label="Хичээл бүрийн хугацааны эзлэх хувь"
+          />
+          <div className="distribution">
+            {subjectEntries.map(([id, sec]) => (
+              <div key={id}>
+                <div>
+                  <span>
+                    <i
+                      className="subject-dot"
+                      style={{ background: index.subjects.get(id)?.color }}
+                    />
+                    {index.subjects.get(id)?.name ?? "Устсан хичээл"}
+                  </span>
+                  <strong>{formatTime(sec)}</strong>
+                </div>
+                <div className="progress">
+                  <span
+                    style={{
+                      width: `${stats.seconds ? (sec / stats.seconds) * 100 : 0}%`,
+                      background: index.subjects.get(id)?.color,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="card" aria-label="Суралцах ахиц ба мэдлэг">
         <SectionTitle
           title="Эргэн санасан мэдлэг"
           subtitle="Сонгосон хугацаанд үлдээсэн тэмдэглэл, давтлага, сорил"
@@ -125,6 +406,7 @@ export function Statistics() {
             : `Картын давтлагын ${knowledge.recall}%-д хариултаа санасан гэж үнэлсэн. Энэ нь өөрийн үнэлгээ бөгөөд чадварын шалгалт биш.`}
         </p>
       </section>
+
       <div className="metrics four">
         <Metric label="Нийт хугацаа" value={formatTime(stats.seconds)} />
         <Metric
@@ -142,6 +424,7 @@ export function Statistics() {
           foot={`${stats.sessionCount} хичээл`}
         />
       </div>
+
       <div className="metrics four">
         <Metric
           label="Тогтмол байдал"
@@ -152,13 +435,11 @@ export function Statistics() {
           label="Хамгийн урт дараалал"
           value={
             <>
-              {longestStreakWithFreezes(
-                stats.days.filter((d) => d.subjects.size).map((d) => d.date),
-                streakFreezeCount(data.settings),
-              )}
+              {stats.longestStreak}
               <small>өдөр</small>
             </>
           }
+          foot={freezeLimit ? `Freeze: ${freezeLimit} нөөц` : undefined}
         />
         <Metric
           label="Хамгийн идэвхтэй өдөр"
@@ -174,28 +455,7 @@ export function Statistics() {
           foot="Хэмжсэн хугацааны нийлбэрээр"
         />
       </div>
-      <section
-        className="card statistics-highlights"
-        aria-label="Нэмэлт үзүүлэлт"
-      >
-        <div>
-          <span>Одоогийн дараалал</span>
-          <strong>{stats.currentStreak} өдөр</strong>
-        </div>
-        <div>
-          <span>Хамгийн урт хичээл</span>
-          <strong>{formatTime(stats.longestSession)}</strong>
-          <small>Бүтэн хэмжилтийн хугацаа</small>
-        </div>
-        <div>
-          <span>Илүү цаг зориулсан хичээл</span>
-          <strong>
-            {stats.topSubject
-              ? index.subjects.get(stats.topSubject)?.name
-              : "—"}
-          </strong>
-        </div>
-      </section>
+
       <section className="card">
         <SectionTitle
           title="Суралцах хэмнэл"
@@ -217,43 +477,8 @@ export function Statistics() {
           label="Суралцах хэмнэл"
         />
       </section>
+
       <div className="two-columns">
-        <section className="card">
-          <SectionTitle
-            title="Хичээлийн хуваарилалт"
-            subtitle={
-              stats.topSubject
-                ? `Илүү цаг зориулсан: ${index.subjects.get(stats.topSubject)?.name}`
-                : "Хичээл хэмжиж эхлэхэд энд харагдана."
-            }
-          />
-          <div className="distribution">
-            {[...stats.bySubject]
-              .sort((a, b) => b[1] - a[1])
-              .map(([id, sec]) => (
-                <div key={id}>
-                  <div>
-                    <span>
-                      <i
-                        className="subject-dot"
-                        style={{ background: index.subjects.get(id)?.color }}
-                      />
-                      {index.subjects.get(id)?.name}
-                    </span>
-                    <strong>{formatTime(sec)}</strong>
-                  </div>
-                  <div className="progress">
-                    <span
-                      style={{
-                        width: `${stats.seconds ? (sec / stats.seconds) * 100 : 0}%`,
-                        background: index.subjects.get(id)?.color,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-          </div>
-        </section>
         <section className="card">
           <SectionTitle
             title="Өдрийн аль цагт?"
@@ -267,7 +492,29 @@ export function Statistics() {
             label="Цаг тус бүрийн хугацаа"
           />
         </section>
+        <section className="card">
+          <SectionTitle
+            title="Энэ долоо хоног"
+            subtitle={`${weekStart(today).replaceAll("-", ".")} — өнөөдөр`}
+          />
+          <div className="weekly-total">
+            {formatTime(week.seconds)}
+            <span>/ {data.goals.weeklyHours}ц зорилго</span>
+          </div>
+          <p className="comparison">
+            {week.change === null
+              ? week.previousComparable === 0
+                ? "Өмнөх долоо хоногийн ижил өдрүүдэд хэмжсэн хугацаа алга."
+                : "Шинэ долоо хоног — шинэ боломж."
+              : `Ижил өдрүүдээр харьцуулахад ${Math.abs(week.change).toFixed(0)}% ${week.change >= 0 ? "өссөн" : "буурсан"}.`}
+          </p>
+          <p className="comparison decision-note">
+            <Icon name="chart" size={15} /> Дээрх decision card нь сүүлийн 7
+            өдрийг өмнөх 7 өдөртэй шууд харьцуулж байна.
+          </p>
+        </section>
       </div>
+
       <Insights />
       <section className="card">
         <SectionTitle title="Сонгосон хугацааны хичээлүүд" />
