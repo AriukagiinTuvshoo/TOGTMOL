@@ -115,10 +115,10 @@ export function MusicPlayer() {
             <small>
               {playing
                 ? "Тоглож байна"
-                : playback === "paused"
-                  ? "Түр зогссон"
-                  : session.playback === "playing"
-                    ? "Үргэлжлүүлэхэд Play дарна уу"
+                : playback === "paused" && session.playback === "playing"
+                  ? "Үргэлжлүүлэхэд Play дарна уу"
+                  : playback === "paused"
+                    ? "Түр зогссон"
                     : "Хөгжим сонгоод эхлүүлнэ"}
             </small>
           </span>
