@@ -1894,16 +1894,13 @@ details.card[open] > summary {
   min-height: 100dvh;
   padding: 0;
 }
-.is-focus .music-player {
-  display: none;
-}
 .focus-timer-screen {
   position: relative;
   display: grid;
   place-items: center;
   min-height: 100dvh;
   min-height: 100svh;
-  padding: 32px;
+  padding: 32px 32px calc(100px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
   background:
     radial-gradient(circle at 50% 35%, var(--moss-soft), transparent 42%),
