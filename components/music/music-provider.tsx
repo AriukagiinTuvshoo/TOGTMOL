@@ -518,7 +518,9 @@ function useMusicController() {
     // when a standalone YouTube video reaches its end.
     const options =
       target && (target.kind === "video" || target.kind === "audio")
-        ? currentSources().map((s) => s.id)
+        ? currentSources()
+            .filter((s) => s.kind === "video" || s.kind === "audio")
+            .map((s) => s.id)
         : [
             ...AMBIENTS.map((a) => `ambient:${a.id}`),
             ...currentSources().map((s) => s.id),
