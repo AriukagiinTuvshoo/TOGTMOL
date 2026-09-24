@@ -296,7 +296,7 @@ export function StudyTimer({
       navigate("focus");
     }
   };
-  if (!t && compact && recentlySaved) {
+  if (!t && recentlySaved) {
     return (
       <section
         className="card timer-card timer-session-saved"
