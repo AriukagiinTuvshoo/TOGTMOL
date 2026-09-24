@@ -15,6 +15,10 @@ import {
   shiftDate,
   weekStart,
 } from "./dates";
+import {
+  currentStreakWithFreezes,
+  longestStreakWithFreezes,
+} from "./decision";
 export function emptyDay(date: string): DailySummary {
   return {
     date,
@@ -147,6 +151,7 @@ export function periodStats(
   count: number | "all",
   today = dateKey(),
   subjectId?: string,
+  freezeLimit = 0,
 ): PeriodStats {
   const map = subjectId
     ? (index.subjectDays.get(subjectId) ?? new Map<string, DailySummary>())
@@ -179,17 +184,26 @@ export function periodStats(
       );
   }
   const top = [...bySubject].sort((a, b) => b[1] - a[1])[0],
-    maxHour = Math.max(...hours);
+    maxHour = Math.max(...hours),
+    freezeStreak =
+      freezeLimit > 0
+        ? currentStreakWithFreezes(new Set([...map.keys()]), today, freezeLimit)
+        : { streak: currentStreak(new Set([...map.keys()]), today) },
+    frozenLongest =
+      freezeLimit > 0
+        ? longestStreakWithFreezes(
+            days.filter((d) => d.subjects.size).map((d) => d.date),
+            freezeLimit,
+          )
+        : longestStreak(days.filter((d) => d.subjects.size).map((d) => d.date));
   return {
     seconds,
     averageDaily: seconds / Math.max(1, dates.length),
     averageSession: seconds / Math.max(1, sessions.size),
     studyDays,
     consistency: (studyDays / Math.max(1, dates.length)) * 100,
-    longestStreak: longestStreak(
-      days.filter((d) => d.subjects.size).map((d) => d.date),
-    ),
-    currentStreak: currentStreak(new Set([...map.keys()]), today),
+    longestStreak: frozenLongest,
+    currentStreak: freezeStreak.streak,
     longestSession: index.sessions.reduce(
       (max, s) => (sessions.has(s.id) ? Math.max(max, s.durationSec) : max),
       0,
