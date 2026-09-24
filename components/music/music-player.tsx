@@ -188,7 +188,7 @@ export function MusicPlayer() {
         <p className="music-error" role="status">
           {error}
           <button className="text-button" onClick={retry}>
-            Дахин оролдох
+            Дахин ачаалах
           </button>
         </p>
       )}
@@ -264,7 +264,7 @@ export function MusicPlayer() {
               }}
             >
               <label>
-                Аудио эсвэл YouTube холбоос
+                YouTube video эсвэл playlist
                 <input
                   type="url"
                   required
@@ -283,7 +283,7 @@ export function MusicPlayer() {
                   maxLength={120}
                 />
                 <button className="button" disabled={busy}>
-                  Хадгалах
+                  Нэмэх
                 </button>
               </div>
             </form>
@@ -344,7 +344,7 @@ export function MusicPlayer() {
                 <p className="muted">
                   {playing
                     ? "Дэмждэг браузер, төхөөрөмж дээр background-аар үргэлжилнэ."
-                    : "Play дарж эхлүүлнэ үү."}
+                    : "Үргэлжлүүлэхэд Play дарна уу"}
                 </p>
               </div>
             </div>

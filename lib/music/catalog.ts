@@ -3,5 +3,6 @@ export const AMBIENTS = [
   { id: "rain", name: "Rainy window", detail: "Борооны тайван чимээ" },
   { id: "piano", name: "Piano", detail: "Зөөлөн төгөлдөр хуур" },
   { id: "nature", name: "Nature", detail: "Салхи, шувуудын зөөлөн чимээ" },
+  { id: "night", name: "Night study", detail: "Шөнийн намуухан аялгуу" },
 ] as const;
 export type AmbientId = (typeof AMBIENTS)[number]["id"];

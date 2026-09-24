@@ -58,7 +58,7 @@ export class AmbientPlayer {
             Math.exp(-chirp * 4) *
             0.06;
       }
-      if (id === "piano" || id === "lofi") {
+      if (id === "piano" || id === "lofi" || id === "night") {
         const n = notes[Math.floor(t / 2) % notes.length],
           age = t % 2;
         v =
