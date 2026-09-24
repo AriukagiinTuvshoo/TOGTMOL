@@ -23,11 +23,11 @@ function LocalizedLoading() {
 }
 const KnowledgeHub = dynamic(
   () => import("./knowledge/hub").then((m) => m.KnowledgeHub),
-  { loading: () => <p role="status">{t("common.loading")}</p> },
+  { loading: () => <LocalizedLoading /> },
 );
 const PrivacyCenter = dynamic(
   () => import("./settings/privacy").then((m) => m.PrivacyCenter),
-  { loading: () => <p role="status">{t("common.loading")}</p> },
+  { loading: () => <LocalizedLoading /> },
 );
 const CustomizeRoom = dynamic(() =>
   import("./world/customize").then((m) => m.CustomizeRoom),
@@ -45,20 +45,20 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
-const NAV: { view: View; key: TranslationKey; icon: string }[] = [
-  { view: "overview", key: "nav.overview", icon: "home" },
-  { view: "knowledge", key: "nav.knowledge", icon: "book" },
-  { view: "calendar", key: "nav.calendar", icon: "calendar" },
-  { view: "subjects", key: "nav.subjects", icon: "book" },
-  { view: "statistics", key: "nav.statistics", icon: "chart" },
-  { view: "goals", key: "nav.goals", icon: "target" },
-  { view: "achievements", key: "nav.achievements", icon: "award" },
-  { view: "assistant", key: "nav.assistant", icon: "spark" },
-  { view: "room", key: "nav.room", icon: "sun" },
-  { view: "privacy", key: "nav.privacy", icon: "shield" },
-  { view: "settings", key: "nav.settings", icon: "settings" },
+const NAV: { view: View; label: TranslationKey; icon: string }[] = [
+  { view: "overview", label: "nav.overview", icon: "home" },
+  { view: "knowledge", label: "nav.knowledge", icon: "book" },
+  { view: "calendar", label: "nav.calendar", icon: "calendar" },
+  { view: "subjects", label: "nav.subjects", icon: "book" },
+  { view: "statistics", label: "nav.statistics", icon: "chart" },
+  { view: "goals", label: "nav.goals", icon: "target" },
+  { view: "achievements", label: "nav.achievements", icon: "award" },
+  { view: "assistant", label: "nav.assistant", icon: "spark" },
+  { view: "room", label: "nav.room", icon: "sun" },
+  { view: "privacy", label: "nav.privacy", icon: "shield" },
+  { view: "settings", label: "nav.settings", icon: "settings" },
 ];
-const TITLE_KEYS: Record<View, TranslationKey> = {
+const titles: Record<View, TranslationKey> = {
   overview: "page.overview",
   timer: "page.timer",
   calendar: "page.calendar",
@@ -74,7 +74,6 @@ const TITLE_KEYS: Record<View, TranslationKey> = {
   privacy: "page.privacy",
 };
 function Shell() {
-  const { t } = useI18n();
   const {
       view,
       navigate,
@@ -89,6 +88,7 @@ function Shell() {
     } = useStudy(),
     state = useStoreState(),
     { status, user } = useAccount(),
+    { t } = useI18n(),
     [more, setMore] = useState(false);
   const go = (v: View) => {
     navigate(v);
@@ -118,7 +118,7 @@ function Shell() {
             .data.subjects.find((item) => !item.deletedAt && !item.archived);
           if (!subject) {
             navigate("subjects");
-            setNotice("Эхлээд нэг хичээл нэмье.");
+            setNotice(t("shell.todayNotice"));
             return;
           }
           try {
@@ -164,11 +164,11 @@ function Shell() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [data.settings, navigate, run, setNotice, store]);
+  }, [data.settings, navigate, run, setNotice, store, t]);
   return (
     <div className={`app-shell ${view === "focus" ? "is-focus" : ""}`}>
       <a className="skip-link" href="#main-content">
-        Үндсэн хэсэг рүү
+        {t("shell.skip")}
       </a>
       <aside className="sidebar">
         <button className="brand" onClick={() => go("overview")}>
@@ -176,7 +176,7 @@ function Shell() {
             <Icon name="leaf" size={24} />
           </span>
           <span>
-            тогтмол<span className="brand-version">STUDY WORLD · 06</span>
+            тогтмол<span className="brand-version">STUDY WORLD · 07</span>
           </span>
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
@@ -189,7 +189,7 @@ function Shell() {
               onClick={() => go(n.view)}
             >
               <Icon name={n.icon} />
-              {t(n.key as TranslationKey)}
+              {t(n.label)}
               {n.view === "assistant" && (
                 <span className="nav-tag" aria-hidden="true">
                   LOCAL
@@ -218,7 +218,7 @@ function Shell() {
                   : (user?.email?.split("@")[0] ?? t("shell.myAccount"))}
               </strong>
               <small>
-                {state.namespace === "guest" ? t("shell.localStorage") : t("shell.account")}
+                {state.namespace === "guest" ? t("common.local") : t("shell.account")}
               </small>
             </span>
             <Icon name="settings" size={17} />
@@ -228,17 +228,18 @@ function Shell() {
       <div className="app-main">
         <header className="topbar">
           <div className="breadcrumbs">
-            <span className="mobile-brand">TOGTMOL</span>
+            <span className="mobile-brand">тогтмол</span>
             <span className="desktop-breadcrumb">
-              {t("shell.mySpace")} <span>/</span> {t(TITLE_KEYS[view])}
+              {t("shell.mySpace")} <span>/</span> {t(titles[view])}
             </span>
           </div>
-          <div className="topbar-right">\n            {state.ready && <LanguageSwitcher compact />}
+          <div className="topbar-right">
             {state.ready && (
-              <ModuleBoundary name={t("common.search")}>
+              <ModuleBoundary name={t("search.module")}>
                 <GlobalSearch />
               </ModuleBoundary>
             )}
+            <LanguageSwitcher compact />
             <span className="save-status">
               <span className="status-dot" />
               {state.busy
@@ -262,7 +263,7 @@ function Shell() {
           >
             <div>
               <span className="eyebrow">{today.replaceAll("-", ".")}</span>
-              <h1>{t(TITLE_KEYS[view])}</h1>
+              <h1>{t(titles[view])}</h1>
             </div>
             <TimerWatch />
           </div>
@@ -272,7 +273,7 @@ function Shell() {
               <p>{state.error}</p>
               <button
                 className="icon-button"
-                aria-label={t("common.close")}
+                aria-label={t("shell.errorClose")}
                 onClick={store.clearError}
               >
                 <Icon name="close" size={18} />
@@ -302,7 +303,7 @@ function Shell() {
                 </ModuleBoundary>
               )}
               {view === "room" && (
-                <ModuleBoundary name={t("nav.room")}>
+                <ModuleBoundary name={t("page.room")}>
                   <CustomizeRoom />
                 </ModuleBoundary>
               )}
@@ -314,7 +315,7 @@ function Shell() {
               {view === "knowledge" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "knowledge"}
-                  name={t("nav.knowledge")}
+                  name={t("page.knowledge")}
                 >
                   <KnowledgeHub />
                 </ModuleBoundary>
@@ -327,21 +328,21 @@ function Shell() {
               {view === "calendar" && (
                 <ModuleBoundary
                   key={selectedRecord ?? "calendar"}
-                  name={t("nav.calendar")}
+                  name={t("page.calendar")}
                 >
                   <StudyCalendar />
                 </ModuleBoundary>
               )}
               {view === "subjects" && <Subjects />}
               {view === "statistics" && (
-                <ModuleBoundary name={t("nav.statistics")}>
+                <ModuleBoundary name={t("page.statistics")}>
                   <Statistics />
                 </ModuleBoundary>
               )}
               {view === "goals" && <Goals />}
               {view === "achievements" && <Achievements />}
               {view === "assistant" && (
-                <ModuleBoundary name={t("nav.bondook")}>
+                <ModuleBoundary name={t("page.assistant")}>
                   <Assistant />
                 </ModuleBoundary>
               )}
@@ -368,7 +369,7 @@ function Shell() {
             ).map((n) => (
               <button key={n.view} onClick={() => go(n.view)}>
                 <Icon name={n.icon} />
-                {t(n.key as TranslationKey)}
+                {t(n.label)}
               </button>
             ))}
           </nav>
@@ -376,10 +377,10 @@ function Shell() {
       )}
       <nav className="mobile-nav" aria-label={t("nav.more")}>
         {[
-          { view: "overview", key: "nav.home", icon: "home" },
-          { view: "knowledge", key: "nav.knowledgeShort", icon: "book" },
-          { view: "timer", key: "nav.focus", icon: "play" },
-          { view: "assistant", key: "nav.bondook", icon: "spark" },
+          { view: "overview", label: t("nav.home"), icon: "home" },
+          { view: "knowledge", label: t("nav.knowledgeShort"), icon: "book" },
+          { view: "timer", label: t("nav.focus"), icon: "play" },
+          { view: "assistant", label: t("nav.bondook"), icon: "spark" },
         ].map((n) => (
           <button
             key={n.view}
@@ -388,7 +389,7 @@ function Shell() {
             onClick={() => go(n.view as View)}
           >
             <Icon name={n.icon} size={21} />
-            <span>{t(n.key as TranslationKey)}</span>
+            <span>{n.label}</span>
           </button>
         ))}
         <button aria-expanded={more} onClick={() => setMore(!more)}>
@@ -403,7 +404,7 @@ function Shell() {
             {notice}
             {undo && (
               <button className="text-button" onClick={() => void run(undo)}>
-                Буцаах
+                {t("common.undo")}
               </button>
             )}
           </div>

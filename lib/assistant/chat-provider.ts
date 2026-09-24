@@ -22,6 +22,7 @@ export interface ChatContext {
   data: StudyData;
   index: StudyIndex;
   today: string;
+  language?: Language;
 }
 export interface ChatProvider {
   kind: "local" | "ai";
@@ -29,8 +30,9 @@ export interface ChatProvider {
 }
 export function localReply(
   message: string,
-  { data, index, today }: ChatContext,
+  { data, index, today, language = "mn" }: ChatContext,
 ): ChatReply {
+  if (language === "en") return localReplyEnglish(message, { data, index, today, language });
   const q = message.toLocaleLowerCase(),
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
@@ -211,6 +213,7 @@ function localReplyEnglish(
     text: `I'm in local mode, so I won't pretend to answer open questions like a full AI. I can work with your real study history: ${insights(index, today).slice(0, 2).map((i) => `${i.title}. ${i.body}`).join("\\n\\n")}\\n\\nTry planning a goal, reviewing your week, or reviewing your notes.`,
   };
 }
+
 export const localChatProvider: ChatProvider = {
   kind: "local",
   reply: async (message, context) => localReply(message, context),
@@ -298,6 +301,7 @@ export function aiContext(
 export function createAIChatProvider(
   token: () => Promise<string | null>,
   includeNotes = false,
+  language: Language = "mn",
 ): ChatProvider {
   return {
     kind: "ai",
@@ -317,6 +321,7 @@ export function createAIChatProvider(
         JSON.stringify({
           message,
           context: wantsPersonal ? contextData : { today: context.today },
+          language,
         });
       for (const list of [
         contextData.subjects,
