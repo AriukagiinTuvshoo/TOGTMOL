@@ -130,6 +130,24 @@ function useMusicController() {
   const currentSources = () =>
     store.getSnapshot().data.musicSources.filter((s) => !s.deletedAt);
 
+  useEffect(() => {
+    const persisted = preference.session;
+    if (!persisted || persisted.playback === "stopped") return;
+    if (
+      latest.current.selection === persisted.selection &&
+      latest.current.playback === persisted.playback
+    )
+      return;
+    // Study data can hydrate after the first client render. Restore a persisted
+    // music intent only while this controller is still stopped, never over a
+    // user action that has already changed the active session.
+    if (actual.current !== "stopped") return;
+    latest.current = persisted;
+    setSession(persisted);
+    setPlayback("paused");
+    setActivated(true);
+  }, [preference.session]);
+
   const commit = (patch: Partial<MusicSession>) => {
     if (!mounted.current || store.getSnapshot().namespace !== namespace) return;
     const next = normalizeMusicSession({ ...latest.current, ...patch })!;
@@ -482,20 +500,29 @@ function useMusicController() {
   };
 
   const next = (direction: number) => {
-    const target = source;
+    const target = currentSources().find(
+      (item) => item.id === latest.current.selection,
+    );
     if (target?.kind === "playlist" && adapter.current?.kind === "youtube") {
       try {
         if (direction > 0) adapter.current.next?.();
         else adapter.current.previous?.();
       } catch {
-        fail("Playlist-ийг солих боломжгүй байна. Дахин оролдоно уу.");
+        fail("Playlist-ийг солих боломжгүй байна. Дахин ачаалж болно.");
       }
       return;
     }
-    const options = [
-      ...AMBIENTS.map((a) => `ambient:${a.id}`),
-      ...currentSources().map((s) => s.id),
-    ];
+
+    // Saved YouTube/audio tracks form their own queue. Ambient presets should
+    // not interrupt an explicit saved-track playlist when Next is pressed or
+    // when a standalone YouTube video reaches its end.
+    const options =
+      target && (target.kind === "video" || target.kind === "audio")
+        ? currentSources().map((s) => s.id)
+        : [
+            ...AMBIENTS.map((a) => `ambient:${a.id}`),
+            ...currentSources().map((s) => s.id),
+          ];
     if (!options.length) return;
     const index = options.indexOf(latest.current.selection);
     select(options[(index + direction + options.length) % options.length]);
