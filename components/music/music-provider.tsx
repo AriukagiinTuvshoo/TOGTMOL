@@ -400,8 +400,9 @@ function useMusicController() {
 
     setBusy(true);
     try {
-      const { AmbientPlayer, ambientProvider } =
-        await import("@/lib/music/ambient");
+      const { AmbientPlayer, ambientProvider } = await import(
+        "@/lib/music/ambient"
+      );
       if (!mounted.current || token !== generation.current) return;
       const engine = ambient.current ?? new AmbientPlayer();
       ambient.current = engine;
@@ -500,8 +501,7 @@ function useMusicController() {
         return;
       }
       mark("stopped");
-    }
-    else return;
+    } else return;
     setBusy(false);
     commit({ ...capture(), playback: actual.current });
   };
@@ -528,7 +528,8 @@ function useMusicController() {
       const queue = currentSources().filter((item) => item.kind === "video");
       const index = queue.findIndex((item) => item.id === target.id);
       if (index < 0 || queue.length === 0) return;
-      const nextTrack = queue[(index + direction + queue.length) % queue.length];
+      const nextTrack =
+        queue[(index + direction + queue.length) % queue.length];
       if (nextTrack.id === target.id) {
         try {
           youtube.current?.seekTo?.(0, true);
