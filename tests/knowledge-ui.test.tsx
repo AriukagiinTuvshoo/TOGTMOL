@@ -49,7 +49,7 @@ async function boot() {
 }
 function navigate(name: string) {
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Үндсэн цэс" })).getByRole(
+    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
       "button",
       { name },
     ),
