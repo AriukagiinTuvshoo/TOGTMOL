@@ -504,12 +504,11 @@ function useMusicController() {
   const retry = () => {
     generation.current++;
     playWhenReady.current = false;
-    mark("paused");
     setError("");
     setBusy(false);
     setActivated(true);
     setAttempt((a) => a + 1);
-    void play();
+    if (actual.current === "playing") mark("paused");
   };
 
   const addURL = async () => {
