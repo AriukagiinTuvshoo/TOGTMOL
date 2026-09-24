@@ -15,7 +15,7 @@ export interface MusicSession {
 export interface MusicPreferences {
   volume: number;
   muted: boolean;
-  defaultCategory: AmbientId | "theme";
+  defaultCategory: AmbientId | "theme" | "night";
   rememberLast: boolean;
   lastPlayed: string | null;
   session: MusicSession | null;
@@ -87,7 +87,7 @@ export function normalizeMusicPreference(raw: unknown): MusicPreferences {
         ? Math.max(0, Math.min(1, value.volume))
         : 0.4,
     muted: value.muted === true,
-    defaultCategory: AMBIENTS.some((a) => a.id === value.defaultCategory)
+    defaultCategory: AMBIENTS.some((a) => a.id === value.defaultCategory) || value.defaultCategory === "night"
       ? (value.defaultCategory as AmbientId)
       : "theme",
     rememberLast: value.rememberLast !== false,

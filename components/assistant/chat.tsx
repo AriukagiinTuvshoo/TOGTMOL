@@ -314,7 +314,7 @@ export function BondookChat() {
               <small>
                 {m.role === "user"
                   ? t("assistant.you")
-                  : `Bondook · ${m.kind === "local" ? t("common.local") : t("common.ai")}`}
+                  : `Бондоок · ${m.kind === "local" ? t("common.local") : t("common.ai")}`}
               </small>
               <p>{m.text}</p>
               {m.action && (

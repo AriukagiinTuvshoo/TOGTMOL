@@ -42,6 +42,7 @@ export function MusicSettings() {
             }
           >
             <option value="theme">Өрөөний загварт тохируулах</option>
+            <option value="night">Night study</option>
             {AMBIENTS.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}

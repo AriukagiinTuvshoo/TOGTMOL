@@ -229,16 +229,19 @@ export function StudyTimer({
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [complete, setComplete] = useState(true),
+    [completionChoices, setCompletionChoices] = useState<Record<string, boolean>>({}),
     [showNote, setShowNote] = useState(false);
   const tId = t?.id;
+  const complete = tId ? (completionChoices[tId] ?? true) : true;
   useEffect(() => {
     if (!tId) return;
     const id = setTimeout(() => {
       if (note !== store.getSnapshot().data.activeTimer?.note)
         void run(() => store.mutate(actions.timerNote(note)));
     }, 500);
-    return () => clearTimeout(id);
+    return () => {
+      clearTimeout(id);
+    };
   }, [note, tId, store, run]);
   if (!data.subjects.some((s) => !s.deletedAt))
     return (
@@ -511,13 +514,15 @@ export function StudyTimer({
               <button
                 className="button"
                 disabled={busy}
-                onClick={() =>
-                  run(() =>
-                    store.mutate(
-                      t.running ? actions.pause() : actions.resume(),
-                    ),
-                  )
-                }
+                onClick={() => {
+                  const expired =
+                    t.running &&
+                    t.targetMs !== null &&
+                    elapsed(t, now) >= t.targetMs;
+                  void run(() =>
+                    store.mutate(expired ? actions.finish() : t.running ? actions.pause() : actions.resume()),
+                  );
+                }}
               >
                 <Icon name={t.running ? "pause" : "play"} />
                 {t.running ? "Pause" : "Resume"}
@@ -600,7 +605,12 @@ export function StudyTimer({
                 <input
                   type="checkbox"
                   checked={complete}
-                  onChange={(e) => setComplete(e.target.checked)}
+                  onChange={(e) =>
+                    setCompletionChoices((choices) => ({
+                      ...choices,
+                      [t.id]: e.target.checked,
+                    }))
+                  }
                 />
                 Хадгалаад төлөвлөгөөг биелсэнд тооцох
               </label>
