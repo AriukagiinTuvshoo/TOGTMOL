@@ -279,29 +279,6 @@ export function streakWithFreezes(
     freezesRemaining: reserve - used,
   };
 }
-export function longestStreakWithFreezes(dates: Iterable<string>, freezes = 2) {
-  const sorted = [...new Set(dates)].sort(),
-    reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
-  if (!sorted.length) return 0;
-  let left = 0,
-    gaps = 0,
-    best = 1;
-  for (let right = 1; right < sorted.length; right++) {
-    gaps += Math.max(
-      0,
-      datesBetween(sorted[right - 1], sorted[right]).length - 2,
-    );
-    while (gaps > reserve && left < right) {
-      gaps -= Math.max(
-        0,
-        datesBetween(sorted[left], sorted[left + 1]).length - 2,
-      );
-      left++;
-    }
-    best = Math.max(best, datesBetween(sorted[left], sorted[right]).length);
-  }
-  return best;
-}
 export function rollingSevenDayReport(index: StudyIndex, today = dateKey()) {
   const currentStart = shiftDate(today, -6),
     previousEnd = shiftDate(today, -7),
