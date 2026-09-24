@@ -369,6 +369,11 @@ export function MusicPlayer() {
                   YouTube тоглуулагчийг ачаалах
                 </button>
               )}
+              <p className="tiny muted">
+                {playing
+                  ? "Хөгжим тоглож байна."
+                  : "Үргэлжлүүлэхэд Play дарна уу."}
+              </p>
               {open && (
                 <div className="music-details">
                   <p className="tiny muted">
