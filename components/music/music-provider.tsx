@@ -27,10 +27,10 @@ import { uid } from "@/lib/constants";
 import type { MusicSource } from "@/types/study";
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
-const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm)$/i;
+const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm|mp4)$/i;
 
 function isAudioFile(file: File) {
-  return file.type.startsWith("audio/") || AUDIO_EXTENSIONS.test(file.name);
+  return (file.type.startsWith("audio/") || file.type === "video/mp4") || AUDIO_EXTENSIONS.test(file.name);
 }
 
 function sourceTrack(
@@ -653,7 +653,7 @@ function useMusicController() {
   const addFile = async (file: File | null) => {
     if (!file) return;
     if (!isAudioFile(file)) {
-      fail("Зөвхөн аудио файл сонгоно уу.");
+      fail("Аудио файл эсвэл дуу агуулсан MP4 файл сонгоно уу.");
       return;
     }
     if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
@@ -764,6 +764,17 @@ function useMusicController() {
     };
     const handleEnded = () => {
       if (nativeSourceId.current !== latest.current.selection) return;
+      const endedSource = currentSources().find(
+        (item) => item.id === latest.current.selection,
+      );
+      const queue = currentSources().filter(
+        (item) => item.kind === "audio" || item.kind === "video",
+      );
+      const index = queue.findIndex((item) => item.id === endedSource?.id);
+      if (index >= 0 && queue.length > 1) {
+        select(queue[(index + 1) % queue.length].id, true);
+        return;
+      }
       mark("stopped");
       setBusy(false);
       commit({ ...capture(), playback: "stopped", position: 0 });
