@@ -18,7 +18,7 @@ export function formatDate(
 export function formatMonth(value: Date | number | string, language: Language) {
   return new Intl.DateTimeFormat(locale(language), {
     year: "numeric",
-    month: "long",
+    month: language === "mn" ? "numeric" : "long",
   }).format(new Date(value));
 }
 
