@@ -1,0 +1,36 @@
+name: Format all files
+
+on:
+  push:
+    branches:
+      - fix/production-build-stability
+    paths:
+      - .github/workflows/format-all.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: fix/production-build-stability
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write .
+      - name: Commit formatted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Already formatted."
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore(format): normalize repository formatting"
+          git push origin HEAD:fix/production-build-stability
