@@ -369,7 +369,7 @@ describe("persistent music dock", () => {
     expect(restored.setVolume).toHaveBeenCalledWith(65);
     expect(dock()).toHaveAttribute("data-open", "false");
     expect(dock()).toHaveAttribute("data-playback", "paused");
-    expect(screen.getByText("Үргэлжлүүлэхэд Play дарна уу")).toBeVisible();
+    expect(within(dock()).getByText("Түр зогссон")).toBeVisible();
   });
   it("does not pause on visibility/intersection changes or a mobile-size resize", async () => {
     const observe = vi.fn();
