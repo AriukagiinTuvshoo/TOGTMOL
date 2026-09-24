@@ -39,6 +39,10 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     Math.max(0, Math.min(2, Number(data.settings.extras.graceDays ?? 1))),
   );
   const last = [...index.sessions].sort((a, b) => b.endEpoch - a.endEpoch)[0];
+  const timerKey = [
+    data.activeTimer?.id ?? "new",
+    store.getSnapshot().namespace,
+  ].join(":");
   useEffect(() => {
     if (!focus) return;
     const exit = (e: KeyboardEvent) => {
@@ -60,7 +64,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
         </button>
         <div className="focus-timer-stage">
           <StudyTimer
-            key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+            key={timerKey}
             recentlySaved={timerSaved}
             onSessionSaved={() => setTimerSaved(true)}
             onSessionStarted={() => setTimerSaved(false)}
@@ -154,7 +158,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           </div>
         </div>
         <StudyTimer
-          key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+          key={timerKey}
           compact
           recentlySaved={focus && timerSaved}
           onSessionSaved={() => setTimerSaved(true)}
