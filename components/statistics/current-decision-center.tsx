@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, type FormEvent } from "react";
 import { useStudy } from "@/hooks/use-study";
 import {
   lateSessionPattern,
@@ -40,8 +40,6 @@ function examValues(data: ReturnType<typeof useStudy>["data"]) {
 
 export function CurrentDecisionCenter() {
   const { data, index, today, store, run } = useStudy();
-  const [examDateInput, setExamDateInput] = useState(examValues(data).date);
-  const [examTitleInput, setExamTitleInput] = useState(examValues(data).title);
   const exam = examValues(data);
 
   const last7 = useMemo(() => periodStats(index, 7, today), [index, today]);
@@ -77,11 +75,6 @@ export function CurrentDecisionCenter() {
       ? subjectEntries[0][1] / last7.seconds
       : 0;
   const balanceWarning = subjectEntries.length >= 2 && topSubjectShare >= 0.65;
-  useEffect(() => {
-    setExamDateInput(exam.date);
-    setExamTitleInput(exam.title);
-  }, [exam.date, exam.title]);
-
   const examDiff = exam.date
     ? Math.round(
         (parseDate(exam.date)!.getTime() - parseDate(today)!.getTime()) /
@@ -89,9 +82,18 @@ export function CurrentDecisionCenter() {
       )
     : null;
 
-  const saveExam = async (event: FormEvent) => {
+  const saveExam = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const examDateInput = String(values.get("examDate") ?? "");
+    const examTitleInput = String(values.get("examTitle") ?? "");
     const title = examTitleInput.trim().slice(0, 80) || "Шалгалт";
+    if (examDateInput && !parseDate(examDateInput)) {
+      await run(async () => {
+        throw Error("Шалгалтын огноо буруу байна.");
+      });
+      return;
+    }
     await run(
       () =>
         store.mutate(
@@ -143,20 +145,24 @@ export function CurrentDecisionCenter() {
           <p>
             {examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}
           </p>
-          <form className="exam-form" onSubmit={saveExam}>
+          <form
+            key={exam.date + "|" + exam.title}
+            className="exam-form"
+            onSubmit={saveExam}
+          >
             <label>
               Шалгалтын өдөр
               <input
                 type="date"
-                value={examDateInput}
-                onChange={(event) => setExamDateInput(event.target.value)}
+                defaultValue={exam.date}
+                name="examDate"
               />
             </label>
             <label>
               Шалгалтын нэр
               <input
-                value={examTitleInput}
-                onChange={(event) => setExamTitleInput(event.target.value)}
+                defaultValue={exam.title}
+                name="examTitle"
                 maxLength={80}
               />
             </label>
