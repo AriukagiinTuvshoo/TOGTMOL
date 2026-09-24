@@ -71,7 +71,7 @@ export function TimerAlert({
                   className="button ghost large"
                   onClick={onExit}
                 >
-                  Focus-оос гарах
+                  Өрөө рүү буцах
                 </button>
               )}
             </>

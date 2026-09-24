@@ -400,9 +400,8 @@ function useMusicController() {
 
     setBusy(true);
     try {
-      const { AmbientPlayer, ambientProvider } = await import(
-        "@/lib/music/ambient"
-      );
+      const { AmbientPlayer, ambientProvider } =
+        await import("@/lib/music/ambient");
       if (!mounted.current || token !== generation.current) return;
       const engine = ambient.current ?? new AmbientPlayer();
       ambient.current = engine;
@@ -522,6 +521,15 @@ function useMusicController() {
       } catch {
         fail("Playlist-ийг солих боломжгүй байна. Дахин оролдоно уу.");
       }
+      return;
+    }
+    if (target?.kind === "audio") {
+      const queue = currentSources().filter((item) => item.kind === "audio");
+      const index = queue.findIndex((item) => item.id === target.id);
+      if (index < 0 || queue.length < 2) return;
+      const nextTrack =
+        queue[(index + direction + queue.length) % queue.length];
+      select(nextTrack.id);
       return;
     }
     if (target?.kind === "video") {
@@ -784,6 +792,17 @@ function useMusicController() {
     };
     const handleEnded = () => {
       if (nativeSourceId.current !== latest.current.selection) return;
+      const endedSource = currentSources().find(
+        (item) => item.id === latest.current.selection,
+      );
+      if (endedSource?.kind === "audio") {
+        const queue = currentSources().filter((item) => item.kind === "audio");
+        const index = queue.findIndex((item) => item.id === endedSource.id);
+        if (index >= 0 && queue.length > 1) {
+          select(queue[(index + 1) % queue.length].id, true);
+          return;
+        }
+      }
       mark("stopped");
       setBusy(false);
       commit({ ...capture(), playback: "stopped", position: 0 });

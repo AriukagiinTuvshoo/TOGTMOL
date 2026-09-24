@@ -48,8 +48,30 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     window.addEventListener("keydown", exit);
     return () => window.removeEventListener("keydown", exit);
   }, [focus, navigate]);
+  if (focus) {
+    return (
+      <section className="focus-timer-screen" aria-label="Төвлөрөх цаг">
+        <span className="focus-timer-brand">ТОГТМОЛ · FOCUS</span>
+        <button
+          className="focus-exit-button"
+          onClick={() => navigate("overview")}
+        >
+          <Icon name="close" size={16} /> Өрөө рүү буцах
+        </button>
+        <div className="focus-timer-stage">
+          <StudyTimer
+            key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+            recentlySaved={timerSaved}
+            onSessionSaved={() => setTimerSaved(true)}
+            onSessionStarted={() => setTimerSaved(false)}
+          />
+        </div>
+        <p className="focus-hint">Esc · Focus-оос гарах</p>
+      </section>
+    );
+  }
   return (
-    <div className={`study-world ${focus ? "focus-world" : ""}`}>
+    <div className="study-world">
       <div className="world-heading">
         <div>
           <span className="eyebrow">

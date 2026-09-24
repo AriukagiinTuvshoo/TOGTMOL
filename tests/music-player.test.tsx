@@ -247,6 +247,74 @@ describe("persistent music dock", () => {
     expect(first.pauseVideo).toHaveBeenCalled();
   });
 
+  it("steps through saved MP4 tracks manually and starts the next one on end", async () => {
+    vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockImplementation(function (this: HTMLMediaElement) {
+        this.dispatchEvent(new Event("play"));
+        return Promise.resolve();
+      });
+    const queue: StudyData["musicSources"] = [
+      {
+        id: "youtube-test",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://media.example/first.mp4",
+        mimeType: "video/mp4",
+        title: "First MP4",
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        extras: {},
+      },
+      {
+        id: "youtube-second",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://media.example/second.mp4",
+        mimeType: "video/mp4",
+        title: "Second MP4",
+        createdAt: 2,
+        updatedAt: 2,
+        deletedAt: null,
+        extras: {},
+      },
+    ];
+    await boot("video", queue);
+    click("Хөгжим нээх");
+    await start();
+    click("Дараагийн хөгжим");
+    await waitFor(() =>
+      expect(
+        dock().querySelector(".saved-music li:nth-child(2) button"),
+      ).toHaveAttribute("aria-pressed", "true"),
+    );
+    click("Өмнөх хөгжим");
+    await waitFor(() =>
+      expect(
+        dock().querySelector(".saved-music li:first-child button"),
+      ).toHaveAttribute("aria-pressed", "true"),
+    );
+    click("Дараагийн хөгжим");
+    await waitFor(() =>
+      expect(
+        dock().querySelector(".saved-music li:nth-child(2) button"),
+      ).toHaveAttribute("aria-pressed", "true"),
+    );
+    const media = document.querySelector("video");
+    expect(media).not.toBeNull();
+    act(() => media!.dispatchEvent(new Event("ended")));
+    await waitFor(() =>
+      expect(
+        dock().querySelector(".saved-music li:first-child button"),
+      ).toHaveAttribute("aria-pressed", "true"),
+    );
+    expect(play).toHaveBeenCalledTimes(5);
+    expect(dock()).toHaveAttribute("data-playback", "playing");
+  });
+
   it("minimizes and expands repeatedly without stopping or recreating the same iframe", async () => {
     await boot();
     const player = await load();
@@ -504,6 +572,10 @@ describe("persistent music dock", () => {
       ).getByRole("button", { name: "Төвлөрөх" }),
     );
     await screen.findByRole("heading", { name: "Төвлөрөх цаг" });
+    expect(
+      document.querySelector(".focus-timer-stage .timer-digits"),
+    ).not.toBeNull();
+    expect(document.querySelector(".timer-compact")).toBeNull();
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Start study" })).toBeEnabled(),
     );
@@ -524,7 +596,12 @@ describe("persistent music dock", () => {
       await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" }),
     );
     await screen.findByText(/Хичээлээ хадгаллаа/);
+    await screen.findByText("ХИЧЭЭЛ ХАДГАЛАГДЛАА");
     expect(dock()).toHaveAttribute("data-playback", "playing");
+    fireEvent.click(screen.getByRole("button", { name: "Өрөө рүү буцах" }));
+    await waitFor(() =>
+      expect(document.querySelector(".app-shell")).not.toHaveClass("is-focus"),
+    );
     expect(screen.getByTitle("Test YouTube")).toBe(player.iframe);
     expect(player.playVideo).toHaveBeenCalledTimes(1);
     expect(player.pauseVideo).not.toHaveBeenCalled();

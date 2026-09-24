@@ -135,6 +135,20 @@ it("Escape and View result both silence the alert", async () => {
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
+it("can leave the completed timer screen and return to the room", async () => {
+  now = NOW + 60000;
+  render(<TimerWatch />);
+  const dialog = await screen.findByRole("dialog", {
+    name: "Хугацаа дууслаа!",
+  });
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Өрөө рүү буцах" }),
+  );
+  expect(sounds.stopTimerAlertSound).toHaveBeenCalled();
+  expect(navigate).toHaveBeenCalledWith("overview");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
 it("skips missed ticks after suspension and resets countdown for another timer", () => {
   const view = render(<TimerWatch />);
   now = NOW + 58000;

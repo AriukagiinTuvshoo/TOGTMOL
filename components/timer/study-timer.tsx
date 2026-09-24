@@ -170,6 +170,10 @@ export function TimerWatch() {
             stopAlertSound();
             navigate("focus");
           }}
+          onExit={() => {
+            stopAlertSound();
+            navigate("overview");
+          }}
         />
       )}
       {countdown !== null && !alert && (
@@ -229,7 +233,9 @@ export function StudyTimer({
     [note, setNote] = useState(() =>
       t ? readTimerDraft(store.getSnapshot().namespace, t.id, t.note) : "",
     ),
-    [completionChoices, setCompletionChoices] = useState<Record<string, boolean>>({}),
+    [completionChoices, setCompletionChoices] = useState<
+      Record<string, boolean>
+    >({}),
     [showNote, setShowNote] = useState(false);
   const tId = t?.id;
   const complete = tId ? (completionChoices[tId] ?? true) : true;
@@ -520,7 +526,13 @@ export function StudyTimer({
                     t.targetMs !== null &&
                     elapsed(t, now) >= t.targetMs;
                   void run(() =>
-                    store.mutate(expired ? actions.finish() : t.running ? actions.pause() : actions.resume()),
+                    store.mutate(
+                      expired
+                        ? actions.finish()
+                        : t.running
+                          ? actions.pause()
+                          : actions.resume(),
+                    ),
                   );
                 }}
               >
