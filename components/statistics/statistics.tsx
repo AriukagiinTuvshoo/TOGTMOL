@@ -20,6 +20,7 @@ import { streakFreezeCount } from "@/lib/calculations/decision";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     { language } = useI18n(),
+    freezeCount = streakFreezeCount(data.settings),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -37,9 +38,9 @@ export function Statistics() {
               : period,
         today,
         subject || undefined,
-        streakFreezeCount(data.settings),
+        freezeCount,
       ),
-    [index, period, today, subject],
+    [index, period, today, subject, freezeCount],
   );
   const groups = new Map<string, number>();
   const knowledge = knowledgeStatistics(
