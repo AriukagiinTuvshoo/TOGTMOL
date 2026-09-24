@@ -2015,7 +2015,7 @@ details.card[open] > summary {
     font-size: 11px;
   }
   .focus-timer-stage .timer-card {
-    min-height: calc(100dvh - 76px);
+    min-height: calc(100dvh - 176px);
     padding: 34px 14px 42px;
     border-radius: 22px;
   }
