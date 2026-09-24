@@ -3,6 +3,7 @@ import { dayBoundary } from "@/lib/preferences";
 import { parseDate, studyDate } from "@/lib/calculations/dates";
 import { goalDetails } from "@/lib/world/milestones";
 import {
+  elapsed,
   pause,
   resume,
   review,
@@ -288,7 +289,29 @@ export const actions = {
     },
   discard:
     () =>
-    (data: StudyData): StudyData => ({ ...data, activeTimer: null }),
+    (data: StudyData): StudyData => {
+      const timer = data.activeTimer;
+      if (!timer) return data;
+      const now = Date.now();
+      const attempt = {
+        id: timer.id,
+        subjectId: timer.subjectId,
+        startEpoch: timer.sessionStartedAt,
+        discardedAt: now,
+        accumulatedSec: Math.max(0, Math.round(elapsed(timer, now) / 1000)),
+        targetSec:
+          timer.targetMs === null ? null : Math.round(timer.targetMs / 1000),
+      };
+      const raw = Array.isArray(data.extras.behaviorAttempts)
+        ? data.extras.behaviorAttempts
+        : [];
+      const behaviorAttempts = [...raw, attempt].slice(-500);
+      return {
+        ...data,
+        activeTimer: null,
+        extras: { ...data.extras, behaviorAttempts },
+      };
+    },
   timerNote:
     (note: string) =>
     (data: StudyData): StudyData =>
