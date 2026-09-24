@@ -56,7 +56,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
           className="focus-exit-button"
           onClick={() => navigate("overview")}
         >
-          <Icon name="close" size={16} /> Өрөө рүү буцах
+          <Icon name="close" size={16} /> Focus-оос гарах
         </button>
         <div className="focus-timer-stage">
           <StudyTimer
