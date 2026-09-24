@@ -187,10 +187,9 @@ async function start() {
 }
 function navigate(name: string) {
   fireEvent.click(
-    within(screen.getByRole("navigation", { name: "Миний орон зай" })).getByRole(
-      "button",
-      { name },
-    ),
+    within(
+      screen.getByRole("navigation", { name: "Миний орон зай" }),
+    ).getByRole("button", { name }),
   );
 }
 async function savedPreference() {
