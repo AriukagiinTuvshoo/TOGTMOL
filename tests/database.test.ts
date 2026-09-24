@@ -211,16 +211,29 @@ describe("v4 cloud extensions", () => {
         fixture(),
       ),
     )(fixture());
-    data.musicSources.push({
-      id: "music-test",
-      title: "Rain",
-      kind: "video",
-      youtubeId: "abcdefghijk",
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      extras: {},
-    });
+    data.musicSources.push(
+      {
+        id: "music-test",
+        title: "Rain",
+        kind: "video",
+        youtubeId: "abcdefghijk",
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        extras: {},
+      },
+      {
+        id: "audio-test",
+        title: "Study MP3",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://cdn.example.com/study.mp3",
+        createdAt: 2,
+        updatedAt: 2,
+        deletedAt: null,
+        extras: {},
+      },
+    );
     await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
       A,
       before.rows[0].value.revision,
