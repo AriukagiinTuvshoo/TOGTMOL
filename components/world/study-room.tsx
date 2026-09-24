@@ -65,6 +65,7 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
         <div className="focus-timer-stage">
           <StudyTimer
             key={timerKey}
+            compact
             recentlySaved={timerSaved}
             onSessionSaved={() => setTimerSaved(true)}
             onSessionStarted={() => setTimerSaved(false)}
