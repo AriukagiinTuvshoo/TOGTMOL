@@ -15,10 +15,7 @@ import {
   shiftDate,
   weekStart,
 } from "./dates";
-import {
-  currentStreakWithFreezes,
-  longestStreakWithFreezes,
-} from "./decision";
+import { currentStreakWithFreezes } from "./decision";
 export function emptyDay(date: string): DailySummary {
   return {
     date,

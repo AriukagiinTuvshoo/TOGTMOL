@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n/language-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { parsePlanProposal } from "@/lib/assistant/plan";
 import { useStudy } from "@/hooks/use-study";
@@ -30,6 +31,7 @@ import {
 } from "@/lib/world/milestones";
 import { TaskForm } from "@/components/dashboard/task-form";
 export function GoalPlanner() {
+  const { t } = useI18n();
   const { data, index, today, store, run, navigate } = useStudy(),
     [adding, setAdding] = useState(false),
     [editing, setEditing] = useState<string | null>(null),
@@ -48,7 +50,7 @@ export function GoalPlanner() {
   return (
     <section className="stack">
       <SectionTitle
-        title="Зорилгоо жижиг алхам болгоё"
+        title={t("nav.goals")}
         subtitle="Зорилго → төлөвлөгөө → timer → бодит ахиц"
         action={
           <button className="button primary" onClick={() => setAdding(true)}>

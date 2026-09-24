@@ -1,5 +1,6 @@
 "use client";
 import { StoredImage } from "@/components/ui/stored-image";
+import { useI18n } from "@/components/i18n/language-provider";
 import { useEffect, useRef, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
