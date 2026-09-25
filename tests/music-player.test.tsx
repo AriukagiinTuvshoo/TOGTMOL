@@ -468,7 +468,9 @@ describe("persistent music dock", () => {
     await screen.findByRole("button", { name: "Pause" });
     now += 10000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Save result" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" }),
+    );
     await screen.findByText(/Хичээлээ хадгаллаа/);
     expect(dock()).toHaveAttribute("data-playback", "playing");
     expect(screen.getByTitle("Test YouTube")).toBe(player.iframe);

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { periodStats } from "@/lib/calculations/analytics";
 import {
@@ -14,8 +14,16 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
+import {
+  calendarTimeZone,
+  calendarWeekStartsOn,
+  countdownLabel,
+  deadlineEpoch,
+  readCalendarDeadlines,
+} from "@/lib/calculations/calendar";
 export function Statistics() {
   const { data, index, today } = useStudy(),
+    weekStartsOn = calendarWeekStartsOn(data),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -27,14 +35,14 @@ export function Statistics() {
         period === "today"
           ? 1
           : period === "week"
-            ? datesBetween(weekStart(today), today).length
+            ? datesBetween(weekStart(today, weekStartsOn), today).length
             : period === "month"
               ? Number(today.slice(-2))
               : period,
         today,
         subject || undefined,
       ),
-    [index, period, today, subject],
+    [index, period, today, subject, weekStartsOn],
   );
   const groups = new Map<string, number>();
   const knowledge = knowledgeStatistics(
@@ -44,7 +52,7 @@ export function Statistics() {
       : period === "today"
         ? today
         : period === "week"
-          ? weekStart(today)
+          ? weekStart(today, weekStartsOn)
           : period === "month"
             ? `${today.slice(0, 7)}-01`
             : shiftDate(today, 1 - period),
@@ -56,12 +64,27 @@ export function Statistics() {
       stats.days.length > 90
         ? d.date.slice(0, 7)
         : stats.days.length > 30
-          ? weekStart(d.date)
+          ? weekStart(d.date, weekStartsOn)
           : d.date;
     groups.set(key, (groups.get(key) ?? 0) + d.seconds);
   }
   const buckets = [...groups].slice(-36),
     ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const tz = calendarTimeZone(data);
+  const nextDeadline = useMemo(
+    () =>
+      readCalendarDeadlines(data)
+        .filter((d) => !d.deletedAt && (!subject || d.subjectId === subject))
+        .map((d) => ({ deadline: d, epoch: deadlineEpoch(d, tz) }))
+        .filter((x) => Number.isFinite(x.epoch) && x.epoch >= clockNow)
+        .sort((a, b) => a.epoch - b.epoch)[0] ?? null,
+    [data, subject, tz, clockNow],
+  );
   return (
     <div className="stack">
       <div className="filter-row">
@@ -119,6 +142,24 @@ export function Statistics() {
             : `Картын давтлагын ${knowledge.recall}%-д хариултаа санасан гэж үнэлсэн. Энэ нь өөрийн үнэлгээ бөгөөд чадварын шалгалт биш.`}
         </p>
       </section>
+      {nextDeadline && (
+        <section
+          className="card deadline-countdown-card"
+          aria-label="Дараагийн deadline"
+        >
+          <SectionTitle
+            title="🎯 Дараагийн шалгалт / deadline"
+            subtitle={`${nextDeadline.deadline.title} · ${nextDeadline.deadline.date} ${nextDeadline.deadline.time} · ${index.subjects.get(nextDeadline.deadline.subjectId)?.name ?? "Хичээл"}`}
+          />
+          <strong className="deadline-countdown-value">
+            {countdownLabel(nextDeadline.epoch - clockNow)}
+          </strong>
+          <p className="tiny muted">
+            Countdown нь Calendar дахь deadline-ийн өгөгдлөөс шууд тооцогдоно ·
+            ${tz}
+          </p>
+        </section>
+      )}
       <div className="metrics four">
         <Metric label="Нийт хугацаа" value={formatTime(stats.seconds)} />
         <Metric

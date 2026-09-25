@@ -15,7 +15,8 @@ import { ACHIEVEMENTS } from "@/lib/calculations/achievements";
 import { dayBoundary } from "@/lib/preferences";
 import { enableSound } from "@/lib/notifications";
 import { ROOM_THEMES } from "@/lib/world/room-themes";
-import { dateKey, studyDate } from "@/lib/calculations/dates";
+import { studyDate } from "@/lib/calculations/dates";
+import { calendarTimeZone } from "@/lib/calculations/calendar";
 import type { StudyData, StudyIndex, View } from "@/types/study";
 type ContextValue = {
   store: StudyStore;
@@ -39,12 +40,17 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       store.getServerSnapshot,
     );
   const [view, setView] = useState<View>("overview"),
-    [today, setToday] = useState(dateKey),
+    [nowTick, setNowTick] = useState(() => Date.now()),
     [notice, setNotice] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
   const [undo, setUndo] = useState<(() => Promise<void>) | null>(null);
   const { subjects, sessions, entries, settings } = state.data;
   const boundary = dayBoundary(settings);
+  const timeZone = calendarTimeZone(state.data);
+  const today = useMemo(
+    () => studyDate(new Date(nowTick), boundary, timeZone),
+    [nowTick, boundary, timeZone],
+  );
   const index = useMemo(
     () =>
       buildIndex({ subjects, sessions, entries } as StudyData, today, boundary),
@@ -53,28 +59,16 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void store.initialize();
     const refresh = () => {
-      setToday(
-        studyDate(new Date(), dayBoundary(store.getSnapshot().data.settings)),
-      );
+      setNowTick(Date.now());
       void store.reload().catch(store.reportError);
     };
     window.addEventListener("focus", refresh);
-    const id = setInterval(
-      () =>
-        setToday(
-          studyDate(new Date(), dayBoundary(store.getSnapshot().data.settings)),
-        ),
-      30000,
-    );
+    const id = setInterval(() => setNowTick(Date.now()), 30000);
     return () => {
       clearInterval(id);
       window.removeEventListener("focus", refresh);
     };
   }, [store]);
-  useEffect(() => {
-    const tick = setTimeout(() => setToday(studyDate(new Date(), boundary)), 0);
-    return () => clearTimeout(tick);
-  }, [boundary]);
   useEffect(() => {
     if (!settings.sound) return;
     const prime = () => {

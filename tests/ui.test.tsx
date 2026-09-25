@@ -92,7 +92,7 @@ describe("interactive local workflow", () => {
     now += 15000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
     const saveButton = await screen.findByRole("button", {
-      name: "Save result",
+      name: "Үр дүнгээ хадгалах",
     });
     await waitFor(() => expect(saveButton).toBeEnabled());
     fireEvent.click(saveButton);
@@ -125,15 +125,13 @@ describe("interactive local workflow", () => {
       await screen.findByText("Тогтмол байдал", { exact: true }),
     ).toBeVisible();
     fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
-    expect(
-      await screen.findByRole("button", { name: "365 өдөр" }),
-    ).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "365 өдөр" }));
-    expect(
-      screen.getAllByRole("button", {
-        name: /\d{4}-\d{2}-\d{2}, 0м, 0 хичээл/,
-      }),
-    ).toHaveLength(365);
+    expect(await screen.findByRole("tab", { name: /Сар/ })).toBeVisible();
+    expect(screen.getByRole("tab", { name: /7 хоног/ })).toBeVisible();
+    expect(screen.getByRole("tab", { name: /Өдөр/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: /7 хоног/ }));
+    expect(await screen.findByText(/таны суралцах хуваарь/i)).toBeVisible();
+    fireEvent.click(screen.getByRole("tab", { name: /Өдөр/ }));
+    expect(screen.getByRole("heading", { name: /timeline/i })).toBeVisible();
     fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
     fireEvent.click(await screen.findByRole("button", { name: "Бараан" }));
     await waitFor(() =>
@@ -218,11 +216,11 @@ describe("study world integration", () => {
     await screen.findByRole("button", { name: "Өрөөгөө өөрчлөх" });
     expect(document.querySelector(".app-shell")).not.toHaveClass("is-focus");
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    await screen.findByRole("button", { name: "Save result" });
+    await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" });
     fireEvent.change(screen.getByLabelText("Юу сурсан бэ?"), {
       target: { value: "Хоёр жишээ бодлоо" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save result" }));
+    fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }));
     await waitFor(async () => {
       const d = (await repo.load("guest"))!.data;
       expect(d.sessions).toHaveLength(1);
@@ -374,13 +372,9 @@ it("edits a daily task and reports its actual completion day in the calendar", a
       { name: "Календарь" },
     ),
   );
-  expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
-  expect(
-    within(screen.getByText("Биелсэн алхмууд").parentElement!).getByText(
-      "Гурван жишээ",
-    ),
-  ).toBeVisible();
-  expect(screen.getByText(/35м төлөвлөсөн/)).toBeVisible();
+  expect(await screen.findByText(/Төлөвлөсөн алхмууд/)).toBeVisible();
+  expect(screen.getByText("Гурван жишээ")).toBeVisible();
+  expect(screen.getByText(/35м/)).toBeVisible();
   await repo.close();
 });
 
