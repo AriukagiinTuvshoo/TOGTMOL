@@ -6,7 +6,7 @@ import { shiftDate, dateKey, weekStart } from "@/lib/calculations/dates";
 import {
   streakFreezeCount,
   streakWithFreezes,
-} from "@/lib/calculations/analytics";
+} from "@/lib/calculations/decision";
 export type CompanionState =
   | "idle"
   | "studying"

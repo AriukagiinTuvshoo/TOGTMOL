@@ -211,16 +211,29 @@ describe("v4 cloud extensions", () => {
         fixture(),
       ),
     )(fixture());
-    data.musicSources.push({
-      id: "music-test",
-      title: "Rain",
-      kind: "video",
-      youtubeId: "abcdefghijk",
-      createdAt: 1,
-      updatedAt: 1,
-      deletedAt: null,
-      extras: {},
-    });
+    data.musicSources.push(
+      {
+        id: "music-test",
+        title: "Rain",
+        kind: "video",
+        youtubeId: "abcdefghijk",
+        createdAt: 1,
+        updatedAt: 1,
+        deletedAt: null,
+        extras: {},
+      },
+      {
+        id: "audio-test",
+        title: "Study MP3",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://cdn.example.com/study.mp3",
+        createdAt: 2,
+        updatedAt: 2,
+        deletedAt: null,
+        extras: {},
+      },
+    );
     await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
       A,
       before.rows[0].value.revision,
@@ -231,7 +244,11 @@ describe("v4 cloud extensions", () => {
       [A],
     );
     expect(pulled.rows[0].value.data.studyGoals).toEqual(data.studyGoals);
-    expect(pulled.rows[0].value.data.musicSources).toEqual(data.musicSources);
+    expect(
+      [...pulled.rows[0].value.data.musicSources].sort((a, b) =>
+        a.id.localeCompare(b.id),
+      ),
+    ).toEqual([...data.musicSources].sort((a, b) => a.id.localeCompare(b.id)));
     expect(pulled.rows[0].value.data.tasks[0].goalId).toBe(
       data.studyGoals[0].id,
     );
@@ -257,9 +274,17 @@ describe("v4 cloud extensions", () => {
         JSON.stringify({ ...fixture(), schemaVersion: 3 }),
       ]),
     ).rejects.toThrow("Unsupported schema");
-    expect(
-      (await db.query("select * from public.study_goals")).rows,
-    ).toHaveLength(1);
+    const beforeGoals = (await db.query("select * from public.study_goals"))
+      .rows.length;
+    await expect(
+      db.query("select public.push_study_data($1,2,$2::jsonb)", [
+        A,
+        JSON.stringify({ ...fixture(), schemaVersion: 3 }),
+      ]),
+    ).rejects.toThrow("Unsupported schema");
+    const afterGoals = (await db.query("select * from public.study_goals")).rows
+      .length;
+    expect(afterGoals).toBe(beforeGoals);
   });
   it("enforces a durable per-user daily AI cap that cannot be reset by clients", async () => {
     await asUser(A);

@@ -6,12 +6,11 @@ import {
   datesBetween,
   parseDate,
 } from "@/lib/calculations/dates";
+import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
 import {
-  periodStats,
-  weeklyReport,
   streakFreezeCount,
   streakWithFreezes,
-} from "@/lib/calculations/analytics";
+} from "@/lib/calculations/decision";
 import { SHORT_DAYS, WEEKDAYS } from "@/lib/constants";
 import { Empty, Metric, Progress, SectionTitle } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
