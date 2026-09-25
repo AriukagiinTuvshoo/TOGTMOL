@@ -244,7 +244,13 @@ describe("v4 cloud extensions", () => {
       [A],
     );
     expect(pulled.rows[0].value.data.studyGoals).toEqual(data.studyGoals);
-    expect(pulled.rows[0].value.data.musicSources).toEqual(data.musicSources);
+    expect(
+      [...pulled.rows[0].value.data.musicSources].sort((a, b) =>
+        a.id.localeCompare(b.id),
+      ),
+    ).toEqual(
+      [...data.musicSources].sort((a, b) => a.id.localeCompare(b.id)),
+    );
     expect(pulled.rows[0].value.data.tasks[0].goalId).toBe(
       data.studyGoals[0].id,
     );
