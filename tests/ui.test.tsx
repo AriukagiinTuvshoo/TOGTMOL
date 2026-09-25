@@ -92,7 +92,7 @@ describe("interactive local workflow", () => {
     now += 15000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
     const saveButton = await screen.findByRole("button", {
-      name: "Save result",
+      name: "Үр дүнгээ хадгалах",
     });
     await waitFor(() => expect(saveButton).toBeEnabled());
     fireEvent.click(saveButton);
@@ -216,11 +216,11 @@ describe("study world integration", () => {
     await screen.findByRole("button", { name: "Өрөөгөө өөрчлөх" });
     expect(document.querySelector(".app-shell")).not.toHaveClass("is-focus");
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    await screen.findByRole("button", { name: "Save result" });
+    await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" });
     fireEvent.change(screen.getByLabelText("Юу сурсан бэ?"), {
       target: { value: "Хоёр жишээ бодлоо" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save result" }));
+    fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }));
     await waitFor(async () => {
       const d = (await repo.load("guest"))!.data;
       expect(d.sessions).toHaveLength(1);
