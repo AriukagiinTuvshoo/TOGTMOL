@@ -1,6 +1,7 @@
 name: Temporary format audit branch
 on:
-  workflow_dispatch:
+  push:
+    branches: [audit-v7-stability]
 jobs:
   format:
     runs-on: ubuntu-latest
