@@ -163,4 +163,3 @@ export function annualHeatmap(index: StudyIndex, year: number): AnnualHeatmap {
     totalMinutes: totalSeconds / 60,
   };
 }
-

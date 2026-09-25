@@ -60,7 +60,10 @@ export function CurrentDecisionCenter() {
     [index.sortedDates, today, freezeLimit],
   );
 
-  const behavior = useMemo(() => lateSessionPattern(index, today), [index, today]);
+  const behavior = useMemo(
+    () => lateSessionPattern(index, today),
+    [index, today],
+  );
 
   const heatmap = useMemo(
     () => annualHeatmap(index, Number(today.slice(0, 4))),
@@ -152,11 +155,7 @@ export function CurrentDecisionCenter() {
           >
             <label>
               Шалгалтын өдөр
-              <input
-                type="date"
-                defaultValue={exam.date}
-                name="examDate"
-              />
+              <input type="date" defaultValue={exam.date} name="examDate" />
             </label>
             <label>
               Шалгалтын нэр

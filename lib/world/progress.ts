@@ -3,7 +3,10 @@ import { ROOM_REWARDS } from "@/lib/world/config";
 import type { StudyData, StudyGoal, StudyIndex } from "@/types/study";
 import { buildIndex, sessionAllocations } from "@/lib/calculations/analytics";
 import { shiftDate, dateKey, weekStart } from "@/lib/calculations/dates";
-import { streakFreezeCount, streakWithFreezes } from "@/lib/calculations/decision";
+import {
+  streakFreezeCount,
+  streakWithFreezes,
+} from "@/lib/calculations/decision";
 export type CompanionState =
   | "idle"
   | "studying"
