@@ -131,7 +131,7 @@ describe("interactive local workflow", () => {
     fireEvent.click(screen.getByRole("tab", { name: /7 хоног/ }));
     expect(await screen.findByText(/таны суралцах хуваарь/i)).toBeVisible();
     fireEvent.click(screen.getByRole("tab", { name: /Өдөр/ }));
-    expect(screen.getByText(/timeline/i)).toBeVisible();
+    expect(screen.getByRole("heading", { name: /timeline/i })).toBeVisible();
     fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
     fireEvent.click(await screen.findByRole("button", { name: "Бараан" }));
     await waitFor(() =>
@@ -372,7 +372,7 @@ it("edits a daily task and reports its actual completion day in the calendar", a
       { name: "Календарь" },
     ),
   );
-  expect(await screen.findByText("Төлөвлөсөн алхмууд")).toBeVisible();
+  expect(await screen.findByText(/Төлөвлөсөн алхмууд/)).toBeVisible();
   expect(screen.getByText("Гурван жишээ")).toBeVisible();
   expect(screen.getByText(/35м/)).toBeVisible();
   await repo.close();
