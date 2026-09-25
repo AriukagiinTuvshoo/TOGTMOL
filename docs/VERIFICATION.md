@@ -51,3 +51,4 @@ React урсгалууд **jsdom** дээр ажилласан. SQL шалгал
 Бодит Supabase төсөл, AI түлхүүр, Google provider, live URL тохируулаагүй. Байршуулахдаа v5 SQL migration хэрэглэж, email confirmation, Google callback, password recovery, хоёр бодит төхөөрөмжийн синк/үүлэн устгал, онлайн AI болон зураг уншуулах урсгалыг шалгана. [Байршуулах заавар](DEPLOYMENT.md).
 
 GitHub-ийн тусдаа шалгалтыг [Actions](https://github.com/AriukagiinTuvshoo/TOGTMOL/actions) хэсгээс харна. Энэ тайлан CI үр дүнг урьдчилан тэнцсэн гэж үзээгүй.
+- 2026-09-25: Calendar planning feature branch was formatter-normalized; the subsequent source check passed 197/197 tests, production build, typecheck, and lint. Final formatting verification is triggered from this commit.
