@@ -8,6 +8,8 @@ alter table public.music_sources
 
 alter table public.music_sources
   drop constraint if exists music_sources_check;
+alter table public.music_sources
+  drop constraint if exists music_sources_check1;
 
 alter table public.music_sources
   add constraint music_sources_kind_check
