@@ -14,7 +14,13 @@ import { SessionList } from "@/components/ui/session-list";
 import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
-import { calendarTimeZone, calendarWeekStartsOn, countdownLabel, deadlineEpoch, readCalendarDeadlines } from "@/lib/calculations/calendar";
+import {
+  calendarTimeZone,
+  calendarWeekStartsOn,
+  countdownLabel,
+  deadlineEpoch,
+  readCalendarDeadlines,
+} from "@/lib/calculations/calendar";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     weekStartsOn = calendarWeekStartsOn(data),
@@ -137,7 +143,10 @@ export function Statistics() {
         </p>
       </section>
       {nextDeadline && (
-        <section className="card deadline-countdown-card" aria-label="Дараагийн deadline">
+        <section
+          className="card deadline-countdown-card"
+          aria-label="Дараагийн deadline"
+        >
           <SectionTitle
             title="🎯 Дараагийн шалгалт / deadline"
             subtitle={`${nextDeadline.deadline.title} · ${nextDeadline.deadline.date} ${nextDeadline.deadline.time} · ${index.subjects.get(nextDeadline.deadline.subjectId)?.name ?? "Хичээл"}`}
@@ -145,7 +154,10 @@ export function Statistics() {
           <strong className="deadline-countdown-value">
             {countdownLabel(nextDeadline.epoch - clockNow)}
           </strong>
-          <p className="tiny muted">Countdown нь Calendar дахь deadline-ийн өгөгдлөөс шууд тооцогдоно · ${tz}</p>
+          <p className="tiny muted">
+            Countdown нь Calendar дахь deadline-ийн өгөгдлөөс шууд тооцогдоно ·
+            ${tz}
+          </p>
         </section>
       )}
       <div className="metrics four">

@@ -1,7 +1,12 @@
 import { dayBoundary } from "@/lib/preferences";
 import { datesBetween, parseDate, studyDate } from "@/lib/calculations/dates";
 import { uid } from "@/lib/constants";
-import { calendarTimeZone, readCalendarDeadlines, validCalendarTime, withCalendarDeadlines } from "@/lib/calculations/calendar";
+import {
+  calendarTimeZone,
+  readCalendarDeadlines,
+  validCalendarTime,
+  withCalendarDeadlines,
+} from "@/lib/calculations/calendar";
 import { goalDetails } from "@/lib/world/milestones";
 import {
   pause,
@@ -139,7 +144,11 @@ export const actions = {
     (data: StudyData): StudyData => {
       subject(data, id);
       validDate(date);
-      const today = studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data));
+      const today = studyDate(
+        new Date(),
+        dayBoundary(data.settings),
+        calendarTimeZone(data),
+      );
       if (date > today)
         throw Error("Ирээдүйн өдрийг суралцсан гэж тэмдэглэх боломжгүй.");
       const matches = data.entries.filter(
@@ -194,7 +203,11 @@ export const actions = {
             now,
             taskId,
           ),
-          date: studyDate(new Date(now), dayBoundary(data.settings), calendarTimeZone(data)),
+          date: studyDate(
+            new Date(now),
+            dayBoundary(data.settings),
+            calendarTimeZone(data),
+          ),
           extras: taskId
             ? {
                 taskId,
@@ -355,7 +368,12 @@ export const actions = {
         throw Error("Энэ бичлэг өөрчлөгдсөн байна. Дахин нээгээд засна уу.");
       validDate(patch.date);
       if (
-        patch.date > studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data)) ||
+        patch.date >
+          studyDate(
+            new Date(),
+            dayBoundary(data.settings),
+            calendarTimeZone(data),
+          ) ||
         !Number.isFinite(patch.durationSec) ||
         patch.durationSec < 5 ||
         patch.durationSec > 86400 * 366
@@ -517,7 +535,11 @@ export const actions = {
                   ...t.extras,
                   completedOn: t.completed
                     ? null
-                    : studyDate(new Date(now), dayBoundary(data.settings), calendarTimeZone(data)),
+                    : studyDate(
+                        new Date(now),
+                        dayBoundary(data.settings),
+                        calendarTimeZone(data),
+                      ),
                 },
               }
             : t,
@@ -608,27 +630,39 @@ export const actions = {
       subject(data, input.subjectId);
       validDate(input.startDate);
       validDate(input.endDate);
-      if (input.endDate < input.startDate) throw Error("Дуусах огноо эхлэхээс өмнө байна.");
+      if (input.endDate < input.startDate)
+        throw Error("Дуусах огноо эхлэхээс өмнө байна.");
       if (!input.weekdays.length || input.weekdays.some((d) => d < 0 || d > 6))
         throw Error("Давтагдах өдрөө сонгоно уу.");
-      if (!Number.isFinite(input.minutes) || input.minutes < 1 || input.minutes > 1440)
+      if (
+        !Number.isFinite(input.minutes) ||
+        input.minutes < 1 ||
+        input.minutes > 1440
+      )
         throw Error("Төлөвлөсөн хугацаа 1–1440 минут байна.");
       if (input.startTime !== null && !validCalendarTime(input.startTime))
         throw Error("Эхлэх цагийг шалгана уу.");
       if (!input.title.trim() || input.title.trim().length > 200)
         throw Error("Төлөвлөгөөний нэрийг шалгана уу.");
       const dates = datesBetween(input.startDate, input.endDate);
-      if (dates.length > 366) throw Error("Нэг давталтын хүрээ 366 өдрөөс их байж болохгүй.");
+      if (dates.length > 366)
+        throw Error("Нэг давталтын хүрээ 366 өдрөөс их байж болохгүй.");
       const goal = data.studyGoals.find(
-        (g) => g.id === input.goalId && !g.deletedAt && g.subjectId === input.subjectId,
+        (g) =>
+          g.id === input.goalId &&
+          !g.deletedAt &&
+          g.subjectId === input.subjectId,
       );
-      if (input.goalId && !goal) throw Error("Хичээлтэй тохирох зорилго сонгоно уу.");
+      if (input.goalId && !goal)
+        throw Error("Хичээлтэй тохирох зорилго сонгоно уу.");
       if (
         input.milestoneId &&
-        (!goal || !goalDetails(goal).milestones.some((m) => m.id === input.milestoneId))
+        (!goal ||
+          !goalDetails(goal).milestones.some((m) => m.id === input.milestoneId))
       )
         throw Error("Зорилгын үе шатыг шалгана уу.");
-      const now = Date.now(), seriesId = uid("series");
+      const now = Date.now(),
+        seriesId = uid("series");
       const additions = dates
         .filter((ds) => input.weekdays.includes(parseDate(ds)!.getDay()))
         .map((date) => ({
@@ -651,15 +685,26 @@ export const actions = {
             },
           },
         }));
-      if (!additions.length) throw Error("Сонгосон хугацаанд давтагдах өдөр олдсонгүй.");
+      if (!additions.length)
+        throw Error("Сонгосон хугацаанд давтагдах өдөр олдсонгүй.");
       return { ...data, tasks: [...data.tasks, ...additions] };
     },
   addDeadline:
-    (input: { title: string; subjectId: string; date: string; time: string; notes?: string }) =>
+    (input: {
+      title: string;
+      subjectId: string;
+      date: string;
+      time: string;
+      notes?: string;
+    }) =>
     (data: StudyData): StudyData => {
       subject(data, input.subjectId);
       validDate(input.date);
-      if (!input.title.trim() || input.title.trim().length > 200 || !validCalendarTime(input.time))
+      if (
+        !input.title.trim() ||
+        input.title.trim().length > 200 ||
+        !validCalendarTime(input.time)
+      )
         throw Error("Deadline-ийн нэр, огноо, цагийг шалгана уу.");
       const now = Date.now();
       const deadlines = readCalendarDeadlines(data);
@@ -695,17 +740,31 @@ export const actions = {
     (data: StudyData): StudyData => {
       const old = data.sessions.find((s) => s.id === id && !s.deletedAt);
       if (!old) throw Error("Session олдсонгүй.");
-      if (old.updatedAt !== expected) throw Error("Session өөрчлөгдсөн байна. Дахин оролдоно уу.");
+      if (old.updatedAt !== expected)
+        throw Error("Session өөрчлөгдсөн байна. Дахин оролдоно уу.");
       validDate(newDate);
-      const from = parseDate(old.date), to = parseDate(newDate);
+      const from = parseDate(old.date),
+        to = parseDate(newDate);
       if (!from || !to) throw Error("Огноо буруу.");
-      if (newDate > studyDate(new Date(), dayBoundary(data.settings), calendarTimeZone(data)))
+      if (
+        newDate >
+        studyDate(
+          new Date(),
+          dayBoundary(data.settings),
+          calendarTimeZone(data),
+        )
+      )
         throw Error("Session-ийг ирээдүйн өдөр рүү зөөж болохгүй.");
       const delta = to.getTime() - from.getTime();
       const shiftEpoch = (epoch: number) => {
         const d = new Date(epoch);
         const target = new Date(to);
-        target.setHours(d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+        target.setHours(
+          d.getHours(),
+          d.getMinutes(),
+          d.getSeconds(),
+          d.getMilliseconds(),
+        );
         return target.getTime();
       };
       const now = Date.now();
@@ -718,7 +777,10 @@ export const actions = {
                 date: newDate,
                 startEpoch: shiftEpoch(s.startEpoch),
                 endEpoch: shiftEpoch(s.endEpoch),
-                segments: s.segments.map((span) => ({ start: span.start + delta, end: span.end + delta })),
+                segments: s.segments.map((span) => ({
+                  start: span.start + delta,
+                  end: span.end + delta,
+                })),
                 updatedAt: now,
                 manuallyEdited: true,
                 extras: {

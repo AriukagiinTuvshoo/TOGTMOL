@@ -30,15 +30,16 @@ export function StudyCalendar({
 }: {
   subjectId?: string;
 }) {
-  const { index, today, data, store, run, selectedRecord, navigate } = useStudy();
+  const { index, today, data, store, run, selectedRecord, navigate } =
+    useStudy();
   const [selected, setSelected] = useState(
     data.sessions.find((s) => s.id === selectedRecord)?.date ?? today,
   );
   const [subjectId, setSubject] = useState(fixedSubject ?? "");
   const [month, setMonth] = useState(today.slice(0, 7));
-  const [calendarView, setCalendarView] = useState<"month" | "week" | "day" | "timeline">(
-    "month",
-  );
+  const [calendarView, setCalendarView] = useState<
+    "month" | "week" | "day" | "timeline"
+  >("month");
   const [adding, setAdding] = useState(false);
   const [dragSessionId, setDragSessionId] = useState<string | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -52,7 +53,10 @@ export function StudyCalendar({
   const visibleSessions = useMemo(
     () =>
       index.sessions
-        .filter((s) => !s.deletedAt && (!actualSubject || s.subjectId === actualSubject))
+        .filter(
+          (s) =>
+            !s.deletedAt && (!actualSubject || s.subjectId === actualSubject),
+        )
         .sort((a, b) => a.startEpoch - b.startEpoch),
     [index.sessions, actualSubject],
   );
@@ -79,10 +83,15 @@ export function StudyCalendar({
   const monthOffset =
     weekStart(dateKey(monthFirst), weekStartDay) === dateKey(monthFirst)
       ? 0
-      : datesBetween(weekStart(dateKey(monthFirst), weekStartDay), dateKey(monthFirst)).length - 1;
+      : datesBetween(
+          weekStart(dateKey(monthFirst), weekStartDay),
+          dateKey(monthFirst),
+        ).length - 1;
   const monthDays = datesBetween(
     firstOfMonth,
-    dateKey(new Date(monthFirst.getFullYear(), monthFirst.getMonth() + 1, 0, 12)),
+    dateKey(
+      new Date(monthFirst.getFullYear(), monthFirst.getMonth() + 1, 0, 12),
+    ),
   );
   const monthGrid = [
     ...Array.from({ length: monthOffset }, () => null as string | null),
@@ -97,7 +106,8 @@ export function StudyCalendar({
         t.date === ds &&
         (!actualSubject || t.subjectId === actualSubject),
     );
-  const sessionsOn = (ds: string) => visibleSessions.filter((s) => s.date === ds);
+  const sessionsOn = (ds: string) =>
+    visibleSessions.filter((s) => s.date === ds);
   const deadlinesOn = (ds: string) => deadlines.filter((d) => d.date === ds);
 
   const moveSelection = (delta: number) => {
@@ -171,22 +181,29 @@ export function StudyCalendar({
   };
 
   const dropSession = async (date: string) => {
-    if (!dragSessionId || date === visibleSessions.find((s) => s.id === dragSessionId)?.date)
+    if (
+      !dragSessionId ||
+      date === visibleSessions.find((s) => s.id === dragSessionId)?.date
+    )
       return;
     const session = visibleSessions.find((s) => s.id === dragSessionId);
     setDragSessionId(null);
     if (!session) return;
     await run(
       () =>
-        store.mutate(
-          actions.moveSession(session.id, date, session.updatedAt),
-        ),
+        store.mutate(actions.moveSession(session.id, date, session.updatedAt)),
       "Session шинэ өдөрт шилжлээ.",
     );
   };
 
   const dayButton = (ds: string | null, compact = false) => {
-    if (!ds) return <span className="calendar-day-cell calendar-day-blank" aria-hidden="true" />;
+    if (!ds)
+      return (
+        <span
+          className="calendar-day-cell calendar-day-blank"
+          aria-hidden="true"
+        />
+      );
     const plans = plannedOn(ds);
     const sessions = sessionsOn(ds);
     const dayDeadlines = deadlinesOn(ds);
@@ -216,7 +233,11 @@ export function StudyCalendar({
           <span>{formatTime(summary?.seconds ?? 0)}</span>
         </div>
         {dayDeadlines.slice(0, 2).map((deadline) => (
-          <span className="calendar-deadline-marker" key={deadline.id} title={deadline.title}>
+          <span
+            className="calendar-deadline-marker"
+            key={deadline.id}
+            title={deadline.title}
+          >
             🎯 {deadline.time} {deadline.title}
           </span>
         ))}
@@ -227,7 +248,11 @@ export function StudyCalendar({
               className={`calendar-event planned-event ${plan.completed ? "completed" : ""}`}
               key={plan.id}
               title={`Төлөвлөгөө · ${plan.title}`}
-              style={{ "--subject-color": subject?.color ?? "var(--moss)" } as React.CSSProperties}
+              style={
+                {
+                  "--subject-color": subject?.color ?? "var(--moss)",
+                } as React.CSSProperties
+              }
             >
               <i />
               {plan.startTime ?? "—"} {plan.title}
@@ -246,11 +271,16 @@ export function StudyCalendar({
                 e.dataTransfer.effectAllowed = "move";
                 e.dataTransfer.setData("text/plain", session.id);
               }}
-              style={{ "--subject-color": subject?.color ?? "var(--moss)" } as React.CSSProperties}
+              style={
+                {
+                  "--subject-color": subject?.color ?? "var(--moss)",
+                } as React.CSSProperties
+              }
               title="Зөөх бол чирээд өөр өдөр дээр тавина"
             >
               <i />
-              {formatCalendarTime(session.startEpoch, timeZone)} {subject?.name ?? "Хичээл"}
+              {formatCalendarTime(session.startEpoch, timeZone)}{" "}
+              {subject?.name ?? "Хичээл"}
             </span>
           );
         })}
@@ -271,13 +301,19 @@ export function StudyCalendar({
             <span className="eyebrow">📅 STUDY PLANNING CENTER</span>
             <h2>Таны суралцах хуваарь</h2>
             <p>
-              Төлөвлөсөн ажлаа хүрээтэй, бодитоор хийснээ дүүрэн өнгөөр харуулна.
+              Төлөвлөсөн ажлаа хүрээтэй, бодитоор хийснээ дүүрэн өнгөөр
+              харуулна.
             </p>
           </div>
-          <div className="calendar-smart-buddy" aria-hidden="true">🤖✨</div>
+          <div className="calendar-smart-buddy" aria-hidden="true">
+            🤖✨
+          </div>
         </div>
         <div className="calendar-quick-actions">
-          <button className="button primary small" onClick={() => setAdding(true)}>
+          <button
+            className="button primary small"
+            onClick={() => setAdding(true)}
+          >
             ＋ Төлөвлөгөө нэмэх
           </button>
           <button
@@ -315,13 +351,19 @@ export function StudyCalendar({
         </div>
 
         <div className="calendar-control-bar">
-          <div className="segmented calendar-view-switch" role="tablist" aria-label="Календарийн харагдац">
-            {([
-              ["month", "📅 Сар"],
-              ["week", "🗓️ 7 хоног"],
-              ["day", "☀️ Өдөр"],
-              ["timeline", "🕐 Timeline"],
-            ] as const).map(([v, label]) => (
+          <div
+            className="segmented calendar-view-switch"
+            role="tablist"
+            aria-label="Календарийн харагдац"
+          >
+            {(
+              [
+                ["month", "📅 Сар"],
+                ["week", "🗓️ 7 хоног"],
+                ["day", "☀️ Өдөр"],
+                ["timeline", "🕐 Timeline"],
+              ] as const
+            ).map(([v, label]) => (
               <button
                 key={v}
                 role="tab"
@@ -374,20 +416,31 @@ export function StudyCalendar({
         </div>
 
         <div className="calendar-legend-row">
-          <span><i className="legend-outline" /> Төлөвлөсөн</span>
-          <span><i className="legend-solid" /> Бодит session</span>
-          <span><i className="legend-deadline" /> Deadline</span>
+          <span>
+            <i className="legend-outline" /> Төлөвлөсөн
+          </span>
+          <span>
+            <i className="legend-solid" /> Бодит session
+          </span>
+          <span>
+            <i className="legend-deadline" /> Deadline
+          </span>
           <small>← → сум · гар утас swipe</small>
         </div>
 
         {calendarView === "month" && (
           <div className="calendar-grid planner-month-grid">
-            {(weekStartDay === "sunday" ? WEEKDAYS : WEEKDAYS.slice(1).concat(WEEKDAYS.slice(0, 1))).map(
-              (label) => (
-                <div className="calendar-weekday-label" key={label}>{label}</div>
-              ),
-            )}
-            {monthGrid.map((ds, i) => <div key={ds ?? `blank-${i}`}>{dayButton(ds, true)}</div>)}
+            {(weekStartDay === "sunday"
+              ? WEEKDAYS
+              : WEEKDAYS.slice(1).concat(WEEKDAYS.slice(0, 1))
+            ).map((label) => (
+              <div className="calendar-weekday-label" key={label}>
+                {label}
+              </div>
+            ))}
+            {monthGrid.map((ds, i) => (
+              <div key={ds ?? `blank-${i}`}>{dayButton(ds, true)}</div>
+            ))}
           </div>
         )}
 
@@ -409,16 +462,32 @@ export function StudyCalendar({
                   className="calendar-week-column-head"
                   onClick={() => {
                     setSelected(ds);
-                    if (plannedOn(ds).length + sessionsOn(ds).length + deadlinesOn(ds).length === 0)
+                    if (
+                      plannedOn(ds).length +
+                        sessionsOn(ds).length +
+                        deadlinesOn(ds).length ===
+                      0
+                    )
                       setAdding(true);
                   }}
                 >
-                  <span>{SHORT_DAYS[parseDate(ds)!.getDay() === 0 ? 6 : parseDate(ds)!.getDay() - 1]}</span>
+                  <span>
+                    {
+                      SHORT_DAYS[
+                        parseDate(ds)!.getDay() === 0
+                          ? 6
+                          : parseDate(ds)!.getDay() - 1
+                      ]
+                    }
+                  </span>
                   <strong>{ds.slice(5).replace("-", "/")}</strong>
                 </button>
                 <div className="calendar-week-column-body">
                   {deadlinesOn(ds).map((deadline) => (
-                    <div className="calendar-week-event deadline-event" key={deadline.id}>
+                    <div
+                      className="calendar-week-event deadline-event"
+                      key={deadline.id}
+                    >
                       <b>🎯 {deadline.time}</b>
                       <span>{deadline.title}</span>
                     </div>
@@ -428,12 +497,18 @@ export function StudyCalendar({
                     return (
                       <div
                         className={`calendar-week-event planned-event ${plan.completed ? "completed" : ""}`}
-                        style={{ "--subject-color": subject?.color ?? "var(--moss)" } as React.CSSProperties}
+                        style={
+                          {
+                            "--subject-color": subject?.color ?? "var(--moss)",
+                          } as React.CSSProperties
+                        }
                         key={plan.id}
                       >
                         <b>{plan.startTime ?? "—"}</b>
                         <span>{plan.title}</span>
-                        <small>{subject?.name ?? "Хичээл"} · {plan.minutes}м</small>
+                        <small>
+                          {subject?.name ?? "Хичээл"} · {plan.minutes}м
+                        </small>
                       </div>
                     );
                   })}
@@ -442,7 +517,11 @@ export function StudyCalendar({
                     return (
                       <div
                         className="calendar-week-event actual-event"
-                        style={{ "--subject-color": subject?.color ?? "var(--moss)" } as React.CSSProperties}
+                        style={
+                          {
+                            "--subject-color": subject?.color ?? "var(--moss)",
+                          } as React.CSSProperties
+                        }
                         key={session.id}
                         draggable
                         onDragStart={(e) => {
@@ -450,24 +529,28 @@ export function StudyCalendar({
                           e.dataTransfer.effectAllowed = "move";
                         }}
                       >
-                        <b>{formatCalendarTime(session.startEpoch, timeZone)}</b>
+                        <b>
+                          {formatCalendarTime(session.startEpoch, timeZone)}
+                        </b>
                         <span>{subject?.name ?? "Хичээл"}</span>
                         <small>{Math.round(session.durationSec / 60)}м</small>
                       </div>
                     );
                   })}
-                  {!plannedOn(ds).length && !sessionsOn(ds).length && !deadlinesOn(ds).length && (
-                    <button
-                      type="button"
-                      className="calendar-empty-slot"
-                      onClick={() => {
-                        setSelected(ds);
-                        setAdding(true);
-                      }}
-                    >
-                      ＋ Энд төлөвлөх
-                    </button>
-                  )}
+                  {!plannedOn(ds).length &&
+                    !sessionsOn(ds).length &&
+                    !deadlinesOn(ds).length && (
+                      <button
+                        type="button"
+                        className="calendar-empty-slot"
+                        onClick={() => {
+                          setSelected(ds);
+                          setAdding(true);
+                        }}
+                      >
+                        ＋ Энд төлөвлөх
+                      </button>
+                    )}
                 </div>
               </div>
             ))}
@@ -476,23 +559,45 @@ export function StudyCalendar({
 
         {calendarView === "day" && (
           <div className="calendar-day-planner">
-            <div className="calendar-day-dropzone" onDragOver={(e) => dragSessionId && e.preventDefault()} onDrop={(e) => { e.preventDefault(); void dropSession(selected); }}>
+            <div
+              className="calendar-day-dropzone"
+              onDragOver={(e) => dragSessionId && e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                void dropSession(selected);
+              }}
+            >
               <div className="calendar-day-section-title">
                 <h3>Өнөөдрийн timeline</h3>
                 <span>{timeZone}</span>
               </div>
               {selectedDeadlines.map((deadline) => (
-                <div className="calendar-day-item deadline-event" key={deadline.id}>
+                <div
+                  className="calendar-day-item deadline-event"
+                  key={deadline.id}
+                >
                   <time>{deadline.time}</time>
-                  <div><strong>🎯 {deadline.title}</strong><small>{index.subjects.get(deadline.subjectId)?.name ?? "Хичээл"} · deadline</small></div>
+                  <div>
+                    <strong>🎯 {deadline.title}</strong>
+                    <small>
+                      {index.subjects.get(deadline.subjectId)?.name ?? "Хичээл"}{" "}
+                      · deadline
+                    </small>
+                  </div>
                 </div>
               ))}
               {selectedPlans.map((plan) => (
-                <div className={`calendar-day-item planned-event ${plan.completed ? "completed" : ""}`} key={plan.id}>
+                <div
+                  className={`calendar-day-item planned-event ${plan.completed ? "completed" : ""}`}
+                  key={plan.id}
+                >
                   <time>{plan.startTime ?? "—"}</time>
                   <div>
                     <strong>{plan.title}</strong>
-                    <small>{index.subjects.get(plan.subjectId)?.name ?? "Хичээл"} · {plan.minutes}м · төлөвлөсөн</small>
+                    <small>
+                      {index.subjects.get(plan.subjectId)?.name ?? "Хичээл"} ·{" "}
+                      {plan.minutes}м · төлөвлөсөн
+                    </small>
                   </div>
                 </div>
               ))}
@@ -506,46 +611,77 @@ export function StudyCalendar({
                     e.dataTransfer.effectAllowed = "move";
                   }}
                 >
-                  <time>{formatCalendarTime(session.startEpoch, timeZone)}</time>
+                  <time>
+                    {formatCalendarTime(session.startEpoch, timeZone)}
+                  </time>
                   <div>
-                    <strong>{index.subjects.get(session.subjectId)?.icon ?? "📚"} {index.subjects.get(session.subjectId)?.name ?? "Хичээл"}</strong>
-                    <small>{Math.round(session.durationSec / 60)}м · бодит гүйцэтгэл</small>
+                    <strong>
+                      {index.subjects.get(session.subjectId)?.icon ?? "📚"}{" "}
+                      {index.subjects.get(session.subjectId)?.name ?? "Хичээл"}
+                    </strong>
+                    <small>
+                      {Math.round(session.durationSec / 60)}м · бодит гүйцэтгэл
+                    </small>
                   </div>
                 </div>
               ))}
-              {!selectedPlans.length && !selectedSessions.length && !selectedDeadlines.length && (
-                <button className="calendar-empty-day-cta" onClick={() => setAdding(true)}>
-                  ＋ Энэ өдөрт төлөвлөгөө нэмэх
-                </button>
-              )}
+              {!selectedPlans.length &&
+                !selectedSessions.length &&
+                !selectedDeadlines.length && (
+                  <button
+                    className="calendar-empty-day-cta"
+                    onClick={() => setAdding(true)}
+                  >
+                    ＋ Энэ өдөрт төлөвлөгөө нэмэх
+                  </button>
+                )}
             </div>
           </div>
         )}
 
         {calendarView === "timeline" && (
           <div className="calendar-timeline">
-            {visibleSessions.slice(-60).reverse().map((session) => {
-              const subject = index.subjects.get(session.subjectId);
-              return (
-                <div
-                  key={session.id}
-                  className="calendar-timeline-row"
-                  draggable
-                  onDragStart={() => setDragSessionId(session.id)}
-                  onClick={() => setSelected(session.date)}
-                >
-                  <time>{session.date}<br />{formatCalendarTime(session.startEpoch, timeZone)}</time>
-                  <span className="calendar-timeline-line"><i style={{ background: subject?.color }} /></span>
-                  <span><strong>{subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}</strong><small>{Math.round(session.durationSec / 60)} минут · бодит</small></span>
-                </div>
-              );
-            })}
-            {!visibleSessions.length && <div className="calendar-empty-state">📭 Session алга байна.</div>}
+            {visibleSessions
+              .slice(-60)
+              .reverse()
+              .map((session) => {
+                const subject = index.subjects.get(session.subjectId);
+                return (
+                  <div
+                    key={session.id}
+                    className="calendar-timeline-row"
+                    draggable
+                    onDragStart={() => setDragSessionId(session.id)}
+                    onClick={() => setSelected(session.date)}
+                  >
+                    <time>
+                      {session.date}
+                      <br />
+                      {formatCalendarTime(session.startEpoch, timeZone)}
+                    </time>
+                    <span className="calendar-timeline-line">
+                      <i style={{ background: subject?.color }} />
+                    </span>
+                    <span>
+                      <strong>
+                        {subject?.icon ?? "📚"} {subject?.name ?? "Хичээл"}
+                      </strong>
+                      <small>
+                        {Math.round(session.durationSec / 60)} минут · бодит
+                      </small>
+                    </span>
+                  </div>
+                );
+              })}
+            {!visibleSessions.length && (
+              <div className="calendar-empty-state">📭 Session алга байна.</div>
+            )}
           </div>
         )}
 
         <p className="calendar-drag-hint">
-          🖱️ Бодит session-ийг чирээд өөр өдөр рүү тавьж болно. Төлөвлөсөн хэсэг хүрээтэй, бодит session дүүрэн харагдана.
+          🖱️ Бодит session-ийг чирээд өөр өдөр рүү тавьж болно. Төлөвлөсөн хэсэг
+          хүрээтэй, бодит session дүүрэн харагдана.
         </p>
       </section>
 
@@ -567,7 +703,10 @@ export function StudyCalendar({
                 <span>🎯</span>
                 <div>
                   <strong>{deadline.title}</strong>
-                  <small>{deadline.date} · {deadline.time} · {index.subjects.get(deadline.subjectId)?.name ?? "Хичээл"}</small>
+                  <small>
+                    {deadline.date} · {deadline.time} ·{" "}
+                    {index.subjects.get(deadline.subjectId)?.name ?? "Хичээл"}
+                  </small>
                 </div>
                 <button
                   className="text-button danger-text"
@@ -588,28 +727,55 @@ export function StudyCalendar({
           <div className="calendar-subsection-head">
             <div>
               <h3>📌 Төлөвлөсөн алхмууд</h3>
-              <p>Хүрээтэй төлөвлөгөө + бодит session-ийг зэрэгцүүлж харуулна.</p>
+              <p>
+                Хүрээтэй төлөвлөгөө + бодит session-ийг зэрэгцүүлж харуулна.
+              </p>
             </div>
           </div>
           {selectedPlans.map((task) => (
-            <div className={`calendar-plan-row ${task.completed ? "completed" : ""}`} key={task.id}>
-              <span className="calendar-plan-time">{task.startTime ?? "—"}</span>
-              <span className="calendar-plan-icon">{index.subjects.get(task.subjectId)?.icon ?? "📚"}</span>
-              <div><strong>{task.title}</strong><small>{index.subjects.get(task.subjectId)?.name ?? "Хичээл"} · {task.minutes}м</small></div>
+            <div
+              className={`calendar-plan-row ${task.completed ? "completed" : ""}`}
+              key={task.id}
+            >
+              <span className="calendar-plan-time">
+                {task.startTime ?? "—"}
+              </span>
+              <span className="calendar-plan-icon">
+                {index.subjects.get(task.subjectId)?.icon ?? "📚"}
+              </span>
+              <div>
+                <strong>{task.title}</strong>
+                <small>
+                  {index.subjects.get(task.subjectId)?.name ?? "Хичээл"} ·{" "}
+                  {task.minutes}м
+                </small>
+              </div>
               <span>{task.completed ? "✓" : "○"}</span>
             </div>
           ))}
-          {!selectedPlans.length && <p className="tiny muted">Төлөвлөгөө алга. Нэг жижиг алхам нэмээрэй.</p>}
+          {!selectedPlans.length && (
+            <p className="tiny muted">
+              Төлөвлөгөө алга. Нэг жижиг алхам нэмээрэй.
+            </p>
+          )}
         </div>
         <div className="manual-marks">
           <h3>Суралцсан гэж тэмдэглэх</h3>
-          <p className="tiny muted">Хугацаа хэмжээгүй байсан ч өдрөө тэмдэглэж болно.</p>
+          <p className="tiny muted">
+            Хугацаа хэмжээгүй байсан ч өдрөө тэмдэглэж болно.
+          </p>
           <div className="chip-row">
             {data.subjects
-              .filter((s) => !s.deletedAt && (!actualSubject || s.id === actualSubject))
+              .filter(
+                (s) =>
+                  !s.deletedAt && (!actualSubject || s.id === actualSubject),
+              )
               .map((subject) => {
                 const marked = data.entries.some(
-                  (e) => e.subjectId === subject.id && e.date === selected && !e.deletedAt,
+                  (e) =>
+                    e.subjectId === subject.id &&
+                    e.date === selected &&
+                    !e.deletedAt,
                 );
                 const disabled = selected > today;
                 return (
@@ -619,10 +785,15 @@ export function StudyCalendar({
                     aria-pressed={marked}
                     disabled={disabled}
                     onClick={() =>
-                      run(() => store.mutate(actions.markDay(subject.id, selected)))
+                      run(() =>
+                        store.mutate(actions.markDay(subject.id, selected)),
+                      )
                     }
                   >
-                    <span className="subject-dot" style={{ background: subject.color }} />
+                    <span
+                      className="subject-dot"
+                      style={{ background: subject.color }}
+                    />
                     {subject.name}
                     <span>{marked ? "✓" : "+"}</span>
                   </button>
@@ -643,7 +814,10 @@ export function StudyCalendar({
           (r.kind === "note" || r.kind === "attempt"
             ? r.date === selected
             : r.kind === "review"
-              ? studyDate(new Date(r.reviewedAt), dayBoundary(data.settings)) === selected
+              ? studyDate(
+                  new Date(r.reviewedAt),
+                  dayBoundary(data.settings),
+                ) === selected
               : false),
       ).length > 0 && (
         <section className="card">
@@ -657,7 +831,10 @@ export function StudyCalendar({
                   (r.kind === "note" || r.kind === "attempt"
                     ? r.date === selected
                     : r.kind === "review"
-                      ? studyDate(new Date(r.reviewedAt), dayBoundary(data.settings)) === selected
+                      ? studyDate(
+                          new Date(r.reviewedAt),
+                          dayBoundary(data.settings),
+                        ) === selected
                       : false),
               )
               .slice(0, 40)

@@ -82,8 +82,7 @@ export function zonedDateTimeToEpoch(
   time: string,
   timeZone = "UTC",
 ): number {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !validCalendarTime(time))
-    return NaN;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !validCalendarTime(time)) return NaN;
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm] = time.split(":").map(Number);
   const target = Date.UTC(y, m - 1, d, hh, mm, 0, 0);

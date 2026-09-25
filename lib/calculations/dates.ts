@@ -31,21 +31,17 @@ export function hourInTimeZone(d: Date | number, timeZone?: string) {
         timeZone,
         hour: "2-digit",
         hourCycle: "h23",
-      }).formatToParts(value).find((p) => p.type === "hour")?.value ?? 0,
+      })
+        .formatToParts(value)
+        .find((p) => p.type === "hour")?.value ?? 0,
     );
   } catch {
     return value.getHours();
   }
 }
-export function studyDate(
-  d = new Date(),
-  boundary = 0,
-  timeZone?: string,
-) {
+export function studyDate(d = new Date(), boundary = 0, timeZone?: string) {
   const date = dateKeyInTimeZone(d, timeZone);
-  return hourInTimeZone(d, timeZone) < boundary
-    ? shiftDate(date, -1)
-    : date;
+  return hourInTimeZone(d, timeZone) < boundary ? shiftDate(date, -1) : date;
 }
 export function flexibleStreak(dates: Set<string>, today: string, grace = 1) {
   let current = today,

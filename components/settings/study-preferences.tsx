@@ -58,7 +58,9 @@ export function StudyPreferences() {
       <label>
         Долоо хоног эхлэх өдөр
         <select
-          value={data.settings.extras.weekStartsOn === "sunday" ? "sunday" : "monday"}
+          value={
+            data.settings.extras.weekStartsOn === "sunday" ? "sunday" : "monday"
+          }
           onChange={(e) => void update("weekStartsOn", e.target.value)}
         >
           <option value="monday">Даваа гараг</option>
@@ -75,7 +77,9 @@ export function StudyPreferences() {
           onChange={(e) => void update("timeZone", e.target.value)}
         >
           {listTimeZones().map((zone) => (
-            <option key={zone} value={zone}>{zone}</option>
+            <option key={zone} value={zone}>
+              {zone}
+            </option>
           ))}
         </select>
       </label>

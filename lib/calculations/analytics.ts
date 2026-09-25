@@ -56,14 +56,14 @@ export function sessionAllocations(
         hour: session.startTimeEstimated
           ? -1
           : Number(
-            new Intl.DateTimeFormat("en-US", {
-              timeZone,
-              hour: "2-digit",
-              hourCycle: "h23",
-            })
-              .formatToParts(new Date(session.startEpoch))
-              .find((p) => p.type === "hour")?.value ?? 0,
-          ),
+              new Intl.DateTimeFormat("en-US", {
+                timeZone,
+                hour: "2-digit",
+                hourCycle: "h23",
+              })
+                .formatToParts(new Date(session.startEpoch))
+                .find((p) => p.type === "hour")?.value ?? 0,
+            ),
         seconds: session.durationSec,
       },
     ];

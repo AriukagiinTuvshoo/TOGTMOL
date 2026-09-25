@@ -30,9 +30,7 @@ describe("calendar planning", () => {
     expect(data.tasks.every((t) => t.startTime === "19:00")).toBe(true);
     expect(
       data.tasks.every(
-        (t) =>
-          t.extras.recurrence &&
-          typeof t.extras.recurrence === "object",
+        (t) => t.extras.recurrence && typeof t.extras.recurrence === "object",
       ),
     ).toBe(true);
   });
@@ -57,7 +55,9 @@ describe("calendar planning", () => {
       new Date("2026-10-10T09:30:00+09:00").getTime(),
     );
     const removed = actions.deleteDeadline(deadlines[0].id)(added);
-    expect(readCalendarDeadlines(removed).filter((d) => !d.deletedAt)).toHaveLength(0);
+    expect(
+      readCalendarDeadlines(removed).filter((d) => !d.deletedAt),
+    ).toHaveLength(0);
     expect(removed.sessions).toEqual(base.sessions);
   });
 
@@ -80,12 +80,14 @@ describe("calendar planning", () => {
       expected,
     )(data);
     expect(moved.sessions[0].date).toBe("2026-09-19");
-    expect(new Date(moved.sessions[0].startEpoch).toLocaleTimeString("en-US", {
-      timeZone: calendarTimeZone(moved),
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })).toBe(
+    expect(
+      new Date(moved.sessions[0].startEpoch).toLocaleTimeString("en-US", {
+        timeZone: calendarTimeZone(moved),
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }),
+    ).toBe(
       new Date(base.sessions[0].startEpoch).toLocaleTimeString("en-US", {
         timeZone: "Asia/Tokyo",
         hour: "2-digit",
