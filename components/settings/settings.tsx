@@ -62,7 +62,10 @@ export function Settings() {
           <p className="tiny muted">{t("settings.language.helper")}</p>
         </section>
         <section className="card">
-          <SectionTitle title={t("settings.appearance")} subtitle={t("settings.appearance.subtitle")} />
+          <SectionTitle
+            title={t("settings.appearance")}
+            subtitle={t("settings.appearance.subtitle")}
+          />
           <div className="theme-options">
             {(
               [
@@ -141,7 +144,8 @@ export function Settings() {
             className="text-button settings-link"
             onClick={() => navigate("room")}
           >
-            {t("nav.room")} · <span>{t("nav.room")}</span> <Icon name="arrow" size={16} />
+            {t("nav.room")} · <span>{t("nav.room")}</span>{" "}
+            <Icon name="arrow" size={16} />
           </button>
         </section>
         <MusicSettings />

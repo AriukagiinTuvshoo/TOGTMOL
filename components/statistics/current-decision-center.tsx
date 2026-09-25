@@ -55,18 +55,11 @@ export function CurrentDecisionCenter() {
   const freezeLimit = streakFreezeLimit(data.settings);
   const freeze = useMemo(
     () =>
-      currentStreakWithFreezes(
-        new Set(index.sortedDates),
-        today,
-        freezeLimit,
-      ),
+      currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit),
     [index.sortedDates, today, freezeLimit],
   );
 
-  const patterns = useMemo(
-    () => behaviorPatterns(data, index),
-    [data, index],
-  );
+  const patterns = useMemo(() => behaviorPatterns(data, index), [data, index]);
 
   const heatmap = useMemo(
     () => annualHeatmap(index, Number(today.slice(0, 4))),
@@ -80,8 +73,7 @@ export function CurrentDecisionCenter() {
     last7.seconds > 0 && subjectEntries.length
       ? subjectEntries[0][1] / last7.seconds
       : 0;
-  const balanceWarning =
-    subjectEntries.length >= 2 && topSubjectShare >= 0.65;
+  const balanceWarning = subjectEntries.length >= 2 && topSubjectShare >= 0.65;
   const examDiff = exam.date
     ? Math.round(
         (parseDate(exam.date)!.getTime() - parseDate(today)!.getTime()) /
@@ -140,7 +132,9 @@ export function CurrentDecisionCenter() {
                   ? "ӨНӨӨДӨР"
                   : `${Math.abs(examDiff)} өдөр өнгөрсөн`}
           </strong>
-          <p>{examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}</p>
+          <p>
+            {examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}
+          </p>
           <form className="exam-form" onSubmit={saveExam}>
             <label>
               Шалгалтын өдөр
@@ -169,7 +163,8 @@ export function CurrentDecisionCenter() {
           <span className="eyebrow">STREAK FREEZE</span>
           <strong>{freeze.streak} өдөр</strong>
           <p>
-            Нөөц: {Math.max(0, freezeLimit - freeze.usedFreezes)} / {freezeLimit}
+            Нөөц: {Math.max(0, freezeLimit - freeze.usedFreezes)} /{" "}
+            {freezeLimit}
           </p>
           <label className="freeze-control">
             Хамгаалалтын өдөр
@@ -209,7 +204,10 @@ export function CurrentDecisionCenter() {
           <span className="eyebrow">ЗАН ҮЙЛИЙН PATTERN</span>
           {patterns.length ? (
             patterns.map((pattern) => (
-              <div className={`pattern-result ${pattern.tone}`} key={pattern.id}>
+              <div
+                className={`pattern-result ${pattern.tone}`}
+                key={pattern.id}
+              >
                 <strong>{pattern.title}</strong>
                 <p>{pattern.body}</p>
               </div>
@@ -307,8 +305,8 @@ export function CurrentDecisionCenter() {
             : `Ижил өдрүүдээр харьцуулахад ${Math.abs(week.change).toFixed(0)}% ${week.change >= 0 ? "өссөн" : "буурсан"}.`}
         </p>
         <p className="comparison decision-note">
-          <Icon name="chart" size={15} /> Сүүлийн 7 өдөр ба өмнөх 7 өдрийн
-          бодит хэмжилтийг тусад нь харуулж байна.
+          <Icon name="chart" size={15} /> Сүүлийн 7 өдөр ба өмнөх 7 өдрийн бодит
+          хэмжилтийг тусад нь харуулж байна.
         </p>
       </section>
     </>

@@ -279,10 +279,7 @@ export function streakWithFreezes(
     freezesRemaining: reserve - used,
   };
 }
-export function longestStreakWithFreezes(
-  dates: Iterable<string>,
-  freezes = 2,
-) {
+export function longestStreakWithFreezes(dates: Iterable<string>, freezes = 2) {
   const sorted = [...new Set(dates)].sort(),
     reserve = Math.max(0, Math.min(2, Math.floor(freezes)));
   if (!sorted.length) return 0;

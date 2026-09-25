@@ -103,8 +103,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       t: (key) => translate(language, key),
       formatDate: (value, options) => formatDate(value, language, options),
       formatMonth: (value) => formatMonth(value, language),
-      formatWeekday: (value, short) =>
-        formatWeekday(value, language, short),
+      formatWeekday: (value, short) => formatWeekday(value, language, short),
       formatTime: (value) => formatTime(value, language),
       formatNumber: (value) => formatNumber(value, language),
     }),

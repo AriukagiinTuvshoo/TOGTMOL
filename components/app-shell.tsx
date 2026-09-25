@@ -13,8 +13,7 @@ import { ModuleBoundary } from "./ui/module-boundary";
 import { RecoveryPanel } from "./settings/recovery";
 import { GlobalSearch } from "./knowledge/search";
 import { StudyRoom } from "./world/study-room";
-import { MusicPlayer } from "./music/music-player";
-import { MusicProvider } from "./music/music-provider";
+import { MusicPlayer, MusicProvider } from "./music/music-player";
 import { LanguageProvider, useI18n } from "./i18n/language-provider";
 import { LanguageSwitcher } from "./i18n/language-switcher";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
@@ -219,7 +218,9 @@ function Shell() {
                   : (user?.email?.split("@")[0] ?? t("shell.myAccount"))}
               </strong>
               <small>
-                {state.namespace === "guest" ? t("common.local") : t("shell.account")}
+                {state.namespace === "guest"
+                  ? t("common.local")
+                  : t("shell.account")}
               </small>
             </span>
             <Icon name="settings" size={17} />
@@ -354,7 +355,11 @@ function Shell() {
             <Icon name="leaf" size={15} />
             <span>{t("shell.footer1")}</span>
             <span>TOGTMOL v7</span>
-          <span className="legal-links"><a href="/privacy">Нууцлал</a><a href="/terms">Нөхцөл</a></span></footer>
+            <span className="legal-links">
+              <a href="/privacy">Нууцлал</a>
+              <a href="/terms">Нөхцөл</a>
+            </span>
+          </footer>
         </main>
       </div>
       {more && (

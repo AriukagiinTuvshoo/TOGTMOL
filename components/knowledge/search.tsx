@@ -143,10 +143,7 @@ export function GlobalSearch() {
     return () => window.removeEventListener("keydown", key);
   }, []);
 
-  const index = useMemo(
-    () => (open ? searchableData(data) : []),
-    [open, data],
-  );
+  const index = useMemo(() => (open ? searchableData(data) : []), [open, data]);
   const deferred = useDeferredValue(query);
   const commands = useMemo(
     () =>
@@ -223,8 +220,13 @@ export function GlobalSearch() {
           </label>
 
           {commands.length > 0 && (
-            <section className="command-palette-section" aria-label={t("search.quickCommands")}>
-              <div className="command-palette-section-title">{t("search.quickCommands")}</div>
+            <section
+              className="command-palette-section"
+              aria-label={t("search.quickCommands")}
+            >
+              <div className="command-palette-section-title">
+                {t("search.quickCommands")}
+              </div>
               <div className="command-palette-commands" role="listbox">
                 {commands.map((command, index) => (
                   <button
@@ -245,7 +247,9 @@ export function GlobalSearch() {
                     </span>
                     <span className="command-palette-copy">
                       <strong>{t(command.label)}</strong>
-                      <small>{language === "en" ? command.hintEn : command.hintMn}</small>
+                      <small>
+                        {language === "en" ? command.hintEn : command.hintMn}
+                      </small>
                     </span>
                     {index === activeCommand && <kbd>Enter</kbd>}
                   </button>
@@ -258,7 +262,9 @@ export function GlobalSearch() {
             className="command-palette-section"
             aria-label={t("search.myData")}
           >
-            <div className="command-palette-section-title">{t("search.myData")}</div>
+            <div className="command-palette-section-title">
+              {t("search.myData")}
+            </div>
             <div className="global-search-results">
               {results.map((r) => (
                 <button
@@ -274,7 +280,9 @@ export function GlobalSearch() {
                 </button>
               ))}
               {!results.length && (
-                <p className="command-palette-no-results">{t("search.noResults")}</p>
+                <p className="command-palette-no-results">
+                  {t("search.noResults")}
+                </p>
               )}
             </div>
           </section>

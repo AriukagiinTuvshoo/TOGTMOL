@@ -58,7 +58,7 @@ export class AmbientPlayer {
             Math.exp(-chirp * 4) *
             0.06;
       }
-      if (id === "piano" || id === "lofi") {
+      if (id === "piano" || id === "lofi" || id === "night") {
         const n = notes[Math.floor(t / 2) % notes.length],
           age = t % 2;
         v =
@@ -78,6 +78,10 @@ export class AmbientPlayer {
               0.13 +
             noise * Math.exp(-(((t % 1) - 0.5) ** 2) * 5000) * 0.025 +
             low * 0.15;
+        }
+        if (id === "night") {
+          v *= 0.55;
+          v += slow * 0.08;
         }
       }
       // Crossfade to silence at loop boundaries to avoid clicks.

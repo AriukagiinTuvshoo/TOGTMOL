@@ -1,131 +1,949 @@
 "use client";
+import {
+  Component,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useStudy } from "@/hooks/use-study";
+import { useMusicPreference } from "@/hooks/use-music-preference";
+import { useMusicMediaSession } from "@/hooks/use-music-media-session";
+import { AMBIENTS, type AmbientId } from "@/lib/music/catalog";
+import type { AmbientPlayer } from "@/lib/music/ambient";
+import type { MusicProvider as MusicAdapter } from "@/lib/music/provider";
+import { youtubeProvider, type YTPlayer } from "@/lib/music/youtube-player";
+import {
+  initialMusicSelection,
+  normalizeMusicSession,
+  type MusicSession,
+  type PlaybackState,
+} from "@/lib/music/preferences";
+import { parseYouTube, youtubeURL } from "@/lib/music/youtube";
+import { parseAudioURL } from "@/lib/music/native-audio";
+import { uid } from "@/lib/constants";
+import type { MusicSource } from "@/types/study";
 
-import React, { createContext, useContext, useState } from "react";
+const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
+const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm)$/i;
 
-export type MusicSource =
-  | { kind: "video"; id: string; title?: string }
-  | { kind: "playlist"; id: string; title?: string }
-  | { kind: "audio"; id: string; url: string; title?: string };
-
-export type YouTubeSource = Extract<MusicSource, { kind: "video" | "playlist" }>;
-
-interface MusicContextType {
-  sources: MusicSource[];
-  selected: number;
-  source: MusicSource | null;
-  busy: boolean;
-  error: string | null;
-  volume: number;
-  muted: boolean;
-  isPlaying: boolean;
-  title: string;
-  setTitle: (title: string) => void;
-  select: (index: number) => void;
-  next: () => void;
-  previous: () => void;
-  togglePlay: () => void;
-  remove: (index: number) => void;
-  addSource: (src: MusicSource) => void;
-  addURL: (url: string) => void;
-  addFile: (file: File) => void;
-  onState: (state: number) => void;
+function isAudioFile(file: File) {
+  return file.type.startsWith("audio/") || AUDIO_EXTENSIONS.test(file.name);
 }
 
-const MusicContext = createContext<MusicContextType | null>(null);
+function sourceTrack(
+  source: MusicSource | undefined,
+  fallback = "Хөгжим",
+  selection = "",
+) {
+  if (!source) {
+    const ambient = AMBIENTS.find((a) => `ambient:${a.id}` === selection);
+    return {
+      title: ambient?.name ?? fallback,
+      artist: ambient ? "Тогтмол · Study Sounds" : "Тогтмол",
+      videoId: null,
+      url: "",
+    };
+  }
+  if (source.kind === "audio") {
+    return {
+      title: source.title,
+      artist: source.audioStorageKey ? "Төхөөрөмжийн файл" : "Аудио холбоос",
+      videoId: null,
+      url: source.audioUrl ?? "",
+    };
+  }
+  if (source.kind === "video" || source.kind === "playlist") {
+    return {
+      title: source.title,
+      artist: "YouTube",
+      videoId: source.kind === "video" ? source.youtubeId : null,
+      url: youtubeURL(
+        source as { kind: "video" | "playlist"; youtubeId: string },
+      ),
+    };
+  }
+  return { title: fallback, artist: "Хөгжим", videoId: null, url: "" };
+}
 
-export function MusicProvider({ children }: { children: React.ReactNode }) {
-  const [sources, setSources] = useState<MusicSource[]>([
-    { kind: "video", id: "jfKfPfyJRdk", title: "Lofi Hip Hop Radio" },
-  ]);
-  const [selected, setSelected] = useState<number>(0);
+function useMusicController() {
+  const { data, store } = useStudy();
+  const namespace = store.getSnapshot().namespace;
+  const [preference, updatePreference, storageError] =
+    useMusicPreference(namespace);
+  const [session, setSession] = useState<MusicSession>(() => {
+    const selection = initialMusicSelection(
+      preference,
+      data.settings.world.design,
+      data.musicSources,
+    );
+    const previous =
+      preference.rememberLast && preference.session?.selection === selection
+        ? preference.session
+        : null;
+    const source = data.musicSources.find(
+      (s) => !s.deletedAt && s.id === selection,
+    );
+    return (
+      previous ?? {
+        selection,
+        open: preference.session?.open ?? false,
+        playback: "stopped",
+        position: 0,
+        playlistIndex: 0,
+        track: sourceTrack(source, "Хөгжим", selection),
+      }
+    );
+  });
+  const [playback, setPlayback] = useState<PlaybackState>(
+    session.playback === "stopped" ? "stopped" : "paused",
+  );
+  const [activated, setActivated] = useState(
+    session.open || session.playback !== "stopped",
+  );
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [title, setTitle] = useState("Lofi Radio");
-  const [volume, setVolume] = useState(80);
-  const [muted, setMuted] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
 
-  const currentSource = sources[selected] || null;
+  const latest = useRef(session);
+  const actual = useRef(playback);
+  const mounted = useRef(true);
+  const generation = useRef(0);
+  const playWhenReady = useRef(false);
+  const ambient = useRef<AmbientPlayer | null>(null);
+  const youtube = useRef<YTPlayer | null>(null);
+  const adapter = useRef<MusicAdapter | null>(null);
+  const nativeAudio = useRef<HTMLAudioElement | null>(null);
+  const nativeSourceId = useRef<string | null>(null);
+  const nativeObjectURL = useRef<string | null>(null);
 
-  const next = () => {
-    if (sources.length > 0) {
-      setSelected((prev) => (prev + 1) % sources.length);
+  const sources = data.musicSources.filter((s) => !s.deletedAt);
+  const selected = session.selection;
+  const source = sources.find((s) => s.id === selected);
+  const isAmbient = selected.startsWith("ambient:");
+  const { volume, muted } = preference;
+
+  const currentSources = () =>
+    store.getSnapshot().data.musicSources.filter((s) => !s.deletedAt);
+
+  useEffect(() => {
+    const persisted = preference.session;
+    if (!persisted || persisted.playback === "stopped") return;
+    if (
+      latest.current.selection === persisted.selection &&
+      latest.current.playback === persisted.playback
+    )
+      return;
+    // Study data can hydrate after the first client render. Restore a persisted
+    // music intent only while this controller is still stopped, never over a
+    // user action that has already changed the active session.
+    if (actual.current !== "stopped") return;
+    latest.current = persisted;
+    setSession(persisted);
+    setPlayback("paused");
+    setActivated(true);
+  }, [preference.session]);
+
+  const commit = (patch: Partial<MusicSession>) => {
+    if (!mounted.current || store.getSnapshot().namespace !== namespace) return;
+    const next = normalizeMusicSession({ ...latest.current, ...patch })!;
+    if (JSON.stringify(next) === JSON.stringify(latest.current)) return;
+    latest.current = next;
+    setSession(next);
+    void updatePreference({
+      session: next,
+      ...(next.playback === "playing" ? { lastPlayed: next.selection } : {}),
+    });
+  };
+
+  const mark = (state: PlaybackState) => {
+    actual.current = state;
+    setPlayback(state);
+  };
+
+  const fail = (message: string) => {
+    if (!mounted.current) return;
+    setBusy(false);
+    setError(message);
+  };
+
+  const ensureNativeAudio = () => {
+    if (nativeAudio.current) return nativeAudio.current;
+    const element = new Audio();
+    element.preload = "metadata";
+    try {
+      const audioSession = (
+        navigator as Navigator & {
+          audioSession?: { type: string };
+        }
+      ).audioSession;
+      if (audioSession) audioSession.type = "playback";
+    } catch {
+      /* Audio Session is optional. */
+    }
+    nativeAudio.current = element;
+    return element;
+  };
+
+  const revokeNativeURL = () => {
+    if (nativeObjectURL.current) {
+      URL.revokeObjectURL(nativeObjectURL.current);
+      nativeObjectURL.current = null;
     }
   };
 
-  const previous = () => {
-    if (sources.length > 0) {
-      setSelected((prev) => (prev - 1 + sources.length) % sources.length);
+  const loadNativeSource = async (
+    target: MusicSource,
+    resumePosition: number,
+  ) => {
+    if (target.kind !== "audio") throw Error("Аудио эх сурвалж буруу.");
+    const element = ensureNativeAudio();
+    const targetId = target.id;
+    let nextURL = target.audioUrl ?? "";
+    if (target.audioStorageKey) {
+      const blob = await store.repository.loadMusicBlob(
+        namespace,
+        target.audioStorageKey,
+      );
+      if (!blob) throw Error("Төхөөрөмж дээрх энэ аудио файл олдсонгүй.");
+      nextURL = URL.createObjectURL(blob);
+    }
+    if (!nextURL) throw Error("Аудио холбоос олдсонгүй.");
+    if (nativeSourceId.current !== targetId) {
+      element.pause();
+      revokeNativeURL();
+      nativeSourceId.current = targetId;
+      nativeObjectURL.current = target.audioStorageKey ? nextURL : null;
+      element.src = nextURL;
+      element.load();
+    }
+    if (Number.isFinite(resumePosition) && resumePosition > 0) {
+      try {
+        if (element.readyState < 1) {
+          await new Promise<void>((resolve, reject) => {
+            const done = () => {
+              cleanup();
+              resolve();
+            };
+            const failed = () => {
+              cleanup();
+              reject(Error("Аудиог уншиж чадсангүй."));
+            };
+            const cleanup = () => {
+              element.removeEventListener("loadedmetadata", done);
+              element.removeEventListener("error", failed);
+            };
+            element.addEventListener("loadedmetadata", done, { once: true });
+            element.addEventListener("error", failed, { once: true });
+          });
+        }
+        if (Number.isFinite(element.duration))
+          element.currentTime = Math.min(
+            resumePosition,
+            Math.max(0, element.duration - 0.25),
+          );
+      } catch {
+        /* Starting from the beginning is safer than blocking playback. */
+      }
+    }
+    element.volume = muted ? 0 : volume;
+    return element;
+  };
+
+  const capture = (): MusicSession => {
+    let current = latest.current;
+    const element = nativeAudio.current;
+    if (
+      current.selection === nativeSourceId.current &&
+      element &&
+      latest.current.selection !== ""
+    ) {
+      return normalizeMusicSession({
+        ...current,
+        position:
+          actual.current === "stopped"
+            ? 0
+            : Number.isFinite(element.currentTime)
+              ? element.currentTime
+              : current.position,
+      })!;
+    }
+    const player = youtube.current;
+    if (!player || current.selection.startsWith("ambient:")) return current;
+    try {
+      if ([-1, 5].includes(player.getPlayerState())) return current;
+      const details = player.getVideoData?.();
+      const videoURL = player.getVideoUrl?.();
+      const id =
+        details?.video_id ??
+        (videoURL ? new URL(videoURL).searchParams.get("v") : null);
+      current = normalizeMusicSession({
+        ...current,
+        position:
+          actual.current === "stopped"
+            ? 0
+            : (player.getCurrentTime?.() ?? current.position),
+        playlistIndex: player.getPlaylistIndex?.() ?? current.playlistIndex,
+        track: {
+          ...current.track,
+          title: details?.title || current.track.title,
+          artist: details?.author || current.track.artist,
+          ...(id && /^[a-zA-Z0-9_-]{11}$/.test(id)
+            ? { videoId: id, url: `https://www.youtube.com/watch?v=${id}` }
+            : {}),
+        },
+      })!;
+    } catch {
+      /* A temporarily detached metadata getter cannot interrupt playback or study. */
+    }
+    return current;
+  };
+
+  const control = (kind: "pause" | "stop") => {
+    generation.current++;
+    playWhenReady.current = false;
+    const snapshot = capture();
+    mark(kind === "stop" ? "stopped" : "paused");
+    setBusy(false);
+    commit({
+      ...snapshot,
+      playback: actual.current,
+      ...(kind === "stop" ? { position: 0 } : {}),
+    });
+    try {
+      if (
+        nativeSourceId.current === latest.current.selection &&
+        nativeAudio.current
+      ) {
+        if (kind === "stop") nativeAudio.current.currentTime = 0;
+        nativeAudio.current.pause();
+        return;
+      }
+      const target = adapter.current;
+      void target?.[kind]().catch(() => {
+        if (adapter.current === target)
+          fail("Хөгжмийн удирдлага тасарлаа. Дахин оролдоно уу.");
+      });
+    } catch {
+      fail("Хөгжмийн удирдлага тасарлаа. Дахин оролдоно уу.");
     }
   };
 
-  const select = (index: number) => {
-    if (index >= 0 && index < sources.length) {
-      setSelected(index);
+  const pause = () => control("pause");
+  const stop = () => control("stop");
+
+  const play = async (id = latest.current.selection) => {
+    if (actual.current === "playing" && id === latest.current.selection) return;
+    setError("");
+    const token = ++generation.current;
+    const target = currentSources().find((s) => s.id === id);
+
+    if (target?.kind === "audio") {
+      setBusy(true);
+      try {
+        const element = await loadNativeSource(
+          target,
+          actual.current === "stopped" ? 0 : latest.current.position,
+        );
+        if (!mounted.current || token !== generation.current) return;
+        await element.play();
+        if (!mounted.current || token !== generation.current) return;
+        mark("playing");
+        commit({ playback: "playing" });
+      } catch (e) {
+        if (token === generation.current)
+          fail(e instanceof Error ? e.message : "Аудиог тоглуулж чадсангүй.");
+      } finally {
+        if (mounted.current && token === generation.current) setBusy(false);
+      }
+      return;
+    }
+
+    if (!id.startsWith("ambient:")) {
+      if (!youtube.current || adapter.current?.kind !== "youtube") {
+        playWhenReady.current = true;
+        setActivated(true);
+        setBusy(true);
+        return;
+      }
+      try {
+        const targetAdapter = adapter.current;
+        if (actual.current === "stopped") youtube.current?.seekTo?.(0, true);
+        await targetAdapter.play();
+        if (!mounted.current || token !== generation.current) return;
+      } catch {
+        fail("YouTube-г тоглуулж чадсангүй. Дахин оролдоно уу.");
+      }
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const { AmbientPlayer, ambientProvider } =
+        await import("@/lib/music/ambient");
+      if (!mounted.current || token !== generation.current) return;
+      const engine = ambient.current ?? new AmbientPlayer();
+      ambient.current = engine;
+      const targetAdapter = ambientProvider(engine, id.slice(8) as AmbientId);
+      adapter.current = targetAdapter;
+      targetAdapter.setVolume(volume, muted);
+      await targetAdapter.play();
+      if (!mounted.current || token !== generation.current) return;
+      mark("playing");
+      commit({ playback: "playing" });
+    } catch {
+      if (token === generation.current)
+        fail("Дуу эхэлсэнгүй. Play-г дахин дарж үзнэ үү.");
+    } finally {
+      if (mounted.current && token === generation.current) setBusy(false);
     }
   };
 
-  const togglePlay = () => setIsPlaying((prev) => !prev);
-
-  const addSource = (newSource: MusicSource) => {
-    setSources((prev) => [...prev, newSource]);
+  const select = (id: string, resume = actual.current === "playing") => {
+    if (id === latest.current.selection) return;
+    generation.current++;
+    playWhenReady.current = false;
+    try {
+      adapter.current?.pause().catch(() => {});
+    } catch {}
+    if (nativeSourceId.current !== id) {
+      try {
+        nativeAudio.current?.pause();
+      } catch {}
+    }
+    adapter.current = null;
+    youtube.current = null;
+    mark("paused");
+    setBusy(false);
+    setError("");
+    const target = currentSources().find((s) => s.id === id);
+    commit({
+      selection: id,
+      playback: resume ? "playing" : "stopped",
+      position: 0,
+      playlistIndex: 0,
+      track: target
+        ? sourceTrack(target)
+        : {
+            title:
+              AMBIENTS.find((a) => `ambient:${a.id}` === id)?.name ?? "Хөгжим",
+            artist: "Тогтмол",
+            videoId: null,
+            url: "",
+          },
+    });
+    setActivated(true);
+    if (resume) {
+      if (id.startsWith("ambient:")) void play(id);
+      else if (target?.kind === "audio") void play(id);
+      else playWhenReady.current = true;
+    } else mark("stopped");
   };
 
-  const addURL = (url: string) => {
-    addSource({ kind: "audio", id: Date.now().toString(), url, title: "Custom URL Track" });
+  const setOpen = (open: boolean) => {
+    commit({ ...capture(), open });
+    if (open) setActivated(true);
   };
 
-  const addFile = (file: File) => {
-    const url = URL.createObjectURL(file);
-    addSource({ kind: "audio", id: Date.now().toString(), url, title: file.name });
-  };
-
-  const remove = (index: number) => {
-    setSources((prev) => prev.filter((_, i) => i !== index));
-    if (selected >= index && selected > 0) {
-      setSelected((prev) => prev - 1);
+  const onReady = (player: YTPlayer | null) => {
+    youtube.current = player;
+    if (!player) {
+      if (adapter.current?.kind === "youtube") adapter.current = null;
+      return;
+    }
+    if (!mounted.current) return;
+    adapter.current = youtubeProvider(player);
+    try {
+      adapter.current.setVolume(volume, muted);
+    } catch {
+      fail("YouTube дууны түвшинг тохируулж чадсангүй.");
+    }
+    setBusy(false);
+    if (playWhenReady.current) {
+      playWhenReady.current = false;
+      void play();
     }
   };
 
   const onState = (state: number) => {
-    if (state === 0) {
-      next();
+    if (!mounted.current) return;
+    if (state === 1) {
+      mark("playing");
+    } else if (state === 2 && actual.current !== "stopped") {
+      mark("paused");
+    } else if (state === 0) {
+      const current = currentSources().find(
+        (item) => item.id === latest.current.selection,
+      );
+      // A standalone video ending advances the saved queue. YouTube playlists
+      // manage their own internal track progression.
+      if (current?.kind === "video") {
+        setBusy(false);
+        next(1);
+        return;
+      }
+      mark("stopped");
+    } else return;
+    setBusy(false);
+    commit({ ...capture(), playback: actual.current });
+  };
+
+  const onError = (message: string) => {
+    playWhenReady.current = false;
+    mark("paused");
+    commit({ playback: "paused" });
+    fail(message);
+  };
+
+  const next = (direction: number) => {
+    const target = currentSources().find(
+      (item) => item.id === latest.current.selection,
+    );
+    if (target?.kind === "playlist" && adapter.current?.kind === "youtube") {
+      try {
+        if (direction > 0) adapter.current.next?.();
+        else adapter.current.previous?.();
+      } catch {
+        fail("Playlist-ийг солих боломжгүй байна. Дахин ачаалж болно.");
+      }
+      return;
+    }
+
+    // Saved YouTube/audio tracks form their own queue. Ambient presets should
+    // not interrupt an explicit saved-track playlist when Next is pressed or
+    // when a standalone YouTube video reaches its end.
+    const options =
+      target && (target.kind === "video" || target.kind === "audio")
+        ? currentSources().map((s) => s.id)
+        : [
+            ...AMBIENTS.map((a) => `ambient:${a.id}`),
+            ...currentSources().map((s) => s.id),
+          ];
+    if (!options.length) return;
+    const index = options.indexOf(latest.current.selection);
+    select(options[(index + direction + options.length) % options.length]);
+  };
+
+  const retry = () => {
+    generation.current++;
+    playWhenReady.current = false;
+    setError("");
+    setBusy(false);
+    setActivated(true);
+    setAttempt((a) => a + 1);
+    if (actual.current === "playing") mark("paused");
+  };
+
+  const addURL = async () => {
+    const input = url.trim();
+    if (!input) return;
+    try {
+      let parsedYouTube: ReturnType<typeof parseYouTube> | null = null;
+      let youtubeError: Error | null = null;
+      try {
+        parsedYouTube = parseYouTube(input);
+      } catch (error) {
+        youtubeError =
+          error instanceof Error
+            ? error
+            : Error("YouTube холбоос буруу байна.");
+      }
+
+      if (parsedYouTube) {
+        const old = currentSources().find(
+          (s) =>
+            s.kind === parsedYouTube.kind &&
+            s.youtubeId === parsedYouTube.youtubeId,
+        );
+        if (old) {
+          select(old.id, false);
+          await play(old.id);
+          setUrl("");
+          setTitle("");
+          return;
+        }
+        const now = Date.now();
+        const newSource: MusicSource = {
+          ...parsedYouTube,
+          id: uid("music"),
+          title:
+            title.trim().slice(0, 120) ||
+            (parsedYouTube.kind === "playlist"
+              ? "Миний YouTube playlist"
+              : "Миний YouTube бичлэг"),
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+          extras: {},
+        };
+        await store.mutate(
+          (d) =>
+            store.getSnapshot().namespace === namespace
+              ? { ...d, musicSources: [...d.musicSources, newSource] }
+              : d,
+          { reportError: false, reportBusy: false },
+        );
+        commit({
+          selection: newSource.id,
+          playback: "stopped",
+          position: 0,
+          playlistIndex: 0,
+          track: sourceTrack(newSource),
+        });
+        setActivated(true);
+        setUrl("");
+        setTitle("");
+        return;
+      }
+
+      let audioUrl: string;
+      try {
+        audioUrl = parseAudioURL(input);
+      } catch {
+        throw youtubeError ?? Error("Холбоос буруу байна.");
+      }
+      const old = currentSources().find(
+        (s) => s.kind === "audio" && s.audioUrl === audioUrl,
+      );
+      if (old) {
+        select(old.id, false);
+        await play(old.id);
+        setUrl("");
+        setTitle("");
+        return;
+      }
+      const now = Date.now();
+      const newSource: MusicSource = {
+        id: uid("music"),
+        title: title.trim().slice(0, 120) || "Миний аудио",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        extras: {},
+      };
+      await store.mutate(
+        (d) =>
+          store.getSnapshot().namespace === namespace
+            ? { ...d, musicSources: [...d.musicSources, newSource] }
+            : d,
+        { reportError: false, reportBusy: false },
+      );
+      commit({
+        selection: newSource.id,
+        playback: "stopped",
+        position: 0,
+        playlistIndex: 0,
+        track: sourceTrack(newSource),
+      });
+      setActivated(true);
+      setUrl("");
+      setTitle("");
+    } catch (e) {
+      fail(e instanceof Error ? e.message : "Холбоосыг хадгалж чадсангүй.");
     }
   };
 
+  const addFile = async (file: File | null) => {
+    if (!file) return;
+    if (!isAudioFile(file)) {
+      fail("Зөвхөн аудио файл сонгоно уу.");
+      return;
+    }
+    if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
+      fail("Аудио файл 1 байтаас 80 MB хүртэл байна.");
+      return;
+    }
+    if (store.repository.fallback) {
+      fail(
+        "Төхөөрөмжийн аудио файл хадгалахад IndexedDB дэмждэг браузер хэрэгтэй.",
+      );
+      return;
+    }
+    const key = uid("musicblob");
+    const now = Date.now();
+    const newSource: MusicSource = {
+      id: uid("music"),
+      title: title.trim().slice(0, 120) || file.name.replace(/\.[^.]+$/, ""),
+      kind: "audio",
+      youtubeId: "",
+      audioStorageKey: key,
+      mimeType: file.type || "audio/*",
+      sizeBytes: file.size,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      extras: {},
+    };
+    setBusy(true);
+    try {
+      await store.repository.saveMusicBlob(namespace, key, file);
+      try {
+        await store.mutate(
+          (d) =>
+            store.getSnapshot().namespace === namespace
+              ? { ...d, musicSources: [...d.musicSources, newSource] }
+              : d,
+          { reportError: false, reportBusy: false },
+        );
+      } catch (error) {
+        await store.repository.deleteMusicBlob(namespace, key).catch(() => {});
+        throw error;
+      }
+      commit({
+        selection: newSource.id,
+        playback: "stopped",
+        position: 0,
+        playlistIndex: 0,
+        track: sourceTrack(newSource),
+      });
+      setActivated(true);
+      setTitle("");
+      setUrl("");
+    } catch (e) {
+      fail(e instanceof Error ? e.message : "Аудио файлыг хадгалж чадсангүй.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    const target = currentSources().find((s) => s.id === id);
+    try {
+      await store.mutate(
+        (d) =>
+          store.getSnapshot().namespace === namespace
+            ? {
+                ...d,
+                musicSources: d.musicSources.map((s) =>
+                  s.id === id
+                    ? { ...s, deletedAt: Date.now(), updatedAt: Date.now() }
+                    : s,
+                ),
+              }
+            : d,
+        { reportError: false, reportBusy: false },
+      );
+      if (target?.kind === "audio" && target.audioStorageKey)
+        await store.repository.deleteMusicBlob(
+          namespace,
+          target.audioStorageKey,
+        );
+      if (!mounted.current || store.getSnapshot().namespace !== namespace)
+        return;
+      if (latest.current.selection === id) select("ambient:lofi", false);
+    } catch {
+      fail("Хөгжмийг устгаж чадсангүй.");
+    }
+  };
+
+  useEffect(() => {
+    const element = nativeAudio.current;
+    if (!element) return;
+    const handlePlay = () => {
+      if (nativeSourceId.current !== latest.current.selection) return;
+      mark("playing");
+      setBusy(false);
+      commit({ playback: "playing" });
+    };
+    const handlePause = () => {
+      if (
+        nativeSourceId.current !== latest.current.selection ||
+        actual.current === "stopped"
+      )
+        return;
+      mark("paused");
+      setBusy(false);
+      commit({ ...capture(), playback: "paused" });
+    };
+    const handleEnded = () => {
+      if (nativeSourceId.current !== latest.current.selection) return;
+      mark("stopped");
+      setBusy(false);
+      commit({ ...capture(), playback: "stopped", position: 0 });
+    };
+    const handleError = () => {
+      if (nativeSourceId.current !== latest.current.selection) return;
+      mark("paused");
+      fail("Энэ аудиог тоглуулж чадсангүй. Файлаа эсвэл холбоосоо шалгана уу.");
+    };
+    element.addEventListener("play", handlePlay);
+    element.addEventListener("pause", handlePause);
+    element.addEventListener("ended", handleEnded);
+    element.addEventListener("error", handleError);
+    return () => {
+      element.removeEventListener("play", handlePlay);
+      element.removeEventListener("pause", handlePause);
+      element.removeEventListener("ended", handleEnded);
+      element.removeEventListener("error", handleError);
+    };
+  });
+
+  useEffect(() => {
+    try {
+      adapter.current?.setVolume(volume, muted);
+      if (nativeAudio.current) nativeAudio.current.volume = muted ? 0 : volume;
+    } catch {
+      const tick = setTimeout(
+        () => fail("Дууны түвшинг тохируулж чадсангүй. Дахин оролдоно уу."),
+        0,
+      );
+      return () => clearTimeout(tick);
+    }
+  }, [volume, muted]);
+
+  useEffect(() => {
+    mounted.current = true;
+    generation.current++;
+    return () => {
+      mounted.current = false;
+      playWhenReady.current = false;
+      try {
+        nativeAudio.current?.pause();
+        nativeAudio.current?.removeAttribute("src");
+        nativeAudio.current?.load();
+      } catch {}
+      revokeNativeURL();
+      nativeSourceId.current = null;
+      try {
+        ambient.current?.close();
+      } catch {}
+      ambient.current = null;
+      youtube.current = null;
+      adapter.current = null;
+    };
+  }, [namespace]);
+
+  const checkpoint = useRef(() => {});
+  useEffect(() => {
+    checkpoint.current = () => {
+      if (actual.current === "playing") commit(capture());
+    };
+  });
+  useEffect(() => {
+    const tick = setInterval(() => checkpoint.current(), 15000);
+    const save = () => checkpoint.current();
+    window.addEventListener("pagehide", save);
+    return () => {
+      clearInterval(tick);
+      window.removeEventListener("pagehide", save);
+    };
+  }, []);
+
+  useMusicMediaSession({
+    title: session.track.title,
+    artist: session.track.artist,
+    playback,
+    play: () => {
+      void play();
+    },
+    pause,
+    stop,
+    next: () => next(1),
+    previous: () => next(-1),
+  });
+
+  return {
+    data,
+    volume,
+    muted,
+    savePreference: updatePreference,
+    session,
+    playback,
+    playing: playback === "playing",
+    activated,
+    open: session.open,
+    setOpen,
+    selected,
+    source,
+    sources,
+    isAmbient,
+    isNativeAudio: source?.kind === "audio",
+    name: session.track.title,
+    error: error || storageError,
+    busy,
+    attempt,
+    url,
+    setUrl,
+    title,
+    setTitle,
+    select,
+    minimize: () => setOpen(false),
+    toggle: () => {
+      if (actual.current === "playing") pause();
+      else void play();
+    },
+    stop,
+    next,
+    retry,
+    addURL,
+    addFile,
+    remove,
+    onReady,
+    onState,
+    onError,
+  };
+}
+
+const MusicContext = createContext<ReturnType<
+  typeof useMusicController
+> | null>(null);
+
+class MusicBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean; attempt: number }
+> {
+  state = { failed: false, attempt: 0 };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (this.state.failed)
+      return (
+        <aside
+          className="music-player music-dock music-failed"
+          aria-label="Study music"
+        >
+          <p role="alert">
+            Хөгжим түр ажиллахгүй байна. Хичээлээ үргэлжлүүлж болно.
+          </p>
+          <button
+            className="button small"
+            onClick={() =>
+              this.setState((s) => ({ failed: false, attempt: s.attempt + 1 }))
+            }
+          >
+            Хөгжмийг дахин нээх
+          </button>
+        </aside>
+      );
+    return (
+      <MusicController key={this.state.attempt}>
+        {this.props.children}
+      </MusicController>
+    );
+  }
+}
+
+function MusicController({ children }: { children: ReactNode }) {
+  const controller = useMusicController();
   return (
-    <MusicContext.Provider
-      value={{
-        sources,
-        selected,
-        source: currentSource,
-        busy,
-        error,
-        volume,
-        muted,
-        isPlaying,
-        title,
-        setTitle,
-        select,
-        next,
-        previous,
-        togglePlay,
-        remove,
-        addSource,
-        addURL,
-        addFile,
-        onState,
-      }}
-    >
-      {children}
-    </MusicContext.Provider>
+    <MusicContext.Provider value={controller}>{children}</MusicContext.Provider>
   );
+}
+
+export function MusicProvider({ children }: { children: ReactNode }) {
+  return <MusicBoundary>{children}</MusicBoundary>;
 }
 
 export function useMusic() {
   const context = useContext(MusicContext);
-  if (!context) {
-    throw new Error("useMusic must be used within a MusicProvider");
-  }
+  if (!context) throw Error("MusicProvider шаардлагатай.");
   return context;
 }

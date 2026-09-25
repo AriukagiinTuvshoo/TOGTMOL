@@ -4315,7 +4315,6 @@ main {
   max-width: 100%;
 }
 
-
 /* Bilingual language control */
 .language-switcher {
   display: inline-flex;
@@ -4338,7 +4337,10 @@ main {
   font: inherit;
   font-size: 11px;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+  transition:
+    background 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 .language-switcher button:hover {
   color: var(--text);

@@ -66,7 +66,8 @@ const mn = {
   "settings.language.mongolian": "Монгол",
   "settings.language.english": "English",
   "settings.language.changed": "Хэлний тохиргоо шинэчлэгдлээ.",
-  "settings.language.helper": "Сонголт шууд хэрэгжинэ. Дахин ачаалах шаардлагагүй.",
+  "settings.language.helper":
+    "Сонголт шууд хэрэгжинэ. Дахин ачаалах шаардлагагүй.",
   "settings.appearance": "Харагдах байдал",
   "settings.appearance.subtitle": "Танд тухтай орчин.",
   "settings.appTheme": "Аппын өнгөний theme",
@@ -97,7 +98,8 @@ const mn = {
   "assistant.companion": "ТАНЫ СУРАЛЦАХ ХАМТРАГЧ",
   "assistant.smallStep": "Нэг жижиг алхмыг хамт сонгоё.",
   "assistant.localPrivacy": "Таны мэдээллийг гаднын AI руу илгээхгүй.",
-  "assistant.consent": "Онлайн AI-д асуулт, хичээлийн нэр, зорилго, суралцсан хугацааны товч дүгнэлт илгээнэ. Тэмдэглэлийг зөвхөн тусдаа сонголтоор хуваалцана.",
+  "assistant.consent":
+    "Онлайн AI-д асуулт, хичээлийн нэр, зорилго, суралцсан хугацааны товч дүгнэлт илгээнэ. Тэмдэглэлийг зөвхөн тусдаа сонголтоор хуваалцана.",
   "assistant.previous": "Өмнөх зурвасууд",
   "assistant.conversation": "Бондооктой ярилцлага",
   "assistant.you": "Та",
@@ -108,8 +110,10 @@ const mn = {
   "assistant.localFallback": "Local туслах руу шилжих",
   "assistant.sendPlaceholder": "Жишээ: Энэ долоо хоног ямар байсан бэ?",
   "assistant.sendPlaceholderEn": "Example: How was my week?",
-  "assistant.onlineWarning": "AI-ийн санал алдаатай байж болно. Хуваарийг та хянаж хадгална.",
-  "assistant.localDescription": "Local туслах нь цаг, зорилго, тэмдэглэлд тулгуурласан дүрмээр хариулна.",
+  "assistant.onlineWarning":
+    "AI-ийн санал алдаатай байж болно. Хуваарийг та хянаж хадгална.",
+  "assistant.localDescription":
+    "Local туслах нь цаг, зорилго, тэмдэглэлд тулгуурласан дүрмээр хариулна.",
   "common.today": "Өнөөдөр",
   "common.previous": "Өмнөх",
   "common.next": "Дараагийн",
@@ -131,7 +135,8 @@ const mn = {
   "search.myData": "Миний мэдээлэл",
   "search.hint": "Команд сонгох · ↑↓ шилжих · Enter нээх",
   "search.placeholder": "Жишээ: timer, календарь, зорилго…",
-  "search.noResults": "Хайлтад тохирох бичлэг алга. Дээрх командаас нэгийг сонгоод шууд нээгээрэй.",
+  "search.noResults":
+    "Хайлтад тохирох бичлэг алга. Дээрх командаас нэгийг сонгоод шууд нээгээрэй.",
   "search.open": "Команд эсвэл мэдээлэл хайх",
   "search.module": "Хайлт",
 } as const;
@@ -202,7 +207,8 @@ const en = {
   "settings.language.mongolian": "Монгол",
   "settings.language.english": "English",
   "settings.language.changed": "Language updated.",
-  "settings.language.helper": "Your choice applies instantly. No reload is required.",
+  "settings.language.helper":
+    "Your choice applies instantly. No reload is required.",
   "settings.appearance": "Appearance",
   "settings.appearance.subtitle": "An environment that feels right for you.",
   "settings.appTheme": "App color theme",
@@ -233,7 +239,8 @@ const en = {
   "assistant.companion": "YOUR STUDY COMPANION",
   "assistant.smallStep": "Let's choose one small step together.",
   "assistant.localPrivacy": "Your study data is not sent to external AI.",
-  "assistant.consent": "Your question, subject names, goals, and short study-time summary will be sent to online AI. Notes are shared only with a separate opt-in.",
+  "assistant.consent":
+    "Your question, subject names, goals, and short study-time summary will be sent to online AI. Notes are shared only with a separate opt-in.",
   "assistant.previous": "Previous messages",
   "assistant.conversation": "Bondook conversation",
   "assistant.you": "You",
@@ -244,8 +251,10 @@ const en = {
   "assistant.localFallback": "Switch to local assistant",
   "assistant.sendPlaceholder": "Example: How was my week?",
   "assistant.sendPlaceholderEn": "Example: How was my week?",
-  "assistant.onlineWarning": "AI suggestions can be wrong. Review the schedule before saving it.",
-  "assistant.localDescription": "The local assistant uses rules based on your time, goals, and notes.",
+  "assistant.onlineWarning":
+    "AI suggestions can be wrong. Review the schedule before saving it.",
+  "assistant.localDescription":
+    "The local assistant uses rules based on your time, goals, and notes.",
   "common.today": "Today",
   "common.previous": "Previous",
   "common.next": "Next",
@@ -267,7 +276,8 @@ const en = {
   "search.myData": "My data",
   "search.hint": "Choose a command · ↑↓ move · Enter open",
   "search.placeholder": "Try: timer, calendar, goals…",
-  "search.noResults": "No matching data. Pick a command above to open it directly.",
+  "search.noResults":
+    "No matching data. Pick a command above to open it directly.",
   "search.open": "Search commands or data",
   "search.module": "Search",
 } as const;
