@@ -3,6 +3,7 @@ import { actions } from "@/lib/persistence/actions";
 import { fixture, subject } from "./fixtures";
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -21,8 +22,9 @@ describe("persistence action guards", () => {
   });
 
   it("uses the configured study day when marking days near midnight", () => {
-    const now = new Date(2026, 8, 23, 2, 0, 0).getTime();
-    vi.spyOn(Date, "now").mockReturnValue(now);
+    const now = new Date(2026, 8, 23, 2).getTime();
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
 
     const base = fixture();
     const data = {
@@ -43,8 +45,9 @@ describe("persistence action guards", () => {
   });
 
   it("uses the configured study day when editing a session near midnight", () => {
-    const now = new Date("2026-09-23T02:00:00").getTime();
-    vi.spyOn(Date, "now").mockReturnValue(now);
+    const now = new Date(2026, 8, 23, 2).getTime();
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
 
     const base = fixture();
     const data = {
