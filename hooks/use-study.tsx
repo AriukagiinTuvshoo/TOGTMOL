@@ -16,6 +16,7 @@ import { dayBoundary } from "@/lib/preferences";
 import { enableSound } from "@/lib/notifications";
 import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { dateKey, studyDate } from "@/lib/calculations/dates";
+import { appHash, parseAppHash } from "@/lib/navigation";
 import type { StudyData, StudyIndex, View } from "@/types/study";
 type ContextValue = {
   store: StudyStore;
@@ -50,6 +51,22 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       buildIndex({ subjects, sessions, entries } as StudyData, today, boundary),
     [subjects, sessions, entries, boundary, today],
   );
+  useEffect(() => {
+    const applyLocation = () => {
+      if (window.location.hash && !window.location.hash.startsWith("#/"))
+        return;
+      const location = parseAppHash(window.location.hash);
+      setView(location.view);
+      setSelectedRecord(location.recordId);
+    };
+    applyLocation();
+    window.addEventListener("popstate", applyLocation);
+    window.addEventListener("hashchange", applyLocation);
+    return () => {
+      window.removeEventListener("popstate", applyLocation);
+      window.removeEventListener("hashchange", applyLocation);
+    };
+  }, []);
   useEffect(() => {
     void store.initialize();
     const refresh = () => {
@@ -244,6 +261,9 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     [store],
   );
   const navigate = useCallback((v: View, recordId?: string) => {
+    const nextHash = appHash(v, recordId);
+    if (window.location.hash !== nextHash)
+      window.history.pushState({ togtmol: true }, "", nextHash);
     setSelectedRecord(recordId ?? null);
     setView(v);
     window.scrollTo({ top: 0, behavior: "instant" });

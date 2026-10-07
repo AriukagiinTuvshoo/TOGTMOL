@@ -13,22 +13,58 @@ interface InstallEvent extends Event {
 let promptEvent: InstallEvent | null = null;
 export function PwaManager() {
   const { data, store, setNotice, view } = useStudy();
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(
+    null,
+  );
   useEffect(() => {
+    let disposed = false;
+    let registration: ServiceWorkerRegistration | undefined;
+    let installing: ServiceWorker | null = null;
+    const inspect = () => {
+      if (
+        !disposed &&
+        registration?.waiting &&
+        navigator.serviceWorker.controller
+      )
+        setWaitingWorker(registration.waiting);
+    };
+    const workerChanged = () => inspect();
+    const updateFound = () => {
+      installing?.removeEventListener("statechange", workerChanged);
+      installing = registration?.installing ?? null;
+      installing?.addEventListener("statechange", workerChanged);
+      inspect();
+    };
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production")
       void navigator.serviceWorker
         .register("/sw.js")
-        .catch(() =>
-          setNotice(
-            "Интернэтгүй ажиллах хувилбарыг бэлтгэж чадсангүй. Холболттой үед дахин нээнэ үү.",
-          ),
-        );
+        .then((next) => {
+          if (disposed) return;
+          registration = next;
+          registration.addEventListener("updatefound", updateFound);
+          updateFound();
+          void registration.update().catch(() => {
+            // The active offline worker remains usable when an update check fails.
+          });
+        })
+        .catch(() => {
+          if (!disposed)
+            setNotice(
+              "Интернэтгүй ажиллах хувилбарыг бэлтгэж чадсангүй. Холболттой үед дахин нээнэ үү.",
+            );
+        });
     const handler = (e: Event) => {
       e.preventDefault();
       promptEvent = e as InstallEvent;
       window.dispatchEvent(new Event("togtmol-install-ready"));
     };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      disposed = true;
+      window.removeEventListener("beforeinstallprompt", handler);
+      registration?.removeEventListener("updatefound", updateFound);
+      installing?.removeEventListener("statechange", workerChanged);
+    };
   }, [setNotice]);
   useEffect(() => {
     let disposed = false,
@@ -88,7 +124,79 @@ export function PwaManager() {
       clearInterval(id);
     };
   }, [store, data.settings, setNotice]);
-  return <InstallPrompt hidden={view === "settings"} />;
+  return (
+    <>
+      {!waitingWorker && <InstallPrompt hidden={view === "settings"} />}
+      {waitingWorker && (
+        <AppUpdatePrompt
+          worker={waitingWorker}
+          onDismiss={() => setWaitingWorker(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function AppUpdatePrompt({
+  worker,
+  onDismiss,
+}: {
+  worker: ServiceWorker;
+  onDismiss: () => void;
+}) {
+  const { setNotice } = useStudy();
+  const [applying, setApplying] = useState(false);
+  return (
+    <aside
+      className="pwa-install-prompt pwa-update-prompt"
+      aria-label="Тогтмол аппын шинэчлэлт"
+    >
+      <span className="pwa-install-icon" aria-hidden="true">
+        <Icon name="download" size={18} />
+      </span>
+      <div>
+        <strong>Шинэ хувилбар бэлэн</strong>
+        <p>Шинэ боломж, засваруудыг авахын тулд аппыг нэг удаа шинэчилнэ.</p>
+      </div>
+      <div className="pwa-install-actions">
+        <button
+          className="button primary small"
+          disabled={applying}
+          onClick={() => {
+            setApplying(true);
+            let changed = false;
+            const fallback = window.setTimeout(() => {
+              if (changed) return;
+              setApplying(false);
+              setNotice(
+                "Шинэчлэлтийг идэвхжүүлж чадсангүй. Нээлттэй цонхуудаа хаагаад дахин оролдоно уу.",
+              );
+            }, 5000);
+            navigator.serviceWorker.addEventListener(
+              "controllerchange",
+              () => {
+                changed = true;
+                window.clearTimeout(fallback);
+                window.location.reload();
+              },
+              { once: true },
+            );
+            worker.postMessage({ type: "SKIP_WAITING" });
+          }}
+        >
+          {applying ? "Шинэчилж байна…" : "Одоо шинэчлэх"}
+        </button>
+        <button
+          className="icon-button"
+          aria-label="Шинэчлэлтийг дараа хийх"
+          disabled={applying}
+          onClick={onDismiss}
+        >
+          <Icon name="close" size={17} />
+        </button>
+      </div>
+    </aside>
+  );
 }
 
 function InstallPrompt({ hidden = false }: { hidden?: boolean }) {

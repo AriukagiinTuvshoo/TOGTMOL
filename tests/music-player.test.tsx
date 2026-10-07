@@ -108,6 +108,7 @@ class Player {
   cuePlaylist = vi.fn();
 }
 beforeEach(() => {
+  window.history.replaceState(null, "", "/");
   players = [];
   failConstruction = false;
   for (const fn of Object.values(local)) fn.mockReset();

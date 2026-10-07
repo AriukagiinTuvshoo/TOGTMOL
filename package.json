@@ -1,6 +1,6 @@
 {
   "name": "togtmol-study-os",
-  "version": "5.0.0",
+  "version": "7.0.0",
   "private": true,
   "engines": {
     "node": ">=22 <27"
@@ -21,9 +21,10 @@
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",
     "lucide-react": "^1.47.0",
-    "next": "16.3.5",
+    "next": "16.3.8",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
@@ -46,5 +47,8 @@
     "typescript": "6.0.3",
     "vitest": "5.0.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "source-map-js": "1.2.2"
+  }
 }

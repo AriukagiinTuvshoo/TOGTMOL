@@ -21,6 +21,10 @@ self.addEventListener("install", (event) => {
     })(),
   );
 });
+self.addEventListener("message", (event) => {
+  // A waiting worker activates only after an explicit user action in the app.
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches

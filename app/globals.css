@@ -567,11 +567,33 @@ small {
   max-width: 270px;
 }
 .status-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   background: var(--moss);
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--moss) 12%, transparent);
+}
+.save-status.is-busy .status-dot {
+  animation: status-pulse 1.1s ease-in-out infinite;
+}
+.save-status.is-offline {
+  color: #8b5b17;
+}
+.save-status.is-offline .status-dot {
+  background: #c27a16;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #c27a16 15%, transparent);
+}
+@keyframes status-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-status.is-busy .status-dot {
+    animation: none;
+  }
 }
 .mobile-brand {
   display: none;
@@ -3746,7 +3768,7 @@ main {
 .pwa-install-prompt {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: calc(24px + var(--music-dock-height, 0px));
   z-index: 150;
   display: flex;
   align-items: center;
@@ -3788,11 +3810,20 @@ main {
   align-items: center;
   gap: 3px;
 }
+.pwa-update-prompt {
+  border-color: color-mix(in srgb, var(--moss) 42%, var(--border));
+}
+.pwa-update-prompt .pwa-install-icon {
+  color: var(--surface);
+  background: var(--moss);
+}
 @media (max-width: 650px) {
   .pwa-install-prompt {
     left: 12px;
     right: 12px;
-    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(
+      84px + var(--music-dock-height, 0px) + env(safe-area-inset-bottom, 0px)
+    );
     width: auto;
   }
   .pwa-install-prompt p {

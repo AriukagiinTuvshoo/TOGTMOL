@@ -15,6 +15,7 @@ import { AppShell } from "@/components/app-shell";
 import { Repository } from "@/lib/persistence/repository";
 import { knowledgeFixture } from "./knowledge-fixtures";
 beforeEach(() => {
+  window.history.replaceState(null, "", "/");
   localStorage.clear();
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("BroadcastChannel", undefined);
@@ -137,8 +138,8 @@ describe("knowledge flows", () => {
     await repo.close();
     cleanup();
     render(<AppShell />);
-    await screen.findByText("Миний төлөвлөгөө");
-    navigate("Миний мэдлэг");
+    await screen.findByRole("heading", { name: "Миний мэдлэг" });
+    expect(window.location.hash).toBe("#/knowledge");
     await waitFor(() =>
       expect(
         screen.getByRole("button", { name: "Давтлага эхлүүлэх" }),

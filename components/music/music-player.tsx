@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AMBIENTS } from "@/lib/music/catalog";
-import { ROOM_THEMES } from "@/lib/world/room-themes";
 import { youtubeURL } from "@/lib/music/youtube";
 import { Icon } from "@/components/ui/icon";
 import { useMusic } from "./music-provider";
@@ -32,7 +31,6 @@ function sourceKind(source: MusicSource) {
 
 export function MusicPlayer() {
   const {
-    data,
     volume,
     muted,
     savePreference,
@@ -52,7 +50,6 @@ export function MusicPlayer() {
     sources,
     selected,
     source,
-    isAmbient,
     name,
     select,
     minimize,
