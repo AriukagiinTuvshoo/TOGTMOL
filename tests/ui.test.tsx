@@ -16,6 +16,7 @@ import { AppShell } from "@/components/app-shell";
 import { startTimer } from "@/lib/calculations/timer";
 import { fixture } from "./fixtures";
 beforeEach(() => {
+  window.history.replaceState(null, "", "/");
   localStorage.clear();
   vi.stubGlobal("indexedDB", new IDBFactory());
   vi.stubGlobal("BroadcastChannel", undefined);
@@ -94,7 +95,11 @@ describe("interactive local workflow", () => {
     );
     now += 15000;
     fireEvent.click(screen.getByRole("button", { name: "Finish" }));
-    await screen.findByRole("button", { name: "Үр дүнгээ хадгалах" });
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }),
+      ).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Үр дүнгээ хадгалах" }));
     await screen.findByText(/Өнөөдөр бага байсан ч ахиц. Хичээлээ хадгаллаа./);
     const repo = new Repository(indexedDB, localStorage),
@@ -169,8 +174,11 @@ describe("study world integration", () => {
     await repo.close();
     cleanup();
     render(<AppShell />);
-    await screen.findByText("Миний төлөвлөгөө");
-    expect(document.documentElement.dataset.design).toBe("sakura");
+    await screen.findByRole("heading", { name: "Таны жижиг ертөнц" });
+    expect(window.location.hash).toBe("#/room");
+    await waitFor(() =>
+      expect(document.documentElement.dataset.design).toBe("sakura"),
+    );
   });
   it("starts a goal task in focus mode and saves real progress through the shared timer", async () => {
     let now = new Date("2026-09-15T12:00:00").getTime();
@@ -432,7 +440,8 @@ it("shares music preferences with the persistent player and restores the chosen 
   });
   cleanup();
   render(<AppShell />);
-  await screen.findByText("Миний төлөвлөгөө");
+  await screen.findByLabelText("Үндсэн хөгжмийн ангилал");
+  expect(window.location.hash).toBe("#/settings");
   expect(
     screen.getByText("Night study", { selector: ".music-title strong" }),
   ).toBeVisible();

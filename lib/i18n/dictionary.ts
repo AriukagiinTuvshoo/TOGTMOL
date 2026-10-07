@@ -35,6 +35,9 @@ const mn = {
   "page.privacy": "Нууцлал ба өгөгдөл",
   "shell.mySpace": "Миний орон зай",
   "shell.localStorage": "Локал хадгалалт",
+  "shell.offline": "Интернэтгүй · локал",
+  "shell.offlineHint":
+    "Таны ажил төхөөрөмж дээр хадгалагдана. Синк, AI, YouTube холболт орсны дараа ажиллана.",
   "shell.account": "Бүртгэлтэй",
   "shell.device": "Миний төхөөрөмж",
   "shell.myAccount": "Миний бүртгэл",
@@ -176,6 +179,9 @@ const en = {
   "page.privacy": "Privacy & Data",
   "shell.mySpace": "My Space",
   "shell.localStorage": "Local storage",
+  "shell.offline": "Offline · local",
+  "shell.offlineHint":
+    "Your work is saved on this device. Sync, AI, and YouTube resume when you reconnect.",
   "shell.account": "Signed in",
   "shell.device": "My device",
   "shell.myAccount": "My account",

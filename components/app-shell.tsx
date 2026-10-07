@@ -88,12 +88,28 @@ function Shell() {
     } = useStudy(),
     state = useStoreState(),
     { status, user } = useAccount(),
-    { t } = useI18n(),
-    [more, setMore] = useState(false);
+    { t, language } = useI18n(),
+    [more, setMore] = useState(false),
+    [online, setOnline] = useState(true);
   const go = (v: View) => {
     navigate(v);
     setMore(false);
   };
+
+  useEffect(() => {
+    const updateConnection = () => setOnline(navigator.onLine);
+    updateConnection();
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    return () => {
+      window.removeEventListener("online", updateConnection);
+      window.removeEventListener("offline", updateConnection);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = `${t(titles[view])} · ${language === "en" ? "TOGTMOL" : "Тогтмол"}`;
+  }, [language, t, view]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -167,7 +183,14 @@ function Shell() {
   }, [data.settings, navigate, run, setNotice, store, t]);
   return (
     <div className={`app-shell ${view === "focus" ? "is-focus" : ""}`}>
-      <a className="skip-link" href="#main-content">
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+      >
         {t("shell.skip")}
       </a>
       <aside className="sidebar">
@@ -242,13 +265,20 @@ function Shell() {
               </ModuleBoundary>
             )}
             <LanguageSwitcher compact />
-            <span className="save-status">
+            <span
+              className={`save-status ${!online ? "is-offline" : state.busy ? "is-busy" : ""}`}
+              role="status"
+              aria-live="polite"
+              title={!online ? t("shell.offlineHint") : undefined}
+            >
               <span className="status-dot" />
-              {state.busy
-                ? t("shell.saveBusy")
-                : state.namespace === "guest"
-                  ? t("shell.localStorage")
-                  : status}
+              {!online
+                ? t("shell.offline")
+                : state.busy
+                  ? t("shell.saveBusy")
+                  : state.namespace === "guest"
+                    ? t("shell.localStorage")
+                    : status}
             </span>
             <button
               className="icon-button"

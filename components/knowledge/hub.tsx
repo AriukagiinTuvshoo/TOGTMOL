@@ -363,7 +363,9 @@ export function KnowledgeHub() {
                 <StoredImage loading="lazy" src={r.image} alt={r.title} />
               )}
               <div className="knowledge-card-body">
-                <span className="eyebrow">{labels[r.kind]}</span>
+                <span className="eyebrow">
+                  {language === "en" ? LABEL_EN[r.kind] : labels[r.kind]}
+                </span>
                 <button
                   className="knowledge-card-title"
                   onClick={() => setSelected(r.id)}
@@ -484,7 +486,11 @@ export function KnowledgeHub() {
       {selectedItem && (
         <Modal title={selectedItem.title} onClose={() => setSelected(null)}>
           <article className="knowledge-detail">
-            <span className="eyebrow">{labels[selectedItem.kind]}</span>
+            <span className="eyebrow">
+              {language === "en"
+                ? LABEL_EN[selectedItem.kind]
+                : labels[selectedItem.kind]}
+            </span>
             {selectedItem.kind === "note" && (
               <>
                 {selectedItem.image && (

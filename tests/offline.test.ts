@@ -7,7 +7,8 @@ describe("service worker privacy and offline lifecycle", () => {
     const handlers = new Map<string, EventHandler>(),
       cached: string[] = [],
       requests: string[] = [],
-      deleted: string[] = [];
+      deleted: string[] = [],
+      skipWaiting = { calls: 0 };
     const context = {
       URL,
       Response,
@@ -36,6 +37,9 @@ describe("service worker privacy and offline lifecycle", () => {
       self: {
         location: { origin: "https://study.example" },
         clients: { claim: async () => {} },
+        skipWaiting: () => {
+          skipWaiting.calls += 1;
+        },
         addEventListener: (name: string, handler: EventHandler) =>
           handlers.set(name, handler),
       },
@@ -44,7 +48,7 @@ describe("service worker privacy and offline lifecycle", () => {
       readFileSync("scripts/service-worker.template.js", "utf8"),
       context,
     );
-    return { handlers, cached, requests, deleted };
+    return { handlers, cached, requests, deleted, skipWaiting };
   }
   it("pre-caches application JS and CSS on the first installation", async () => {
     const { handlers, cached } = worker();
@@ -87,8 +91,8 @@ describe("service worker privacy and offline lifecycle", () => {
     });
     expect(intercepted).toBe(false);
   });
-  it("cleans only this app’s obsolete caches and waits for old tabs", async () => {
-    const { handlers, deleted } = worker();
+  it("cleans only this app’s obsolete caches and waits for user approval", async () => {
+    const { handlers, deleted, skipWaiting } = worker();
     let task: Promise<void> | undefined;
     handlers.get("activate")!({
       waitUntil: (p: Promise<void>) => {
@@ -97,8 +101,10 @@ describe("service worker privacy and offline lifecycle", () => {
     });
     await task;
     expect(deleted).toEqual(["togtmol-shell-old"]);
-    expect(
-      readFileSync("scripts/service-worker.template.js", "utf8"),
-    ).not.toMatch(/skipWaiting\(/);
+    expect(skipWaiting.calls).toBe(0);
+    handlers.get("message")!({ data: { type: "UNRELATED" } });
+    expect(skipWaiting.calls).toBe(0);
+    handlers.get("message")!({ data: { type: "SKIP_WAITING" } });
+    expect(skipWaiting.calls).toBe(1);
   });
 });
