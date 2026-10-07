@@ -12,3 +12,4 @@ supabase/.temp/
 /test-results/
 /public/precache-manifest.json
 /public/sw.js
+.env
