@@ -1,11 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
-import {
-  longestStreakWithFreezes,
-  periodStats,
-  streakFreezeCount,
-} from "@/lib/calculations/analytics";
+import { periodStats } from "@/lib/calculations/analytics";
 import {
   dateLabel,
   formatTime,
@@ -20,9 +16,11 @@ import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { CurrentDecisionCenter } from "./current-decision-center";
 import { useI18n } from "@/components/i18n/language-provider";
+import { streakFreezeCount } from "@/lib/calculations/decision";
 export function Statistics() {
   const { data, index, today } = useStudy(),
     { language } = useI18n(),
+    freezeCount = streakFreezeCount(data.settings),
     [period, setPeriod] = useState<number | "all" | "today" | "week" | "month">(
       "week",
     ),
@@ -40,8 +38,9 @@ export function Statistics() {
               : period,
         today,
         subject || undefined,
+        freezeCount,
       ),
-    [index, period, today, subject],
+    [index, period, today, subject, freezeCount],
   );
   const groups = new Map<string, number>();
   const knowledge = knowledgeStatistics(
@@ -180,10 +179,7 @@ export function Statistics() {
           label="Хамгийн урт дараалал"
           value={
             <>
-              {longestStreakWithFreezes(
-                stats.days.filter((d) => d.subjects.size).map((d) => d.date),
-                streakFreezeCount(data.settings),
-              )}
+              {stats.longestStreak}
               <small>өдөр</small>
             </>
           }

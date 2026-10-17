@@ -51,3 +51,5 @@ React урсгалууд **jsdom** дээр ажилласан. SQL шалгал
 Бодит Supabase төсөл, AI түлхүүр, Google provider, live URL тохируулаагүй. Байршуулахдаа v5 SQL migration хэрэглэж, email confirmation, Google callback, password recovery, хоёр бодит төхөөрөмжийн синк/үүлэн устгал, онлайн AI болон зураг уншуулах урсгалыг шалгана. [Байршуулах заавар](DEPLOYMENT.md).
 
 GitHub-ийн тусдаа шалгалтыг [Actions](https://github.com/AriukagiinTuvshoo/TOGTMOL/actions) хэсгээс харна. Энэ тайлан CI үр дүнг урьдчилан тэнцсэн гэж үзээгүй.
+
+- 2026-09-25: `audit-v7-stability` дээр formatter canonical output-оор сэргээж, validation дахин ажиллуулсан.

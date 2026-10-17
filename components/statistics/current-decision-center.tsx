@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, type FormEvent } from "react";
 import { useStudy } from "@/hooks/use-study";
-import { periodStats, weeklyReport } from "@/lib/calculations/analytics";
+import {
+  lateSessionPattern,
+  periodStats,
+  weeklyReport,
+} from "@/lib/calculations/analytics";
 import {
   annualHeatmap,
-  behaviorPatterns,
   currentStreakWithFreezes,
-  streakFreezeLimit,
+  streakFreezeCount,
 } from "@/lib/calculations/decision";
 import {
   formatTime,
@@ -37,8 +40,6 @@ function examValues(data: ReturnType<typeof useStudy>["data"]) {
 
 export function CurrentDecisionCenter() {
   const { data, index, today, store, run } = useStudy();
-  const [examDateInput, setExamDateInput] = useState(examValues(data).date);
-  const [examTitleInput, setExamTitleInput] = useState(examValues(data).title);
   const exam = examValues(data);
 
   const last7 = useMemo(() => periodStats(index, 7, today), [index, today]);
@@ -52,14 +53,17 @@ export function CurrentDecisionCenter() {
       : null;
 
   const week = useMemo(() => weeklyReport(index, today), [index, today]);
-  const freezeLimit = streakFreezeLimit(data.settings);
+  const freezeLimit = streakFreezeCount(data.settings);
   const freeze = useMemo(
     () =>
       currentStreakWithFreezes(new Set(index.sortedDates), today, freezeLimit),
     [index.sortedDates, today, freezeLimit],
   );
 
-  const patterns = useMemo(() => behaviorPatterns(data, index), [data, index]);
+  const behavior = useMemo(
+    () => lateSessionPattern(index, today),
+    [index, today],
+  );
 
   const heatmap = useMemo(
     () => annualHeatmap(index, Number(today.slice(0, 4))),
@@ -81,9 +85,18 @@ export function CurrentDecisionCenter() {
       )
     : null;
 
-  const saveExam = async (event: FormEvent) => {
+  const saveExam = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const examDateInput = String(values.get("examDate") ?? "");
+    const examTitleInput = String(values.get("examTitle") ?? "");
     const title = examTitleInput.trim().slice(0, 80) || "Шалгалт";
+    if (examDateInput && !parseDate(examDateInput)) {
+      await run(async () => {
+        throw Error("Шалгалтын огноо буруу байна.");
+      });
+      return;
+    }
     await run(
       () =>
         store.mutate(
@@ -135,20 +148,20 @@ export function CurrentDecisionCenter() {
           <p>
             {examDiff === null ? "Шалгалтын өдрөө оруулаарай." : exam.title}
           </p>
-          <form className="exam-form" onSubmit={saveExam}>
+          <form
+            key={exam.date + "|" + exam.title}
+            className="exam-form"
+            onSubmit={saveExam}
+          >
             <label>
               Шалгалтын өдөр
-              <input
-                type="date"
-                value={examDateInput}
-                onChange={(event) => setExamDateInput(event.target.value)}
-              />
+              <input type="date" defaultValue={exam.date} name="examDate" />
             </label>
             <label>
               Шалгалтын нэр
               <input
-                value={examTitleInput}
-                onChange={(event) => setExamTitleInput(event.target.value)}
+                defaultValue={exam.title}
+                name="examTitle"
                 maxLength={80}
               />
             </label>
@@ -202,22 +215,29 @@ export function CurrentDecisionCenter() {
             <Icon name="spark" size={17} />
           </div>
           <span className="eyebrow">ЗАН ҮЙЛИЙН PATTERN</span>
-          {patterns.length ? (
-            patterns.map((pattern) => (
-              <div
-                className={`pattern-result ${pattern.tone}`}
-                key={pattern.id}
-              >
-                <strong>{pattern.title}</strong>
-                <p>{pattern.body}</p>
-              </div>
-            ))
+          {behavior.measured >= 3 ? (
+            <>
+              <strong>
+                {behavior.unfinishedPercent === null
+                  ? "—"
+                  : behavior.unfinishedPercent.toFixed(0) + "%"}
+              </strong>
+              <p>
+                {behavior.unfinishedPercent === null
+                  ? "Төлөвлөгөөт session-ийн мэдээлэл хүрэлцэхгүй байна."
+                  : `21:00–04:59 эхэлсэн төлөвлөгөөт session-үүдийн ${behavior.unfinishedPercent.toFixed(0)}%-д төлөвлөсөн хугацаа бүрдээгүй.`}
+              </p>
+              <small>
+                Шалгасан: {behavior.measured} төлөвлөгөөт session · нийт оройн
+                эхлэлт {behavior.candidates}.
+              </small>
+            </>
           ) : (
             <>
               <strong>Хангалттай өгөгдөл цуглуулж байна</strong>
               <p>
-                21:00-с хойших эхлэл, дуусгалгүй орхилтыг 4+ тохиолдлын дараа
-                харьцуулж эхэлнэ.
+                Оройн төлөвлөгөөт session-үүдээс дор хаяж 3 хэмжилт бүрдсэний
+                дараа pattern харуулна.
               </p>
             </>
           )}
