@@ -59,6 +59,8 @@
 
 Туслах функцууд [`lib/knowledge/session.ts`](../lib/knowledge/session.ts): `reviewSessionLimit`, `reviewSessionQueue` (өдрийн шинэ картын хязгаар + багц шүүлт + хэмжээг нэг дарааллаар хэрэглэнэ), `remainingMs`, `formatClock`.
 
+Цонхыг бодит санд тулгуурлан шалгах туслах: [`tests/store-seed.ts`](../tests/store-seed.ts) — `seedGuestStore(data)` нь өгөгдлийг IndexedDB-ийн `guest` namespace-д бичнэ, `dataWithFreshCards(багцууд, тоо)` нь өнөөдөр дуусах шинэ карттай өгөгдөл үүсгэнэ. `tests/review-window.test.tsx` үүгээр `StudyProvider` дотор `CardReview`-г шууд нээж, багц шүүлт, урьдчилан сонголт, тоолуур, «Цаг дууслаа» мэдэгдэл, 10 минут нэмэх, дуусгах үйлдлийг шалгана.
+
 ## 4. Зураг ба текст
 
 - **Текст** — «ойлголт: тайлбар» мөрүүдээс төхөөрөмж дээр загвар бэлдэх (`localCardDrafts`, `localQuizDrafts`), эсвэл онлайн Бондоокоор AI-аар бэлдүүлэх.
