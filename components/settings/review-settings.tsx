@@ -28,24 +28,27 @@ export function ReviewSettings() {
       ? data.settings.extras.fsrsScale
       : 1;
   const budget = newCardsPerDay(data.settings),
-    [budgetDraft, setBudgetDraft] = useState(String(budget));
+    // `null` means "no unsaved edit": the input mirrors the store, so a value
+    // that arrives from another device (cloud merge) replaces the field instead
+    // of leaving stale text behind.
+    [budgetDraft, setBudgetDraft] = useState<string | null>(null);
   const sessionLimit = reviewSessionLimit(data.settings),
-    [limitDraft, setLimitDraft] = useState(String(sessionLimit));
+    [limitDraft, setLimitDraft] = useState<string | null>(null);
   const saveLimit = () => {
+    if (limitDraft === null) return;
     const value = Number.parseInt(limitDraft, 10);
+    setLimitDraft(null);
     if (
       !Number.isFinite(value) ||
       value < 0 ||
       value > MAX_REVIEW_SESSION_LIMIT
     ) {
-      setLimitDraft(String(sessionLimit));
       setMessage(
         `Нэг давтлагын дээд хэмжээ 0–${MAX_REVIEW_SESSION_LIMIT} (0 = хязгааргүй).`,
       );
       return;
     }
     if (value === sessionLimit) return;
-    setLimitDraft(String(value));
     void run(
       () =>
         store.mutate(
@@ -57,14 +60,14 @@ export function ReviewSettings() {
     );
   };
   const saveBudget = () => {
+    if (budgetDraft === null) return;
     const value = Number.parseInt(budgetDraft, 10);
+    setBudgetDraft(null);
     if (!Number.isFinite(value) || value < 0 || value > 500) {
-      setBudgetDraft(String(budget));
       setMessage("Өдрийн шинэ карт 0–500 хооронд байна (0 = хязгааргүй).");
       return;
     }
     if (value === budget) return;
-    setBudgetDraft(String(value));
     void run(
       () =>
         store.mutate(
@@ -177,7 +180,7 @@ export function ReviewSettings() {
             type="number"
             min={0}
             max={500}
-            value={budgetDraft}
+            value={budgetDraft ?? String(budget)}
             disabled={busy}
             onChange={(e) => setBudgetDraft(e.target.value)}
             onBlur={saveBudget}
@@ -202,7 +205,7 @@ export function ReviewSettings() {
             type="number"
             min={0}
             max={MAX_REVIEW_SESSION_LIMIT}
-            value={limitDraft}
+            value={limitDraft ?? String(sessionLimit)}
             disabled={busy}
             onChange={(e) => setLimitDraft(e.target.value)}
             onBlur={saveLimit}
