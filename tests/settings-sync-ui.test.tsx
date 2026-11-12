@@ -12,6 +12,8 @@ import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { LanguageProvider } from "@/components/i18n/language-provider";
 import { ReviewSettings } from "@/components/settings/review-settings";
+import { Settings } from "@/components/settings/settings";
+import { AccountProvider } from "@/hooks/use-account";
 import { StudyProvider, useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
 import type { StudyStore } from "@/lib/persistence/store";
@@ -74,6 +76,49 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+
+describe("timer settings after a cloud merge", () => {
+  it("follows merged timer values and keeps a typed draft", async () => {
+    await seedGuestStore(
+      dataWith({
+        focusMinutes: 25,
+        shortBreakMinutes: 5,
+        longBreakMinutes: 15,
+      }),
+    );
+    render(
+      <LanguageProvider>
+        <StudyProvider>
+          <AccountProvider>
+            <Capture />
+            <Settings />
+          </AccountProvider>
+        </StudyProvider>
+      </LanguageProvider>,
+    );
+    const focus = await screen.findByLabelText("Төвлөрөх (м)");
+    expect(focus).toHaveValue(25);
+
+    const current = store!.getSnapshot().data;
+    await store!.mutate(
+      actions.settings({
+        ...current.settings,
+        focusMinutes: 50,
+      }),
+    );
+    await waitFor(() => expect(focus).toHaveValue(50));
+
+    fireEvent.change(focus, { target: { value: "40" } });
+    expect(focus).toHaveValue(40);
+    await store!.mutate(
+      actions.settings({
+        ...store!.getSnapshot().data.settings,
+        focusMinutes: 60,
+      }),
+    );
+    expect(focus).toHaveValue(40);
+  });
 });
 
 describe("review settings after a cloud merge", () => {

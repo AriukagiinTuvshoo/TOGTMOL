@@ -43,10 +43,15 @@ export function Settings() {
   const { data, store, run, navigate } = useStudy(),
     { t } = useI18n(),
     { namespace } = useStoreState();
-  const [focus, setFocus] = useState(String(data.settings.focusMinutes)),
-    [short, setShort] = useState(String(data.settings.shortBreakMinutes)),
-    [long, setLong] = useState(String(data.settings.longBreakMinutes)),
+  // `null` draft = untouched field: the timer inputs follow the store, so a
+  // sync merge shows up instead of leaving text that Save would write back.
+  const [focusDraft, setFocusDraft] = useState<string | null>(null),
+    [shortDraft, setShortDraft] = useState<string | null>(null),
+    [longDraft, setLongDraft] = useState<string | null>(null),
     [time, setTime] = useState(data.settings.reminderTime ?? "");
+  const focus = focusDraft ?? String(data.settings.focusMinutes),
+    short = shortDraft ?? String(data.settings.shortBreakMinutes),
+    long = longDraft ?? String(data.settings.longBreakMinutes);
   const warningRaw = data.settings.extras.timerWarningSeconds;
   const warningSeconds =
     warningRaw === 10 || warningRaw === 30 || warningRaw === 60
@@ -169,7 +174,12 @@ export function Settings() {
                     }),
                   ),
                 "Timer тохиргоо хадгалагдлаа.",
-              );
+              ).then((saved) => {
+                if (!saved) return;
+                setFocusDraft(null);
+                setShortDraft(null);
+                setLongDraft(null);
+              });
             }}
           >
             <label>
@@ -201,7 +211,7 @@ export function Settings() {
                   min={1}
                   max={240}
                   value={focus}
-                  onChange={(e) => setFocus(e.target.value)}
+                  onChange={(e) => setFocusDraft(e.target.value)}
                   required
                 />
               </label>
@@ -212,7 +222,7 @@ export function Settings() {
                   min={1}
                   max={90}
                   value={short}
-                  onChange={(e) => setShort(e.target.value)}
+                  onChange={(e) => setShortDraft(e.target.value)}
                   required
                 />
               </label>
@@ -223,7 +233,7 @@ export function Settings() {
                   min={1}
                   max={90}
                   value={long}
-                  onChange={(e) => setLong(e.target.value)}
+                  onChange={(e) => setLongDraft(e.target.value)}
                   required
                 />
               </label>
