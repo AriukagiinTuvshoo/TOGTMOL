@@ -3,6 +3,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync, readdirSync } from "node:fs";
 import { fixture } from "./fixtures";
 import { knowledgeFixture } from "./knowledge-fixtures";
+import type { MusicSource, StudyData } from "@/types/study";
 const A = "11111111-1111-4111-8111-111111111111",
   B = "22222222-2222-4222-8222-222222222222";
 let db: PGlite;
@@ -405,5 +406,126 @@ describe("v5 knowledge and cloud erasure", () => {
     ).toBeGreaterThan(0);
     await db.exec("reset role");
     expect((await db.query("select * from auth.users")).rows).toHaveLength(2);
+  });
+});
+
+const musicBase = {
+  createdAt: 5,
+  updatedAt: 5,
+  deletedAt: null,
+  extras: {},
+};
+function audioSource(patch: Partial<MusicSource> = {}): MusicSource {
+  return {
+    ...musicBase,
+    id: "audio-source",
+    title: "Study audio",
+    kind: "audio",
+    youtubeId: "",
+    ...patch,
+  } as MusicSource;
+}
+function withoutYouTubeId(source: MusicSource): MusicSource {
+  const copy: Partial<MusicSource> = { ...source };
+  delete copy.youtubeId;
+  return copy as MusicSource;
+}
+describe("v6 audio music sources", () => {
+  async function pushMusic(
+    sources: MusicSource[],
+  ): Promise<{ revision: number; musicSources: MusicSource[] }> {
+    await asUser(A);
+    const before = await db.query<{
+      value: { revision: number; data: StudyData };
+    }>("select public.pull_study_data($1) as value", [A]);
+    const { revision, data } = before.rows[0].value;
+    const pushed = await db.query<{ value: { revision: number } }>(
+      "select public.push_study_data($1,$2,$3::jsonb) as value",
+      [A, revision, JSON.stringify({ ...data, musicSources: sources })],
+    );
+    const pulled = await db.query<{
+      value: { data: Pick<StudyData, "musicSources"> };
+    }>("select public.pull_study_data($1) as value", [A]);
+    return {
+      revision: pushed.rows[0].value.revision,
+      musicSources: pulled.rows[0].value.data.musicSources,
+    };
+  }
+  it("round-trips URL and device-key audio sources with a null youtube_id", async () => {
+    // A URL source has no youtubeId key at all; the UI also stores "" for files.
+    const sources = [
+      withoutYouTubeId(
+        audioSource({
+          id: "audio-url",
+          audioUrl: "https://cdn.example.com/study.mp3",
+        }),
+      ),
+      audioSource({
+        id: "audio-file",
+        audioStorageKey: "musicblob_abcdefgh1234",
+        mimeType: "audio/mpeg",
+        sizeBytes: 4096,
+      }),
+    ];
+    const result = await pushMusic(sources);
+    expect(result.revision).toBeGreaterThan(0);
+    expect(
+      result.musicSources
+        .filter((s) => s.id.startsWith("audio-"))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+    ).toEqual([...sources].sort((a, b) => a.id.localeCompare(b.id)));
+    await db.exec("reset role");
+    const stored = await db.query<{ id: string; youtube_id: string | null }>(
+      "select id,youtube_id from public.music_sources where id like 'audio-%' order by id",
+    );
+    expect(stored.rows).toEqual([
+      { id: "audio-file", youtube_id: "" },
+      { id: "audio-url", youtube_id: null },
+    ]);
+  });
+  it("rejects an audio source that no device could ever play", async () => {
+    await expect(
+      pushMusic([audioSource({ id: "audio-empty" })]),
+    ).rejects.toThrow(/music_sources_payload_check/);
+    await expect(
+      pushMusic([
+        audioSource({
+          id: "audio-short-key",
+          audioStorageKey: "musicblob_short",
+        }),
+      ]),
+    ).rejects.toThrow(/music_sources_payload_check/);
+    await expect(
+      pushMusic([
+        audioSource({
+          id: "audio-bad-scheme",
+          audioUrl: "ftp://example.com/a.mp3",
+        }),
+      ]),
+    ).rejects.toThrow(/music_sources_payload_check/);
+  });
+  it("keeps the YouTube video and playlist validation intact", async () => {
+    await expect(
+      pushMusic([
+        {
+          ...musicBase,
+          id: "video-short",
+          title: "Broken video",
+          kind: "video",
+          youtubeId: "short",
+        },
+      ]),
+    ).rejects.toThrow(/music_sources_payload_check/);
+    const playlist = {
+      ...musicBase,
+      id: "playlist-ok",
+      title: "Playlist",
+      kind: "playlist" as const,
+      youtubeId: "PLabcdefghij",
+    };
+    const result = await pushMusic([playlist]);
+    expect(result.musicSources.find((s) => s.id === playlist.id)).toEqual(
+      playlist,
+    );
   });
 });

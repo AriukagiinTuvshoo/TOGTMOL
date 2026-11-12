@@ -209,7 +209,10 @@ function useMusicController() {
         namespace,
         target.audioStorageKey,
       );
-      if (!blob) throw Error("Төхөөрөмж дээрх энэ аудио файл олдсонгүй.");
+      if (!blob)
+        throw Error(
+          "Энэ аудио файл зөвхөн оруулсан төхөөрөмж дээр байна. Файлын оронд аудио холбоос нэмбэл бүх төхөөрөмжид тоглуулна.",
+        );
       nextURL = URL.createObjectURL(blob);
     }
     if (!nextURL) throw Error("Аудио холбоос олдсонгүй.");

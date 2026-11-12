@@ -11,6 +11,7 @@ import { Repository } from "@/lib/persistence/repository";
 import { emptyData } from "@/lib/constants";
 import { fixture, MemoryStorage, NOW } from "./fixtures";
 import { knowledgeFixture } from "./knowledge-fixtures";
+import type { StudyData } from "@/types/study";
 class Cloud implements CloudAdapter {
   snapshot: CloudSnapshot = { revision: 0, data: emptyData() };
   pushes = 0;
@@ -165,6 +166,58 @@ describe("sync engine", () => {
     await engine.sync();
     expect(cloud.snapshot.data.activeTimer).toBeNull();
     expect(store.getSnapshot().data.activeTimer?.id).toBe("active");
+    store.destroy();
+  });
+  it("carries audio sources to a second device instead of dropping them", async () => {
+    const { store, cloud, engine } = await setup();
+    const base = {
+      createdAt: NOW,
+      updatedAt: NOW,
+      deletedAt: null,
+      extras: {},
+    };
+    const audio: StudyData["musicSources"] = [
+      {
+        ...base,
+        id: "audio-url",
+        title: "Study MP3",
+        kind: "audio",
+        youtubeId: "",
+        audioUrl: "https://cdn.example.com/study.mp3",
+      },
+      {
+        ...base,
+        id: "audio-file",
+        title: "Local recording",
+        kind: "audio",
+        youtubeId: "",
+        audioStorageKey: "musicblob_abcdefgh1234",
+        mimeType: "audio/mpeg",
+        sizeBytes: 4096,
+      },
+    ];
+    await store.mutate((d) => ({ ...d, musicSources: audio }));
+    await engine.sync();
+    expect(cloud.snapshot.data.musicSources.map((s) => s.id).sort()).toEqual([
+      "audio-file",
+      "audio-url",
+    ]);
+
+    const second = new StudyStore(
+      new Repository(new IDBFactory(), new MemoryStorage()),
+    );
+    await second.initialize();
+    await second.switchNamespace("account:a");
+    await new SyncEngine(second, cloud, "a").sync();
+    const pulled = second.getSnapshot().data.musicSources;
+    expect(pulled.map((s) => s.id).sort()).toEqual(["audio-file", "audio-url"]);
+    expect(pulled.find((s) => s.id === "audio-file")?.audioStorageKey).toBe(
+      "musicblob_abcdefgh1234",
+    );
+    expect(pulled.find((s) => s.id === "audio-url")?.audioUrl).toBe(
+      "https://cdn.example.com/study.mp3",
+    );
+    second.destroy();
     store.destroy();
   });
 });
