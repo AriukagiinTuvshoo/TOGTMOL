@@ -11,7 +11,7 @@
 | TypeScript         | `npm run typecheck`    | Тэнцсэн, алдаагүй                                 |
 | ESLint             | `npm run lint`         | Тэнцсэн, алдаа/анхааруулгагүй                     |
 | Формат             | `npm run format:check` | Тэнцсэн                                           |
-| Тест               | `npm run test`         | **248 / 248** тест, **29 / 29** файл (~55 секунд) |
+| Тест               | `npm run test`         | **249 / 249** тест, **30 / 30** файл (~55 секунд) |
 | Production build   | `npm run build`        | Тэнцсэн; offline manifest **29** immutable asset  |
 | CI (`check.yml`)   | —                      | `main` дээр `check`, `lighthouse` = success       |
 
@@ -94,7 +94,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
      Scenario бүр цэвэр үүлэн сангаас эхэлнэ; нэг тестийн reset epoch нөгөөгийнхөд нөлөөлөхгүй.
 - **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх. Энэ ажлын орчинд `SUPABASE_PRODUCTION_URL`, `SUPABASE_PRODUCTION_PUBLISHABLE_KEY`, `SUPABASE_TEST_EMAIL`, `SUPABASE_TEST_PASSWORD`, `SUPABASE_EXPECTED_PROJECT_REF` байхгүй тул бодит үйлчилгээний тестийг ажиллуулж чадаагүй. Бэлэн хэрэгсэл: `npm run verify:supabase:production` ба `.github/workflows/supabase-production-smoke.yml`.
 - **Схем.** `types/` нь схем 5. v6-д нэмэх талбарыг эхлээд `docs/MIGRATION.md`-д төлөвлөж, дараа нь SQL бичнэ.
-- **Тестийн суурь.** 248 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
+- **Тестийн суурь.** 249 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
 
 ## 6. Phase 2 — PWA, гар утасны навигаци ба хүртээмж (эхэлсэн)
 
@@ -117,7 +117,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
 - **FSRS-4.5 бөгөөд бүрэн.** `lib/knowledge/fsrs.ts`: нийтлэг 17 жин, мартах муруй, `D0/S0`, амжилт/алдааны тогтвортой байдал, коэффициент ба хязгаарууд. 0–2 → Again, 3 → Hard, 4 → Good, 5 → Easy буулгалттай.
 - **Түүхээс сурах.** `lib/knowledge/calibrate.ts` нь давтлагын түүхээс нэг тогтвортой байдлын коэффициентийг log-loss-оор тааруулна; 40-өөс доош ажиглалт эсвэл ач холбогдолгүй сайжруулалтад анхдагчаа үлдээнэ. Зөвхөн хэрэглэгчийн товч дарахад хадгална.
 - **Хадгалалт.** `ReviewSchedule`-д `algorithm/stability/difficulty/lastReview` нэмэгдэж, validation болон `migrate()` тэдгээрийг хадгална — үүлэн синк, JSON нөөцөд автоматаар орно.
-- **Тест.** `tests/fsrs.test.ts` — 19 тест (муруй, үнэлгээ, тогтвортой байдал, калибровкын чиглэл ба босго, SM-2/FSRS интеграци, round-trip).
+- **Тест.** `tests/fsrs.test.ts` — 19 тест (муруй, үнэлгээ, тогтвортой байдал, калибровкын чиглэл ба босго, SM-2/FSRS интеграци, round-trip); `tests/fsrs-ui.test.tsx` — Тохиргооны сонголт SM-2-оос FSRS руу шилжиж, `aria-pressed` болон тайлбар шинэчлэгдэхийг шалгана.
 - **Үлдсэн.** Бүрэн жин сургах (сервер талын оптимизатор), FSRS-5/6-ийн нэг өдрийн доторх загвар, Anki импорт/экспорт, PDF/текстээс карт үүсгэх.
 
 ## 8. Phase 0-ийн дараагийн гурван үйлдэл
