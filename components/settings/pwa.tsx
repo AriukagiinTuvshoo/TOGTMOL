@@ -53,6 +53,21 @@ export function PwaManager() {
               "Интернэтгүй ажиллах хувилбарыг бэлтгэж чадсангүй. Холболттой үед дахин нээнэ үү.",
             );
         });
+    // A tab that stays open for days never sees a new build unless the worker is
+    // re-checked. Ask at most once a minute, and only while the tab is visible.
+    let lastCheck = Date.now();
+    const checkForUpdate = () => {
+      if (disposed || document.hidden || !registration) return;
+      if (Date.now() - lastCheck < 60000) return;
+      lastCheck = Date.now();
+      void registration.update().catch(() => {
+        // Offline or a failed check must leave the active worker alone.
+      });
+    };
+    const onVisibility = () => {
+      if (!document.hidden) checkForUpdate();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     const handler = (e: Event) => {
       e.preventDefault();
       promptEvent = e as InstallEvent;
@@ -61,6 +76,7 @@ export function PwaManager() {
     window.addEventListener("beforeinstallprompt", handler);
     return () => {
       disposed = true;
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("beforeinstallprompt", handler);
       registration?.removeEventListener("updatefound", updateFound);
       installing?.removeEventListener("statechange", workerChanged);

@@ -62,6 +62,9 @@ describe("service worker privacy and offline lifecycle", () => {
     expect(cached).toContain("/_next/static/app.js");
     expect(cached).toContain("/_next/static/app.css");
     expect(cached).toContain("/");
+    // Legal pages are static routes, so they stay readable without a network.
+    expect(cached).toContain("/privacy");
+    expect(cached).toContain("/terms");
   });
   it("never intercepts Supabase, authorization headers, or OAuth callback URLs", () => {
     const { handlers } = worker();

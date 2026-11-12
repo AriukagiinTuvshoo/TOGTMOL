@@ -3,6 +3,8 @@
 const CACHE = "togtmol-shell-__BUILD_ID__";
 const ASSETS = [
   "/",
+  "/privacy",
+  "/terms",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
