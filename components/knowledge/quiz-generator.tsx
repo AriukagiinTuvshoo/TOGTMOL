@@ -12,6 +12,7 @@ import { recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { uid } from "@/lib/constants";
 import type { QuizQuestion, StudyQuiz } from "@/types/knowledge";
 import { useI18n } from "@/components/i18n/language-provider";
+import { FileMaterial } from "./file-material";
 
 export function QuizGenerator({ onClose }: { onClose: () => void }) {
   const { data, store, run } = useStudy();
@@ -169,6 +170,18 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                 placeholder="Жишээ: Python функц нь дахин ашиглах кодын хэсэг..."
               />
             </label>
+            <FileMaterial
+              disabled={busy}
+              onText={(value, name) => {
+                setText(value.slice(0, 12000));
+                setTitle((current) =>
+                  !current.trim() || current.startsWith("Бондоок")
+                    ? `${name.slice(0, 170)} · Quiz`
+                    : current,
+                );
+                setSource("");
+              }}
+            />
             <label>
               Асуултын тоо
               <input

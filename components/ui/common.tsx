@@ -154,6 +154,19 @@ export function Modal({
     </dialog>
   );
 }
+export function downloadText(
+  value: string,
+  filename: string,
+  type = "text/plain;charset=utf-8",
+) {
+  const blob = new Blob([value], { type }),
+    url = URL.createObjectURL(blob),
+    a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 export function downloadJson(value: unknown, filename: string) {
   const blob = new Blob(
       [typeof value === "string" ? value : JSON.stringify(value, null, 2)],

@@ -8,6 +8,7 @@ import type { StudyData } from "@/types/study";
 import type {
   CardReview,
   Flashcard,
+  FlashcardDeck,
   KnowledgeRecord,
   QuizAttempt,
   StudyQuiz,
@@ -202,6 +203,87 @@ export function saveQuizAttempt(
         },
       ],
     };
+  };
+}
+export const cardKey = (front: string) =>
+  front.trim().normalize("NFKC").toLocaleLowerCase().replace(/\s+/g, " ");
+
+/**
+ * Import cards from an external source (Anki text export, CSV, pasted text).
+ * The deck is created when needed, and cards whose question already exists in
+ * that deck are skipped so a repeated import does not double the deck.
+ */
+export function importCards(
+  cards: { front: string; back: string; tags?: string[] }[],
+  options: {
+    title: string;
+    subjectId?: string | null;
+    deckId?: string;
+    tags?: string[];
+    today: string;
+    now?: number;
+  },
+) {
+  return (data: StudyData): StudyData => {
+    if (!cards.length) throw Error("Импортлох карт олдсонгүй.");
+    if (cards.length > 2000)
+      throw Error("Нэг удаад 2000 хүртэл карт импортолно.");
+    const title = options.title.trim();
+    const now = options.now ?? Date.now();
+    const existingDeck = options.deckId
+      ? data.knowledge.find(
+          (r): r is FlashcardDeck =>
+            r.kind === "deck" && r.id === options.deckId && !r.deletedAt,
+        )
+      : undefined;
+    if (options.deckId && !existingDeck) throw Error("Багц олдсонгүй.");
+    if (!existingDeck && !title) throw Error("Багцын нэрээ оруулна уу.");
+    if (title.length > 180) throw Error("Багцын нэр 180 тэмдэгтээс хэтрэхгүй.");
+    const deck: FlashcardDeck = existingDeck ?? {
+      ...recordBase(title, options.subjectId ?? null, options.tags ?? [], now),
+      kind: "deck",
+      description: "Гаднаас импортолсон (Anki текст/CSV)",
+    };
+    let next = existingDeck ? data : saveKnowledge(deck, undefined)(data);
+    const deckId = deck.id;
+    const seen = new Set(
+      next.knowledge
+        .filter(
+          (r): r is Flashcard =>
+            r.kind === "card" && r.deckId === deckId && !r.deletedAt,
+        )
+        .map((card) => cardKey(card.front)),
+    );
+    for (const card of cards) {
+      const key = cardKey(card.front);
+      if (!key || !card.back.trim() || seen.has(key)) continue;
+      seen.add(key);
+      next = saveKnowledge(
+        {
+          ...recordBase(
+            card.front.slice(0, 180),
+            options.subjectId ?? deck.subjectId ?? null,
+            [...new Set([...(card.tags ?? []), ...(options.tags ?? [])])].slice(
+              0,
+              30,
+            ),
+            now,
+          ),
+          kind: "card" as const,
+          deckId,
+          front: card.front,
+          back: card.back,
+          schedule: {
+            repetitions: 0,
+            interval: 0,
+            ease: 2.5,
+            dueOn: options.today,
+          },
+        },
+        undefined,
+      )(next);
+    }
+    return next;
   };
 }
 export function addCards(cards: Flashcard[]) {

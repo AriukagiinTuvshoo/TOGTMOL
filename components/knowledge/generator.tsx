@@ -12,6 +12,7 @@ import {
 } from "@/lib/knowledge/generation";
 import { addCards, recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { prepareImage } from "@/lib/knowledge/images";
+import { FileMaterial } from "./file-material";
 import type { Flashcard, FlashcardDeck } from "@/types/knowledge";
 export function CardGenerator({ onClose }: { onClose: () => void }) {
   const { data, store, run, today } = useStudy();
@@ -201,6 +202,18 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
                 placeholder="Ойлголт: тайлбар гэсэн мөрүүд эсвэл суралцах текстээ оруулна уу."
               />
             </label>
+            <FileMaterial
+              disabled={busy}
+              onText={(value, name) => {
+                setText(value.slice(0, 12000));
+                setTitle((current) =>
+                  current === "Миний давтлага" || !current.trim()
+                    ? name.slice(0, 180)
+                    : current,
+                );
+                setSource("");
+              }}
+            />
             <label className="button file-button">
               Зураг сонгох
               <input
