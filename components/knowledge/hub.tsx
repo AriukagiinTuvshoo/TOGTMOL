@@ -87,7 +87,7 @@ export function KnowledgeHub() {
   const [cardLimit, setCardLimit] = useState(100);
   const index = useMemo(
     () => knowledgeIndex(data.knowledge, today, data.settings),
-    [data.knowledge, today],
+    [data.knowledge, today, data.settings],
   );
   const deferred = useDeferredValue(query),
     search = useMemo(() => searchableData(data), [data]);

@@ -13,7 +13,7 @@ export function DailyKnowledge() {
     [reviewing, setReviewing] = useState(false);
   const index = useMemo(
     () => knowledgeIndex(data.knowledge, today, data.settings),
-    [data.knowledge, today],
+    [data.knowledge, today, data.settings],
   );
   const inspiration = index.notes
     .filter((n) => n.kind === "note" && n.date === today)
