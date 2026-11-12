@@ -56,7 +56,36 @@ export function schedule(input: unknown): ReviewSchedule {
     ease > 100
   )
     throw Error("Картын давтлагын хуваарь буруу.");
-  return { repetitions, interval, ease, dueOn: input.dueOn as string };
+  const result: ReviewSchedule = {
+    repetitions,
+    interval,
+    ease,
+    dueOn: input.dueOn as string,
+  };
+  // The optional FSRS memory state travels with the schedule; older clients and
+  // SM-2 records simply have none of these fields.
+  if (input.algorithm !== undefined) {
+    if (input.algorithm !== "sm2" && input.algorithm !== "fsrs")
+      throw Error("Картын давтлагын алгоритм танигдсангүй.");
+    result.algorithm = input.algorithm;
+  }
+  if (input.stability !== undefined) {
+    const stability = finite(input.stability, -1);
+    if (!(stability > 0) || stability > 36500)
+      throw Error("Картын тогтвортой байдал буруу.");
+    result.stability = stability;
+  }
+  if (input.difficulty !== undefined) {
+    const difficulty = finite(input.difficulty, -1);
+    if (difficulty < 1 || difficulty > 10) throw Error("Картын хүндрэл буруу.");
+    result.difficulty = difficulty;
+  }
+  if (input.lastReview !== undefined) {
+    if (!parseDate(input.lastReview))
+      throw Error("Картын сүүлийн давтлагын огноо буруу.");
+    result.lastReview = input.lastReview as string;
+  }
+  return result;
 }
 export function question(input: unknown): QuizQuestion {
   if (

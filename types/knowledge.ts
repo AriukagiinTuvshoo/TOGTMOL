@@ -20,6 +20,11 @@ export interface ReviewSchedule {
   interval: number;
   ease: number;
   dueOn: string;
+  /** Present once a card has been scheduled by the optional FSRS algorithm. */
+  algorithm?: "sm2" | "fsrs";
+  stability?: number;
+  difficulty?: number;
+  lastReview?: string;
 }
 export interface Flashcard extends KnowledgeBase {
   kind: "card";

@@ -3,6 +3,7 @@ import { dateKey, studyDate } from "@/lib/calculations/dates";
 import { dayBoundary } from "@/lib/preferences";
 import { parseKnowledge } from "./validation";
 import { sm2 } from "./spaced-repetition";
+import { fsrsSchedule } from "./fsrs";
 import type { StudyData } from "@/types/study";
 import type {
   CardReview,
@@ -117,7 +118,16 @@ export function reviewCard(
       )
       .sort((a, b) => a.reviewedAt - b.reviewedAt);
     const before = sameDay[0]?.before ?? card.schedule;
-    const after = sm2(before, grade, reviewDay);
+    // SM-2 stays the default; a user can opt into FSRS in the settings.
+    const calibration = data.settings.extras.fsrsScale,
+      scale =
+        typeof calibration === "number" && Number.isFinite(calibration)
+          ? Math.min(2, Math.max(0.5, calibration))
+          : 1;
+    const after =
+      data.settings.extras.srsAlgorithm === "fsrs"
+        ? fsrsSchedule(before, grade, reviewDay, { scale })
+        : sm2(before, grade, reviewDay);
     const review: CardReview = {
       ...recordBase(card.title, card.subjectId, card.tags, now),
       id: reviewId,

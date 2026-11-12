@@ -14,6 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { AccountPanel } from "./account-panel";
 import { InstallButton } from "./pwa";
 import { MusicSettings } from "./music-settings";
+import { ReviewSettings } from "./review-settings";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
 
@@ -149,6 +150,7 @@ export function Settings() {
           </button>
         </section>
         <MusicSettings />
+        <ReviewSettings />
         <section className="card">
           <SectionTitle title={t("settings.timerRhythm")} />
           <form
