@@ -11,8 +11,8 @@
 | TypeScript         | `npm run typecheck`    | Тэнцсэн, алдаагүй                                 |
 | ESLint             | `npm run lint`         | Тэнцсэн, алдаа/анхааруулгагүй                     |
 | Формат             | `npm run format:check` | Тэнцсэн                                           |
-| Тест               | `npm run test`         | **295 / 295** тест, **37 / 37** файл (~55 секунд) |
-| Production build   | `npm run build`        | Тэнцсэн; offline manifest **29** immutable asset  |
+| Тест               | `npm run test`         | **305 / 305** тест, **38 / 38** файл (~60 секунд) |
+| Production build   | `npm run build`        | Тэнцсэн; offline manifest **30** immutable asset  |
 | CI (`check.yml`)   | —                      | `main` дээр `check`, `lighthouse` = success       |
 
 Дүгнэлт: **`main` нь CI-тэйгээ нийцэж, бүрэн ногоон байна.** Phase 0-ийн «CI-г заавал тэнцдэг болгох» зорилго нь код засах шаардлагагүйгээр аль хэдийн биелсэн; асуудал нь салбар болон PR-үүд дээр байна (§3).
@@ -74,7 +74,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
 | ---------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `docs/ARCHITECTURE.md` | «Тогтмол v5: архитектур»                                        | Бүтэц нь үндсэндээ хүчинтэй; v6/v7-ийн өөрчлөлт (i18n, decision center, PWA lifecycle) ороогүй |
 | `docs/MIGRATION.md`    | v2/v3/v4 → **v5** шилжилт                                       | Схем 5 хэвээр тул агуулга хүчинтэй; v6 migration төлөвлөгөө байхгүй                            |
-| `docs/VERIFICATION.md` | 2026-09-22-ны тайлан: 146 тест / 17 файл, 25 asset, Next 16.3.5 | Хуучирсан: одоо **217 тест / 26 файл**, **29 asset**, Next **16.3.8**                          |
+| `docs/VERIFICATION.md` | 2026-09-22-ны тайлан: 146 тест / 17 файл, 25 asset, Next 16.3.5 | Хуучирсан: одоо **305 тест / 38 файл**, **30 asset**, Next **16.3.8**                          |
 | `docs/UPGRADE-5.md`    | v5-ийн инженерийн тэмдэглэл                                     | Түүхэн баримт тул хэвээр; v7-ийн тэмдэглэл байхгүй                                             |
 | `docs/DEPLOYMENT.md`   | v5 SQL migration, Cloudflare/Vercel                             | Схем 5 хэвээр тул хүчинтэй                                                                     |
 
@@ -94,7 +94,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
      Scenario бүр цэвэр үүлэн сангаас эхэлнэ; нэг тестийн reset epoch нөгөөгийнхөд нөлөөлөхгүй.
 - **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх. Энэ ажлын орчинд `SUPABASE_PRODUCTION_URL`, `SUPABASE_PRODUCTION_PUBLISHABLE_KEY`, `SUPABASE_TEST_EMAIL`, `SUPABASE_TEST_PASSWORD`, `SUPABASE_EXPECTED_PROJECT_REF` байхгүй тул бодит үйлчилгээний тестийг ажиллуулж чадаагүй. Бэлэн хэрэгсэл: `npm run verify:supabase:production` ба `.github/workflows/supabase-production-smoke.yml`.
 - **Схем.** `types/` нь схем 5. v6-д нэмэх талбарыг эхлээд `docs/MIGRATION.md`-д төлөвлөж, дараа нь SQL бичнэ.
-- **Тестийн суурь.** 295 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
+- **Тестийн суурь.** 305 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
 
 ## 6. Phase 2 — PWA, гар утасны навигаци ба хүртээмж (эхэлсэн)
 

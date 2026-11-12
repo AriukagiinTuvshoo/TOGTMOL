@@ -389,8 +389,8 @@ small {
   position: fixed;
   left: 16px;
   top: -100px;
-  background: var(--moss);
-  color: var(--surface);
+  background: #14140f;
+  color: #fff;
   padding: 12px 18px;
   border-radius: 9px;
   z-index: 100;

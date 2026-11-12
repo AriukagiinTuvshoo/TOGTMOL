@@ -2236,3 +2236,13 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * Contrast: the active knowledge tab pairs the translucent dark surface with
+ * the violet accent, which measured 3.86:1. A deeper violet with white text
+ * reaches 6.2:1 without touching the accent's other uses.
+ */
+.knowledge-tabs button[aria-current="page"] {
+  background: #6f3fe0;
+  color: #fff;
+}

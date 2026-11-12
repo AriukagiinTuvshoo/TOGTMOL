@@ -4,9 +4,11 @@
   --surface: #fffcf6;
   --surface-muted: #f0e8dc;
   --text: #443e36;
-  --muted: #776d61;
+  /* ≥4.5:1 on --surface-muted (#e5eadd); the old #776d61 sat at 4.14. */
+  --muted: #6c6357;
   --border: #e4dacb;
-  --moss: #667b60;
+  /* ≥4.5:1 on --surface-muted and --surface; the old #667b60 sat at 3.75. */
+  --moss: #586c52;
   --moss-soft: #e5eadd;
   --hero: #526c50;
   --yellow: #e8c890;
