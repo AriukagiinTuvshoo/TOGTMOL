@@ -11,7 +11,7 @@
 | TypeScript         | `npm run typecheck`    | Тэнцсэн, алдаагүй                                 |
 | ESLint             | `npm run lint`         | Тэнцсэн, алдаа/анхааруулгагүй                     |
 | Формат             | `npm run format:check` | Тэнцсэн                                           |
-| Тест               | `npm run test`         | **221 / 221** тест, **26 / 26** файл (~35 секунд) |
+| Тест               | `npm run test`         | **227 / 227** тест, **27 / 27** файл (~50 секунд) |
 | Production build   | `npm run build`        | Тэнцсэн; offline manifest **29** immutable asset  |
 | CI (`check.yml`)   | —                      | `main` дээр `check`, `lighthouse` = success       |
 
@@ -84,9 +84,17 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
 
 - **Аудио Cloud Sync — migration орсон (2026-11-12).** `supabase/migrations/20260924201500_music_audio_sources_v6.sql` нэмэгдсэн: `youtube_id` nullable, `kind='audio'` зөвшөөрөгдөнө, `audioUrl` эсвэл `audioStorageKey`-ийн аль нэг нь заавал байна. Байхгүй тохиолдолд `coalesce(..., false)` ашигласан — эс бөгөөс SQL-ийн NULL нь CHECK-ийг "давсан" гэж үзэж, тоглуулах боломжгүй бичлэг хадгалагдах байсан. Схем 5 хэвээр. `tests/database.test.ts` дэх `v6 audio music sources` бүлэг (3 тест) бодит PGlite дээр батална: URL ба файлын аудио round-trip, `youtube_id` NULL/`''`, аудио тодорхойлогчгүй/буруу түлхүүр/буруу схем татгалзагдах, видео/playlist-ийн шалгалт хэвээр.
 - **Аудио бодлого.** URL аудио бүх төхөөрөмжид синк хийгдэнэ; `audioStorageKey` файлын байт нь зөвхөн оруулсан төхөөрөмж дээр үлдэж, бусад төхөөрөмж дээр тодорхой мессеж гарна ([MUSIC.md](MUSIC.md)). Аль нэг аудио эх сурвалж нь өмнө нь бүхэл бүртгэлийн push-ийг унагадаг байсан — migration үүнийг зассан.
-- **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх; хоёр төхөөрөмжийн синк, conflict resolution ба backup/recovery-г бодит орчинд дахин шалгах.
+- **Хоёр төхөөрөмжийн синк — scenario тест (2026-11-12).** `tests/two-device-sync.test.ts` нь хоёр тусдаа IndexedDB төхөөрөмж, бодит `SyncEngine` ба `SupabaseAdapter`, бодит PGlite PostgreSQL (RLS, RPC, migration) дээр 6 scenario ажиллуулна:
+  1. нэг бүртгэлийн А төхөөрөмжөөс В рүү хичээл, session, аудио эх сурвалж шилжих, буцаж В-ийн session А руу орох;
+  2. хоёр төхөөрөмж нэг хичээлийг зэрэг засах үед хоёр хувилбар `conflicts`-д үлдэх, шинэ нь ялах, дараа нь хоёулаа ижил төлөвт нийлэх;
+  3. push унах үед офлайн засвар локалд үлдэх, дараагийн синкэд байршиж нөгөө төхөөрөмжид хүрэх;
+  4. үүлэн устгалтын дараа локал түүх зөвшөөрөлгүй буцаж байршихаас татгалзах, зөвшөөрлийн дараа `cloudResetAt` хадгалагдан байрших;
+  5. эвдэрсэн бүртгэлийг яг байгаагаар нь нөөцөлж, ил сэргээх, сэргээх нь синкийг унтраадаг тул дахин холбож, давхардалгүй байршуулах;
+  6. төхөөрөмжийн аудио файлын мета үүлээр дамжих боловч байт нь зөвхөн эх төхөөрөмж дээр байх.
+     Scenario бүр цэвэр үүлэн сангаас эхэлнэ; нэг тестийн reset epoch нөгөөгийнхөд нөлөөлөхгүй.
+- **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх. Энэ ажлын орчинд `SUPABASE_PRODUCTION_URL`, `SUPABASE_PRODUCTION_PUBLISHABLE_KEY`, `SUPABASE_TEST_EMAIL`, `SUPABASE_TEST_PASSWORD`, `SUPABASE_EXPECTED_PROJECT_REF` байхгүй тул бодит үйлчилгээний тестийг ажиллуулж чадаагүй. Бэлэн хэрэгсэл: `npm run verify:supabase:production` ба `.github/workflows/supabase-production-smoke.yml`.
 - **Схем.** `types/` нь схем 5. v6-д нэмэх талбарыг эхлээд `docs/MIGRATION.md`-д төлөвлөж, дараа нь SQL бичнэ.
-- **Тестийн суурь.** 221 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
+- **Тестийн суурь.** 227 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
 
 ## 6. Phase 0-ийн дараагийн гурван үйлдэл
 
