@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { StudyProvider, useStudy, useStoreState } from "@/hooks/use-study";
 import { AccountProvider, useAccount } from "@/hooks/use-account";
 import type { View } from "@/types/study";
@@ -95,6 +95,47 @@ function Shell() {
     navigate(v);
     setMore(false);
   };
+  const moreButton = useRef<HTMLButtonElement>(null),
+    morePanel = useRef<HTMLDivElement>(null);
+  const closeMore = () => {
+    setMore(false);
+    moreButton.current?.focus();
+  };
+
+  // The mobile "Бусад" sheet behaves like a dialog: Escape closes it, focus
+  // starts inside, Tab stays inside, and focus returns to its trigger.
+  useEffect(() => {
+    if (!more) return;
+    morePanel.current
+      ?.querySelector<HTMLElement>(".mobile-more nav button")
+      ?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMore(false);
+        moreButton.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || !morePanel.current) return;
+      const focusable = [
+        ...morePanel.current.querySelectorAll<HTMLElement>(
+          "button:not([disabled])",
+        ),
+      ];
+      if (!focusable.length) return;
+      const first = focusable[0],
+        last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [more]);
 
   useEffect(() => {
     const updateConnection = () => setOnline(navigator.onLine);
@@ -393,10 +434,17 @@ function Shell() {
         </main>
       </div>
       {more && (
-        <div className="mobile-more">
+        <div
+          className="mobile-more"
+          id="mobile-more-panel"
+          ref={morePanel}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("nav.more")}
+        >
           <button
             className="more-close"
-            onClick={() => setMore(false)}
+            onClick={closeMore}
             aria-label={t("common.close")}
           />
           <nav aria-label={t("nav.more")}>
@@ -411,7 +459,7 @@ function Shell() {
           </nav>
         </div>
       )}
-      <nav className="mobile-nav" aria-label="Гар утасны цэс">
+      <nav className="mobile-nav" aria-label={t("nav.mobileMenu")}>
         {[
           { view: "overview", label: t("nav.home"), icon: "home" },
           { view: "knowledge", label: t("nav.knowledgeShort"), icon: "book" },
@@ -428,7 +476,13 @@ function Shell() {
             <span>{n.label}</span>
           </button>
         ))}
-        <button aria-expanded={more} onClick={() => setMore(!more)}>
+        <button
+          ref={moreButton}
+          aria-expanded={more}
+          aria-haspopup="dialog"
+          aria-controls="mobile-more-panel"
+          onClick={() => (more ? closeMore() : setMore(true))}
+        >
           <Icon name="more" size={21} />
           <span>{t("nav.more")}</span>
         </button>

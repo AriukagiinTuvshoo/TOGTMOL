@@ -11,7 +11,7 @@
 | TypeScript         | `npm run typecheck`    | Тэнцсэн, алдаагүй                                 |
 | ESLint             | `npm run lint`         | Тэнцсэн, алдаа/анхааруулгагүй                     |
 | Формат             | `npm run format:check` | Тэнцсэн                                           |
-| Тест               | `npm run test`         | **227 / 227** тест, **27 / 27** файл (~50 секунд) |
+| Тест               | `npm run test`         | **229 / 229** тест, **28 / 28** файл (~50 секунд) |
 | Production build   | `npm run build`        | Тэнцсэн; offline manifest **29** immutable asset  |
 | CI (`check.yml`)   | —                      | `main` дээр `check`, `lighthouse` = success       |
 
@@ -94,9 +94,22 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
      Scenario бүр цэвэр үүлэн сангаас эхэлнэ; нэг тестийн reset epoch нөгөөгийнхөд нөлөөлөхгүй.
 - **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх. Энэ ажлын орчинд `SUPABASE_PRODUCTION_URL`, `SUPABASE_PRODUCTION_PUBLISHABLE_KEY`, `SUPABASE_TEST_EMAIL`, `SUPABASE_TEST_PASSWORD`, `SUPABASE_EXPECTED_PROJECT_REF` байхгүй тул бодит үйлчилгээний тестийг ажиллуулж чадаагүй. Бэлэн хэрэгсэл: `npm run verify:supabase:production` ба `.github/workflows/supabase-production-smoke.yml`.
 - **Схем.** `types/` нь схем 5. v6-д нэмэх талбарыг эхлээд `docs/MIGRATION.md`-д төлөвлөж, дараа нь SQL бичнэ.
-- **Тестийн суурь.** 227 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
+- **Тестийн суурь.** 229 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
 
-## 6. Phase 0-ийн дараагийн гурван үйлдэл
+## 6. Phase 2 — PWA, гар утасны навигаци ба хүртээмж (эхэлсэн)
+
+Дэлгэрэнгүй: [PWA.md](PWA.md).
+
+- **Offline.** `/privacy`, `/terms` одоо service worker-ийн кэшэд орсон — өмнө нь offline үед эдгээр хуудас аппын нүүр рүү шилждэг байсан. API, auth, токентой болон гаднын хүсэлт кэшлэгдэхгүй хэвээр.
+- **Worker шинэчлэлт.** Урьд нь зөвхөн нээх үед шалгадаг байсныг өргөтгөж, таб дахин харагдах бүрд (хамгийн ихдээ минутад нэг) `registration.update()` дуудна. Хэрэглэгчийн зөвшөөрөлөөр идэвхжих урсгал хэвээр.
+- **Гар утасны «Бусад» хуудас.** Одоо `role="dialog"`, `aria-modal`, `aria-controls`/`aria-haspopup`-той; нээгдэхэд фокус дотор шилжиж, Tab хуудас дотор үлдэж, Escape/backdrop хааж, фокус товч руу буцна (`tests/mobile-shell.test.tsx`, 2 тест).
+- **Орчуулга.** `<nav>`-ийн хатуу бичсэн «Гар утасны цэс» нь `nav.mobileMenu` (mn/en) болсон.
+- **Контраст.** Бүх үндсэн токен хос WCAG AA (≥4.5:1)-д тэнцсэн — хамгийн бага нь 4.87 (гэрэл, muted/muted-surface). Палетт өөрчлөөгүй.
+- **Бусад шалгалт.** `viewport`-д zoom хориг байхгүй, `prefers-reduced-motion` 10 газарт, `<html lang>` хэл солиход шинэчлэгдэнэ.
+- **Capacitor.** PR #21-ийг нэгтгэхгүй: сервер талын `/api/*` route-уудтай тул статик export алдаа гаргана; шаардлагатай бол `server.url`-тай шинээр хийнэ.
+- **Үлдсэн.** Бодит iPhone/Android/Windows төхөөрөмж, Lighthouse (энэ орчинд Chrome байхгүй), iOS install ба түгжээтэй дэлгэцийн шалгалт — [PWA.md](PWA.md)-ийн §5 жагсаалт.
+
+## 7. Phase 0-ийн дараагийн гурван үйлдэл
 
 1. `#35`, дараа нь `#37`-г `main` руу нийлүүлж, CI ногоон хэвээр байгааг батална.
 2. §3.2-ын «Хаах» гэсэн 8 PR-ыг хааж, §3.1-ийн 6 салбарыг устгана (GitHub дээр).
