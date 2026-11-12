@@ -1,8 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Modal } from "@/components/ui/common";
 import { knowledgeIndex, newCardsPerDay } from "@/lib/knowledge/index";
+import {
+  SESSION_MINUTES,
+  formatClock,
+  remainingMs,
+  reviewSessionLimit,
+  reviewSessionQueue,
+} from "@/lib/knowledge/session";
 import {
   reviewCard,
   gradeQuiz,
@@ -11,7 +18,12 @@ import {
   addCards,
   saveKnowledge,
 } from "@/lib/knowledge/actions";
-import type { Flashcard, QuizAttempt, StudyQuiz } from "@/types/knowledge";
+import type {
+  Flashcard,
+  FlashcardDeck,
+  QuizAttempt,
+  StudyQuiz,
+} from "@/types/knowledge";
 const GRADES = [
   "0 · Санасангүй",
   "1 · Харсны дараа танилаа",
@@ -29,14 +41,28 @@ export function CardReview({
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
-  const [queue, setQueue] = useState(() =>
-    knowledgeIndex(data.knowledge, today, data.settings)
-      .reviewQueue.filter((c) => !deckId || c.deckId === deckId)
-      .slice(0, 200)
-      .map((c) => c.id),
-  );
-  const [answer, setAnswer] = useState(false),
-    [completed, setCompleted] = useState(0);
+  const limit = reviewSessionLimit(data.settings),
+    decks = data.knowledge.filter(
+      (r): r is FlashcardDeck => r.kind === "deck" && !r.deletedAt,
+    );
+  const buildQueue = (value: string) =>
+    reviewSessionQueue(data.knowledge, today, data.settings, {
+      deckId: value || undefined,
+    }).map((c) => c.id);
+  const [deck, setDeck] = useState(deckId ?? ""),
+    [queue, setQueue] = useState(() => buildQueue(deckId ?? "")),
+    [answer, setAnswer] = useState(false),
+    [completed, setCompleted] = useState(0),
+    [minutes, setMinutes] = useState<number>(0),
+    [deadline, setDeadline] = useState<number | null>(null),
+    [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    if (deadline === null) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [deadline]);
+  const remaining = remainingMs(deadline, clock),
+    timeUp = remaining !== null && remaining <= 0;
   const card = data.knowledge.find(
     (r): r is Flashcard =>
       r.id === queue[0] && r.kind === "card" && !r.deletedAt,
@@ -61,7 +87,80 @@ export function CardReview({
         <div className="review-meta">
           <span>{completed} карт давтсан</span>
           <span>{queue.length} үлдсэн</span>
+          {remaining !== null && (
+            <span
+              className={timeUp ? "review-time up" : "review-time"}
+              aria-live="polite"
+            >
+              {timeUp ? "Цаг дууслаа" : `Үлдсэн ${formatClock(remaining)}`}
+            </span>
+          )}
         </div>
+        <div className="review-controls">
+          <label>
+            Багц
+            <select
+              value={deck}
+              disabled={busy}
+              onChange={(e) => {
+                setDeck(e.target.value);
+                setQueue(buildQueue(e.target.value));
+                setAnswer(false);
+              }}
+            >
+              <option value="">Бүх багц</option>
+              {decks.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Хугацаа
+            <select
+              value={minutes}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setMinutes(value);
+                setClock(Date.now());
+                setDeadline(value > 0 ? Date.now() + value * 60000 : null);
+              }}
+            >
+              {SESSION_MINUTES.map((value) => (
+                <option key={value} value={value}>
+                  {value ? `${value} минут` : "Хязгааргүй"}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {timeUp && queue.length > 0 && (
+          <div className="error-banner" role="status">
+            <p>
+              Цаг дууслаа. Үргэлжлүүлэх эсвэл өнөөдрийн давтлагыг дуусгаарай.
+            </p>
+            <div className="button-row">
+              <button
+                type="button"
+                className="button small"
+                onClick={() => {
+                  setClock(Date.now());
+                  setDeadline(Date.now() + 10 * 60000);
+                }}
+              >
+                10 минут нэмэх
+              </button>
+              <button
+                type="button"
+                className="button small primary"
+                onClick={onClose}
+              >
+                Дуусгах
+              </button>
+            </div>
+          </div>
+        )}
         {card ? (
           <>
             <p className="eyebrow">ЭХЛЭЭД ӨӨРӨӨ САНААРАЙ</p>
@@ -134,8 +233,9 @@ export function CardReview({
         )}
         <p className="tiny muted">
           {data.settings.extras.srsAlgorithm === "fsrs" ? "FSRS" : "SM-2"}{" "}
-          хуваарь · Энэ удаа 200 хүртэл карт. 4-өөс доош үнэлсэн карт энэ
-          давтлага дотор дахин гарна. Завсарлахад түүх хадгалагдана.
+          хуваарь · Энэ удаа {limit ? `${limit} хүртэл` : "бүх"} карт. 4-өөс
+          доош үнэлсэн карт энэ давтлага дотор дахин гарна. Завсарлахад түүх
+          хадгалагдана.
         </p>
         <p className="tiny muted">
           {newCardsPerDay(data.settings)

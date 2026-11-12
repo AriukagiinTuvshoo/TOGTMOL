@@ -11,7 +11,7 @@
 | TypeScript         | `npm run typecheck`    | Тэнцсэн, алдаагүй                                 |
 | ESLint             | `npm run lint`         | Тэнцсэн, алдаа/анхааруулгагүй                     |
 | Формат             | `npm run format:check` | Тэнцсэн                                           |
-| Тест               | `npm run test`         | **282 / 282** тест, **35 / 35** файл (~55 секунд) |
+| Тест               | `npm run test`         | **292 / 292** тест, **36 / 36** файл (~55 секунд) |
 | Production build   | `npm run build`        | Тэнцсэн; offline manifest **29** immutable asset  |
 | CI (`check.yml`)   | —                      | `main` дээр `check`, `lighthouse` = success       |
 
@@ -94,7 +94,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
      Scenario бүр цэвэр үүлэн сангаас эхэлнэ; нэг тестийн reset epoch нөгөөгийнхөд нөлөөлөхгүй.
 - **Үлдсэн Phase 1.** Production Supabase дээр migration-ыг хэрэглэж smoke test хийх. Энэ ажлын орчинд `SUPABASE_PRODUCTION_URL`, `SUPABASE_PRODUCTION_PUBLISHABLE_KEY`, `SUPABASE_TEST_EMAIL`, `SUPABASE_TEST_PASSWORD`, `SUPABASE_EXPECTED_PROJECT_REF` байхгүй тул бодит үйлчилгээний тестийг ажиллуулж чадаагүй. Бэлэн хэрэгсэл: `npm run verify:supabase:production` ба `.github/workflows/supabase-production-smoke.yml`.
 - **Схем.** `types/` нь схем 5. v6-д нэмэх талбарыг эхлээд `docs/MIGRATION.md`-д төлөвлөж, дараа нь SQL бичнэ.
-- **Тестийн суурь.** 282 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
+- **Тестийн суурь.** 292 тест нь хамгаалалтын тор; Phase 1-д `sync.test.ts`, `database.test.ts`, `recovery-v5.test.ts` гурав өргөжинө.
 
 ## 6. Phase 2 — PWA, гар утасны навигаци ба хүртээмж (эхэлсэн)
 
@@ -120,6 +120,7 @@ Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/car
 - **Тест.** `tests/fsrs.test.ts` — 19 тест (муруй, үнэлгээ, тогтвортой байдал, калибровкын чиглэл ба босго, SM-2/FSRS интеграци, round-trip); `tests/fsrs-ui.test.tsx` — Тохиргооны сонголт SM-2-оос FSRS руу шилжиж, `aria-pressed` болон тайлбар шинэчлэгдэхийг шалгана.
 - **Импорт ба экспорт.** `lib/knowledge/anki.ts` Anki-ийн текст/CSV/TSV-ийг уншиж (meta толгой, RFC 4180 ишлэл, HTML цэвэрлэлт, тусгаарлагч таних), Anki-д оруулах TSV ба хүснэгтийн CSV үүсгэнэ; давхардсан асуултыг сонгосон багцад алгасна. `.apkg` нь SQLite/zstd архив тул шууд уншигдахгүй — шалтгааныг UI тайлбарлана.
 - **Импортын дараах давтлага.** `knowledgeIndex` нь өдрийн шинэ картын хязгаарыг (`extras.newCardsPerDay`, анхдагч 20, 0 = хязгааргүй) харж, тухайн өдөр аль хэдийн нээсэн шинэ картыг хасна; шинэ картууд `dueOn → createdAt → id` дарааллаар гарна. Ингэснээр 500 картын импорт нэг өдөр дараалалыг дүүргэхгүй, хугацаа болсон карт харин үргэлж бүгд гарна. Мэдлэгийн сан, самбар, сануулга, зөвлөх нэг ижил хязгаарыг харна.
+- **Давтлагын цонх.** Нэг давтлагын дээд хэмжээ `extras.reviewSessionLimit` (анхдагч 200, 0 = хязгааргүй, 2000 хүртэл) болж тохируулагдав; цонхон дотор багцаар шүүх (`Бүх багц` эсвэл тухайн багц — шүүлт хязгаараас өмнө) ба 10/20/30/45 минутын хугацааны хязгаар нэмэгдэв. Цаг дуусахад карт албадан хаагдахгүй — «10 минут нэмэх» эсвэл «Дуусгах» сонголт гарна. Туслах функцууд `lib/knowledge/session.ts`.
 - **PDF ба файл.** `lib/knowledge/pdf.ts` Flate/шахалтгүй stream, `Tj/TJ` оператор, escape, `ToUnicode` CMap (кирилл) уншина; карт ба quiz үүсгэгчид PDF/TXT/MD файлаас материал ачаална. Скан хийсэн PDF, object stream дэмжигдэхгүй.
 - **Үлдсэн.** Бүрэн жин сургах (сервер талын оптимизатор), FSRS-5/6-ийн нэг өдрийн доторх загвар, `.apkg` ба Anki media, PDF-ийн layout сэргээлт.
 

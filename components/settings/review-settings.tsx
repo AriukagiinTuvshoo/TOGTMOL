@@ -6,6 +6,10 @@ import { SectionTitle } from "@/components/ui/common";
 import { useI18n } from "@/components/i18n/language-provider";
 import { calibrateStabilityScale } from "@/lib/knowledge/calibrate";
 import { newCardsPerDay } from "@/lib/knowledge/index";
+import {
+  MAX_REVIEW_SESSION_LIMIT,
+  reviewSessionLimit,
+} from "@/lib/knowledge/session";
 import type { CardReview } from "@/types/knowledge";
 
 type Algorithm = "sm2" | "fsrs";
@@ -25,6 +29,33 @@ export function ReviewSettings() {
       : 1;
   const budget = newCardsPerDay(data.settings),
     [budgetDraft, setBudgetDraft] = useState(String(budget));
+  const sessionLimit = reviewSessionLimit(data.settings),
+    [limitDraft, setLimitDraft] = useState(String(sessionLimit));
+  const saveLimit = () => {
+    const value = Number.parseInt(limitDraft, 10);
+    if (
+      !Number.isFinite(value) ||
+      value < 0 ||
+      value > MAX_REVIEW_SESSION_LIMIT
+    ) {
+      setLimitDraft(String(sessionLimit));
+      setMessage(
+        `Нэг давтлагын дээд хэмжээ 0–${MAX_REVIEW_SESSION_LIMIT} (0 = хязгааргүй).`,
+      );
+      return;
+    }
+    if (value === sessionLimit) return;
+    setLimitDraft(String(value));
+    void run(
+      () =>
+        store.mutate(
+          actions.settings({
+            extras: { ...data.settings.extras, reviewSessionLimit: value },
+          }),
+        ),
+      "Нэг давтлагын дээд хэмжээг хадгаллаа.",
+    );
+  };
   const saveBudget = () => {
     const value = Number.parseInt(budgetDraft, 10);
     if (!Number.isFinite(value) || value < 0 || value > 500) {
@@ -162,6 +193,31 @@ export function ReviewSettings() {
           {en
             ? "Imported cards enter the review queue at this pace; overdue cards always show up in full."
             : "Импортолсон картууд энэ хязгаараар өдөр бүр давтлагад орно; хугацаа болсон карт үргэлж бүгд гарна."}
+        </p>
+        <label>
+          {en
+            ? `Cards per session (0 = no limit, max ${MAX_REVIEW_SESSION_LIMIT})`
+            : `Нэг давтлагын дээд хэмжээ (0 = хязгааргүй, дээд нь ${MAX_REVIEW_SESSION_LIMIT})`}
+          <input
+            type="number"
+            min={0}
+            max={MAX_REVIEW_SESSION_LIMIT}
+            value={limitDraft}
+            disabled={busy}
+            onChange={(e) => setLimitDraft(e.target.value)}
+            onBlur={saveLimit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveLimit();
+              }
+            }}
+          />
+        </label>
+        <p className="tiny muted">
+          {en
+            ? "The session stops offering new cards after this many. You can still filter by deck or set a time box in the review window."
+            : "Давтлагын цонх энэ тооноос хэтэрсэн картыг нээхгүй. Цонхон дотор багцаар шүүх, хугацаа тогтоох боломжтой."}
         </p>
         <p className="tiny muted">
           {en
