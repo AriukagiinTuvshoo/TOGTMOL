@@ -7,7 +7,44 @@ import type {
 type QuizQuestionSnapshot = { quizId: string; question: QuizQuestion | null };
 import { studyDate } from "@/lib/calculations/dates";
 import { dayBoundary } from "@/lib/preferences";
-export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
+export const DEFAULT_NEW_CARDS_PER_DAY = 20;
+
+/** 0 means no limit; unreadable values fall back to the default. */
+export function newCardsPerDay(settings: StudyData["settings"]): number {
+  const raw = settings.extras.newCardsPerDay;
+  if (raw === undefined || raw === null) return DEFAULT_NEW_CARDS_PER_DAY;
+  if (typeof raw !== "number" || !Number.isFinite(raw))
+    return DEFAULT_NEW_CARDS_PER_DAY;
+  return Math.max(0, Math.min(500, Math.round(raw)));
+}
+
+/** Cards whose first-ever review happened on the given study day. */
+export function newCardsIntroducedToday(
+  records: KnowledgeRecord[],
+  today: string,
+  settings: StudyData["settings"],
+) {
+  const boundary = dayBoundary(settings),
+    introduced = new Set<string>();
+  for (const record of records) {
+    if (record.kind !== "review" || record.deletedAt) continue;
+    const before = record.before;
+    if (before.repetitions !== 0 || before.interval !== 0) continue;
+    if (studyDate(new Date(record.reviewedAt), boundary) !== today) continue;
+    introduced.add(record.cardId);
+  }
+  return introduced.size;
+}
+
+/**
+ * `settings` enables the daily new-card budget. Without it the queue keeps the
+ * old behaviour of offering every new card, which older callers rely on.
+ */
+export function knowledgeIndex(
+  records: KnowledgeRecord[],
+  today: string,
+  settings?: StudyData["settings"],
+) {
   const active = records.filter((r) => !r.deletedAt),
     byId = new Map(active.map((r) => [r.id, r]));
   const cards = active.filter(
@@ -27,19 +64,42 @@ export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
         a.schedule.dueOn.localeCompare(b.schedule.dueOn) ||
         a.id.localeCompare(b.id),
     );
-  const fresh = cards.filter(
-    (c) =>
-      c.schedule.repetitions === 0 &&
-      c.schedule.interval === 0 &&
-      c.schedule.dueOn <= today,
-  );
+  const fresh = cards
+    .filter(
+      (c) =>
+        c.schedule.repetitions === 0 &&
+        c.schedule.interval === 0 &&
+        c.schedule.dueOn <= today,
+    )
+    // Deterministic order: the oldest cards are introduced first, so a large
+    // import is worked through in a predictable way instead of randomly.
+    .sort(
+      (a, b) =>
+        a.schedule.dueOn.localeCompare(b.schedule.dueOn) ||
+        a.createdAt - b.createdAt ||
+        a.id.localeCompare(b.id),
+    );
+  const budget = settings ? newCardsPerDay(settings) : 0,
+    freshToday =
+      budget === 0
+        ? fresh
+        : fresh.slice(
+            0,
+            Math.max(
+              0,
+              budget -
+                (settings
+                  ? newCardsIntroducedToday(records, today, settings)
+                  : 0),
+            ),
+          );
   const relearning = cards.filter(
     (c) =>
       c.schedule.repetitions === 0 &&
       c.schedule.interval > 0 &&
       c.schedule.dueOn <= today,
   );
-  const reviewQueue = [...due, ...relearning, ...fresh];
+  const reviewQueue = [...due, ...relearning, ...freshToday];
   const quizRetryByQuestion = new Map<string, QuizQuestionSnapshot>();
   const attempts = active
     .filter(
@@ -69,6 +129,8 @@ export function knowledgeIndex(records: KnowledgeRecord[], today: string) {
     cardsByDeck,
     due: [...due, ...relearning],
     fresh,
+    freshToday,
+    newCardsPerDay: settings ? budget : 0,
     reviewQueue,
     quizRetryQueue,
     notes: active.filter((r) => r.kind === "note"),

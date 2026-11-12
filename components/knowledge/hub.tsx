@@ -86,7 +86,7 @@ export function KnowledgeHub() {
   const [selected, setSelected] = useState<string | null>(selectedRecord);
   const [cardLimit, setCardLimit] = useState(100);
   const index = useMemo(
-    () => knowledgeIndex(data.knowledge, today),
+    () => knowledgeIndex(data.knowledge, today, data.settings),
     [data.knowledge, today],
   );
   const deferred = useDeferredValue(query),
@@ -168,12 +168,19 @@ export function KnowledgeHub() {
         </div>
         <div className="review-today">
           <Icon name="book" size={28} />
-          <strong>{index.due.length + index.fresh.length}</strong>
+          <strong>{index.reviewQueue.length}</strong>
           <span>{language === "en" ? "cards to review" : "давтах карт"}</span>
           <small>
             {index.due.length} {language === "en" ? "due" : "хугацаа болсон"} ·{" "}
-            {index.fresh.length} {language === "en" ? "new" : "шинэ"}
+            {index.freshToday.length} {language === "en" ? "new" : "шинэ"}
           </small>
+          {index.fresh.length > index.freshToday.length && (
+            <small>
+              {language === "en"
+                ? `Daily new-card limit: ${index.freshToday.length} of ${index.fresh.length}. The rest come tomorrow.`
+                : `Өдрийн шинэ картын хязгаар: ${index.fresh.length}-аас ${index.freshToday.length}. Үлдсэн нь маргааш орно.`}
+            </small>
+          )}
           <button
             className="button primary"
             onClick={() => setReview("all")}

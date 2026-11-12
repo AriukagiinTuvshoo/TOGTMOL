@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Modal } from "@/components/ui/common";
-import { knowledgeIndex } from "@/lib/knowledge/index";
+import { knowledgeIndex, newCardsPerDay } from "@/lib/knowledge/index";
 import {
   reviewCard,
   gradeQuiz,
@@ -30,7 +30,7 @@ export function CardReview({
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
   const [queue, setQueue] = useState(() =>
-    knowledgeIndex(data.knowledge, today)
+    knowledgeIndex(data.knowledge, today, data.settings)
       .reviewQueue.filter((c) => !deckId || c.deckId === deckId)
       .slice(0, 200)
       .map((c) => c.id),
@@ -137,6 +137,11 @@ export function CardReview({
           хуваарь · Энэ удаа 200 хүртэл карт. 4-өөс доош үнэлсэн карт энэ
           давтлага дотор дахин гарна. Завсарлахад түүх хадгалагдана.
         </p>
+        <p className="tiny muted">
+          {newCardsPerDay(data.settings)
+            ? `Өдөрт ${newCardsPerDay(data.settings)} шинэ карт нээгдэнэ (Тохиргоо → «Давтлагын алгоритм»).`
+            : "Шинэ картын өдрийн хязгааргүй."}
+        </p>
       </div>
     </Modal>
   );
@@ -150,7 +155,7 @@ export function QuizSession({
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
-  const quizRetry = knowledgeIndex(data.knowledge, today)
+  const quizRetry = knowledgeIndex(data.knowledge, today, data.settings)
     .quizRetryQueue.filter((item) => item.quizId === quiz.id)
     .map((item) => item.question);
   const retryIds = new Set(quiz.questions.map((q) => q.id));

@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { cardKey, importCards } from "@/lib/knowledge/actions";
+import { newCardsPerDay } from "@/lib/knowledge/index";
 import {
   downloadText,
   SectionTitle,
@@ -139,7 +140,7 @@ export function TransferSettings() {
     }, "Импортыг хадгаллаа.");
     if (ok)
       setMessage(
-        `${created} карт нэмэгдлээ${duplicates ? `, ${duplicates} давхардсан карт алгасагдлаа` : ""}${parsed.skipped ? `, ${parsed.skipped} мөр тохиромжгүй` : ""}.`,
+        `${created} карт нэмэгдлээ${duplicates ? `, ${duplicates} давхардсан карт алгасагдлаа` : ""}${parsed.skipped ? `, ${parsed.skipped} мөр тохиромжгүй` : ""}. Шинэ картууд өдрийн хязгаараар (${newCardsPerDay(data.settings) || "∞"}) давтлагад орно.`,
       );
   };
 

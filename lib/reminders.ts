@@ -11,7 +11,8 @@ export function reminderMessage(data: StudyData, today: string) {
     if (count) parts.push(`${count} жижиг алхам`);
   }
   if (extras.remindCards) {
-    const count = knowledgeIndex(data.knowledge, today).reviewQueue.length;
+    const count = knowledgeIndex(data.knowledge, today, data.settings)
+      .reviewQueue.length;
     if (count) parts.push(`${count} давтах карт`);
   }
   if (extras.remindGoals) {

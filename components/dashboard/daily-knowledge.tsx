@@ -12,7 +12,7 @@ export function DailyKnowledge() {
     [editing, setEditing] = useState(false),
     [reviewing, setReviewing] = useState(false);
   const index = useMemo(
-    () => knowledgeIndex(data.knowledge, today),
+    () => knowledgeIndex(data.knowledge, today, data.settings),
     [data.knowledge, today],
   );
   const inspiration = index.notes
@@ -84,7 +84,7 @@ export function DailyKnowledge() {
           </h2>
           <p>
             {index.reviewQueue.length
-              ? `${index.due.length} хугацаа болсон, ${index.fresh.length} шинэ карт таныг хүлээж байна.`
+              ? `${index.due.length} хугацаа болсон, ${index.freshToday.length} шинэ карт таныг хүлээж байна.${index.fresh.length > index.freshToday.length ? ` (${index.fresh.length - index.freshToday.length} шинэ карт маргааш орно.)` : ""}`
               : "Сурсан зүйлээ нэг картаар үлдээвэл дараагийн удаа эргэн санахад амар болно."}
           </p>
           <button

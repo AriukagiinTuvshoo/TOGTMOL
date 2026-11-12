@@ -5,6 +5,7 @@ import { actions } from "@/lib/persistence/actions";
 import { SectionTitle } from "@/components/ui/common";
 import { useI18n } from "@/components/i18n/language-provider";
 import { calibrateStabilityScale } from "@/lib/knowledge/calibrate";
+import { newCardsPerDay } from "@/lib/knowledge/index";
 import type { CardReview } from "@/types/knowledge";
 
 type Algorithm = "sm2" | "fsrs";
@@ -22,6 +23,27 @@ export function ReviewSettings() {
     typeof data.settings.extras.fsrsScale === "number"
       ? data.settings.extras.fsrsScale
       : 1;
+  const budget = newCardsPerDay(data.settings),
+    [budgetDraft, setBudgetDraft] = useState(String(budget));
+  const saveBudget = () => {
+    const value = Number.parseInt(budgetDraft, 10);
+    if (!Number.isFinite(value) || value < 0 || value > 500) {
+      setBudgetDraft(String(budget));
+      setMessage("Өдрийн шинэ карт 0–500 хооронд байна (0 = хязгааргүй).");
+      return;
+    }
+    if (value === budget) return;
+    setBudgetDraft(String(value));
+    void run(
+      () =>
+        store.mutate(
+          actions.settings({
+            extras: { ...data.settings.extras, newCardsPerDay: value },
+          }),
+        ),
+      "Өдрийн шинэ картын хязгаарыг хадгаллаа.",
+    );
+  };
   const reviews = data.knowledge.filter(
     (r): r is CardReview => r.kind === "review" && !r.deletedAt,
   );
@@ -116,6 +138,31 @@ export function ReviewSettings() {
             : "SM-2: интервал таны хялбаршлын коэффициентээр өснө. 0–2 үнэлгээтэй карт маргааш буцаж ирнэ."}
       </p>
       <div className="form-stack">
+        <label>
+          {en
+            ? "New cards per day (0 = no limit)"
+            : "Өдөрт шинэ карт (0 = хязгааргүй)"}
+          <input
+            type="number"
+            min={0}
+            max={500}
+            value={budgetDraft}
+            disabled={busy}
+            onChange={(e) => setBudgetDraft(e.target.value)}
+            onBlur={saveBudget}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveBudget();
+              }
+            }}
+          />
+        </label>
+        <p className="tiny muted">
+          {en
+            ? "Imported cards enter the review queue at this pace; overdue cards always show up in full."
+            : "Импортолсон картууд энэ хязгаараар өдөр бүр давтлагад орно; хугацаа болсон карт үргэлж бүгд гарна."}
+        </p>
         <p className="tiny muted">
           {en
             ? `Stability multiplier: ×${scale}. Observations in your history: ${calibration.samples}.`

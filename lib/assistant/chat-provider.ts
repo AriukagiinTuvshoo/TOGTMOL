@@ -38,7 +38,7 @@ export function localReply(
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
   if (/карт|flashcard|сорил|quiz/.test(q)) {
-    const practice = knowledgeIndex(data.knowledge, today),
+    const practice = knowledgeIndex(data.knowledge, today, data.settings),
       cards = practice.cards,
       due = practice.reviewQueue;
     return {
@@ -136,7 +136,7 @@ function localReplyEnglish(
     w = weeklyReport(index, today),
     stats = periodStats(index, 7, today);
   if (/card|flashcard|quiz|review/.test(q)) {
-    const practice = knowledgeIndex(data.knowledge, today);
+    const practice = knowledgeIndex(data.knowledge, today, data.settings);
     return {
       text: `You have ${practice.cards.length} flashcards in your Knowledge Hub. ${practice.reviewQueue.length} are ready to review today. Review answers before saving generated cards.`,
       action: "knowledge",

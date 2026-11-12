@@ -27,7 +27,8 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     world = data.settings.world;
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
   const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
-  const reviewCount = knowledgeIndex(data.knowledge, today).reviewQueue.length;
+  const reviewCount = knowledgeIndex(data.knowledge, today, data.settings)
+    .reviewQueue.length;
   const todaySeconds = index.days.get(today)?.seconds ?? 0,
     daily =
       data.goals.dailyMinutes ??
