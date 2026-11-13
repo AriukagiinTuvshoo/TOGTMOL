@@ -17,7 +17,7 @@
 | `components/music/`, `lib/music/`        | Байнгын provider, жижиг тоглуулагч, процедурын ая, албан ёсны YouTube                                    |
 | `lib/world/`, `components/world/`        | Өрөө, Бондоок, ахиц, урамшуулал, зорилгын үе шат                                                         |
 | `hooks/use-account.tsx`, `lib/supabase/` | Бүртгэл тусгаарлах, синк, хуучин төхөөрөмжийн устгалын хамгаалалт                                        |
-| `supabase/migrations/`                   | Гурван дараалсан SQL өөрчлөлт, RLS, atomic RPC                                                           |
+| `supabase/migrations/`                   | Дөрвөн дараалсан SQL өөрчлөлт, RLS, atomic RPC                                                           |
 | `scripts/`, `tests/`                     | Интернэтгүй ажиллах файлууд, зураг үүсгэх, автомат шалгалтууд                                            |
 
 ## Хадгалалтын урсгал

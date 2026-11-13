@@ -466,9 +466,19 @@ it("falls back to a labelled local reply when online AI has no configured accoun
   );
   fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
   expect(await screen.findByText("Бондоок · Local")).toBeVisible();
-  await waitFor(() =>
-    expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked(),
+  // The consent flag is persisted after the local fallback is appended, which
+  // can outlast the default 1s wait when the whole suite runs in parallel.
+  const repo = new Repository();
+  await waitFor(
+    async () => {
+      expect((await repo.load("guest"))?.data.settings.extras.aiEnabled).toBe(
+        false,
+      );
+    },
+    { timeout: 5000 },
   );
+  await repo.close();
+  expect(screen.getByLabelText("Онлайн AI ашиглах")).not.toBeChecked();
   expect(
     within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();

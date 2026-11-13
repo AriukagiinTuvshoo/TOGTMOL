@@ -10,7 +10,7 @@
     "build": "next build && node scripts/create-precache.mjs",
     "start": "next start -H 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run lint && npm test && npm run build",
