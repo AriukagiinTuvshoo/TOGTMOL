@@ -15,6 +15,7 @@ import {
   searchResults,
 } from "@/lib/knowledge/index";
 import { removeKnowledge } from "@/lib/knowledge/actions";
+import { deckMastery, type DeckMastery } from "@/lib/knowledge/statistics";
 import { formatTime } from "@/lib/calculations/dates";
 import { MarkdownView } from "./markdown-view";
 import { QuizGenerator } from "./quiz-generator";
@@ -70,6 +71,12 @@ const TAB_EN: Record<string, string> = {
   session: "Session history",
   trash: "Trash",
 };
+/** Deck panel line: size, progress, and how often the cards were recalled. */
+function masteryLine(m: DeckMastery): string {
+  const retention = m.retention === null ? "" : ` · ${m.retention}% санасаар`;
+  return `${m.total} карт · ${m.mature} тогтоосон · ${m.learning} суралцаж буй · ${m.fresh} шинэ · ${m.mastery}% эзэмшсэн${retention}`;
+}
+
 export function KnowledgeHub() {
   const { data, store, run, today, selectedRecord, navigate } = useStudy(),
     { busy } = useStoreState();
@@ -99,6 +106,10 @@ export function KnowledgeHub() {
   const index = useMemo(
     () => knowledgeIndex(data.knowledge, today, data.settings),
     [data.knowledge, today, data.settings],
+  );
+  const mastery = useMemo(
+    () => deckMastery(data.knowledge, today),
+    [data.knowledge, today],
   );
   // A card's subject comes from its deck, so the subject filter can scope the
   // review queue without storing anything extra on the card itself.
@@ -423,7 +434,7 @@ export function KnowledgeHub() {
                     : r.kind === "link"
                       ? r.description || hostname(r.url)
                       : r.kind === "deck"
-                        ? `${index.cardsByDeck.get(r.id)?.length ?? 0} карт · ${r.description}`
+                        ? `${index.cardsByDeck.get(r.id)?.length ?? 0} карт · ${mastery.get(r.id)?.mastery ?? 0}% эзэмшсэн · ${r.description}`
                         : r.kind === "quiz"
                           ? `${r.questions.length} асуулт`
                           : ""}
@@ -572,6 +583,11 @@ export function KnowledgeHub() {
             {selectedItem.kind === "deck" && (
               <>
                 <p>{selectedItem.description}</p>
+                {mastery.get(selectedItem.id) && (
+                  <p className="tiny muted">
+                    {masteryLine(mastery.get(selectedItem.id) as DeckMastery)}
+                  </p>
+                )}
                 <div className="button-row">
                   <button
                     className="button primary"

@@ -1,4 +1,5 @@
 import type { StudyData } from "@/types/study";
+import type { ReviewSchedule } from "@/types/knowledge";
 import { dayBoundary } from "@/lib/preferences";
 import { studyDate } from "@/lib/calculations/dates";
 export function knowledgeStatistics(
@@ -40,4 +41,94 @@ export function knowledgeStatistics(
         )
       : null,
   };
+}
+
+/** An interval this long means the card is scheduled well into the future. */
+export const MATURE_INTERVAL_DAYS = 21;
+
+export interface DeckMastery {
+  deckId: string;
+  total: number;
+  fresh: number;
+  learning: number;
+  mature: number;
+  dueNow: number;
+  /** 0–100 progress estimate, not a recall probability. */
+  mastery: number;
+  /** Share of reviews graded 3+ in the window, or null without reviews. */
+  retention: number | null;
+  reviews: number;
+}
+
+/** Fresh cards are 0, learning cards scale with interval, mature cards are 1. */
+function cardScore(schedule: ReviewSchedule): number {
+  if (schedule.repetitions === 0 || schedule.interval <= 0) return 0;
+  if (schedule.interval >= MATURE_INTERVAL_DAYS) return 1;
+  return Math.min(1, schedule.interval / MATURE_INTERVAL_DAYS);
+}
+
+/**
+ * How far each deck has moved from "never seen" to "scheduled far ahead".
+ * Everything is derived from the cards' schedules and their review history, so
+ * no extra field is stored and decks that predate this function still report.
+ * `options.since` limits the retention window to recent reviews (milliseconds).
+ */
+export function deckMastery(
+  records: StudyData["knowledge"],
+  today: string,
+  options: { since?: number } = {},
+): Map<string, DeckMastery> {
+  const result = new Map<string, DeckMastery>();
+  for (const record of records)
+    if (record.kind === "deck" && !record.deletedAt)
+      result.set(record.id, {
+        deckId: record.id,
+        total: 0,
+        fresh: 0,
+        learning: 0,
+        mature: 0,
+        dueNow: 0,
+        mastery: 0,
+        retention: null,
+        reviews: 0,
+      });
+  const scoreSum = new Map<string, number>(),
+    cardDeck = new Map<string, string>();
+  for (const record of records) {
+    if (record.kind !== "card" || record.deletedAt) continue;
+    const stats = result.get(record.deckId);
+    if (!stats) continue;
+    cardDeck.set(record.id, record.deckId);
+    stats.total += 1;
+    if (record.schedule.dueOn <= today) stats.dueNow += 1;
+    const score = cardScore(record.schedule);
+    scoreSum.set(record.deckId, (scoreSum.get(record.deckId) ?? 0) + score);
+    if (score === 0) stats.fresh += 1;
+    else if (score === 1) stats.mature += 1;
+    else stats.learning += 1;
+  }
+  for (const [deckId, sum] of scoreSum) {
+    const stats = result.get(deckId);
+    if (stats && stats.total)
+      stats.mastery = Math.round((100 * sum) / stats.total);
+  }
+  const since = options.since ?? -Infinity,
+    graded = new Map<string, { good: number; total: number }>();
+  for (const record of records) {
+    if (record.kind !== "review" || record.deletedAt) continue;
+    if (record.reviewedAt < since) continue;
+    const deckId = cardDeck.get(record.cardId);
+    if (!deckId) continue;
+    const tally = graded.get(deckId) ?? { good: 0, total: 0 };
+    tally.total += 1;
+    if (record.grade >= 3) tally.good += 1;
+    graded.set(deckId, tally);
+  }
+  for (const [deckId, tally] of graded) {
+    const stats = result.get(deckId);
+    if (!stats) continue;
+    stats.reviews = tally.total;
+    stats.retention = Math.round((100 * tally.good) / tally.total);
+  }
+  return result;
 }
