@@ -45,18 +45,42 @@ const Assistant = dynamic(() =>
   import("./assistant/chat").then((m) => m.BondookChat),
 );
 import { PwaManager } from "./settings/pwa";
-const NAV: { view: View; label: TranslationKey; icon: string }[] = [
-  { view: "overview", label: "nav.overview", icon: "home" },
-  { view: "knowledge", label: "nav.knowledge", icon: "book" },
-  { view: "calendar", label: "nav.calendar", icon: "calendar" },
-  { view: "subjects", label: "nav.subjects", icon: "book" },
-  { view: "statistics", label: "nav.statistics", icon: "chart" },
-  { view: "goals", label: "nav.goals", icon: "target" },
-  { view: "achievements", label: "nav.achievements", icon: "award" },
-  { view: "assistant", label: "nav.assistant", icon: "spark" },
-  { view: "room", label: "nav.room", icon: "sun" },
-  { view: "privacy", label: "nav.privacy", icon: "shield" },
-  { view: "settings", label: "nav.settings", icon: "settings" },
+type NavItem = { view: View; label: TranslationKey; icon: string };
+// Five sections instead of eleven equal buttons. Every view keeps its own
+// route and button, so deep links, tests and muscle memory still work.
+const NAV_GROUPS: { label: TranslationKey; items: NavItem[] }[] = [
+  {
+    label: "nav.groupToday",
+    items: [{ view: "overview", label: "nav.overview", icon: "home" }],
+  },
+  {
+    label: "nav.groupLearn",
+    items: [
+      { view: "knowledge", label: "nav.knowledge", icon: "book" },
+      { view: "calendar", label: "nav.calendar", icon: "calendar" },
+      { view: "subjects", label: "nav.subjects", icon: "book" },
+    ],
+  },
+  {
+    label: "nav.groupProgress",
+    items: [
+      { view: "statistics", label: "nav.statistics", icon: "chart" },
+      { view: "goals", label: "nav.goals", icon: "target" },
+      { view: "achievements", label: "nav.achievements", icon: "award" },
+    ],
+  },
+  {
+    label: "nav.groupCompanion",
+    items: [{ view: "assistant", label: "nav.assistant", icon: "spark" }],
+  },
+  {
+    label: "nav.groupSettings",
+    items: [
+      { view: "room", label: "nav.room", icon: "sun" },
+      { view: "privacy", label: "nav.privacy", icon: "shield" },
+      { view: "settings", label: "nav.settings", icon: "settings" },
+    ],
+  },
 ];
 const titles: Record<View, TranslationKey> = {
   overview: "page.overview",
@@ -245,21 +269,26 @@ function Shell() {
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
         <nav aria-label={t("shell.mySpace")}>
-          {NAV.map((n) => (
-            <button
-              key={n.view}
-              className={view === n.view ? "active" : ""}
-              aria-current={view === n.view ? "page" : undefined}
-              onClick={() => go(n.view)}
-            >
-              <Icon name={n.icon} />
-              {t(n.label)}
-              {n.view === "assistant" && (
-                <span className="nav-tag" aria-hidden="true">
-                  LOCAL
-                </span>
-              )}
-            </button>
+          {NAV_GROUPS.map((group) => (
+            <Fragment key={group.label}>
+              <div className="nav-caption nav-group">{t(group.label)}</div>
+              {group.items.map((n) => (
+                <button
+                  key={n.view}
+                  className={`${view === n.view ? "active" : ""}${group.items.length > 1 ? " nav-sub" : ""}`}
+                  aria-current={view === n.view ? "page" : undefined}
+                  onClick={() => go(n.view)}
+                >
+                  <Icon name={n.icon} />
+                  {t(n.label)}
+                  {n.view === "assistant" && (
+                    <span className="nav-tag" aria-hidden="true">
+                      LOCAL
+                    </span>
+                  )}
+                </button>
+              ))}
+            </Fragment>
           ))}
         </nav>
         <div className="sidebar-bottom">
@@ -448,14 +477,23 @@ function Shell() {
             aria-label={t("common.close")}
           />
           <nav aria-label={t("nav.more")}>
-            {NAV.filter(
-              (n) => !["overview", "knowledge", "assistant"].includes(n.view),
-            ).map((n) => (
-              <button key={n.view} onClick={() => go(n.view)}>
-                <Icon name={n.icon} />
-                {t(n.label)}
-              </button>
-            ))}
+            {NAV_GROUPS.map((group) => {
+              const items = group.items.filter(
+                (n) => !["overview", "knowledge", "assistant"].includes(n.view),
+              );
+              if (!items.length) return null;
+              return (
+                <Fragment key={group.label}>
+                  <div className="nav-caption nav-group">{t(group.label)}</div>
+                  {items.map((n) => (
+                    <button key={n.view} onClick={() => go(n.view)}>
+                      <Icon name={n.icon} />
+                      {t(n.label)}
+                    </button>
+                  ))}
+                </Fragment>
+              );
+            })}
           </nav>
         </div>
       )}
