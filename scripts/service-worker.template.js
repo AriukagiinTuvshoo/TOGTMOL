@@ -66,9 +66,14 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() =>
-          caches.match("/").then((cached) => cached || Response.error()),
-        ),
+        .catch(async () => {
+          // Serve the page the user asked for when it was precached, instead
+          // of replacing a legal page with the home screen.
+          const cached = await caches.match(url.pathname, {
+            ignoreSearch: true,
+          });
+          return cached || (await caches.match("/")) || Response.error();
+        }),
     );
     return;
   }

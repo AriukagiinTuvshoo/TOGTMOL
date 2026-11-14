@@ -53,7 +53,12 @@ export function calibrationSamples(reviews: CardReview[]): CalibrationSample[] {
       const previous = group[i - 1],
         current = group[i],
         elapsedDays = (current.reviewedAt - previous.reviewedAt) / DAY_MS,
-        stability = previous.after.interval || 0;
+        // FSRS stores the stability it actually used; the interval is only the
+        // SM-2 proxy for it, so prefer the real value when the record has one.
+        stability =
+          previous.after.stability && previous.after.stability > 0
+            ? previous.after.stability
+            : previous.after.interval || 0;
       // Same-day retries (minutes or hours apart) say nothing about the
       // forgetting curve, so only real day-scale gaps become observations.
       if (elapsedDays < 0.5 || !(stability > 0)) continue;
@@ -68,6 +73,8 @@ export function calibrationSamples(reviews: CardReview[]): CalibrationSample[] {
 }
 
 function logLoss(samples: CalibrationSample[], scale: number): number {
+  // No observations is no evidence, not an undefined loss.
+  if (!samples.length) return 0;
   let total = 0;
   for (const sample of samples) {
     const recall = clamp(

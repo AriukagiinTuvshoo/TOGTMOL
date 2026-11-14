@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 type EventHandler = (event: Record<string, unknown>) => void;
 describe("service worker privacy and offline lifecycle", () => {
-  function worker() {
+  function worker(
+    options: { offline?: boolean; entries?: Record<string, string> } = {},
+  ) {
+    const entries = options.entries ?? {};
     const handlers = new Map<string, EventHandler>(),
       cached: string[] = [],
       requests: string[] = [],
@@ -14,8 +17,9 @@ describe("service worker privacy and offline lifecycle", () => {
       Response,
       Promise,
       Error,
-      fetch: async (input: string) => {
-        requests.push(input);
+      fetch: async (input: string | Request) => {
+        requests.push(typeof input === "string" ? input : input.url);
+        if (options.offline) throw new TypeError("offline");
         return new Response(
           JSON.stringify({
             assets: ["/_next/static/app.js", "/_next/static/app.css"],
@@ -29,6 +33,11 @@ describe("service worker privacy and offline lifecycle", () => {
             cached.push(...paths);
           },
         }),
+        match: async (input: string | Request) => {
+          const path =
+            typeof input === "string" ? input : new URL(input.url).pathname;
+          return path in entries ? new Response(entries[path]) : undefined;
+        },
         keys: async () => ["togtmol-shell-old", "other-app"],
         delete: async (key: string) => {
           deleted.push(key);
@@ -66,6 +75,31 @@ describe("service worker privacy and offline lifecycle", () => {
     expect(cached).toContain("/privacy");
     expect(cached).toContain("/terms");
   });
+  it("serves a precached legal page offline instead of the home screen", async () => {
+    const { handlers } = worker({
+      offline: true,
+      entries: { "/privacy": "privacy page", "/": "home" },
+    });
+    const navigate = (path: string) => {
+      let response: Promise<Response> | undefined;
+      handlers.get("fetch")!({
+        request: {
+          method: "GET",
+          mode: "navigate",
+          url: `https://study.example${path}`,
+          headers: new Headers(),
+        },
+        respondWith: (value: Promise<Response>) => {
+          response = value;
+        },
+      });
+      return response!;
+    };
+    expect(await (await navigate("/privacy")).text()).toBe("privacy page");
+    // An uncached deep link still lands on the cached shell.
+    expect(await (await navigate("/unknown")).text()).toBe("home");
+  });
+
   it("never intercepts Supabase, authorization headers, or OAuth callback URLs", () => {
     const { handlers } = worker();
     for (const input of [

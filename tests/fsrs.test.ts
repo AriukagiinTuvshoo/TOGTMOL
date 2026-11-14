@@ -217,6 +217,29 @@ describe("FSRS calibration from existing history", () => {
     expect(calibrationSamples(history(3, 5, () => 4))).toHaveLength(2);
   });
 
+  it("reports a finite loss before any history exists", () => {
+    expect(calibrateStabilityScale([])).toEqual({
+      scale: 1,
+      samples: 0,
+      logLossBefore: 0,
+      logLossAfter: 0,
+      applied: false,
+    });
+  });
+
+  it("uses the FSRS stability when the review stored one", () => {
+    const [sample] = calibrationSamples([
+      {
+        ...reviewSample(0, 4),
+        after: { ...baseSchedule({ interval: 5 }), stability: 12 },
+      },
+      { ...reviewSample(1, 4), reviewedAt: NOW + 5 * DAY },
+    ]);
+    // The interval said 5 days, but FSRS knew the stability was 12.
+    expect(sample.stability).toBe(12);
+    expect(sample.elapsedDays).toBe(5);
+  });
+
   it("asks for more history before changing anything", () => {
     const result = calibrateStabilityScale(history(10, 5, () => 4));
     expect(result.applied).toBe(false);

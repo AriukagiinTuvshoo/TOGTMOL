@@ -12,7 +12,7 @@
 | TypeScript         | `npm run typecheck`      | Алдаагүй                                                           |
 | ESLint             | `npm run lint`           | Алдаагүй (0 error, 0 warning; `--max-warnings 0`)                  |
 | Формат             | `npm run format:check`   | Тэнцсэн                                                            |
-| Тест               | `npm run test`           | **315 / 315** тест, **40 / 40** файл (~60 секунд)                  |
+| Тест               | `npm run test`           | **318 / 318** тест, **40 / 40** файл (~60 секунд)                  |
 | Production build   | `npm run build`          | Тэнцсэн; offline manifest **30** immutable asset                   |
 | PostgreSQL         | `tests/database.test.ts` | PGlite дээр migration-ууд бодитоор ажилласан                       |
 | CSP (report-only)  | `next start` + `curl`    | Толгой ба `report-uri` ажиллана; санамсаргүй төрөл 415, тайлан 204 |
