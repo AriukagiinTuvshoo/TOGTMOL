@@ -1,5 +1,5 @@
 import { knowledgeIndex } from "./index";
-import type { Flashcard } from "@/types/knowledge";
+import type { Flashcard, FlashcardDeck } from "@/types/knowledge";
 import type { StudyData } from "@/types/study";
 
 export const DEFAULT_REVIEW_SESSION_LIMIT = 200;
@@ -15,19 +15,34 @@ export function reviewSessionLimit(settings: StudyData["settings"]): number {
 }
 
 /**
- * The cards one session will show: optional deck filter first, then the size
- * limit, so a deck filter never gets shrunk by cards from other decks.
+ * The cards one session will show: optional subject and deck filters first,
+ * then the size limit, so a filter never gets shrunk by cards outside it.
+ * A card's subject comes from its deck, so no extra field is stored on cards.
  */
 export function reviewSessionQueue(
   records: StudyData["knowledge"],
   today: string,
   settings: StudyData["settings"],
-  options: { deckId?: string; limit?: number } = {},
+  options: { deckId?: string; subjectId?: string; limit?: number } = {},
 ): Flashcard[] {
-  const limit = options.limit ?? reviewSessionLimit(settings),
-    queue = knowledgeIndex(records, today, settings).reviewQueue.filter(
-      (card) => !options.deckId || card.deckId === options.deckId,
-    );
+  const limit = options.limit ?? reviewSessionLimit(settings);
+  const subjectDecks = options.subjectId
+    ? new Set(
+        records
+          .filter(
+            (r): r is FlashcardDeck =>
+              r.kind === "deck" &&
+              !r.deletedAt &&
+              r.subjectId === options.subjectId,
+          )
+          .map((r) => r.id),
+      )
+    : null;
+  const queue = knowledgeIndex(records, today, settings).reviewQueue.filter(
+    (card) =>
+      (!options.deckId || card.deckId === options.deckId) &&
+      (!subjectDecks || subjectDecks.has(card.deckId)),
+  );
   return limit <= 0 ? queue : queue.slice(0, limit);
 }
 

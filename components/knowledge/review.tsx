@@ -34,20 +34,26 @@ const GRADES = [
 ];
 export function CardReview({
   deckId,
+  subjectId,
   onClose,
 }: {
   deckId?: string;
+  subjectId?: string;
   onClose: () => void;
 }) {
   const { data, store, run, today } = useStudy(),
     { busy } = useStoreState();
   const limit = reviewSessionLimit(data.settings),
     decks = data.knowledge.filter(
-      (r): r is FlashcardDeck => r.kind === "deck" && !r.deletedAt,
+      (r): r is FlashcardDeck =>
+        r.kind === "deck" &&
+        !r.deletedAt &&
+        (!subjectId || r.subjectId === subjectId),
     );
   const buildQueue = (value: string) =>
     reviewSessionQueue(data.knowledge, today, data.settings, {
       deckId: value || undefined,
+      subjectId,
     }).map((c) => c.id);
   const [deck, setDeck] = useState(deckId ?? ""),
     [queue, setQueue] = useState(() => buildQueue(deckId ?? "")),

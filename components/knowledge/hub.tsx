@@ -87,7 +87,10 @@ export function KnowledgeHub() {
       record?: KnowledgeRecord;
       deckId?: string;
     } | null>(null),
-    [review, setReview] = useState<string | null>(null),
+    [review, setReview] = useState<{
+      deckId?: string;
+      subjectId?: string;
+    } | null>(null),
     [quiz, setQuiz] = useState<StudyQuiz | null>(null),
     [generator, setGenerator] = useState(false),
     [quizGenerator, setQuizGenerator] = useState(false);
@@ -97,6 +100,25 @@ export function KnowledgeHub() {
     () => knowledgeIndex(data.knowledge, today, data.settings),
     [data.knowledge, today, data.settings],
   );
+  // A card's subject comes from its deck, so the subject filter can scope the
+  // review queue without storing anything extra on the card itself.
+  const scopedQueue = useMemo(() => {
+    if (!subject) return index.reviewQueue;
+    const deckIds = new Set(
+      data.knowledge
+        .filter(
+          (r) => r.kind === "deck" && !r.deletedAt && r.subjectId === subject,
+        )
+        .map((r) => r.id),
+    );
+    return index.reviewQueue.filter((card) => deckIds.has(card.deckId));
+  }, [data.knowledge, index, subject]);
+  const dueCount = subject
+      ? scopedQueue.filter((c) => c.schedule.repetitions > 0).length
+      : index.due.length,
+    freshCount = subject
+      ? scopedQueue.filter((c) => c.schedule.repetitions === 0).length
+      : index.freshToday.length;
   const deferred = useDeferredValue(query),
     search = useMemo(() => searchableData(data), [data]);
   const matches = useMemo(
@@ -176,13 +198,20 @@ export function KnowledgeHub() {
         </div>
         <div className="review-today">
           <Icon name="book" size={28} />
-          <strong>{index.reviewQueue.length}</strong>
+          <strong>{scopedQueue.length}</strong>
           <span>{language === "en" ? "cards to review" : "давтах карт"}</span>
           <small>
-            {index.due.length} {language === "en" ? "due" : "хугацаа болсон"} ·{" "}
-            {index.freshToday.length} {language === "en" ? "new" : "шинэ"}
+            {dueCount} {language === "en" ? "due" : "хугацаа болсон"} ·{" "}
+            {freshCount} {language === "en" ? "new" : "шинэ"}
           </small>
-          {index.fresh.length > index.freshToday.length && (
+          {subject && (
+            <small>
+              {language === "en"
+                ? "Limited to the selected subject."
+                : "Сонгосон хичээлээр хязгаарласан."}
+            </small>
+          )}
+          {!subject && index.fresh.length > index.freshToday.length && (
             <small>
               {language === "en"
                 ? `Daily new-card limit: ${index.freshToday.length} of ${index.fresh.length}. The rest come tomorrow.`
@@ -191,8 +220,8 @@ export function KnowledgeHub() {
           )}
           <button
             className="button primary"
-            onClick={() => setReview("all")}
-            disabled={!index.reviewQueue.length}
+            onClick={() => setReview({ subjectId: subject || undefined })}
+            disabled={!scopedQueue.length}
           >
             {language === "en" ? "Start review" : "Давтлага эхлүүлэх"}
           </button>
@@ -420,7 +449,7 @@ export function KnowledgeHub() {
                   ) : r.kind === "deck" ? (
                     <button
                       className="text-button"
-                      onClick={() => setReview(r.id)}
+                      onClick={() => setReview({ deckId: r.id })}
                     >
                       Давтах →
                     </button>
@@ -547,7 +576,7 @@ export function KnowledgeHub() {
                   <button
                     className="button primary"
                     onClick={() => {
-                      setReview(selectedItem.id);
+                      setReview({ deckId: selectedItem.id });
                       setSelected(null);
                     }}
                   >
@@ -710,7 +739,8 @@ export function KnowledgeHub() {
       )}
       {review && (
         <CardReview
-          deckId={review === "all" ? undefined : review}
+          deckId={review.deckId}
+          subjectId={review.subjectId}
           onClose={() => setReview(null)}
         />
       )}{" "}

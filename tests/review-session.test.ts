@@ -57,6 +57,20 @@ function twoDecks(
   };
 }
 
+/** `twoDecks`, but deck-b belongs to the `physics` subject. */
+function twoSubjects(
+  perDeck: number,
+  extras: Record<string, unknown> = {},
+): StudyData {
+  const data = twoDecks(perDeck, extras);
+  return {
+    ...data,
+    knowledge: data.knowledge.map((r) =>
+      r.id === "deck-b" ? { ...r, subjectId: "physics" } : r,
+    ),
+  };
+}
+
 describe("reviewSessionLimit", () => {
   it("defaults to 200 and allows an explicit size", () => {
     expect(reviewSessionLimit(twoDecks(1).settings)).toBe(
@@ -115,6 +129,63 @@ describe("reviewSessionQueue", () => {
     expect(
       reviewSessionQueue(paced.knowledge, TODAY, paced.settings),
     ).toHaveLength(4);
+  });
+
+  it("keeps only cards whose deck belongs to the subject", () => {
+    const data = twoSubjects(2, { reviewSessionLimit: 0 });
+    const queue = reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+      subjectId: "physics",
+    });
+    expect(queue).toHaveLength(2);
+    expect(queue.every((card) => card.deckId === "deck-b")).toBe(true);
+    expect(
+      reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+        subjectId: "math",
+      }).every((card) => card.deckId === "deck-a"),
+    ).toBe(true);
+  });
+
+  it("combines the subject and deck filters", () => {
+    const data = twoSubjects(2, { reviewSessionLimit: 0 });
+    expect(
+      reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+        subjectId: "physics",
+        deckId: "deck-b",
+      }),
+    ).toHaveLength(2);
+    expect(
+      reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+        subjectId: "physics",
+        deckId: "deck-a",
+      }),
+    ).toHaveLength(0);
+  });
+
+  it("applies the limit after the subject filter", () => {
+    const data = twoSubjects(5, { reviewSessionLimit: 3 });
+    const queue = reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+      subjectId: "math",
+    });
+    expect(queue).toHaveLength(3);
+    expect(queue.every((card) => card.deckId === "deck-a")).toBe(true);
+  });
+
+  it("returns nothing for a subject without decks, and ignores deleted decks", () => {
+    const data = twoSubjects(2, { reviewSessionLimit: 0 });
+    expect(
+      reviewSessionQueue(data.knowledge, TODAY, data.settings, {
+        subjectId: "chemistry",
+      }),
+    ).toHaveLength(0);
+    const removed = twoSubjects(2, { reviewSessionLimit: 0 });
+    removed.knowledge = removed.knowledge.map((r) =>
+      r.id === "deck-b" ? { ...r, deletedAt: NOW } : r,
+    );
+    expect(
+      reviewSessionQueue(removed.knowledge, TODAY, removed.settings, {
+        subjectId: "physics",
+      }),
+    ).toHaveLength(0);
   });
 
   it("honours an explicit limit over the stored setting", () => {
