@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { MATURE_INTERVAL_DAYS, deckMastery } from "@/lib/knowledge/statistics";
+import {
+  MATURE_INTERVAL_DAYS,
+  RETENTION_WINDOW_DAYS,
+  deckMastery,
+  retentionWindowStart,
+} from "@/lib/knowledge/statistics";
 import { recordBase } from "@/lib/knowledge/actions";
 import { knowledgeFixture } from "./knowledge-fixtures";
 import { NOW } from "./fixtures";
@@ -66,6 +71,17 @@ function review(
     after: schedule(),
   };
 }
+
+describe("retentionWindowStart", () => {
+  it("counts back from the study day and degrades to all time", () => {
+    const start = Date.parse(`${TODAY}T00:00:00`);
+    expect(retentionWindowStart(TODAY)).toBe(
+      start - RETENTION_WINDOW_DAYS * DAY,
+    );
+    expect(retentionWindowStart(TODAY, 7)).toBe(start - 7 * DAY);
+    expect(retentionWindowStart("not-a-day")).toBe(-Infinity);
+  });
+});
 
 describe("deckMastery", () => {
   it("splits cards into fresh, learning and mature and weights mastery", () => {

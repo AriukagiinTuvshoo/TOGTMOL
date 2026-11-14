@@ -15,7 +15,13 @@ import {
   searchResults,
 } from "@/lib/knowledge/index";
 import { removeKnowledge } from "@/lib/knowledge/actions";
-import { deckMastery, type DeckMastery } from "@/lib/knowledge/statistics";
+import {
+  RETENTION_WINDOW_DAYS,
+  deckMastery,
+  retentionWindowStart,
+  type DeckMastery,
+} from "@/lib/knowledge/statistics";
+import { sortKnowledge } from "@/lib/knowledge/sort";
 import { formatTime } from "@/lib/calculations/dates";
 import { MarkdownView } from "./markdown-view";
 import { QuizGenerator } from "./quiz-generator";
@@ -71,9 +77,12 @@ const TAB_EN: Record<string, string> = {
   session: "Session history",
   trash: "Trash",
 };
-/** Deck panel line: size, progress, and how often the cards were recalled. */
+/** Deck panel line: size, progress, and recent recall. */
 function masteryLine(m: DeckMastery): string {
-  const retention = m.retention === null ? "" : ` · ${m.retention}% санасаар`;
+  const retention =
+    m.retention === null
+      ? ""
+      : ` · ${RETENTION_WINDOW_DAYS} хоногийн санасаар ${m.retention}%`;
   return `${m.total} карт · ${m.mature} тогтоосон · ${m.learning} суралцаж буй · ${m.fresh} шинэ · ${m.mastery}% эзэмшсэн${retention}`;
 }
 
@@ -88,6 +97,7 @@ export function KnowledgeHub() {
     [from, setFrom] = useState(""),
     [to, setTo] = useState(""),
     [limit, setLimit] = useState(36),
+    [weakFirst, setWeakFirst] = useState(false),
     [showFilters, setShowFilters] = useState(false);
   const [editor, setEditor] = useState<{
       kind: EditableKind;
@@ -108,7 +118,10 @@ export function KnowledgeHub() {
     [data.knowledge, today, data.settings],
   );
   const mastery = useMemo(
-    () => deckMastery(data.knowledge, today),
+    () =>
+      deckMastery(data.knowledge, today, {
+        since: retentionWindowStart(today),
+      }),
     [data.knowledge, today],
   );
   // A card's subject comes from its deck, so the subject filter can scope the
@@ -144,8 +157,8 @@ export function KnowledgeHub() {
       ),
     [search, deferred, subject, tag, from, to],
   );
-  const items = data.knowledge
-    .filter((r) =>
+  const items = sortKnowledge(
+    data.knowledge.filter((r) =>
       tab === "trash"
         ? Boolean(r.deletedAt)
         : !r.deletedAt &&
@@ -155,8 +168,10 @@ export function KnowledgeHub() {
             : tab === "image"
               ? r.kind === "note" && Boolean(r.image)
               : r.kind === tab),
-    )
-    .sort((a, b) => b.updatedAt - a.updatedAt || a.id.localeCompare(b.id));
+    ),
+    mastery,
+    weakFirst,
+  );
   const selectedItem = data.knowledge.find(
     (r) => r.id === selected && !r.deletedAt,
   );
@@ -341,6 +356,21 @@ export function KnowledgeHub() {
           Шүүлтүүр
           {(subject || tag || from || to) && <span className="filter-dot" />}
         </button>
+        {(tab === "all" || tab === "deck") && (
+          <label className="knowledge-sort">
+            Эрэмбэ
+            <select
+              value={weakFirst ? "weak" : "recent"}
+              onChange={(e) => {
+                setWeakFirst(e.target.value === "weak");
+                setLimit(36);
+              }}
+            >
+              <option value="recent">Шинэ нь эхэндээ</option>
+              <option value="weak">Сул багц эхэндээ</option>
+            </select>
+          </label>
+        )}
       </div>
       {showFilters && (
         <div className="knowledge-filters">

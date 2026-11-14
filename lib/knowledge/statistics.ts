@@ -46,6 +46,21 @@ export function knowledgeStatistics(
 /** An interval this long means the card is scheduled well into the future. */
 export const MATURE_INTERVAL_DAYS = 21;
 
+/** Default window for the recall figure shown next to a deck. */
+export const RETENTION_WINDOW_DAYS = 30;
+
+/**
+ * Start of a retention window, measured back from a study day. Deriving it from
+ * `today` keeps callers pure: no clock read inside a render or a memo.
+ */
+export function retentionWindowStart(
+  today: string,
+  days = RETENTION_WINDOW_DAYS,
+): number {
+  const start = Date.parse(`${today}T00:00:00`);
+  return Number.isFinite(start) ? start - days * 86400000 : -Infinity;
+}
+
 export interface DeckMastery {
   deckId: string;
   total: number;

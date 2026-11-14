@@ -114,6 +114,17 @@ body {
   width: 100%;
   margin: 0;
 }
+.knowledge-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.knowledge-sort select {
+  min-width: 0;
+  margin: 0;
+}
 .search-field {
   display: flex;
   align-items: center;
