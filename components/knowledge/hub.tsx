@@ -22,6 +22,14 @@ import { QuizGenerator } from "./quiz-generator";
 import type { KnowledgeRecord, StudyQuiz } from "@/types/knowledge";
 import type { KnowledgeView } from "@/types/study";
 import { useI18n } from "@/components/i18n/language-provider";
+// Imported or legacy links may omit the scheme, so never throw while rendering.
+function hostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
 const labels: Record<string, string> = {
   note: "Тэмдэглэл",
   deck: "Картын багц",
@@ -384,7 +392,7 @@ export function KnowledgeHub() {
                   {r.kind === "note"
                     ? r.body.slice(0, 150)
                     : r.kind === "link"
-                      ? r.description || new URL(r.url).hostname
+                      ? r.description || hostname(r.url)
                       : r.kind === "deck"
                         ? `${index.cardsByDeck.get(r.id)?.length ?? 0} карт · ${r.description}`
                         : r.kind === "quiz"

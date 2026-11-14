@@ -69,10 +69,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = language;
     document.documentElement.dataset.language = language;
     document.documentElement.dir = "ltr";
-    document.title =
-      language === "en"
-        ? "TOGTMOL — Study with Bondook"
-        : "Тогтмол — Бондооктой хамт суралцъя";
+    // Titles belong to the route metadata and to the active view in AppShell.
+    // Setting one here would win over both, because this effect runs after
+    // the child effects that render the current page.
   }, [language]);
 
   useEffect(() => {

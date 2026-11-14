@@ -483,3 +483,17 @@ it("falls back to a labelled local reply when online AI has no configured accoun
     within(screen.getByRole("log")).getByText(/Энэ долоо хоногт 0м/),
   ).toBeVisible();
 });
+
+it("keeps the active view in the document title", async () => {
+  render(<AppShell />);
+  await screen.findByText("Миний төлөвлөгөө");
+  // The language provider mounts after this view renders; it must not reset
+  // the title back to a generic one.
+  await waitFor(() => expect(document.title).toBe("Миний өдөр · Тогтмол"));
+  fireEvent.click(
+    within(
+      screen.getByRole("navigation", { name: "Миний орон зай" }),
+    ).getByRole("button", { name: "Хичээлүүд" }),
+  );
+  await waitFor(() => expect(document.title).toBe("Миний хичээлүүд · Тогтмол"));
+});
