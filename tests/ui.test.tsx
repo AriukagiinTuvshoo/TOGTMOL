@@ -15,6 +15,7 @@ import { Repository } from "@/lib/persistence/repository";
 import { AppShell } from "@/components/app-shell";
 import { startTimer } from "@/lib/calculations/timer";
 import { fixture } from "./fixtures";
+import { openView } from "./nav-helper";
 beforeEach(() => {
   window.history.replaceState(null, "", "/");
   localStorage.clear();
@@ -48,8 +49,7 @@ describe("interactive local workflow", () => {
     vi.spyOn(Date, "now").mockImplementation(() => now);
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Хичээлүүд" }));
+    openView("Хичээлүүд");
     fireEvent.click(
       screen.getByRole("button", { name: "Анхны хичээлээ нэмэх" }),
     );
@@ -84,7 +84,7 @@ describe("interactive local workflow", () => {
     });
     // Navigation before the debounce flush must retain the exact note.
     fireEvent.keyDown(window, { key: "Escape" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Миний өрөө" }));
+    openView("Миний өрөө");
     fireEvent.click(
       within(
         screen.getByRole("navigation", { name: "Гар утасны цэс" }),
@@ -112,18 +112,17 @@ describe("interactive local workflow", () => {
     });
     expect(saved?.data.activeTimer).toBeNull();
     await repo.close();
-    fireEvent.click(within(nav).getByRole("button", { name: "Миний өрөө" }));
+    openView("Миний өрөө");
     expect(await screen.findByText(/Рекурс ойлголоо/)).toBeVisible();
   }, 20000);
   it("renders all navigation surfaces with real empty states and persistent theme changes", async () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Статистик" }));
+    openView("Статистик");
     expect(
       await screen.findByText("Тогтмол байдал", { exact: true }),
     ).toBeVisible();
-    fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
+    openView("Календарь");
     expect(
       await screen.findByRole("button", { name: "365 өдөр" }),
     ).toBeVisible();
@@ -133,7 +132,7 @@ describe("interactive local workflow", () => {
         name: /\d{4}-\d{2}-\d{2}, 0м, 0 хичээл/,
       }),
     ).toHaveLength(365);
-    fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
+    openView("Тохиргоо");
     fireEvent.click(await screen.findByRole("button", { name: "Бараан" }));
     await waitFor(() =>
       expect(document.documentElement.dataset.theme).toBe("dark"),
@@ -188,8 +187,7 @@ describe("study world integration", () => {
     await repo.save("guest", { ...fixture(), sessions: [] }, 0);
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Зорилго" }));
+    openView("Зорилго");
     fireEvent.click(screen.getByRole("button", { name: "Шинэ зорилго" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Таны зорилго" }), {
       target: { value: "Математик 1 долоо хоног 25 минут" },
@@ -246,8 +244,7 @@ describe("study world integration", () => {
     expect(
       await screen.findByRole("button", { name: /Rainy window/ }),
     ).toBeVisible();
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Календарь" }));
+    openView("Календарь");
     expect(screen.getByRole("complementary", { name: "Study music" })).toBe(
       player,
     );
@@ -394,11 +391,7 @@ it("edits a daily task and reports its actual completion day in the calendar", a
       day,
     ),
   );
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name: "Календарь" }),
-  );
+  openView("Календарь");
   expect(await screen.findByText("Биелсэн алхмууд")).toBeVisible();
   expect(
     within(screen.getByText("Биелсэн алхмууд").parentElement!).getByText(
@@ -418,11 +411,7 @@ it("shares music preferences with the persistent player and restores the chosen 
   );
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name: "Тохиргоо" }),
-  );
+  openView("Тохиргоо");
   fireEvent.change(screen.getByLabelText("Үндсэн хөгжмийн ангилал"), {
     target: { value: "night" },
   });
@@ -452,11 +441,7 @@ it("shares music preferences with the persistent player and restores the chosen 
 it("falls back to a labelled local reply when online AI has no configured account", async () => {
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name: "Суралцах туслах" }),
-  );
+  openView("Суралцах туслах");
   await screen.findByLabelText("Онлайн AI ашиглах");
   fireEvent.click(screen.getByLabelText("Онлайн AI ашиглах"));
   expect(screen.getByLabelText(/Сүүлийн 7 өдрийн 5 хүртэл/)).not.toBeChecked();
@@ -490,10 +475,6 @@ it("keeps the active view in the document title", async () => {
   // The language provider mounts after this view renders; it must not reset
   // the title back to a generic one.
   await waitFor(() => expect(document.title).toBe("Миний өдөр · Тогтмол"));
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name: "Хичээлүүд" }),
-  );
+  openView("Хичээлүүд");
   await waitFor(() => expect(document.title).toBe("Миний хичээлүүд · Тогтмол"));
 });

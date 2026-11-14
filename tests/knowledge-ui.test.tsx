@@ -12,6 +12,7 @@ import {
 import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { AppShell } from "@/components/app-shell";
+import { openView } from "./nav-helper";
 import { Repository } from "@/lib/persistence/repository";
 import { knowledgeFixture } from "./knowledge-fixtures";
 beforeEach(() => {
@@ -49,11 +50,7 @@ async function boot() {
   await screen.findByText("Миний төлөвлөгөө");
 }
 function navigate(name: string) {
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name }),
-  );
+  openView(name);
 }
 describe("knowledge flows", () => {
   it("creates a searchable note, opens it with Ctrl K, soft-deletes and restores from trash", async () => {

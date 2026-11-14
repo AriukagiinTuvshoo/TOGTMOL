@@ -46,15 +46,25 @@ const Assistant = dynamic(() =>
 );
 import { PwaManager } from "./settings/pwa";
 type NavItem = { view: View; label: TranslationKey; icon: string };
-// Five sections instead of eleven equal buttons. Every view keeps its own
-// route and button, so deep links, tests and muscle memory still work.
-const NAV_GROUPS: { label: TranslationKey; items: NavItem[] }[] = [
+// Five sections instead of eleven equal buttons. A section with one view is
+// that view; a section with several opens them as a sub-list, and every view
+// keeps its own route, so deep links and muscle memory still work.
+const NAV_GROUPS: {
+  label: TranslationKey;
+  icon: string;
+  home: View;
+  items: NavItem[];
+}[] = [
   {
     label: "nav.groupToday",
+    icon: "home",
+    home: "overview",
     items: [{ view: "overview", label: "nav.overview", icon: "home" }],
   },
   {
     label: "nav.groupLearn",
+    icon: "book",
+    home: "knowledge",
     items: [
       { view: "knowledge", label: "nav.knowledge", icon: "book" },
       { view: "calendar", label: "nav.calendar", icon: "calendar" },
@@ -63,6 +73,8 @@ const NAV_GROUPS: { label: TranslationKey; items: NavItem[] }[] = [
   },
   {
     label: "nav.groupProgress",
+    icon: "chart",
+    home: "statistics",
     items: [
       { view: "statistics", label: "nav.statistics", icon: "chart" },
       { view: "goals", label: "nav.goals", icon: "target" },
@@ -71,14 +83,18 @@ const NAV_GROUPS: { label: TranslationKey; items: NavItem[] }[] = [
   },
   {
     label: "nav.groupCompanion",
+    icon: "spark",
+    home: "assistant",
     items: [{ view: "assistant", label: "nav.assistant", icon: "spark" }],
   },
   {
     label: "nav.groupSettings",
+    icon: "settings",
+    home: "settings",
     items: [
+      { view: "settings", label: "nav.settings", icon: "settings" },
       { view: "room", label: "nav.room", icon: "sun" },
       { view: "privacy", label: "nav.privacy", icon: "shield" },
-      { view: "settings", label: "nav.settings", icon: "settings" },
     ],
   },
 ];
@@ -119,6 +135,9 @@ function Shell() {
     navigate(v);
     setMore(false);
   };
+  const activeGroup = NAV_GROUPS.find((group) =>
+    group.items.some((item) => item.view === view),
+  );
   const moreButton = useRef<HTMLButtonElement>(null),
     morePanel = useRef<HTMLDivElement>(null);
   const closeMore = () => {
@@ -269,28 +288,49 @@ function Shell() {
         </button>
         <div className="nav-caption">{t("shell.mySpace")}</div>
         <nav aria-label={t("shell.mySpace")}>
-          {NAV_GROUPS.map((group) => (
-            <Fragment key={group.label}>
-              <div className="nav-caption nav-group">{t(group.label)}</div>
-              {group.items.map((n) => (
-                <button
-                  key={n.view}
-                  className={`${view === n.view ? "active" : ""}${group.items.length > 1 ? " nav-sub" : ""}`}
-                  aria-current={view === n.view ? "page" : undefined}
-                  onClick={() => go(n.view)}
-                >
-                  <Icon name={n.icon} />
-                  {t(n.label)}
-                  {n.view === "assistant" && (
-                    <span className="nav-tag" aria-hidden="true">
-                      LOCAL
-                    </span>
-                  )}
-                </button>
-              ))}
-            </Fragment>
-          ))}
+          {NAV_GROUPS.map((group) => {
+            const active = group.items.some((item) => item.view === view),
+              single = group.items.length === 1,
+              label = single ? group.items[0].label : group.label;
+            return (
+              <button
+                key={group.label}
+                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+                aria-expanded={single ? undefined : active}
+                aria-controls={single ? undefined : "nav-sub-panel"}
+                onClick={() => go(group.home)}
+              >
+                <Icon name={group.icon} />
+                {t(label)}
+                {group.home === "assistant" && (
+                  <span className="nav-tag" aria-hidden="true">
+                    LOCAL
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
+        {activeGroup && activeGroup.items.length > 1 && (
+          <div
+            className="nav-sub"
+            id="nav-sub-panel"
+            role="group"
+            aria-label={t(activeGroup.label)}
+          >
+            {activeGroup.items.map((n) => (
+              <button
+                key={n.view}
+                aria-current={view === n.view ? "page" : undefined}
+                onClick={() => go(n.view)}
+              >
+                <Icon name={n.icon} />
+                {t(n.label)}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="sidebar-bottom">
           <div className="sidebar-quote">
             <Icon name="leaf" size={23} />

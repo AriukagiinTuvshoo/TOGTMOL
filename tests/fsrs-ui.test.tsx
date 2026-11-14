@@ -7,11 +7,11 @@ import {
   fireEvent,
   waitFor,
   cleanup,
-  within,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { AppShell } from "@/components/app-shell";
+import { openView } from "./nav-helper";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/");
@@ -45,8 +45,7 @@ describe("review algorithm settings", () => {
   it("starts on SM-2 and remembers an FSRS choice", async () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
+    openView("Тохиргоо");
 
     const sm2 = await screen.findByRole("button", { name: "SM-2" });
     const fsrs = screen.getByRole("button", { name: "FSRS" });

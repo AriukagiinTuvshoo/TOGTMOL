@@ -13,6 +13,7 @@ import {
 import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { AppShell } from "@/components/app-shell";
+import { openView } from "./nav-helper";
 import { MusicProvider } from "@/components/music/music-provider";
 import { StudyProvider } from "@/hooks/use-study";
 import { Repository } from "@/lib/persistence/repository";
@@ -187,11 +188,7 @@ async function start() {
   );
 }
 function navigate(name: string) {
-  fireEvent.click(
-    within(
-      screen.getByRole("navigation", { name: "Миний орон зай" }),
-    ).getByRole("button", { name }),
-  );
+  openView(name);
 }
 async function savedPreference() {
   const repo = new Repository();
@@ -286,10 +283,10 @@ describe("persistent music dock", () => {
       navigate(page);
       await waitFor(() =>
         expect(
-          within(
-            screen.getByRole("navigation", { name: "Миний орон зай" }),
-          ).getByRole("button", { name: page }),
-        ).toHaveAttribute("aria-current", "page"),
+          screen
+            .getAllByRole("button", { current: "page" })
+            .some((button) => button.textContent?.startsWith(page)),
+        ).toBe(true),
       );
       expect(screen.getByTitle("Test YouTube")).toBe(player.iframe);
       expect(dock()).toHaveAttribute("data-playback", "playing");

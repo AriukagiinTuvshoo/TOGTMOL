@@ -7,11 +7,11 @@ import {
   fireEvent,
   waitFor,
   cleanup,
-  within,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { IDBFactory } from "fake-indexeddb";
 import { AppShell } from "@/components/app-shell";
+import { openView } from "./nav-helper";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/");
@@ -45,8 +45,7 @@ describe("Anki import settings", () => {
   it("previews pasted notes and imports them into a new deck", async () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
+    openView("Тохиргоо");
 
     const paste = await screen.findByLabelText("Эсвэл текстээ энд буулгана уу");
     fireEvent.change(paste, {
@@ -69,8 +68,7 @@ describe("Anki import settings", () => {
   it("explains why .apkg cannot be read directly", async () => {
     render(<AppShell />);
     await screen.findByText("Миний төлөвлөгөө");
-    const nav = screen.getByRole("navigation", { name: "Миний орон зай" });
-    fireEvent.click(within(nav).getByRole("button", { name: "Тохиргоо" }));
+    openView("Тохиргоо");
     const input = (
       await screen.findByText("CSV / TSV / TXT файл сонгох")
     ).parentElement!.querySelector("input[type=file]") as HTMLInputElement;
