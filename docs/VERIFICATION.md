@@ -6,17 +6,18 @@
 
 ## 1. Автомат шалгалт
 
-| Шалгалт            | Команд                   | Үр дүн                                            |
-| ------------------ | ------------------------ | ------------------------------------------------- |
-| Хамаарлын суулгалт | `npm ci`                 | Тэнцсэн; lockfile өөрчлөгдөөгүй                   |
-| TypeScript         | `npm run typecheck`      | Алдаагүй                                          |
-| ESLint             | `npm run lint`           | Алдаагүй (0 error, 0 warning; `--max-warnings 0`) |
-| Формат             | `npm run format:check`   | Тэнцсэн                                           |
-| Тест               | `npm run test`           | **309 / 309** тест, **39 / 39** файл (~55 секунд) |
-| Production build   | `npm run build`          | Тэнцсэн; offline manifest **30** immutable asset  |
-| PostgreSQL         | `tests/database.test.ts` | PGlite дээр migration-ууд бодитоор ажилласан      |
+| Шалгалт            | Команд                   | Үр дүн                                                             |
+| ------------------ | ------------------------ | ------------------------------------------------------------------ |
+| Хамаарлын суулгалт | `npm ci`                 | Тэнцсэн; lockfile өөрчлөгдөөгүй                                    |
+| TypeScript         | `npm run typecheck`      | Алдаагүй                                                           |
+| ESLint             | `npm run lint`           | Алдаагүй (0 error, 0 warning; `--max-warnings 0`)                  |
+| Формат             | `npm run format:check`   | Тэнцсэн                                                            |
+| Тест               | `npm run test`           | **315 / 315** тест, **40 / 40** файл (~60 секунд)                  |
+| Production build   | `npm run build`          | Тэнцсэн; offline manifest **30** immutable asset                   |
+| PostgreSQL         | `tests/database.test.ts` | PGlite дээр migration-ууд бодитоор ажилласан                       |
+| CSP (report-only)  | `next start` + `curl`    | Толгой ба `report-uri` ажиллана; санамсаргүй төрөл 415, тайлан 204 |
 
-Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/cards`, `/api/bondook/plan`, `/api/bondook/quiz`, `/api/chimege/transcribe`, `/api/health`, `/api/togi`, `/manifest.webmanifest`, `/opengraph-image`, `/privacy`, `/terms`.
+Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/cards`, `/api/bondook/plan`, `/api/bondook/quiz`, `/api/chimege/transcribe`, `/api/csp-report`, `/api/health`, `/api/togi`, `/manifest.webmanifest`, `/opengraph-image`, `/privacy`, `/terms`.
 
 ## 2. Функциональ хамрах хүрээ (тестээр)
 
