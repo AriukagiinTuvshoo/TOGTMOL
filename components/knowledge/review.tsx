@@ -8,6 +8,7 @@ import {
   formatClock,
   remainingMs,
   reviewSessionLimit,
+  prioritizeCard,
   reviewSessionQueue,
 } from "@/lib/knowledge/session";
 import {
@@ -35,10 +36,13 @@ const GRADES = [
 export function CardReview({
   deckId,
   subjectId,
+  startCardId,
   onClose,
 }: {
   deckId?: string;
   subjectId?: string;
+  /** Card to show first, e.g. one picked from the weakest-cards list. */
+  startCardId?: string;
   onClose: () => void;
 }) {
   const { data, store, run, today } = useStudy(),
@@ -50,11 +54,15 @@ export function CardReview({
         !r.deletedAt &&
         (!subjectId || r.subjectId === subjectId),
     );
-  const buildQueue = (value: string) =>
-    reviewSessionQueue(data.knowledge, today, data.settings, {
-      deckId: value || undefined,
-      subjectId,
-    }).map((c) => c.id);
+  const [firstCard, setFirstCard] = useState(startCardId);
+  const buildQueue = (value: string, first = firstCard) =>
+    prioritizeCard(
+      reviewSessionQueue(data.knowledge, today, data.settings, {
+        deckId: value || undefined,
+        subjectId,
+      }).map((c) => c.id),
+      first,
+    );
   const [deck, setDeck] = useState(deckId ?? ""),
     [queue, setQueue] = useState(() => buildQueue(deckId ?? "")),
     [answer, setAnswer] = useState(false),
@@ -110,7 +118,8 @@ export function CardReview({
               disabled={busy}
               onChange={(e) => {
                 setDeck(e.target.value);
-                setQueue(buildQueue(e.target.value));
+                setFirstCard(undefined);
+                setQueue(buildQueue(e.target.value, undefined));
                 setAnswer(false);
               }}
             >

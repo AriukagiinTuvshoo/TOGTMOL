@@ -108,6 +108,7 @@ export function KnowledgeHub() {
     [review, setReview] = useState<{
       deckId?: string;
       subjectId?: string;
+      cardId?: string;
     } | null>(null),
     [quiz, setQuiz] = useState<StudyQuiz | null>(null),
     [generator, setGenerator] = useState(false),
@@ -647,6 +648,18 @@ export function KnowledgeHub() {
                             Дараа: {w.card.schedule.dueOn}
                           </small>
                         </span>
+                        <button
+                          className="text-button"
+                          onClick={() => {
+                            setReview({
+                              deckId: selectedItem.id,
+                              cardId: w.card.id,
+                            });
+                            setSelected(null);
+                          }}
+                        >
+                          Давтах →
+                        </button>
                       </div>
                     ))}
                   </>
@@ -820,6 +833,7 @@ export function KnowledgeHub() {
         <CardReview
           deckId={review.deckId}
           subjectId={review.subjectId}
+          startCardId={review.cardId}
           onClose={() => setReview(null)}
         />
       )}{" "}

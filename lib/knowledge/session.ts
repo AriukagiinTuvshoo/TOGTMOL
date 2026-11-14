@@ -46,6 +46,14 @@ export function reviewSessionQueue(
   return limit <= 0 ? queue : queue.slice(0, limit);
 }
 
+/**
+ * Puts an explicitly chosen card at the front of the session. The card is kept
+ * even when it is not due yet, so reviewing it early stays possible.
+ */
+export function prioritizeCard(ids: string[], cardId?: string): string[] {
+  return cardId ? [cardId, ...ids.filter((id) => id !== cardId)] : ids;
+}
+
 /** Milliseconds left on a deadline, or null when no time box is running. */
 export function remainingMs(deadline: number | null, now: number) {
   return deadline === null ? null : Math.max(0, deadline - now);

@@ -5,6 +5,7 @@ import {
   formatClock,
   remainingMs,
   reviewSessionLimit,
+  prioritizeCard,
   reviewSessionQueue,
 } from "@/lib/knowledge/session";
 import { recordBase } from "@/lib/knowledge/actions";
@@ -200,6 +201,25 @@ describe("reviewSessionQueue", () => {
     expect(
       reviewSessionQueue(data.knowledge, "2026-09-14", data.settings),
     ).toHaveLength(0);
+  });
+});
+
+describe("prioritizeCard", () => {
+  it("moves the chosen card to the front without duplicating it", () => {
+    expect(prioritizeCard(["a", "b", "c"], "c")).toEqual(["c", "a", "b"]);
+  });
+
+  it("keeps a chosen card that is not in the queue", () => {
+    expect(prioritizeCard(["a", "b"], "not-due")).toEqual([
+      "not-due",
+      "a",
+      "b",
+    ]);
+  });
+
+  it("leaves the queue alone without a chosen card", () => {
+    const ids = ["a", "b"];
+    expect(prioritizeCard(ids)).toBe(ids);
   });
 });
 
