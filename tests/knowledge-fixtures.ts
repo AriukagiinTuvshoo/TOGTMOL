@@ -6,6 +6,7 @@ import type {
   StudyQuiz,
   FlashcardDeck,
   StudyLink,
+  StudyTopic,
 } from "@/types/knowledge";
 export const SAMPLE_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lYQAAAAASUVORK5CYII=";
@@ -26,6 +27,12 @@ export const note = (): StudyNote => ({
   date: "2026-09-15",
   image: SAMPLE_IMAGE,
   links: ["https://example.org/algebra"],
+});
+export const topic = (): StudyTopic => ({
+  ...base("topic-1", "Тэгшитгэл"),
+  kind: "topic",
+  parentId: null,
+  description: "Нэг үл мэдэгдэхтэй тэгшитгэл",
 });
 export const deck = (): FlashcardDeck => ({
   ...base("deck-1", "Алгебрын карт"),

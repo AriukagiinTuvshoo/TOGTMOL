@@ -4,6 +4,32 @@ import { mergeData, resolveConflict } from "@/lib/migration/merge";
 import { buildIndex } from "@/lib/calculations/analytics";
 import { actions } from "@/lib/persistence/actions";
 import { fixture, NOW, session, subject } from "./fixtures";
+import { deck, topic } from "./knowledge-fixtures";
+describe("schema 6 topics and source links", () => {
+  it("keeps topics and a deck's source across the upgrade", () => {
+    const out = migrate({
+      ...fixture(),
+      schemaVersion: 5,
+      knowledge: [topic(), { ...deck(), sourceId: "note-1" }],
+    });
+    expect(out.schemaVersion).toBe(6);
+    expect(out.knowledge.find((r) => r.kind === "topic")).toMatchObject({
+      id: "topic-1",
+      parentId: null,
+      description: "Нэг үл мэдэгдэхтэй тэгшитгэл",
+    });
+    expect(out.knowledge.find((r) => r.kind === "deck")).toMatchObject({
+      sourceId: "note-1",
+    });
+  });
+
+  it("adds no empty topic fields to records that never had one", () => {
+    const out = migrate({ ...fixture(), schemaVersion: 5 });
+    expect(out.schemaVersion).toBe(6);
+    expect(out.knowledge).toEqual([]);
+  });
+});
+
 describe("v2 compatibility and safe merges", () => {
   it("preserves numeric IDs, exact seconds, notes, goals, achievements and extensions", () => {
     const input = {
@@ -112,7 +138,7 @@ describe("v2 compatibility and safe merges", () => {
   });
   it("rejects unknown and future schemas", () => {
     expect(() => migrate({ random: "value" })).toThrow();
-    expect(() => migrate({ ...fixture(), schemaVersion: 6 })).toThrow();
+    expect(() => migrate({ ...fixture(), schemaVersion: 7 })).toThrow();
   });
   it("preserves duplicate source records by recovering unique IDs", () => {
     const d = fixture();

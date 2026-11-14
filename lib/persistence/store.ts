@@ -227,7 +227,7 @@ export class StudyStore {
     return {
       format: "togtmol-backup",
       app: "togtmol",
-      version: 5,
+      version: 6,
       exportedAt: new Date().toISOString(),
       data: snapshotForExport(
         {

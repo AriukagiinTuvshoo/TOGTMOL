@@ -3,6 +3,14 @@ export interface KnowledgeBase extends RecordBase {
   title: string;
   subjectId: string | null;
   tags: string[];
+  /** Optional chapter this record belongs to; topics carry `parentId` too. */
+  topicId?: string | null;
+}
+export interface StudyTopic extends KnowledgeBase {
+  kind: "topic";
+  /** Parent topic in the same subject, or null for a top-level topic. */
+  parentId: string | null;
+  description: string;
 }
 export interface StudyNote extends KnowledgeBase {
   kind: "note";
@@ -14,6 +22,8 @@ export interface StudyNote extends KnowledgeBase {
 export interface FlashcardDeck extends KnowledgeBase {
   kind: "deck";
   description: string;
+  /** Note or other record the cards were generated from, when known. */
+  sourceId?: string | null;
 }
 export interface ReviewSchedule {
   repetitions: number;
@@ -68,6 +78,7 @@ export interface StudyLink extends KnowledgeBase {
   relatedIds: string[];
 }
 export type KnowledgeRecord =
+  | StudyTopic
   | StudyNote
   | FlashcardDeck
   | Flashcard

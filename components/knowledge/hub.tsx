@@ -39,6 +39,7 @@ function hostname(url: string): string {
   }
 }
 const labels: Record<string, string> = {
+  topic: "Сэдэв",
   note: "Тэмдэглэл",
   deck: "Картын багц",
   card: "Карт",
@@ -53,12 +54,14 @@ const tabs: [KnowledgeView, string][] = [
   ["note", "Тэмдэглэл"],
   ["image", "Зураг"],
   ["deck", "Карт"],
+  ["topic", "Сэдэв"],
   ["quiz", "Сорил"],
   ["link", "Холбоос"],
   ["session", "Хичээлийн түүх"],
   ["trash", "Хогийн сав"],
 ];
 const LABEL_EN: Record<string, string> = {
+  topic: "Topic",
   note: "Note",
   deck: "Deck",
   card: "Card",
@@ -127,6 +130,34 @@ export function KnowledgeHub() {
     [data.knowledge, today],
   );
   // Only the open deck needs its weakest cards, and only while it is a deck.
+  const topicChildren = useMemo(
+    () =>
+      !selected
+        ? []
+        : data.knowledge.filter(
+            (r) =>
+              r.kind === "topic" && r.parentId === selected && !r.deletedAt,
+          ),
+    [data.knowledge, selected],
+  );
+  const topicRecords = useMemo(
+    () =>
+      !selected
+        ? []
+        : data.knowledge.filter(
+            (r) => r.topicId === selected && r.kind !== "topic" && !r.deletedAt,
+          ),
+    [data.knowledge, selected],
+  );
+  const deckSource = useMemo(() => {
+    const record = data.knowledge.find(
+      (r) => r.id === selected && !r.deletedAt,
+    );
+    return record?.kind === "deck" && record.sourceId
+      ? (data.knowledge.find((r) => r.id === record.sourceId && !r.deletedAt) ??
+          null)
+      : null;
+  }, [data.knowledge, selected]);
   const weakCards = useMemo(() => {
     if (!selected) return [];
     const record = data.knowledge.find(
@@ -306,6 +337,13 @@ export function KnowledgeHub() {
             <Icon name="plus" size={16} />{" "}
             {language === "en" ? "Deck" : "Картын багц"}
           </button>
+          <button
+            className="button"
+            onClick={() => setEditor({ kind: "topic" })}
+          >
+            <Icon name="plus" size={16} />{" "}
+            {language === "en" ? "Topic" : "Сэдэв"}
+          </button>
           <button className="button" onClick={() => setGenerator(true)}>
             <Icon name="spark" size={16} />{" "}
             {language === "en" ? "Create cards" : "Карт үүсгэх"}
@@ -480,9 +518,11 @@ export function KnowledgeHub() {
                       ? r.description || hostname(r.url)
                       : r.kind === "deck"
                         ? `${index.cardsByDeck.get(r.id)?.length ?? 0} карт · ${mastery.get(r.id)?.mastery ?? 0}% эзэмшсэн · ${r.description}`
-                        : r.kind === "quiz"
-                          ? `${r.questions.length} асуулт`
-                          : ""}
+                        : r.kind === "topic"
+                          ? r.description
+                          : r.kind === "quiz"
+                            ? `${r.questions.length} асуулт`
+                            : ""}
                 </p>
                 <div className="tag-list">
                   {r.tags.slice(0, 5).map((t) => (
@@ -633,6 +673,21 @@ export function KnowledgeHub() {
                     {masteryLine(mastery.get(selectedItem.id) as DeckMastery)}
                   </p>
                 )}
+                {selectedItem.sourceId && (
+                  <p className="tiny muted">
+                    Эх материал:{" "}
+                    {deckSource ? (
+                      <button
+                        className="text-button"
+                        onClick={() => setSelected(deckSource.id)}
+                      >
+                        {deckSource.title} →
+                      </button>
+                    ) : (
+                      "устсан"
+                    )}
+                  </p>
+                )}
                 {weakCards.length > 0 && (
                   <>
                     <p className="tiny muted">Хамгийн сул картууд</p>
@@ -739,6 +794,53 @@ export function KnowledgeHub() {
                         `${new Date(r.reviewedAt).toLocaleString("mn-MN")} · ${r.title} · ${r.grade}/5`}
                     </p>
                   ))}
+              </>
+            )}
+            {selectedItem.kind === "topic" && (
+              <>
+                <p>{selectedItem.description}</p>
+                {selectedItem.parentId && (
+                  <button
+                    className="text-button"
+                    onClick={() => setSelected(selectedItem.parentId!)}
+                  >
+                    ↑{" "}
+                    {data.knowledge.find((r) => r.id === selectedItem.parentId)
+                      ?.title ?? "Эх сэдэв устсан"}
+                  </button>
+                )}
+                <p className="tiny muted">Дэд сэдэв</p>
+                {topicChildren.length ? (
+                  topicChildren.map((r) => (
+                    <button
+                      className="text-button"
+                      key={r.id}
+                      onClick={() => setSelected(r.id)}
+                    >
+                      {r.title} →
+                    </button>
+                  ))
+                ) : (
+                  <p className="tiny muted">Дэд сэдэв алга.</p>
+                )}
+                <p className="tiny muted">Холбогдсон бичлэг</p>
+                {topicRecords.length ? (
+                  topicRecords.map((r) => (
+                    <button
+                      className="text-button"
+                      key={r.id}
+                      onClick={() => setSelected(r.id)}
+                    >
+                      {r.title} ·{" "}
+                      {language === "en"
+                        ? LABEL_EN[r.kind]
+                        : (labels[r.kind] ?? r.kind)}{" "}
+                      →
+                    </button>
+                  ))
+                ) : (
+                  <p className="tiny muted">Холбогдсон бичлэг алга.</p>
+                )}
               </>
             )}
             {selectedItem.kind === "card" && (

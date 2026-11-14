@@ -167,7 +167,9 @@ export function searchableData(data: StudyData): SearchResult[] {
                 ? r.questions.map((q) => q.prompt).join(" ")
                 : r.kind === "attempt"
                   ? `${r.score}/${r.total}`
-                  : `Үнэлгээ ${r.grade}`;
+                  : r.kind === "topic"
+                    ? r.description
+                    : `Үнэлгээ ${r.grade}`;
     result.push({
       id: r.id,
       title: r.title,

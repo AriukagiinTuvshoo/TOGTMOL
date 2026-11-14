@@ -11,7 +11,7 @@ describe("durable storage", () => {
       repo = new Repository(new IDBFactory(), storage);
     storage.setItem("tracker-data", raw);
     const d = await repo.initialize("guest");
-    expect(d.data.schemaVersion).toBe(5);
+    expect(d.data.schemaVersion).toBe(6);
     expect(storage.getItem("tracker-data")).toBe(raw);
     expect((await repo.backups("guest"))[0].raw).toBe(raw);
     await repo.close();

@@ -4,18 +4,18 @@
 
 ## 1. Одоогийн дугаарууд
 
-| Юу                            | Утга                   | Хаана тодорхойлогдоно                                     |
-| ----------------------------- | ---------------------- | --------------------------------------------------------- |
-| Аппын хувилбар                | `7.0.0`                | `package.json` → `version`                                |
-| Хадгалалтын схем              | `5`                    | `lib/persistence/repository.ts:158`, `data.schemaVersion` |
-| IndexedDB-ийн нэр             | `togtmol-v3`           | `lib/persistence/repository.ts:27`, `store.ts:70`         |
-| IndexedDB-ийн дотоод хувилбар | `3`                    | `repository.ts` дахь `open(DB_NAME, 3)`                   |
-| localStorage prefix           | `togtmol:v3:`          | `lib/persistence/repository.ts`                           |
-| JSON экспортын `version`      | `5`                    | `lib/persistence/store.ts:230`                            |
-| Supabase migration файлууд    | `v3`, `v4`, `v5`, `v6` | `supabase/migrations/` (дөрвөн файл)                      |
-| Supabase дээрх схем           | `5`                    | RPC болон `schemaVersion` шалгалт                         |
+| Юу                            | Утга               | Хаана тодорхойлогдоно                                     |
+| ----------------------------- | ------------------ | --------------------------------------------------------- |
+| Аппын хувилбар                | `7.0.0`            | `package.json` → `version`                                |
+| Хадгалалтын схем              | `6`                | `lib/persistence/repository.ts:158`, `data.schemaVersion` |
+| IndexedDB-ийн нэр             | `togtmol-v3`       | `lib/persistence/repository.ts:27`, `store.ts:70`         |
+| IndexedDB-ийн дотоод хувилбар | `3`                | `repository.ts` дахь `open(DB_NAME, 3)`                   |
+| localStorage prefix           | `togtmol:v3:`      | `lib/persistence/repository.ts`                           |
+| JSON экспортын `version`      | `6`                | `lib/persistence/store.ts:230`                            |
+| Supabase migration файлууд    | `v3`–`v7` (5 файл) | `supabase/migrations/` (таван файл)                       |
+| Supabase дээрх схем           | `6`                | RPC болон `schemaVersion` шалгалт                         |
 
-**Чухал:** migration файлын нэрний `v6` нь **схемийн** дугаар биш. `20260924201500_music_audio_sources_v6.sql` нь дөрөв дэх migration бөгөөд схем 5-ыг өөрчлөхгүй — зөвхөн `knowledge_records` дээр аудио эх сурвалжийг зөвшөөрнө. Иймд «дөрвөн migration, схем 5» гэдэг нь зөрчил биш.
+**Чухал:** migration файлын нэрний дугаар нь **схемийн** дугаар биш, зүгээр л файлын дараалал юм. `20260924201500_music_audio_sources_v6.sql` нь дөрөв дэх файл бөгөөд схем 5 дээр ажиллана. Тав дахь файл `20261114120000_topics_knowledge_v7.sql` нь схем 6-ыг нэвтрүүлнэ: `topic` төрөл, `topicId`, багцын `sourceId`. Одоо зөвхөн схем 6 upload хүлээж авах ба schema 5 ба түүнээс хуучин upload татгалзагдана.
 
 ## 2. Аль дугаарыг хэзээ өсгөх вэ?
 
@@ -25,7 +25,7 @@
 - **Minor** — шинэ боломж, шинэ дэлгэц, шинэ тохиргоо нэмэхэд.
 - **Patch** — алдаа засах, гүйцэтгэл, хүртээмж, баримтын засварт.
 
-Аппын хувилбар нь өгөгдлийн схемээс **хөндий** хөгжинө: 7.x бүхэлдээ схем 5 дээр ажиллаж болно.
+Аппын хувилбар нь өгөгдлийн схемээс **хөндий** хөгжинө: 7.x бүхэлдээ схем 6 дээр ажиллаж болно.
 
 ### Хадгалалтын схем (`schemaVersion`)
 

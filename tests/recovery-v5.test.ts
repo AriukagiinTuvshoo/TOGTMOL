@@ -19,7 +19,7 @@ describe("v5 recovery and IndexedDB records", () => {
     });
     vi.stubGlobal("indexedDB", new IDBFactory());
     const repo = new Repository();
-    expect((await repo.initialize("guest")).data.schemaVersion).toBe(5);
+    expect((await repo.initialize("guest")).data.schemaVersion).toBe(6);
     await repo.save("guest", knowledgeFixture(), 1);
     expect((await repo.load("guest"))?.data.knowledge).toHaveLength(5);
     await repo.close();
@@ -163,7 +163,7 @@ describe("v5 recovery and IndexedDB records", () => {
     ).toHaveLength(1);
     const exported = store.exportData(),
       restored = migrate(exported);
-    expect(exported).toMatchObject({ app: "togtmol", version: 5 });
+    expect(exported).toMatchObject({ app: "togtmol", version: 6 });
     expect(restored.extras.bondookMessages).toHaveLength(1);
     expect(restored.settings.extras.musicPreferences).toMatchObject({
       volume: 0.4,

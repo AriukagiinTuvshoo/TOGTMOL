@@ -2,7 +2,7 @@ import { beforeAll, afterAll, describe, it, expect } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync, readdirSync } from "node:fs";
 import { fixture } from "./fixtures";
-import { knowledgeFixture } from "./knowledge-fixtures";
+import { knowledgeFixture, topic } from "./knowledge-fixtures";
 import type { MusicSource, StudyData } from "@/types/study";
 const A = "11111111-1111-4111-8111-111111111111",
   B = "22222222-2222-4222-8222-222222222222";
@@ -262,6 +262,15 @@ describe("v4 cloud extensions", () => {
       (await db.query("select * from public.study_goals")).rows,
     ).toHaveLength(1);
   });
+  it("refuses v5 uploads now that schema 6 is required", async () => {
+    await asUser(A);
+    await expect(
+      db.query("select public.push_study_data($1,2,$2::jsonb)", [
+        A,
+        JSON.stringify({ ...fixture(), schemaVersion: 5 }),
+      ]),
+    ).rejects.toThrow("Unsupported schema");
+  });
   it("enforces a durable per-user daily AI cap that cannot be reset by clients", async () => {
     await asUser(A);
     for (let i = 0; i < 20; i++)
@@ -307,6 +316,7 @@ describe("v5 knowledge and cloud erasure", () => {
       [A],
     );
     const data = knowledgeFixture();
+    data.knowledge = [...data.knowledge, topic()];
     await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
       A,
       current.rows[0].value.revision,
@@ -316,7 +326,7 @@ describe("v5 knowledge and cloud erasure", () => {
       "select public.pull_study_data($1) as value",
       [A],
     );
-    expect(result.rows[0].value.data.schemaVersion).toBe(5);
+    expect(result.rows[0].value.data.schemaVersion).toBe(6);
     expect(result.rows[0].value.data.knowledge).toEqual(
       [...data.knowledge].sort((a, b) => a.id.localeCompare(b.id)),
     );
@@ -356,7 +366,7 @@ describe("v5 knowledge and cloud erasure", () => {
     ).rejects.toThrow("Cloud revision changed");
     expect(
       (await db.query("select * from public.knowledge_records")).rows,
-    ).toHaveLength(5);
+    ).toHaveLength(6);
     const deleted = await db.query<{
       value: { revision: number; resetAt: number };
     }>("select public.delete_cloud_study_data($1,$2) as value", [A, revision]);
@@ -391,6 +401,7 @@ describe("v5 knowledge and cloud erasure", () => {
       ]),
     ).rejects.toThrow("Unsupported schema");
     const acknowledged = knowledgeFixture();
+    acknowledged.knowledge = [...acknowledged.knowledge, topic()];
     acknowledged.extras.cloudResetAt = deleted.rows[0].value.resetAt;
     await db.query("select public.push_study_data($1,$2,$3::jsonb)", [
       A,
@@ -399,7 +410,7 @@ describe("v5 knowledge and cloud erasure", () => {
     ]);
     expect(
       (await db.query("select * from public.knowledge_records")).rows,
-    ).toHaveLength(5);
+    ).toHaveLength(6);
     await asUser(B);
     expect(
       (await db.query("select * from public.subjects")).rows.length,

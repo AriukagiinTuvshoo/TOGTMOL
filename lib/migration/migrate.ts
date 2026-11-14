@@ -130,7 +130,7 @@ export function migrate(input: unknown): StudyData {
     isObject(input.data)
       ? input.data
       : input;
-  if (finite(raw.schemaVersion) > 5)
+  if (finite(raw.schemaVersion) > 6)
     throw Error("Энэ нөөц шинэ хувилбарт зориулагдсан байна.");
   if (
     !Array.isArray(raw.subjects) &&

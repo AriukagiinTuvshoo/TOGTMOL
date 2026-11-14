@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { knowledgeFixture, note, card, quiz } from "./knowledge-fixtures";
+import {
+  knowledgeFixture,
+  note,
+  card,
+  quiz,
+  topic,
+  deck,
+} from "./knowledge-fixtures";
 import { NOW, session } from "./fixtures";
 import { migrate } from "@/lib/migration/migrate";
 import { mergeData } from "@/lib/migration/merge";
@@ -29,6 +36,7 @@ import { reminderMessage } from "@/lib/reminders";
 import { parsePlanProposal } from "@/lib/assistant/plan";
 import { unlock } from "@/lib/calculations/achievements";
 import { buildIndex } from "@/lib/calculations/analytics";
+import type { FlashcardDeck } from "@/types/knowledge";
 afterEach(() => vi.restoreAllMocks());
 describe("v5 knowledge preservation and search", () => {
   it("round-trips image, note, card, quiz and links with IDs, metadata and unknown fields", () => {
@@ -328,5 +336,67 @@ describe("retrieval practice", () => {
       `100,000 cards + 10,000 sessions: ${elapsed.toFixed(1)} ms (indexes + search)`,
     );
     expect(elapsed).toBeLessThan(5000);
+  });
+});
+
+describe("schema 6 topics and source links", () => {
+  const withPhysics = () => {
+    const data = knowledgeFixture();
+    data.subjects = [
+      ...data.subjects,
+      { ...data.subjects[0], id: "physics", name: "Физик" },
+    ];
+    return data;
+  };
+
+  it("saves nested topics and rejects a cycle", () => {
+    let data = saveKnowledge({ ...topic(), id: "topic-parent" })(withPhysics());
+    data = saveKnowledge({
+      ...topic(),
+      id: "topic-child",
+      parentId: "topic-parent",
+    })(data);
+    expect(data.knowledge.filter((r) => r.kind === "topic")).toHaveLength(2);
+    const parent = data.knowledge.find((r) => r.id === "topic-parent")!;
+    expect(() =>
+      saveKnowledge(
+        { ...topic(), id: "topic-parent", parentId: "topic-child" },
+        parent.updatedAt,
+      )(data),
+    ).toThrow(/эргэлдэж/);
+  });
+
+  it("refuses a parent topic from another subject", () => {
+    const data = saveKnowledge({ ...topic(), id: "topic-parent" })(
+      withPhysics(),
+    );
+    expect(() =>
+      saveKnowledge({
+        ...topic(),
+        id: "topic-child",
+        subjectId: "physics",
+        parentId: "topic-parent",
+      })(data),
+    ).toThrow(/нэг хичээлийн/);
+  });
+
+  it("keeps a deck's source link and clears it on request", () => {
+    const saved = saveKnowledge({
+      ...deck(),
+      id: "deck-src",
+      sourceId: "note-1",
+    })(withPhysics());
+    const savedDeck = saved.knowledge.find(
+      (r): r is FlashcardDeck => r.id === "deck-src" && r.kind === "deck",
+    )!;
+    expect(savedDeck.kind === "deck" && savedDeck.sourceId).toBe("note-1");
+    const cleared = saveKnowledge(
+      { ...savedDeck, sourceId: null },
+      savedDeck.updatedAt,
+    )(saved);
+    const after = cleared.knowledge.find(
+      (r): r is FlashcardDeck => r.id === "deck-src" && r.kind === "deck",
+    )!;
+    expect(after.sourceId).toBeUndefined();
   });
 });

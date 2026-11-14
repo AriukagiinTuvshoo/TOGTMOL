@@ -50,6 +50,26 @@ export function saveKnowledge(
       throw Error("Хичээл олдсонгүй.");
     if (record.title.length > 180 || record.tags.length > 30)
       throw Error("Нэр 180 тэмдэгт, шошго 30-аас хэтрэхгүй байна.");
+    if (record.kind === "topic") {
+      const topics = data.knowledge.filter(
+        (r): r is import("@/types/knowledge").StudyTopic =>
+          r.kind === "topic" && !r.deletedAt,
+      );
+      if (record.parentId) {
+        const parent = topics.find((t) => t.id === record.parentId);
+        if (!parent) throw Error("Эх сэдэв олдсонгүй.");
+        if (parent.subjectId !== record.subjectId)
+          throw Error("Сэдэв нэг хичээлийн дотор байна.");
+        const seen = new Set<string>([record.id]);
+        let cursor: typeof parent | undefined = parent;
+        while (cursor?.parentId) {
+          if (seen.has(cursor.parentId))
+            throw Error("Сэдвийн шатлал өөртэйгөө эргэлдэж байна.");
+          seen.add(cursor.parentId);
+          cursor = topics.find((t) => t.id === cursor?.parentId);
+        }
+      }
+    }
     if (record.kind === "note" && record.body.length > 50000)
       throw Error("Тэмдэглэл 50,000 тэмдэгтээс хэтэрсэн.");
     if (

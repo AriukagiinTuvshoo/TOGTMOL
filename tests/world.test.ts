@@ -40,7 +40,7 @@ describe("v4 migration and world preferences", () => {
     await repo.save("guest", v3, 0);
     const original = JSON.parse(await repo.rawDocument("guest")),
       updated = await repo.load("guest");
-    expect(updated?.data.schemaVersion).toBe(5);
+    expect(updated?.data.schemaVersion).toBe(6);
     expect(updated?.data.sessions).toEqual(v3.sessions);
     expect(updated?.revision).toBe(2);
     expect(JSON.parse((await repo.backups("guest"))[0].raw)).toEqual(original);
@@ -256,7 +256,7 @@ describe("goals, real study and gentle rewards", () => {
       "local горимд",
     );
     expect(localReply("Долоо хоногоо харъя", context).text).toContain("1м");
-    expect(emptyData().schemaVersion).toBe(5);
+    expect(emptyData().schemaVersion).toBe(6);
   });
 });
 describe("official YouTube source validation", () => {

@@ -117,12 +117,14 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
         (r): r is FlashcardDeck =>
           r.kind === "deck" && r.id === deckId && !r.deletedAt,
       );
-      const deck = existing ?? {
+      const sourceNote = notes.find((n) => n.id === source);
+      const deck: FlashcardDeck = existing ?? {
         ...recordBase(title, subject || null),
         kind: "deck" as const,
         description: online
           ? "Бондоокийн санал, хэрэглэгч хянаж хадгалсан"
           : "Тэмдэглэлээс загвараар бэлдсэн, хэрэглэгч хянаж хадгалсан",
+        ...(sourceNote ? { sourceId: sourceNote.id } : {}),
       };
       const cards: Flashcard[] = checked.map((c) => ({
         ...recordBase(c.front.slice(0, 180), subject || deck.subjectId),

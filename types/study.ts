@@ -17,7 +17,15 @@ export type View =
   | "knowledge"
   | "privacy";
 export type KnowledgeView =
-  "all" | "note" | "image" | "deck" | "quiz" | "link" | "session" | "trash";
+  | "all"
+  | "note"
+  | "image"
+  | "deck"
+  | "topic"
+  | "quiz"
+  | "link"
+  | "session"
+  | "trash";
 export type Extras = Record<string, unknown>;
 export interface RecordBase {
   id: string;
@@ -182,7 +190,7 @@ export interface MergeConflict {
   resolvedAt: number | null;
 }
 export interface StudyData {
-  schemaVersion: 5;
+  schemaVersion: 6;
   knowledge: KnowledgeRecord[];
   subjects: Subject[];
   entries: Entry[];
@@ -205,7 +213,7 @@ export interface StoredDocument {
 }
 export interface ExportEnvelope {
   format: "togtmol-backup";
-  version: 5;
+  version: 6;
   exportedAt: string;
   data: StudyData;
 }

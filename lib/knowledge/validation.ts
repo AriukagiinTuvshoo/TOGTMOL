@@ -152,9 +152,14 @@ export function parseKnowledge(r: Record<string, unknown>): KnowledgeRecord {
       "answers",
       "url",
       "relatedIds",
+      "topicId",
+      "parentId",
+      "sourceId",
     ]),
     title: text(r.title),
     subjectId: identifier(r.subjectId),
+    // Only stored when set: older records stay byte-identical after a round trip.
+    ...(identifier(r.topicId) ? { topicId: String(r.topicId) } : {}),
     tags: Array.isArray(r.tags)
       ? r.tags.filter((v): v is string => typeof v === "string")
       : [],
@@ -172,8 +177,23 @@ export function parseKnowledge(r: Record<string, unknown>): KnowledgeRecord {
           ? r.links.map((l) => safeLink(String(l)))
           : [],
       };
+    case "topic": {
+      const parentId = identifier(r.parentId);
+      if (parentId === id) throw Error("Сэдэв өөрийнхөө эх болохгүй.");
+      return {
+        ...shared,
+        kind: "topic",
+        parentId,
+        description: text(r.description),
+      };
+    }
     case "deck":
-      return { ...shared, kind: "deck", description: text(r.description) };
+      return {
+        ...shared,
+        kind: "deck",
+        description: text(r.description),
+        ...(identifier(r.sourceId) ? { sourceId: String(r.sourceId) } : {}),
+      };
     case "card":
       if (
         !identifier(r.deckId) ||

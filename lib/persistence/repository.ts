@@ -155,10 +155,10 @@ export class Repository {
       revision: value.revision,
       records: value.knowledgeSeparated ? migrated.knowledge : [],
     });
-    if (Number(value.data.schemaVersion) !== 5) {
+    if (Number(value.data.schemaVersion) !== 6) {
       await this.backup(
         namespace,
-        `v${value.data.schemaVersion ?? 1} эх өгөгдөл — v5 шилжүүлэхийн өмнө`,
+        `v${value.data.schemaVersion ?? 1} эх өгөгдөл — v6 шилжүүлэхийн өмнө`,
         raw ?? JSON.stringify(value),
       );
       try {

@@ -53,6 +53,53 @@ function navigate(name: string) {
   openView(name);
 }
 describe("knowledge flows", () => {
+  it("creates a topic, links a note to it and lists the note inside the topic", async () => {
+    await boot();
+    navigate("Миний мэдлэг");
+    const add = await screen.findByRole("group", { name: "Мэдлэг нэмэх" });
+    fireEvent.click(within(add).getByRole("button", { name: "Сэдэв" }));
+    let dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Нэр" }), {
+      target: { value: "Интеграл" },
+    });
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Тайлбар" }), {
+      target: { value: "Талбай тооцоолох" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Хадгалах" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(within(add).getByRole("button", { name: "Тэмдэглэл" }));
+    dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Нэр" }), {
+      target: { value: "Интегралын дүрэм" },
+    });
+    const topicSelect = within(dialog).getByRole("combobox", { name: "Сэдэв" });
+    fireEvent.change(topicSelect, {
+      target: {
+        value: (
+          within(topicSelect).getByRole("option", {
+            name: "Интеграл",
+          }) as HTMLOptionElement
+        ).value,
+      },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Хадгалах" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    const tabs = screen.getByRole("navigation", { name: "Мэдлэгийн төрөл" });
+    fireEvent.click(within(tabs).getByRole("button", { name: "Сэдэв" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Интеграл" }));
+    const detail = await screen.findByRole("dialog");
+    expect(within(detail).getByText("Холбогдсон бичлэг")).toBeInTheDocument();
+    expect(
+      within(detail).getByRole("button", { name: /Интегралын дүрэм/ }),
+    ).toBeInTheDocument();
+  });
+
   it("creates a searchable note, opens it with Ctrl K, soft-deletes and restores from trash", async () => {
     await boot();
     navigate("Миний мэдлэг");

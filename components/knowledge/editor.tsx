@@ -7,10 +7,15 @@ import { recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { cleanTags, safeLink } from "@/lib/knowledge/validation";
 import { prepareImage } from "@/lib/knowledge/images";
 import { uid } from "@/lib/constants";
-import type { KnowledgeRecord, QuizQuestion } from "@/types/knowledge";
+import type {
+  KnowledgeRecord,
+  QuizQuestion,
+  StudyTopic,
+} from "@/types/knowledge";
 import { MarkdownView } from "./markdown-view";
-export type EditableKind = "note" | "deck" | "card" | "quiz" | "link";
+export type EditableKind = "topic" | "note" | "deck" | "card" | "quiz" | "link";
 const names: Record<EditableKind, string> = {
+  topic: "Сэдэв",
   note: "Тэмдэглэл",
   deck: "Картын багц",
   card: "Давтлагын карт",
@@ -49,10 +54,29 @@ export function KnowledgeEditor({
   const [body, setBody] = useState(
     record?.kind === "note"
       ? record.body
-      : record?.kind === "deck" || record?.kind === "link"
+      : record?.kind === "deck" ||
+          record?.kind === "link" ||
+          record?.kind === "topic"
         ? record.description
         : "",
   );
+  const [topic, setTopic] = useState(record?.topicId ?? ""),
+    [parent, setParent] = useState(
+      record?.kind === "topic" ? (record.parentId ?? "") : "",
+    );
+  const topics = data.knowledge.filter(
+    (r): r is StudyTopic => r.kind === "topic" && !r.deletedAt,
+  );
+  // Indent a topic by its ancestors so the select shows the hierarchy.
+  const topicLabel = (t: StudyTopic) => {
+    let depth = 0,
+      cursor: StudyTopic | undefined = t;
+    while (cursor?.parentId && depth < 6) {
+      cursor = topics.find((x) => x.id === cursor?.parentId);
+      depth += 1;
+    }
+    return `${"— ".repeat(depth)}${t.title}`;
+  };
   const [image, setImage] = useState(
       record?.kind === "note" ? record.image : null,
     ),
@@ -86,6 +110,7 @@ export function KnowledgeEditor({
           title.trim() || (kind === "card" ? front.trim().slice(0, 180) : ""),
         subjectId: subject || null,
         tags: cleanTags(tags),
+        topicId: topic || null,
       };
       let next: KnowledgeRecord;
       if (kind === "note")
@@ -115,6 +140,13 @@ export function KnowledgeEditor({
               : { repetitions: 0, interval: 0, ease: 2.5, dueOn: today },
         };
       else if (kind === "quiz") next = { ...common, kind, questions };
+      else if (kind === "topic")
+        next = {
+          ...common,
+          kind,
+          parentId: parent || null,
+          description: body,
+        };
       else
         next = {
           ...common,
@@ -154,6 +186,39 @@ export function KnowledgeEditor({
             autoFocus
           />
         </label>
+        {kind === "topic" ? (
+          <label>
+            Эх сэдэв
+            <select value={parent} onChange={(e) => setParent(e.target.value)}>
+              <option value="">Дээд түвшин</option>
+              {topics
+                .filter(
+                  (t) =>
+                    t.id !== record?.id &&
+                    (!subject || t.subjectId === subject),
+                )
+                .map((t) => (
+                  <option value={t.id} key={t.id}>
+                    {topicLabel(t)}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : kind !== "card" ? (
+          <label>
+            Сэдэв
+            <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+              <option value="">Сэдэвгүй</option>
+              {topics
+                .filter((t) => !subject || t.subjectId === subject)
+                .map((t) => (
+                  <option value={t.id} key={t.id}>
+                    {topicLabel(t)}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : null}
         <div className="form-grid">
           <SubjectSelect value={subject} onChange={setSubject} />
           <label>
@@ -166,7 +231,10 @@ export function KnowledgeEditor({
             />
           </label>
         </div>
-        {(kind === "note" || kind === "deck" || kind === "link") &&
+        {(kind === "note" ||
+          kind === "deck" ||
+          kind === "link" ||
+          kind === "topic") &&
           (kind === "note" ? (
             <div className="knowledge-markdown-editor">
               <div
