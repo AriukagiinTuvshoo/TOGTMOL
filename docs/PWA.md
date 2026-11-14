@@ -61,7 +61,7 @@
 
 ## 5. Бодит төхөөрөмж дээр үлдсэн шалгалт
 
-Энэ орчинд Chrome/Chromium байхгүй тул Lighthouse болон жинхэнэ browserын шалгалт хийгдээгүй. (Contrast-ыг DOM дээр шууд хэмжиж 0 failure болтол зассан — [VERIFICATION.md](VERIFICATION.md)-ийн §3.1.) Дараахыг төхөөрөмж бүр дээр гараар хийнэ:
+Энэ орчинд Chrome/Chromium байхгүй тул Lighthouse болон жинхэнэ browserын шалгалт хийгдээгүй. (Contrast-ыг DOM дээр шууд хэмжиж 0 failure болтол зассан — [VERIFICATION.md](VERIFICATION.md)-ийн §3.1.) Алхам бүрийн дэлгэрэнгүй checklist, хүлээгдэх үр дүн, гарах шарт: **[DEVICE-QA.md](DEVICE-QA.md)**. Дараахыг төхөөрөмж бүр дээр гараар хийнэ:
 
 1. iOS Safari (нэмэх → Home Screen) ба Android Chrome (Install app): standalone горим, доод навигаци safe-area-тай давхцахгүй байх.
 2. Онгоцны горимд нээх: үндсэн дэлгэцүүд, `/privacy`, `/terms` ажиллах; AI/YouTube/синк тодорхой мессеж өгөх.
