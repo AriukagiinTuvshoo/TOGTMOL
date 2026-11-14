@@ -4,6 +4,7 @@ import {
   RETENTION_WINDOW_DAYS,
   deckMastery,
   retentionWindowStart,
+  weakestCards,
 } from "@/lib/knowledge/statistics";
 import { recordBase } from "@/lib/knowledge/actions";
 import { knowledgeFixture } from "./knowledge-fixtures";
@@ -80,6 +81,57 @@ describe("retentionWindowStart", () => {
     );
     expect(retentionWindowStart(TODAY, 7)).toBe(start - 7 * DAY);
     expect(retentionWindowStart("not-a-day")).toBe(-Infinity);
+  });
+});
+
+describe("weakestCards", () => {
+  it("orders lapsed, then fresh, then learning, then mature", () => {
+    const data = deckData([MATURE_INTERVAL_DAYS, 7, 0]);
+    data.knowledge = [
+      ...data.knowledge,
+      review("deck-1-card-0", 1, NOW, "lapse"),
+    ];
+    expect(
+      weakestCards(data.knowledge, "deck-1").map((w) => w.card.id),
+    ).toEqual(["deck-1-card-0", "deck-1-card-2", "deck-1-card-1"]);
+  });
+
+  it("counts lapses and the last grade inside the window only", () => {
+    const data = deckData([5]);
+    data.knowledge = [
+      ...data.knowledge,
+      review("deck-1-card-0", 4, NOW - 20 * DAY, "ok"),
+      review("deck-1-card-0", 2, NOW - 5 * DAY, "bad"),
+      review("deck-1-card-0", 1, NOW - 60 * DAY, "old"),
+    ];
+    expect(
+      weakestCards(data.knowledge, "deck-1", { since: NOW - 30 * DAY })[0],
+    ).toMatchObject({ reviews: 2, lapses: 1, lastGrade: 2 });
+  });
+
+  it("respects the limit and leaves out other decks and deleted cards", () => {
+    const data = deckData([0, 0, 0]);
+    data.knowledge = data.knowledge.map((r) =>
+      r.id === "deck-1-card-2" ? { ...r, deletedAt: NOW } : r,
+    );
+    const weak = weakestCards(data.knowledge, "deck-1");
+    expect(weak).toHaveLength(2);
+    expect(weak.every((w) => w.card.deckId === "deck-1")).toBe(true);
+    expect(weak.some((w) => w.card.id === "deck-1-card-2")).toBe(false);
+    expect(weakestCards(data.knowledge, "deck-1", { limit: 1 })).toHaveLength(
+      1,
+    );
+  });
+
+  it("treats a card with no review in the window as never reviewed", () => {
+    const data = deckData([5]);
+    data.knowledge = [
+      ...data.knowledge,
+      review("deck-1-card-0", 0, NOW - 90 * DAY, "ancient"),
+    ];
+    expect(
+      weakestCards(data.knowledge, "deck-1", { since: NOW - 30 * DAY })[0],
+    ).toMatchObject({ reviews: 0, lapses: 0, lastGrade: null });
   });
 });
 

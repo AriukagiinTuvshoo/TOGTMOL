@@ -19,6 +19,7 @@ import {
   RETENTION_WINDOW_DAYS,
   deckMastery,
   retentionWindowStart,
+  weakestCards,
   type DeckMastery,
 } from "@/lib/knowledge/statistics";
 import { sortKnowledge } from "@/lib/knowledge/sort";
@@ -124,6 +125,19 @@ export function KnowledgeHub() {
       }),
     [data.knowledge, today],
   );
+  // Only the open deck needs its weakest cards, and only while it is a deck.
+  const weakCards = useMemo(() => {
+    if (!selected) return [];
+    const record = data.knowledge.find(
+      (r) => r.id === selected && !r.deletedAt,
+    );
+    return record?.kind === "deck"
+      ? weakestCards(data.knowledge, record.id, {
+          since: retentionWindowStart(today),
+          limit: 5,
+        })
+      : [];
+  }, [data.knowledge, selected, today]);
   // A card's subject comes from its deck, so the subject filter can scope the
   // review queue without storing anything extra on the card itself.
   const scopedQueue = useMemo(() => {
@@ -617,6 +631,25 @@ export function KnowledgeHub() {
                   <p className="tiny muted">
                     {masteryLine(mastery.get(selectedItem.id) as DeckMastery)}
                   </p>
+                )}
+                {weakCards.length > 0 && (
+                  <>
+                    <p className="tiny muted">Хамгийн сул картууд</p>
+                    {weakCards.map((w) => (
+                      <div className="deck-card-row" key={w.card.id}>
+                        <span>
+                          {w.card.front}
+                          <small>
+                            {w.lastGrade === null
+                              ? "30 хоногт давтагдаагүй"
+                              : `Сүүлийн үнэлгээ: ${w.lastGrade}/5`}
+                            {w.lapses ? ` · ${w.lapses} удаа алдсан` : ""} ·
+                            Дараа: {w.card.schedule.dueOn}
+                          </small>
+                        </span>
+                      </div>
+                    ))}
+                  </>
                 )}
                 <div className="button-row">
                   <button

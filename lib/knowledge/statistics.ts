@@ -1,5 +1,5 @@
 import type { StudyData } from "@/types/study";
-import type { ReviewSchedule } from "@/types/knowledge";
+import type { Flashcard, ReviewSchedule } from "@/types/knowledge";
 import { dayBoundary } from "@/lib/preferences";
 import { studyDate } from "@/lib/calculations/dates";
 export function knowledgeStatistics(
@@ -80,6 +80,87 @@ function cardScore(schedule: ReviewSchedule): number {
   if (schedule.repetitions === 0 || schedule.interval <= 0) return 0;
   if (schedule.interval >= MATURE_INTERVAL_DAYS) return 1;
   return Math.min(1, schedule.interval / MATURE_INTERVAL_DAYS);
+}
+
+export interface WeakCard {
+  card: Flashcard;
+  /** 0–1 card progress from the schedule (fresh 0, mature 1). */
+  progress: number;
+  reviews: number;
+  lapses: number;
+  /** Last grade in the window, or null when it was not reviewed then. */
+  lastGrade: number | null;
+}
+
+function weaknessRank(card: WeakCard): number {
+  if (card.lastGrade !== null && card.lastGrade <= 2) return 0;
+  if (card.progress === 0) return 1;
+  return card.progress < 1 ? 2 : 3;
+}
+
+/**
+ * The cards most likely to be holding a deck back, weakest first: a card whose
+ * last grade was a lapse comes before a never-reviewed card, then cards still
+ * learning, and mature cards last. Ties go to more lapses, then a smaller
+ * interval, then the earlier due date, so the order is deterministic.
+ */
+export function weakestCards(
+  records: StudyData["knowledge"],
+  deckId: string,
+  options: { limit?: number; since?: number } = {},
+): WeakCard[] {
+  const since = options.since ?? -Infinity,
+    limit = options.limit ?? 5,
+    history = new Map<
+      string,
+      {
+        reviews: number;
+        lapses: number;
+        lastGrade: number | null;
+        lastAt: number;
+      }
+    >();
+  for (const record of records) {
+    if (record.kind !== "review" || record.deletedAt) continue;
+    if (record.reviewedAt < since) continue;
+    const entry = history.get(record.cardId) ?? {
+      reviews: 0,
+      lapses: 0,
+      lastGrade: null,
+      lastAt: -Infinity,
+    };
+    entry.reviews += 1;
+    if (record.grade <= 2) entry.lapses += 1;
+    if (record.reviewedAt >= entry.lastAt) {
+      entry.lastAt = record.reviewedAt;
+      entry.lastGrade = record.grade;
+    }
+    history.set(record.cardId, entry);
+  }
+  return records
+    .filter(
+      (r): r is Flashcard =>
+        r.kind === "card" && !r.deletedAt && r.deckId === deckId,
+    )
+    .map((card): WeakCard => {
+      const seen = history.get(card.id);
+      return {
+        card,
+        progress: cardScore(card.schedule),
+        reviews: seen?.reviews ?? 0,
+        lapses: seen?.lapses ?? 0,
+        lastGrade: seen?.lastGrade ?? null,
+      };
+    })
+    .sort(
+      (a, b) =>
+        weaknessRank(a) - weaknessRank(b) ||
+        b.lapses - a.lapses ||
+        a.progress - b.progress ||
+        a.card.schedule.dueOn.localeCompare(b.card.schedule.dueOn) ||
+        a.card.id.localeCompare(b.card.id),
+    )
+    .slice(0, limit);
 }
 
 /**
