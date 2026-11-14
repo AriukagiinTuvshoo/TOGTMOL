@@ -68,7 +68,7 @@
 3. Шинэ build байршуулж, нээлттэй табыг буцааж идэвхжүүлэх: «Шинэ хувилбар бэлэн» гарч, «Одоо шинэчлэх» дарахад дахин ачаалагдах.
 4. Гар утсан дээр «Бусад» нээж, `Tab` (гарын товчлуур/Bluetooth), `Escape` ба фокус буцахыг шалгах.
 5. iOS/Android дээр түгжээтэй дэлгэц, background дуу — энэ нь PWA-гийн баталгаа биш (`docs/MUSIC.md`).
-6. `lighthouserc.cjs`-ийн gate-ууд (performance 0.8, accessibility 0.9, best-practices 0.9, SEO 0.9, PWA 0.8) CI-ийн `.github/workflows/lighthouse.yml`-ээр ажиллана; локал Chrome байхгүй тул энд ажиллуулаагүй.
+6. `lighthouserc.cjs`-ийн gate-ууд (performance 0.8, accessibility 0.9, best-practices 0.9, SEO 0.9) нь `error` түвшинтэй — CI-ийн `.github/workflows/lighthouse.yml` унана. Lighthouse 12 нь PWA категорийг бүрмөсөн хассан тул offline gate-ыг `tests/offline.test.ts` хариуцна. Локал Chrome байхгүй тул энд ажиллуулаагүй.
 
 ## 6. Файлууд
 

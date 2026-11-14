@@ -26,6 +26,8 @@
 
 ### Өөрчлөгдсөн
 
+- Lighthouse CI-ийн бүх assertion `warn`-аас `error` болсон тул гүйцэтгэл/хүртээмж/SEO-ийн уналт workflow-г унагана. Нэг удаагийн хэмжилт хэт чимээтэй тул `numberOfRuns` 3, медианаар; Lighthouse 12-т байхгүй `categories:pwa` хасагдаж, тайлан/artifact нь унасан ч хадгалагдана.
+
 - `eslint . --max-warnings 0` — анхааруулга ч CI-г унагана.
 - `docs/VERIFICATION.md` нь хэмжсэн бодит үр дүнгээр (309 тест, 39 файл, 0 warning) шинэчлэгдсэн.
 

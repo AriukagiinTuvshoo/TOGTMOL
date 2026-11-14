@@ -35,15 +35,23 @@ jobs:
       - name: Run Lighthouse
         run: npx --yes @lhci/cli@0.15.1 autorun
       - name: Summarize Lighthouse scores
+        if: always()
         run: |
           node <<'NODE'
           const fs = require("node:fs");
           const path = require("node:path");
           const dir = path.resolve("lighthouse-report");
+          if (!fs.existsSync(dir)) {
+            console.log("Lighthouse report not found; skipping the summary.");
+            process.exit(0);
+          }
           const file = fs.readdirSync(dir).find((name) => name.endsWith(".json"));
-          if (!file) throw new Error("Lighthouse JSON report not found");
+          if (!file) {
+            console.log("Lighthouse report not found; skipping the summary.");
+            process.exit(0);
+          }
           const report = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
-          const wanted = ["performance", "accessibility", "best-practices", "seo", "pwa"];
+          const wanted = ["performance", "accessibility", "best-practices", "seo"];
           for (const key of wanted) {
             const score = report.categories?.[key]?.score;
             console.log(`${key}: ${score == null ? "n/a" : Math.round(score * 100)}`);
@@ -59,6 +67,7 @@ jobs:
           }
           NODE
       - name: Upload Lighthouse report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
