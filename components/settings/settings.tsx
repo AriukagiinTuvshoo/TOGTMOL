@@ -18,6 +18,7 @@ import { ReviewSettings } from "./review-settings";
 import { TransferSettings } from "./transfer";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useI18n } from "@/components/i18n/language-provider";
+import { APP_VERSION_LABEL } from "@/lib/version";
 
 const UI_THEMES = [
   {
@@ -99,7 +100,7 @@ export function Settings() {
                 <span className="eyebrow">APP THEME</span>
                 <p>{t("settings.appTheme")}</p>
               </div>
-              <span className="ui-theme-current">v7</span>
+              <span className="ui-theme-current">{APP_VERSION_LABEL}</span>
             </div>
             <div className="ui-theme-grid">
               {UI_THEMES.map((uiTheme) => {
