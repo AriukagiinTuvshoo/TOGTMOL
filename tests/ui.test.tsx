@@ -450,7 +450,9 @@ it("falls back to a labelled local reply when online AI has no configured accoun
     expect(screen.getByLabelText("Онлайн AI ашиглах")).toBeChecked(),
   );
   fireEvent.click(screen.getByRole("button", { name: "Долоо хоногоо харъя" }));
-  expect(await screen.findByText("Бондоок · Local")).toBeVisible();
+  expect(
+    await screen.findByText("Бондоок · Local", {}, { timeout: 5000 }),
+  ).toBeVisible();
   // The consent flag is persisted after the local fallback is appended, which
   // can outlast the default 1s wait when the whole suite runs in parallel.
   const repo = new Repository();

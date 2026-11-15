@@ -80,6 +80,7 @@ import {
 import { ROOMS, resolveV9RoomId, roomById } from "@/lib/v9/rooms";
 import { PRESETS, engine } from "@/lib/v9/audio-engine";
 import { BONDOOK_TIPS, fmtClock, fmtMnDuration } from "@/lib/v9/focus";
+import { APP_VERSION_LABEL } from "@/lib/version";
 
 function LocalizedLoading() {
   const { t } = useI18n();
@@ -676,7 +677,10 @@ function Shell() {
               <Icon name="leaf" size={22} />
             </span>
             <span>
-              тогтмол<span className="brand-version">STUDY OS · v9</span>
+              тогтмол
+              <span className="brand-version">
+                STUDY OS · {APP_VERSION_LABEL}
+              </span>
             </span>
           </button>
           <button

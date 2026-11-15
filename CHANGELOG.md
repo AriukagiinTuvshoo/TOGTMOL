@@ -65,12 +65,13 @@
 
 - `docs/VERSIONING.md` — апп, хадгалалтын схем, Supabase migration, IndexedDB нэрийн дугааруудын ялгаа ба өсгөх дүрэм.
 - `npm run check` одоо `format:check`-ыг ч ажиллуулна — CI-тэй ижил дараалал.
-- `lib/version.ts` — аппын хувилбарын цорын ганц эх сурвалж (`APP_VERSION`, `APP_VERSION_LABEL`); тохиргооны зурвас ба гарчгийн metadata үүнээс уншина.
+- `lib/version.ts` — аппын хувилбарын цорын ганц эх сурвалж (`APP_VERSION`, `APP_VERSION_LABEL`); тохиргооны зурвас (`v7`), брэндийн шошго (`STUDY OS · v9`) ба гарчгийн metadata (`ТОГТМОЛ v9`) бүгд үүнээс уншина.
 - `tests/version-consistency.test.ts` — `package.json`, `lib/version.ts`, README, CHANGELOG, `docs/VERSIONING.md` зөрвөл тестийг унагана.
 - «Миний өдөр»/дэлгэцийн гарчгийг шалгах регрессийн тест (`tests/ui.test.tsx`).
 
 ### Зассан
 
+- CI дээр ачаалалтай үед унадаг байсан хоёр асинхрон UI тестийн хүлээлтийг 5 секунд болгов: `tests/v12-profile-timer-delight.test.tsx` (профайлын нэвтрэлтийн hash) ба `tests/ui.test.tsx` («Бондоок · Local» хариулт). Ижил commit дээр push ба pull_request шалгалтууд өөр үр дүн өгч байсныг CI-ийн annotation-оос тогтоов.
 - Сэдвийн редакторын «Эх сэдэв» жагсаалт одоо өөрийгөө болон бүх үр удмыг харуулахгүй (`topicParentOptions`); хадгалалтын давхаргын cycle validation хэвээр үлдэж, UI болон unit тестээр тусад нь батлагдав.
 - Багц үүсгэгч existing эх материалтай багц сонгоход «Энэ багцын эх материал өөрчлөгдөхгүй: …» гэсэн тайлбарыг харуулж, хадгалахад эх материал солигдохгүй.
 - Schema 5 import/cloud pull, schema 6-ын устсан/өөр хичээлийн/cycle холбоосны regression тестүүд нэмэгдэж, алдааны мессеж асуудалтай бичлэгийн нэрийг агуулна.

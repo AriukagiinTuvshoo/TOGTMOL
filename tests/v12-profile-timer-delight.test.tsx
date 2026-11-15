@@ -137,7 +137,11 @@ describe("TOGTMOL v12 — Simple Profile, Custom Timer, Cute Emotions & Delight"
     fireEvent.click(
       screen.getByRole("button", { name: /Профайлаар шууд орох/i }),
     );
-    expect(await screen.findByText(/Сайн уу, Болор!/)).toBeInTheDocument();
+    // The profile sign-in hashes the password asynchronously; a loaded CI
+    // runner needs more than the default 1s wait.
+    expect(
+      await screen.findByText(/Сайн уу, Болор!/, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
   });
 
   it("finishes the quick onboarding and prepares a selected study track", async () => {
