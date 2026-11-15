@@ -567,7 +567,10 @@ function Shell() {
       className={`app-shell v9-shell ${view === "focus" ? "is-focus" : ""}`}
       style={{ ["--v9-accent" as string]: accent }}
     >
-      <RoomBackground room={room} />
+      <RoomBackground
+        room={room}
+        autoDayNight={data.settings.extras.autoDayNight !== false}
+      />
 
       <a
         className="skip-link"
@@ -973,6 +976,78 @@ function Shell() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Mobile Horizontal Swipeable Quick-Nav Strip (< 1024px) */}
+          <div
+            role="toolbar"
+            aria-label="Гар утасны хурдан шилжилт"
+            className="v11-mobile-strip flex items-center gap-1.5 overflow-x-auto px-3 pb-2 lg:hidden"
+          >
+            {data.activeTimer?.running && (
+              <button
+                type="button"
+                onClick={() => go("focus")}
+                className="flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full bg-red-500/20 px-3 py-1 text-[11.5px] font-bold text-red-200 ring-1 ring-red-400/40"
+              >
+                <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                <span>{liveTimerClock}</span>
+              </button>
+            )}
+            {PRIMARY_TABS.map((tab) => (
+              <button
+                key={`m-${tab.id}`}
+                type="button"
+                onClick={tab.onClick}
+                className={`flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-bold transition ${
+                  tab.active
+                    ? "text-white"
+                    : "bg-white/[0.06] text-white/75 active:bg-white/15"
+                }`}
+                style={
+                  tab.active
+                    ? {
+                        background: `${accent}36`,
+                        boxShadow: `inset 0 0 0 1px ${accent}75`,
+                      }
+                    : undefined
+                }
+              >
+                <tab.icon size={13} />
+                <span>{tab.label}</span>
+                {tab.badge ? (
+                  <span className="rounded-full bg-red-400 px-1.5 text-[10px] font-extrabold text-white">
+                    {tab.badge}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+            {SECONDARY_TABS.map((item) => {
+              const isActive = view === item.view;
+              return (
+                <button
+                  key={`ms-${item.view}`}
+                  type="button"
+                  onClick={() => go(item.view)}
+                  className={`flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-semibold transition ${
+                    isActive
+                      ? "text-white"
+                      : "bg-white/[0.04] text-white/65 active:bg-white/15"
+                  }`}
+                  style={
+                    isActive
+                      ? {
+                          background: `${accent}2e`,
+                          boxShadow: `inset 0 0 0 1px ${accent}66`,
+                        }
+                      : undefined
+                  }
+                >
+                  <item.icon size={13} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </header>
 

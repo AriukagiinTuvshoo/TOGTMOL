@@ -15,6 +15,7 @@ import {
   subscribeGeminiConfig,
 } from "@/lib/assistant/gemini";
 import { AuthModal } from "@/components/v9/auth-modal";
+import { SnapStudyModal } from "@/components/v9/snap-study-modal";
 import {
   BrowserVoiceSession,
   isBrowserSpeechSupported,
@@ -41,6 +42,8 @@ export function BondookChat() {
     [error, setError] = useState(""),
     [plan, setPlan] = useState<string | null>(null),
     [geminiModalOpen, setGeminiModalOpen] = useState(false),
+    [snapOpen, setSnapOpen] = useState(false),
+    [feynmanMode, setFeynmanMode] = useState(false),
     [geminiCfg, setGeminiCfg] = useState(() => readGeminiConfig()),
     [serverGemini, setServerGemini] = useState(false),
     [liveListening, setLiveListening] = useState(false),
@@ -166,7 +169,10 @@ export function BondookChat() {
               language,
             )
         : localChatProvider;
-      const reply = await provider.reply(prompt, {
+      const effectivePrompt = feynmanMode
+        ? `[FEYNMAN MODE · The student is teaching you this topic in their own words. Act as an attentive student-coach: 1) Praise what they explained accurately, 2) Gently point out any missing step or misconception, and 3) Ask 1-2 short Socratic questions to test deeper understanding.]\n\nStudent explanation: ${prompt}`
+        : prompt;
+      const reply = await provider.reply(effectivePrompt, {
         data,
         index,
         today,
@@ -252,6 +258,22 @@ export function BondookChat() {
             <p>{t("assistant.smallStep")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="button small"
+              onClick={() => setSnapOpen(true)}
+            >
+              📸 Зургаас хичээл
+            </button>
+            <button
+              type="button"
+              aria-pressed={feynmanMode}
+              className={feynmanMode ? "button small primary" : "button small"}
+              onClick={() => setFeynmanMode((v) => !v)}
+              title="Ойлгосон сэдвээ Бондоокт өөрийн үгээр зааж өгөөд дутуу ойлголтоо шалгуулаарай"
+            >
+              🧑‍🏫 {feynmanMode ? "Фейнман · Идэвхтэй" : "Бондоокт заах"}
+            </button>
             <button
               type="button"
               className="button small"
@@ -558,6 +580,7 @@ export function BondookChat() {
           onClose={() => setGeminiModalOpen(false)}
         />
       )}
+      {snapOpen && <SnapStudyModal onClose={() => setSnapOpen(false)} />}
     </div>
   );
 }

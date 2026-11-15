@@ -20,6 +20,10 @@ import { TimerSystem } from "@/components/v9/timer-system";
 import { AudioMixer, useSoundEngine } from "@/components/v9/audio-mixer";
 import { Breathing } from "@/components/v9/breathing";
 import { BondookCard, type BondookMood } from "@/components/v9/bondook-widget";
+import { CoFocusWidget } from "@/components/v9/cofocus-widget";
+import { ExamCountdown } from "@/components/v9/exam-countdown";
+import { CozyCollectiblesCard } from "@/components/v9/cozy-shelf";
+import { ShareCardModal } from "@/components/v9/share-card-modal";
 import type { TimerPhase } from "@/types/study";
 
 export function StudyRoom({
@@ -43,6 +47,7 @@ export function StudyRoom({
   const [mood, setMood] = useState<BondookMood>("happy");
   const [bondookMsg, setBondookMsg] = useState<string | undefined>(undefined);
   const [tipIdx, setTipIdx] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const state = companionState(data, index, today);
   const world = data.settings.world;
@@ -315,6 +320,13 @@ export function StudyRoom({
               >
                 🎯 {openTasksCount} даалгавар
               </button>
+              <button
+                type="button"
+                onClick={() => setShareOpen(true)}
+                className="col-span-2 rounded-2xl bg-indigo-500/20 py-2 text-[12px] font-bold text-indigo-100 ring-1 ring-indigo-400/30 transition hover:bg-indigo-500/30"
+              >
+                📸 7 хоногийн карт хуваалцах
+              </button>
             </div>
           </div>
 
@@ -352,6 +364,15 @@ export function StudyRoom({
           <DailyKnowledge />
         </ModuleBoundary>
       </div>
+
+      {/* ── Co-Focus Room, Exam Countdown & Cozy Living Shelf ── */}
+      <div className="grid gap-3.5 lg:grid-cols-3">
+        <CoFocusWidget />
+        <ExamCountdown compact />
+        <CozyCollectiblesCard />
+      </div>
+
+      {shareOpen && <ShareCardModal onClose={() => setShareOpen(false)} />}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Modal, downloadJson } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
 import { DataSettings } from "./settings";
 import { useI18n } from "@/components/i18n/language-provider";
+import { clearGeminiConfig } from "@/lib/assistant/gemini";
 export function PrivacyCenter() {
   const { data, store, run, navigate } = useStudy(),
     { language } = useI18n(),
@@ -393,6 +394,7 @@ export function PrivacyCenter() {
                   await run(async () => {
                     await account.disableSync();
                     await store.clearLocalData();
+                    clearGeminiConfig();
                   }, "Локал хуулбарыг цэвэрлэж, нөөцийг үлдээлээ.")
                 )
                   setLocalReset(false);

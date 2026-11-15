@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Cloud,
   Sparkles,
@@ -11,11 +11,12 @@ import {
   Volume2,
   Trash2,
   Download,
+  Upload,
   LogOut,
   RefreshCw,
   Mail,
 } from "lucide-react";
-import { Modal } from "@/components/ui/common";
+import { Modal, downloadJson } from "@/components/ui/common";
 import { useAccount } from "@/hooks/use-account";
 import { useStudy } from "@/hooks/use-study";
 import {
@@ -55,7 +56,9 @@ export function AuthModal({
     logout,
     syncEnabled,
   } = useAccount();
-  const { store } = useStudy();
+  const { store, today, run } = useStudy();
+  const restoreInputRef = useRef<HTMLInputElement | null>(null);
+  const [cloudBackupMsg, setCloudBackupMsg] = useState("");
 
   // Account form state
   const [authMode, setAuthMode] = useState<"login" | "signup" | "magic">(
@@ -465,6 +468,89 @@ export function AuthModal({
                 </button>
               </div>
             )}
+
+            {/* 1-Tap Google Drive / iCloud / Mobile File Backup & Restore */}
+            <div className="rounded-2xl border border-indigo-400/25 bg-indigo-950/25 p-3.5 text-xs">
+              <div className="mb-1.5 font-bold text-indigo-200">
+                ☁️ Google Drive / Утас хооронд 1-товчоор нөөцлөх
+              </div>
+              <p className="mb-2.5 text-[11px] leading-relaxed text-slate-300">
+                Бүртгэл үүсгэлгүйгээр бүх хичээл, карт, тэмдэглэлээ{" "}
+                <b>Google Drive</b>, <b>iCloud Files</b> эсвэл утас руугаа
+                хадгалж, шинэ төхөөрөмж дээр сэргээнэ.
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const exported = store.exportData();
+                    const jsonStr = JSON.stringify(exported, null, 2);
+                    const fileName = `togtmol-backup-${today}.json`;
+                    try {
+                      if (navigator.share) {
+                        const file = new File([jsonStr], fileName, {
+                          type: "application/json",
+                        });
+                        if (
+                          !navigator.canShare ||
+                          navigator.canShare({ files: [file] })
+                        ) {
+                          await navigator.share({
+                            title: "TOGTMOL Study OS Нөөц",
+                            text: "Google Drive эсвэл Files руу хадгалаарай",
+                            files: [file],
+                          });
+                          setCloudBackupMsg(
+                            "✓ Drive / Утас руу амжилттай хуваалцлаа!",
+                          );
+                          return;
+                        }
+                      }
+                    } catch {
+                      /* fallback to direct file download */
+                    }
+                    downloadJson(exported, fileName);
+                    setCloudBackupMsg("✓ JSON нөөц файл татагдлаа!");
+                  }}
+                  className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-indigo-500/25 px-3 py-2 font-bold text-indigo-100 ring-1 ring-indigo-400/35 hover:bg-indigo-500/35"
+                >
+                  <Download size={14} /> Drive / Утас руу хадгалах
+                </button>
+                <button
+                  type="button"
+                  onClick={() => restoreInputRef.current?.click()}
+                  className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-white/8 px-3 py-2 font-bold text-slate-100 ring-1 ring-white/15 hover:bg-white/15"
+                >
+                  <Upload size={14} /> Нөөцөөс сэргээх
+                </button>
+              </div>
+              <input
+                ref={restoreInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const raw = await file.text();
+                  const ok = await run(
+                    () => store.importData(raw),
+                    "Нөөц файлыг амжилттай сэргээж нэгтгэлээ! 🎉",
+                  );
+                  setCloudBackupMsg(
+                    ok
+                      ? "✓ Нөөц файл амжилттай сэргээгдлээ!"
+                      : "✕ Файлын бүтэц буруу байна.",
+                  );
+                  e.target.value = "";
+                }}
+              />
+              {cloudBackupMsg && (
+                <p className="mt-2 text-[11px] font-semibold text-emerald-300">
+                  {cloudBackupMsg}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

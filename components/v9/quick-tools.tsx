@@ -6,10 +6,12 @@ import {
   Eye,
   Accessibility,
   Keyboard,
+  Languages,
   Plus,
   Check,
   Mic,
 } from "lucide-react";
+import { VocabHelper } from "@/components/v9/vocab-helper";
 import { Modal } from "@/components/ui/common";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -25,7 +27,7 @@ import type { FlashcardDeck, StudyNote } from "@/types/knowledge";
 
 export function QuickToolsModal({ onClose }: { onClose: () => void }) {
   const { data, store, today } = useStudy();
-  const [tab, setTab] = useState<"capture" | "eye" | "a11y" | "keys">(
+  const [tab, setTab] = useState<"capture" | "vocab" | "eye" | "a11y" | "keys">(
     "capture",
   );
 
@@ -205,11 +207,12 @@ export function QuickToolsModal({ onClose }: { onClose: () => void }) {
     <Modal title="⚡ Оюутны Түргэн Хэрэгсэл & Хүртээмж" onClose={onClose}>
       <div className="space-y-4">
         <div
-          className="grid grid-cols-4 gap-1.5 rounded-2xl bg-black/25 p-1.5 ring-1 ring-white/10"
+          className="flex gap-1.5 overflow-x-auto rounded-2xl bg-black/25 p-1.5 ring-1 ring-white/10"
           role="tablist"
         >
           {[
-            { id: "capture", icon: Zap, label: "Түргэн бичих" },
+            { id: "capture", icon: Zap, label: "Бичих" },
+            { id: "vocab", icon: Languages, label: "Толь" },
             { id: "eye", icon: Eye, label: "Нүд 20-20" },
             { id: "a11y", icon: Accessibility, label: "Хүртээмж" },
             { id: "keys", icon: Keyboard, label: "Товчлуур" },
@@ -222,7 +225,7 @@ export function QuickToolsModal({ onClose }: { onClose: () => void }) {
                 role="tab"
                 aria-selected={tab === item.id}
                 onClick={() => setTab(item.id as typeof tab)}
-                className={`flex items-center justify-center gap-1 rounded-xl py-2 text-[11.5px] font-bold transition ${
+                className={`flex min-h-[38px] flex-1 shrink-0 items-center justify-center gap-1 rounded-xl px-2.5 py-2 text-[11.5px] font-bold transition ${
                   tab === item.id
                     ? "bg-amber-400 text-slate-950"
                     : "text-white/75 hover:bg-white/10"
@@ -233,6 +236,9 @@ export function QuickToolsModal({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
+
+        {/* 1B. VOCAB HELPER */}
+        {tab === "vocab" && <VocabHelper />}
 
         {/* 1. QUICK CAPTURE */}
         {tab === "capture" && (

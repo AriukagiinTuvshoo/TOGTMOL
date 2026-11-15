@@ -924,7 +924,37 @@ export class SoundEngine {
       activeCount,
     };
     this.persist();
+    if (this.ctx) {
+      this.syncMediaSession();
+    }
     this.listeners.forEach((l) => l());
+  }
+
+  private syncMediaSession() {
+    if (
+      typeof navigator === "undefined" ||
+      !("mediaSession" in navigator) ||
+      !navigator.mediaSession
+    ) {
+      return;
+    }
+    try {
+      if (this.state.activeCount > 0 && !this.state.muted) {
+        const preset = PRESETS.find((p) => p.id === this.state.activePreset);
+        if (typeof MediaMetadata !== "undefined") {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: preset ? `${preset.emoji} ${preset.nameMn}` : "Орчны микс",
+            artist: `TOGTMOL · ${this.state.activeCount} суваг`,
+            album: "Deep Focus Soundscape",
+          });
+        }
+        navigator.mediaSession.playbackState = "playing";
+      } else if (this.state.activeCount > 0 && this.state.muted) {
+        navigator.mediaSession.playbackState = "paused";
+      }
+    } catch {
+      /* ignore unsupported MediaSession environments */
+    }
   }
 
   /** Restores saved slider values WITHOUT creating an AudioContext. */

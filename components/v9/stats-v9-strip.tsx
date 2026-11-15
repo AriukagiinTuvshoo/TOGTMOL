@@ -14,9 +14,11 @@ import { downloadJson } from "@/components/ui/common";
 import { shiftDate } from "@/lib/calculations/dates";
 import { fmtMnDuration, levelForXp } from "@/lib/v9/focus";
 import { resolveV9RoomId, roomById } from "@/lib/v9/rooms";
+import { ShareCardModal } from "@/components/v9/share-card-modal";
 
 export function StatsV9Banner() {
   const { data, index, today } = useStudy();
+  const [shareOpen, setShareOpen] = useState(false);
   const room = roomById(resolveV9RoomId(data.settings.world));
   const accent = room.accent;
 
@@ -88,8 +90,16 @@ export function StatsV9Banner() {
               {summary.level.needed - summary.level.into} XP
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setShareOpen(true)}
+            className="min-h-[40px] shrink-0 rounded-2xl bg-indigo-500/25 px-3.5 py-2 text-xs font-bold text-indigo-100 ring-1 ring-indigo-400/35 transition hover:bg-indigo-500/35"
+          >
+            📸 Карт хуваалцах
+          </button>
         </div>
       </div>
+      {shareOpen && <ShareCardModal onClose={() => setShareOpen(false)} />}
 
       <div className="glass rounded-3xl p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

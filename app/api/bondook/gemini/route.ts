@@ -104,6 +104,7 @@ export async function POST(request: Request) {
     input.kind === "cards" ||
     input.kind === "quiz" ||
     input.kind === "plan" ||
+    input.kind === "snap" ||
     input.kind === "ping"
       ? input.kind
       : "chat";
@@ -152,6 +153,14 @@ export async function POST(request: Request) {
   }
 
   if (
+    kind === "snap" &&
+    typeof input.image !== "string" &&
+    (typeof input.text !== "string" || !input.text.trim())
+  ) {
+    return json({ error: "Зураг эсвэл тайлбар текст оруулна уу." }, 400);
+  }
+
+  if (
     (kind === "cards" || kind === "quiz") &&
     (typeof input.text !== "string" ||
       input.text.length > 15000 ||
@@ -181,11 +190,13 @@ export async function POST(request: Request) {
     " " +
     (kind === "plan"
       ? "You are Bondook (Бондоок), TOGTMOL's study companion. Propose a realistic study plan as JSON matching {title, description, weeks (1-12), daysPerWeek (1-7), minutesPerDay (5-120), milestoneTitles (string[])}. Respect available time and never claim anything is already saved."
-      : kind === "quiz"
-        ? "You are Bondook (Бондоок), a careful retrieval-practice quiz builder. Return JSON matching {questions: [{type: 'choice'|'boolean'|'short', prompt, options: string[], answer, explanation}]} grounded strictly in the provided material."
-        : kind === "cards"
-          ? "You are Bondook (Бондоок), a concise spaced-repetition flashcard creator. Return JSON matching {cards: [{front, back}]} grounded strictly in the provided material."
-          : "You are Bondook (Бондоок), TOGTMOL Study OS's calm, practical AI study companion. Help the student understand concepts step-by-step, summarize notes, practice languages (MN/EN/JP), or plan gentle realistic sessions based on supplied studyContext. Avoid guilt or pressure; keep formatting crisp and readable.");
+      : kind === "snap"
+        ? "You are Bondook (Бондоок), a multimodal study extractor. Read the uploaded notebook/whiteboard/book image carefully and return JSON matching {title: string, summaryMarkdown: string, cards: [{front: string, back: string}], questions: [{type: 'choice'|'boolean'|'short', prompt: string, options: string[], answer: string, explanation: string}]}."
+        : kind === "quiz"
+          ? "You are Bondook (Бондоок), a careful retrieval-practice quiz builder. Return JSON matching {questions: [{type: 'choice'|'boolean'|'short', prompt, options: string[], answer, explanation}]} grounded strictly in the provided material."
+          : kind === "cards"
+            ? "You are Bondook (Бондоок), a concise spaced-repetition flashcard creator. Return JSON matching {cards: [{front, back}]} grounded strictly in the provided material."
+            : "You are Bondook (Бондоок), TOGTMOL Study OS's calm, practical AI study companion. Help the student understand concepts step-by-step, summarize notes, practice languages (MN/EN/JP), or plan gentle realistic sessions based on supplied studyContext. Avoid guilt or pressure; keep formatting crisp and readable.");
 
   const userParts: Array<Record<string, unknown>> = [];
   if (kind === "chat" || kind === "plan") {
@@ -198,9 +209,11 @@ export async function POST(request: Request) {
   } else {
     userParts.push({
       text:
-        kind === "quiz"
-          ? `Create up to ${input.count} retrieval-practice quiz questions from this material:\n${input.text}`
-          : `Create up to ${input.count} concise Q/A flashcards from this material:\n${input.text}`,
+        kind === "snap"
+          ? `Extract a clean structured Markdown study note (headings, bullet points, formulas), 5 flashcards, and 3 quiz questions from this study material.${typeof input.text === "string" && input.text.trim() ? `\nTopic hint: ${input.text.trim()}` : ""}`
+          : kind === "quiz"
+            ? `Create up to ${input.count} retrieval-practice quiz questions from this material:\n${input.text}`
+            : `Create up to ${input.count} concise Q/A flashcards from this material:\n${input.text}`,
     });
     if (
       typeof input.image === "string" &&
@@ -224,7 +237,12 @@ export async function POST(request: Request) {
     temperature: kind === "chat" ? 0.65 : 0.35,
   };
 
-  if (kind === "cards" || kind === "quiz" || kind === "plan") {
+  if (
+    kind === "cards" ||
+    kind === "quiz" ||
+    kind === "plan" ||
+    kind === "snap"
+  ) {
     generationConfig.responseMimeType = "application/json";
   }
 
@@ -244,6 +262,41 @@ export async function POST(request: Request) {
   const result = await invokeGemini(apiKey, model, geminiPayload);
   if (!result.ok) {
     return json({ error: result.error }, result.status);
+  }
+
+  if (kind === "snap") {
+    try {
+      const cleaned = stripJsonFence(result.text);
+      const parsed = JSON.parse(cleaned) as {
+        title?: unknown;
+        summaryMarkdown?: unknown;
+        cards?: unknown;
+        questions?: unknown;
+      };
+      return json({
+        title:
+          typeof parsed.title === "string" && parsed.title.trim()
+            ? parsed.title.trim().slice(0, 120)
+            : "Зургаас задалсан хичээл",
+        summaryMarkdown:
+          typeof parsed.summaryMarkdown === "string"
+            ? parsed.summaryMarkdown.slice(0, 15000)
+            : "",
+        cards: Array.isArray(parsed.cards)
+          ? parseCardDrafts({ cards: parsed.cards }).slice(0, 10)
+          : [],
+        questions: Array.isArray(parsed.questions)
+          ? parseQuizDrafts({ questions: parsed.questions }).slice(0, 6)
+          : [],
+        kind: "ai",
+        model,
+      });
+    } catch {
+      return json(
+        { error: "Зургийн агуулгыг задлахад алдаа гарлаа. Дахин оролдоно уу." },
+        502,
+      );
+    }
   }
 
   if (kind === "plan") {

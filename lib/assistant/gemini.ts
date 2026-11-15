@@ -204,7 +204,7 @@ async function callDirectBrowserGemini(
 }
 
 function buildSystemInstruction(
-  kind: "chat" | "cards" | "quiz" | "plan",
+  kind: "chat" | "cards" | "quiz" | "plan" | "snap",
   language: Language,
 ): string {
   const langRule =
@@ -212,6 +212,9 @@ function buildSystemInstruction(
       ? "Respond in natural, encouraging English unless the learning material is intentionally in another language."
       : "Цэвэр, ойлгомжтой, дулаахан Монгол хэлээр хариул (хэрэв сурах материал өөр хэл дээр бол тухайн хэлний нэр томьёог хадгалж тайлбарла).";
 
+  if (kind === "snap") {
+    return `${langRule} You are Bondook (Бондоок), a multimodal study extractor. Read the uploaded notebook/whiteboard/book image carefully and return JSON matching {"title": string, "summaryMarkdown": string, "cards": [{"front": string, "back": string}], "questions": [{"type": "choice"|"boolean"|"short", "prompt": string, "options": string[], "answer": string, "explanation": string}]}.`;
+  }
   if (kind === "plan") {
     return `${langRule} You are Bondook (Бондоок), TOGTMOL's study companion. Propose a realistic study plan as JSON matching {"title": string, "description": string, "weeks": number(1-12), "daysPerWeek": number(1-7), "minutesPerDay": number(5-120), "milestoneTitles": string[]}.`;
   }
@@ -225,7 +228,7 @@ function buildSystemInstruction(
 }
 
 async function runGeminiRequest(params: {
-  kind: "chat" | "cards" | "quiz" | "plan" | "ping";
+  kind: "chat" | "cards" | "quiz" | "plan" | "snap" | "ping";
   language: Language;
   message?: string;
   context?: Record<string, unknown>;
@@ -268,9 +271,11 @@ async function runGeminiRequest(params: {
             } else {
               parts.push({
                 text:
-                  params.kind === "quiz"
-                    ? `Create up to ${params.count ?? 5} retrieval-practice quiz questions from this material:\n${params.text ?? ""}`
-                    : `Create up to ${params.count ?? 8} concise Q/A flashcards from this material:\n${params.text ?? ""}`,
+                  params.kind === "snap"
+                    ? `Extract a clean structured Markdown study note, 5 flashcards, and 3 quiz questions from this study material.${params.text?.trim() ? `\nTopic hint: ${params.text.trim()}` : ""}`
+                    : params.kind === "quiz"
+                      ? `Create up to ${params.count ?? 5} retrieval-practice quiz questions from this material:\n${params.text ?? ""}`
+                      : `Create up to ${params.count ?? 8} concise Q/A flashcards from this material:\n${params.text ?? ""}`,
               });
               if (
                 typeof params.image === "string" &&
@@ -294,13 +299,16 @@ async function runGeminiRequest(params: {
               contents: [{ role: "user", parts }],
               generationConfig: {
                 maxOutputTokens:
-                  params.kind === "cards" || params.kind === "quiz"
+                  params.kind === "cards" ||
+                  params.kind === "quiz" ||
+                  params.kind === "snap"
                     ? 4096
                     : 1600,
                 temperature: params.kind === "chat" ? 0.65 : 0.35,
                 ...(params.kind === "cards" ||
                 params.kind === "quiz" ||
-                params.kind === "plan"
+                params.kind === "plan" ||
+                params.kind === "snap"
                   ? { responseMimeType: "application/json" }
                   : {}),
               },
@@ -339,6 +347,8 @@ async function runGeminiRequest(params: {
   });
   const data = (await res.json().catch(() => ({}))) as {
     text?: string;
+    title?: string;
+    summaryMarkdown?: string;
     cards?: unknown;
     questions?: unknown;
     plan?: unknown;
@@ -349,6 +359,17 @@ async function runGeminiRequest(params: {
     throw new Error(
       data.error || "Google AI Studio түр холбогдсонгүй. Түлхүүрээ шалгана уу.",
     );
+  }
+  if (params.kind === "snap") {
+    return {
+      text: JSON.stringify({
+        title: data.title,
+        summaryMarkdown: data.summaryMarkdown,
+        cards: data.cards,
+        questions: data.questions,
+      }),
+      model: data.model || model,
+    };
   }
   if (params.kind === "cards" && data.cards) {
     return {
@@ -476,4 +497,44 @@ export async function generateGeminiPlan(params: {
   });
   const parsed = JSON.parse(stripJsonFence(res.text)) as unknown;
   return parsePlanProposal(parsed);
+}
+
+export interface SnapStudyBundle {
+  title: string;
+  summaryMarkdown: string;
+  cards: CardDraft[];
+  questions: QuizDraft[];
+}
+
+export async function generateGeminiSnapStudy(params: {
+  image: string | null;
+  hintText: string;
+  language: Language;
+}): Promise<SnapStudyBundle> {
+  const res = await runGeminiRequest({
+    kind: "snap",
+    language: params.language,
+    image: params.image,
+    text: params.hintText,
+  });
+  const raw = JSON.parse(stripJsonFence(res.text)) as {
+    title?: unknown;
+    summaryMarkdown?: unknown;
+    cards?: unknown;
+    questions?: unknown;
+  };
+  return {
+    title:
+      typeof raw.title === "string" && raw.title.trim()
+        ? raw.title.trim().slice(0, 120)
+        : "Зургаас задалсан хичээл",
+    summaryMarkdown:
+      typeof raw.summaryMarkdown === "string" ? raw.summaryMarkdown : "",
+    cards: Array.isArray(raw.cards)
+      ? parseCardDrafts({ cards: raw.cards }).slice(0, 10)
+      : [],
+    questions: Array.isArray(raw.questions)
+      ? parseQuizDrafts({ questions: raw.questions }).slice(0, 6)
+      : [],
+  };
 }
