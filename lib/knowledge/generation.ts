@@ -1,3 +1,15 @@
+/**
+ * A deck keeps the first note it was generated from. Only a deck that has no
+ * source yet adopts the newly chosen note, so regenerating from a different
+ * note never rewrites provenance without a decision.
+ */
+export function generatedDeckSource(
+  existingSourceId: string | null | undefined,
+  chosenNoteId: string | null | undefined,
+): string | null {
+  return existingSourceId ?? chosenNoteId ?? null;
+}
+
 export interface CardDraft {
   front: string;
   back: string;

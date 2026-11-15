@@ -2,6 +2,10 @@ import { normalizeWorld } from "@/lib/world/config";
 import { validYouTubeSource } from "@/lib/music/youtube";
 import { validAudioDescriptor, parseAudioURL } from "@/lib/music/native-audio";
 import { parseKnowledge } from "@/lib/knowledge/validation";
+import {
+  knowledgeLinkError,
+  validateKnowledgeLinks,
+} from "@/lib/knowledge/integrity";
 import { emptyData, PALETTE } from "@/lib/constants";
 import { dateKey, parseDate } from "@/lib/calculations/dates";
 import {
@@ -121,7 +125,10 @@ function timer(raw: unknown): ActiveTimer | null {
     ]),
   };
 }
-export function migrate(input: unknown): StudyData {
+export function migrate(
+  input: unknown,
+  options: { strictLinks?: boolean } = {},
+): StudyData {
   if (!isObject(input)) throw Error("Нөөц файлын бүтэц танигдсангүй.");
   const raw =
     (input.format === "togtmol-backup" ||
@@ -461,6 +468,33 @@ export function migrate(input: unknown): StudyData {
       }
       seen.add(r.id);
     });
+  }
+  const issues = validateKnowledgeLinks(data.knowledge);
+  if (issues.length) {
+    // Import and cloud pull must not merge a broken topic graph; a local load
+    // instead keeps every record and drops only the link that cannot resolve.
+    if (options.strictLinks) throw knowledgeLinkError(issues);
+    const broken = new Set(
+      issues.map((issue) => `${issue.recordId}:${issue.field}`),
+    );
+    data.knowledge = data.knowledge.map((record) => {
+      if (broken.has(`${record.id}:parentId`) && record.kind === "topic")
+        return { ...record, parentId: null };
+      if (broken.has(`${record.id}:topicId`))
+        return { ...record, topicId: undefined };
+      return record;
+    });
+    for (const issue of issues)
+      data.quarantine.push({
+        collection: "knowledge",
+        index: -1,
+        reason: issue.message,
+        value: {
+          recordId: issue.recordId,
+          field: issue.field,
+          code: issue.code,
+        },
+      });
   }
   return data;
 }

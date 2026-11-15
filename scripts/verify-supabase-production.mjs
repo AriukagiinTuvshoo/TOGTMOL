@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { EXPECTED_SCHEMA_VERSION, snapshotProblem } from "./snapshot-check.mjs";
 
 const url =
   process.env.SUPABASE_PRODUCTION_URL ??
@@ -112,15 +113,10 @@ if (pullError) {
   process.exit();
 }
 
-if (
-  !snapshot ||
-  typeof snapshot !== "object" ||
-  typeof snapshot.revision !== "number" ||
-  !snapshot.data ||
-  snapshot.data.schemaVersion !== 5
-) {
+const problem = snapshotProblem(snapshot);
+if (problem) {
   await client.auth.signOut();
-  fail("The production database returned an unexpected v5 study snapshot.");
+  fail(problem);
   process.exit();
 }
 
@@ -142,7 +138,7 @@ console.log(
         "authenticated getUser",
         "RLS study_profiles read",
         "pull_study_data RPC",
-        "v5 schema snapshot",
+        `v${EXPECTED_SCHEMA_VERSION} schema snapshot`,
       ],
     },
     null,

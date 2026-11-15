@@ -3,6 +3,7 @@ import type { StudyData } from "@/types/study";
 import { StudyStore } from "@/lib/persistence/store";
 import { mergeData } from "@/lib/migration/merge";
 import { migrate } from "@/lib/migration/migrate";
+import { assertKnowledgeLinks } from "@/lib/knowledge/integrity";
 import { stable } from "@/lib/migration/values";
 export interface CloudSnapshot {
   revision: number;
@@ -21,7 +22,10 @@ export class SupabaseAdapter implements CloudAdapter {
     if (error) throw Error(`Cloud унших: ${error.message}`);
     if (!data || !Number.isSafeInteger(data.revision) || data.revision < 0)
       throw Error("Cloud хариу буруу байна.");
-    return { revision: data.revision, data: migrate(data.data) };
+    return {
+      revision: data.revision,
+      data: migrate(data.data, { strictLinks: true }),
+    };
   }
   async push(userId: string, revision: number, document: StudyData) {
     const { data, error } = await this.client.rpc("push_study_data", {
@@ -103,6 +107,8 @@ export class SyncEngine {
       ),
       remote = await this.adapter.pull(this.userId);
     check();
+    // Any adapter's snapshot must resolve its links before it can be merged.
+    assertKnowledgeLinks(remote.data.knowledge);
     const resetAt = Number(remote.data.extras.cloudResetAt) || 0;
     const consent = await this.store.repository.metadata<number>(
       `cloud-reset-consent:${this.userId}`,

@@ -6,6 +6,7 @@ import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { getSupabase } from "@/lib/supabase/client";
 import {
+  generatedDeckSource,
   localCardDrafts,
   parseCardDrafts,
   type CardDraft,
@@ -118,14 +119,19 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
           r.kind === "deck" && r.id === deckId && !r.deletedAt,
       );
       const sourceNote = notes.find((n) => n.id === source);
-      const deck: FlashcardDeck = existing ?? {
-        ...recordBase(title, subject || null),
-        kind: "deck" as const,
-        description: online
-          ? "Бондоокийн санал, хэрэглэгч хянаж хадгалсан"
-          : "Тэмдэглэлээс загвараар бэлдсэн, хэрэглэгч хянаж хадгалсан",
-        ...(sourceNote ? { sourceId: sourceNote.id } : {}),
-      };
+      const sourceId = generatedDeckSource(existing?.sourceId, sourceNote?.id);
+      const deck: FlashcardDeck = existing
+        ? sourceId && sourceId !== existing.sourceId
+          ? { ...existing, sourceId }
+          : existing
+        : {
+            ...recordBase(title, subject || null),
+            kind: "deck" as const,
+            description: online
+              ? "Бондоокийн санал, хэрэглэгч хянаж хадгалсан"
+              : "Тэмдэглэлээс загвараар бэлдсэн, хэрэглэгч хянаж хадгалсан",
+            ...(sourceId ? { sourceId } : {}),
+          };
       const cards: Flashcard[] = checked.map((c) => ({
         ...recordBase(c.front.slice(0, 180), subject || deck.subjectId),
         kind: "card",
@@ -135,7 +141,13 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
         schedule: { repetitions: 0, interval: 0, ease: 2.5, dueOn: today },
       }));
       await store.mutate((d) =>
-        addCards(cards)(existing ? d : saveKnowledge(deck)(d)),
+        addCards(cards)(
+          existing
+            ? deck === existing
+              ? d
+              : saveKnowledge(deck, existing.updatedAt)(d)
+            : saveKnowledge(deck)(d),
+        ),
       );
     }, "Хянасан картуудыг хадгаллаа.");
     setBusy(false);

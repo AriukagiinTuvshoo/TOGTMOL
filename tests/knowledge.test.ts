@@ -25,6 +25,7 @@ import {
 } from "@/lib/knowledge/index";
 import { safeLink, imageData } from "@/lib/knowledge/validation";
 import {
+  generatedDeckSource,
   localCardDrafts,
   parseCardDrafts,
   parseQuizDrafts,
@@ -398,5 +399,103 @@ describe("schema 6 topics and source links", () => {
       (r): r is FlashcardDeck => r.id === "deck-src" && r.kind === "deck",
     )!;
     expect(after.sourceId).toBeUndefined();
+  });
+});
+
+describe("schema 6 topic link rules on save", () => {
+  const setup = () => {
+    const data = knowledgeFixture();
+    data.subjects = [
+      ...data.subjects,
+      { ...data.subjects[0], id: "physics", name: "Физик" },
+    ];
+    data.knowledge = [...data.knowledge, topic()];
+    return data;
+  };
+
+  it("accepts a topic from the same subject", () => {
+    const saved = saveKnowledge({
+      ...note(),
+      id: "note-linked",
+      topicId: "topic-1",
+    })(setup());
+    expect(saved.knowledge.find((r) => r.id === "note-linked")?.topicId).toBe(
+      "topic-1",
+    );
+  });
+
+  it("rejects a missing or deleted topic", () => {
+    expect(() =>
+      saveKnowledge({ ...note(), id: "n1", topicId: "nope" })(setup()),
+    ).toThrow(/Сэдэв олдсонгүй/);
+    const deleted = setup();
+    deleted.knowledge = deleted.knowledge.map((r) =>
+      r.id === "topic-1" ? { ...r, deletedAt: NOW } : r,
+    );
+    expect(() =>
+      saveKnowledge({ ...note(), id: "n2", topicId: "topic-1" })(deleted),
+    ).toThrow(/Сэдэв олдсонгүй/);
+  });
+
+  it("rejects a topic from another subject", () => {
+    const data = setup();
+    data.knowledge = [
+      ...data.knowledge,
+      { ...topic(), id: "topic-physics", subjectId: "physics" },
+    ];
+    expect(() =>
+      saveKnowledge({ ...note(), id: "n3", topicId: "topic-physics" })(data),
+    ).toThrow(/өөр хичээлийн/);
+  });
+});
+
+describe("generated deck source", () => {
+  it("links a new deck to the chosen note", () => {
+    expect(generatedDeckSource(undefined, "note-1")).toBe("note-1");
+  });
+
+  it("adds a source to a deck that has none yet", () => {
+    expect(generatedDeckSource(null, "note-1")).toBe("note-1");
+  });
+
+  it("never replaces an existing source without a decision", () => {
+    expect(generatedDeckSource("note-old", "note-new")).toBe("note-old");
+  });
+
+  it("stays null when no note was chosen", () => {
+    expect(generatedDeckSource(undefined, undefined)).toBeNull();
+  });
+
+  it("stores the source on a new deck", () => {
+    const saved = saveKnowledge({
+      ...deck(),
+      id: "deck-new",
+      sourceId: generatedDeckSource(undefined, "note-1")!,
+    })(knowledgeFixture());
+    const record = saved.knowledge.find(
+      (r): r is FlashcardDeck => r.id === "deck-new",
+    )!;
+    expect(record.sourceId).toBe("note-1");
+  });
+
+  it("adds a source to an existing deck without touching its other fields", () => {
+    const first = saveKnowledge({ ...deck(), id: "deck-existing" })(
+      knowledgeFixture(),
+    );
+    const existing = first.knowledge.find(
+      (r): r is FlashcardDeck => r.id === "deck-existing",
+    )!;
+    expect(existing.sourceId).toBeUndefined();
+    const sourceId = generatedDeckSource(existing.sourceId, "note-1")!;
+    const second = saveKnowledge(
+      { ...existing, sourceId },
+      existing.updatedAt,
+    )(first);
+    const updated = second.knowledge.find(
+      (r): r is FlashcardDeck => r.id === "deck-existing",
+    )!;
+    expect(updated.sourceId).toBe("note-1");
+    expect(updated.description).toBe(existing.description);
+    expect(updated.deletedAt).toBeNull();
   });
 });

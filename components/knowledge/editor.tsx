@@ -195,7 +195,7 @@ export function KnowledgeEditor({
                 .filter(
                   (t) =>
                     t.id !== record?.id &&
-                    (!subject || t.subjectId === subject),
+                    (t.subjectId ?? null) === (subject || null),
                 )
                 .map((t) => (
                   <option value={t.id} key={t.id}>
@@ -210,7 +210,7 @@ export function KnowledgeEditor({
             <select value={topic} onChange={(e) => setTopic(e.target.value)}>
               <option value="">Сэдэвгүй</option>
               {topics
-                .filter((t) => !subject || t.subjectId === subject)
+                .filter((t) => (t.subjectId ?? null) === (subject || null))
                 .map((t) => (
                   <option value={t.id} key={t.id}>
                     {topicLabel(t)}
@@ -220,7 +220,15 @@ export function KnowledgeEditor({
           </label>
         ) : null}
         <div className="form-grid">
-          <SubjectSelect value={subject} onChange={setSubject} />
+          <SubjectSelect
+            value={subject}
+            onChange={(value) => {
+              setSubject(value);
+              // A topic belongs to one subject, so a stale pick cannot survive.
+              setTopic("");
+              setParent("");
+            }}
+          />
           <label>
             Шошго
             <input

@@ -100,6 +100,38 @@ describe("knowledge flows", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers only the topics of the record's own subject", async () => {
+    await boot();
+    navigate("Миний мэдлэг");
+    const add = await screen.findByRole("group", { name: "Мэдлэг нэмэх" });
+    fireEvent.click(within(add).getByRole("button", { name: "Сэдэв" }));
+    let dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Нэр" }), {
+      target: { value: "Ерөнхий сэдэв" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Хадгалах" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(within(add).getByRole("button", { name: "Тэмдэглэл" }));
+    dialog = screen.getByRole("dialog");
+    const options = () =>
+      within(dialog)
+        .queryAllByRole("option")
+        .map((option) => option.textContent ?? "");
+    // Without a subject the topic is offered, since it belongs to no subject.
+    expect(options()).toContain("Ерөнхий сэдэв");
+    const subjectSelect = within(dialog)
+      .getAllByRole("combobox")
+      .find((select) =>
+        within(select).queryByRole("option", { name: "Математик" }),
+      )!;
+    fireEvent.change(subjectSelect, { target: { value: "math" } });
+    // Once the note belongs to Математик, the subject-less topic is gone.
+    expect(options()).not.toContain("Ерөнхий сэдэв");
+  });
+
   it("creates a searchable note, opens it with Ctrl K, soft-deletes and restores from trash", async () => {
     await boot();
     navigate("Миний мэдлэг");

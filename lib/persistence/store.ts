@@ -169,7 +169,7 @@ export class StudyStore {
   async importData(raw: string, label = "Импортын өмнөх нөөц") {
     const namespace = this.state.namespace,
       before = JSON.stringify(this.exportData());
-    const imported = migrate(JSON.parse(raw));
+    const imported = migrate(JSON.parse(raw), { strictLinks: true });
     await this.repository.backup(namespace, "Импортолсон эх файл", raw);
     await this.repository.backup(namespace, label, before);
     await this.mutate((current) => {

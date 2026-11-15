@@ -50,6 +50,17 @@ export function saveKnowledge(
       throw Error("Хичээл олдсонгүй.");
     if (record.title.length > 180 || record.tags.length > 30)
       throw Error("Нэр 180 тэмдэгт, шошго 30-аас хэтрэхгүй байна.");
+    if (record.topicId) {
+      const topic = data.knowledge.find(
+        (r): r is import("@/types/knowledge").StudyTopic =>
+          r.kind === "topic" && r.id === record.topicId,
+      );
+      if (!topic || topic.deletedAt) throw Error("Сэдэв олдсонгүй.");
+      if (topic.subjectId !== record.subjectId)
+        throw Error(
+          "Сэдэв өөр хичээлийн байна. Тухайн хичээлийн сэдвийг сонгоно уу.",
+        );
+    }
     if (record.kind === "topic") {
       const topics = data.knowledge.filter(
         (r): r is import("@/types/knowledge").StudyTopic =>
