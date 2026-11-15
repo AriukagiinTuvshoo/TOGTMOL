@@ -19,6 +19,7 @@ import { BarChart } from "./charts";
 import { Insights } from "@/components/assistant/insights";
 import { knowledgeStatistics } from "@/lib/knowledge/statistics";
 import { CurrentDecisionCenter } from "./current-decision-center";
+import { StatsV9Backup, StatsV9Banner } from "@/components/v9/stats-v9-strip";
 import { useI18n } from "@/components/i18n/language-provider";
 export function Statistics() {
   const { data, index, today } = useStudy(),
@@ -71,6 +72,7 @@ export function Statistics() {
     ids = new Set(stats.days.flatMap((d) => [...d.sessions]));
   return (
     <div className="stack">
+      <StatsV9Banner />
       <CurrentDecisionCenter />
       <div className="filter-row">
         <div className="segmented">
@@ -324,6 +326,7 @@ export function Statistics() {
           limit={10}
         />
       </section>
+      <StatsV9Backup />
       <p className="tiny muted">
         Эхлэх цаг нь тодорхойгүй хуучин бичлэгийг цагийн харьцуулалтаас хасна.
         Нийт хугацаанд хэвээр тооцно. Шөнө дамнасан шинэ хичээлийг бодитоор

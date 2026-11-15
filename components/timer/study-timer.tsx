@@ -239,12 +239,17 @@ export function StudyTimer({
     if (!tId) return;
     const id = setTimeout(() => {
       if (note !== store.getSnapshot().data.activeTimer?.note)
-        void run(() => store.mutate(actions.timerNote(note)));
+        void store
+          .mutate(actions.timerNote(note), {
+            reportError: false,
+            reportBusy: false,
+          })
+          .catch(() => {});
     }, 500);
     return () => {
       clearTimeout(id);
     };
-  }, [note, tId, store, run]);
+  }, [note, tId, store]);
   if (!data.subjects.some((s) => !s.deletedAt))
     return (
       <div className="card">

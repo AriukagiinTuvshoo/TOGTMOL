@@ -1,0 +1,403 @@
+/* ───────────────────────────────────────────────────────────────────────────
+ * TOGTMOL v9 — Гүн төвлөрлийн өрөө (Deep Focus OS)
+ * Glassmorphic Cosmos Theme, Animations, Full-Width Bento Layout, & Harmonizer
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+:root:not([data-theme="light"]) {
+  --bg: #0c0e1d;
+  --surface: rgba(18, 22, 38, 0.72);
+  --surface-muted: rgba(255, 255, 255, 0.06);
+  --text: #eef0f7;
+  --muted: rgba(238, 240, 247, 0.62);
+  --border: rgba(255, 255, 255, 0.12);
+  --moss: var(--v9-accent, #a78bfa);
+  --moss-soft: rgba(167, 139, 250, 0.18);
+  --yellow: #fbbf24;
+  --yellow-soft: rgba(251, 191, 36, 0.14);
+  --hero: #1b203a;
+  --danger: #fca5a5;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0c0e1d;
+  color: #eef0f7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display {
+  font-family:
+    "Space Grotesk",
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ── Glassmorphic Cards ── */
+.glass {
+  background: rgba(18, 22, 38, 0.56);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.glass-deep {
+  background: rgba(11, 14, 26, 0.78);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Custom Range Sliders (Master & 13-Channel Audio Mixer) ── */
+input[type="range"].v9-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  padding: 0;
+  border: 0;
+}
+
+input[type="range"].v9-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.5),
+    0 0 0 3px rgba(255, 255, 255, 0.18);
+  transition: transform 0.12s ease;
+}
+
+input[type="range"].v9-range::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+}
+
+input[type="range"].v9-range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Keyframe Animations ── */
+@keyframes drift1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4vw, -3vh, 0) scale(1.08);
+  }
+}
+
+@keyframes drift2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.04);
+  }
+  50% {
+    transform: translate3d(-5vw, 4vh, 0) scale(0.95);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes rainfall {
+  0% {
+    transform: translate3d(0, -15vh, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(-4vw, 110vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(6vw, 108vh, 0) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseRing {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.985);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.015);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flipReveal {
+  0% {
+    opacity: 0;
+    transform: perspective(900px) rotateX(-12deg) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(900px) rotateX(0deg) translateY(0);
+  }
+}
+
+.anim-drift-1 {
+  animation: drift1 22s ease-in-out infinite;
+}
+
+.anim-drift-2 {
+  animation: drift2 28s ease-in-out infinite;
+}
+
+.anim-float {
+  animation: floaty 4.5s ease-in-out infinite;
+}
+
+.anim-pulse-ring {
+  animation: pulseRing 3.6s ease-in-out infinite;
+}
+
+.anim-pop {
+  animation: popIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── 8-Week Activity Heatmap Levels ── */
+.heat-0 {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.heat-1 {
+  background: rgba(167, 139, 250, 0.25);
+}
+
+.heat-2 {
+  background: rgba(167, 139, 250, 0.48);
+}
+
+.heat-3 {
+  background: rgba(167, 139, 250, 0.74);
+}
+
+.heat-4 {
+  background: #a78bfa;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.65);
+}
+
+/* ── Full-Width TOGTMOL v9 Shell & Off-Canvas Study Space Drawer ── */
+.v9-shell {
+  position: relative;
+  min-height: 100dvh;
+  background: transparent !important;
+}
+
+.v9-shell .v9-main {
+  margin-left: 0 !important;
+  min-height: 100dvh;
+  background: transparent !important;
+}
+
+.v9-shell .sidebar.v9-drawer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  margin: 0;
+  height: 100dvh;
+  width: min(290px, 84vw);
+  z-index: 70;
+  border-radius: 0 24px 24px 0;
+  background: rgba(11, 14, 26, 0.92);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 24px 0 80px rgba(0, 0, 0, 0.6);
+  transform: translateX(-112%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  overflow-y: auto;
+}
+
+.v9-shell .sidebar.v9-drawer.is-open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.v9-shell.is-focus #main-content {
+  max-width: 1180px;
+  min-height: auto;
+  padding: 24px 20px 80px;
+}
+
+/* ── Global Search (⌘K Command Palette Pill in v9 Header) ── */
+.v9-header .global-search-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.v9-header .global-search-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.v9-header .global-search-button kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 1px 5px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Core Cards Harmonized to v9 Frosted Dark Glass ── */
+.v9-shell .card,
+.v9-shell .daily-strip,
+.v9-shell .room-stage {
+  background: rgba(18, 22, 38, 0.58);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.v9-shell dialog[open] {
+  background: rgba(13, 16, 30, 0.92);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.68);
+}
+
+/* ── Flashcard 3D Reveal Enhancement (Knowledge Review) ── */
+.v9-shell .flashcard-answer {
+  animation: flipReveal 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Sleek Bottom-Right Floating YouTube / Music Dock ── */
+.v9-shell .music-player {
+  left: auto;
+  right: 18px;
+  bottom: 16px;
+  width: min(420px, calc(100vw - 28px));
+  background: rgba(12, 15, 28, 0.82);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.v9-shell .music-player:has(.music-panel) {
+  width: min(920px, calc(100vw - 28px));
+}
+
+@media (max-width: 1023px) {
+  .v9-shell .mobile-nav {
+    display: grid;
+    background: rgba(11, 14, 26, 0.88);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .v9-shell .music-player {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.v9-shell .page-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+}

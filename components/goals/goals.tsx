@@ -1,5 +1,6 @@
 "use client";
 import { GoalPlanner } from "./goal-planner";
+import { GoalsV9Strip } from "@/components/v9/goals-v9-strip";
 import { useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -56,6 +57,7 @@ export function Goals() {
   ];
   return (
     <div className="stack">
+      <GoalsV9Strip />
       <GoalPlanner />
       <details className="card" open>
         <summary>

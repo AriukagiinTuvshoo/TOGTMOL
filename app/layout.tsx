@@ -4,12 +4,13 @@ import "./world.css";
 import "./knowledge.css";
 import "./neon.css";
 import "./legal.css";
+import "./v9.css";
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ??
       "https://togtmol.tuvshoo0331.workers.dev",
   ),
-  title: "Тогтмол v7 — Бондооктой хамт суралцъя",
+  title: "ТОГТМОЛ v9 — Гүн төвлөрлийн өрөө",
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",
