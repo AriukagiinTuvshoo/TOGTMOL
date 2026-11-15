@@ -5,6 +5,7 @@ import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { cleanTags, safeLink } from "@/lib/knowledge/validation";
+import { topicParentOptions } from "@/lib/knowledge/integrity";
 import { prepareImage } from "@/lib/knowledge/images";
 import { uid } from "@/lib/constants";
 import type {
@@ -191,12 +192,8 @@ export function KnowledgeEditor({
             Эх сэдэв
             <select value={parent} onChange={(e) => setParent(e.target.value)}>
               <option value="">Дээд түвшин</option>
-              {topics
-                .filter(
-                  (t) =>
-                    t.id !== record?.id &&
-                    (t.subjectId ?? null) === (subject || null),
-                )
+              {topicParentOptions(topics, record?.id)
+                .filter((t) => (t.subjectId ?? null) === (subject || null))
                 .map((t) => (
                   <option value={t.id} key={t.id}>
                     {topicLabel(t)}

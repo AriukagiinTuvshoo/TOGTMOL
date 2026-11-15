@@ -111,6 +111,33 @@ function hasCycle(start: StudyTopic, topics: Map<string, StudyTopic>): boolean {
   return false;
 }
 
+/**
+ * Topics that may be chosen as the parent of `recordId`: the record itself and
+ * everything below it are excluded, so the picker cannot build a cycle. The
+ * storage layer still validates the graph; this only keeps the choice sane.
+ */
+export function topicParentOptions(
+  topics: StudyTopic[],
+  recordId?: string,
+): StudyTopic[] {
+  if (!recordId) return topics;
+  const blocked = new Set([recordId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const topic of topics)
+      if (
+        topic.parentId &&
+        blocked.has(topic.parentId) &&
+        !blocked.has(topic.id)
+      ) {
+        blocked.add(topic.id);
+        changed = true;
+      }
+  }
+  return topics.filter((topic) => !blocked.has(topic.id));
+}
+
 export function knowledgeLinkError(issues: KnowledgeLinkIssue[]): Error {
   const listed = issues
     .slice(0, 5)

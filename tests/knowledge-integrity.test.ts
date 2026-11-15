@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertKnowledgeLinks,
+  topicParentOptions,
   validateKnowledgeLinks,
 } from "@/lib/knowledge/integrity";
 import { recordBase } from "@/lib/knowledge/actions";
@@ -103,6 +104,33 @@ describe("validateKnowledgeLinks", () => {
       note("n2", { topicId: "nope-2" }),
     ];
     expect(validateKnowledgeLinks(records)).toHaveLength(2);
+  });
+});
+
+describe("topicParentOptions", () => {
+  const tree = () => [
+    topic("a"),
+    topic("b", { parentId: "a" }),
+    topic("c", { parentId: "b" }),
+    topic("d"),
+  ];
+
+  it("excludes the topic itself and all of its descendants", () => {
+    expect(topicParentOptions(tree(), "a").map((t) => t.id)).toEqual(["d"]);
+    expect(topicParentOptions(tree(), "b").map((t) => t.id)).toEqual([
+      "a",
+      "d",
+    ]);
+    expect(topicParentOptions(tree(), "c").map((t) => t.id)).toEqual([
+      "a",
+      "b",
+      "d",
+    ]);
+  });
+
+  it("offers every topic for a new topic", () => {
+    expect(topicParentOptions(tree())).toHaveLength(4);
+    expect(topicParentOptions(tree(), "new-id")).toHaveLength(4);
   });
 });
 

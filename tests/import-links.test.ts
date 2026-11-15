@@ -31,6 +31,67 @@ describe("import with broken topic links", () => {
     store.destroy();
   });
 
+  it("imports schema 5 data that has no topic links at all", async () => {
+    const { store } = await setup();
+    await store.importData(JSON.stringify({ ...fixture(), schemaVersion: 5 }));
+    expect(store.getSnapshot().data.schemaVersion).toBe(6);
+    expect(store.getSnapshot().data.sessions).toHaveLength(1);
+    store.destroy();
+  });
+
+  it("names the offending record when the links are broken", async () => {
+    const { store } = await setup();
+    const bad = {
+      ...fixture(),
+      knowledge: [
+        topic(),
+        {
+          ...note(),
+          id: "note-x",
+          title: "Алдаатай тэмдэглэл",
+          topicId: "nope",
+        },
+      ],
+    };
+    await expect(store.importData(JSON.stringify(bad))).rejects.toThrow(
+      /Алдаатай тэмдэглэл/,
+    );
+    store.destroy();
+  });
+
+  it("rejects cross-subject links, deleted topics and cycles on import", async () => {
+    const { store } = await setup();
+    const cases = [
+      {
+        ...fixture(),
+        knowledge: [
+          { ...topic(), id: "physics", subjectId: "physics" },
+          { ...note(), id: "cross", topicId: "physics" },
+        ],
+      },
+      {
+        ...fixture(),
+        knowledge: [
+          { ...topic(), id: "gone", deletedAt: 1 },
+          { ...note(), id: "deleted", topicId: "gone" },
+        ],
+      },
+      {
+        ...fixture(),
+        knowledge: [
+          { ...topic(), id: "a", parentId: "b" },
+          { ...topic(), id: "b", parentId: "a" },
+        ],
+      },
+    ];
+    for (const bad of cases)
+      await expect(store.importData(JSON.stringify(bad))).rejects.toThrow(
+        /Мэдлэгийн холбоос буруу/,
+      );
+    expect(store.getSnapshot().data.knowledge).toEqual([]);
+    store.destroy();
+  });
+
   it("imports a valid graph and keeps the source link", async () => {
     const { store } = await setup();
     const good = {

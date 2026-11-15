@@ -14,7 +14,8 @@ import { IDBFactory } from "fake-indexeddb";
 import { AppShell } from "@/components/app-shell";
 import { openView } from "./nav-helper";
 import { Repository } from "@/lib/persistence/repository";
-import { knowledgeFixture } from "./knowledge-fixtures";
+import { knowledgeFixture, note as sampleNote } from "./knowledge-fixtures";
+import { recordBase } from "@/lib/knowledge/actions";
 beforeEach(() => {
   window.history.replaceState(null, "", "/");
   localStorage.clear();
@@ -42,9 +43,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
-async function boot() {
+async function boot(data = knowledgeFixture()) {
   const repo = new Repository();
-  await repo.save("guest", knowledgeFixture(), 0);
+  await repo.save("guest", data, 0);
   await repo.close();
   render(<AppShell />);
   await screen.findByText("Миний төлөвлөгөө");
@@ -98,6 +99,129 @@ describe("knowledge flows", () => {
     expect(
       within(detail).getByRole("button", { name: /Интегралын дүрэм/ }),
     ).toBeInTheDocument();
+  });
+
+  async function generateFrom(
+    sourceId: string,
+    deck?: string,
+    newTitle?: string,
+  ) {
+    navigate("Миний мэдлэг");
+    const add = await screen.findByRole("group", { name: "Мэдлэг нэмэх" });
+    fireEvent.click(within(add).getByRole("button", { name: "Карт үүсгэх" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Эх материал" }),
+      { target: { value: sourceId } },
+    );
+    fireEvent.click(
+      within(dialog).getByRole("button", {
+        name: "Төхөөрөмж дээр загвар бэлдэх",
+      }),
+    );
+    const deckSelect = await within(dialog).findByRole("combobox", {
+      name: "Хадгалах багц",
+    });
+    if (deck) fireEvent.change(deckSelect, { target: { value: deck } });
+    else if (newTitle)
+      fireEvent.change(
+        within(dialog).getByRole("textbox", { name: "Шинэ багцын нэр" }),
+        { target: { value: newTitle } },
+      );
+    return dialog;
+  }
+  async function saveDeck(dialog: HTMLElement) {
+    fireEvent.click(
+      await within(dialog).findByRole("button", {
+        name: /Хянасан .* хадгалах/,
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  }
+  async function openDeck(title: string) {
+    fireEvent.click(await screen.findByRole("button", { name: title }));
+    return screen.getByRole("dialog");
+  }
+
+  it("links a newly generated deck to its source note", async () => {
+    await boot();
+    const dialog = await generateFrom("note-1", undefined, "Эхтэй багц");
+    await saveDeck(dialog);
+    const detail = await openDeck("Эхтэй багц");
+    expect(within(detail).getByText(/Эх материал/)).toBeInTheDocument();
+    expect(
+      within(detail).getByRole("button", { name: /Тэгшитгэлийн санаа/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("adds a source to an existing deck that has none", async () => {
+    await boot();
+    const dialog = await generateFrom("note-1", "deck-1");
+    await saveDeck(dialog);
+    const detail = await openDeck("Алгебрын карт");
+    expect(
+      within(detail).getByRole("button", { name: /Тэгшитгэлийн санаа/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps an existing source and says so before saving", async () => {
+    const data = knowledgeFixture();
+    data.knowledge = [
+      ...data.knowledge,
+      { ...sampleNote(), id: "note-2", title: "Хоёр дахь тэмдэглэл" },
+    ].map((r) => (r.id === "deck-1" ? { ...r, sourceId: "note-2" } : r));
+    await boot(data);
+    const dialog = await generateFrom("note-1", "deck-1");
+    expect(
+      within(dialog).getByText(/эх материал өөрчлөгдөхгүй/),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/Хоёр дахь тэмдэглэл/)).toBeInTheDocument();
+    await saveDeck(dialog);
+    const detail = await openDeck("Алгебрын карт");
+    expect(
+      within(detail).getByRole("button", { name: /Хоёр дахь тэмдэглэл/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides a topic's own subtree from the parent picker", async () => {
+    const data = knowledgeFixture();
+    const make = (
+      id: string,
+      title: string,
+      parentId: string | null = null,
+    ) => ({
+      ...recordBase(title, "math", [], Date.now()),
+      id,
+      kind: "topic" as const,
+      parentId,
+      description: "",
+    });
+    await boot({
+      ...data,
+      knowledge: [
+        ...data.knowledge,
+        make("ta", "A"),
+        make("tb", "B", "ta"),
+        make("tc", "C", "tb"),
+        make("td", "D"),
+      ],
+    });
+    navigate("Миний мэдлэг");
+    fireEvent.click(await screen.findByRole("button", { name: "A" }));
+    const detail = screen.getByRole("dialog");
+    fireEvent.click(within(detail).getByRole("button", { name: "Засах" }));
+    const dialogs = screen.getAllByRole("dialog");
+    const editor = dialogs[dialogs.length - 1];
+    const parent = within(editor).getByRole("combobox", { name: "Эх сэдэв" });
+    const names = within(parent)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(names).toContain("D");
+    expect(names).not.toContain("A");
+    expect(names).not.toContain("B");
+    expect(names).not.toContain("C");
   });
 
   it("offers only the topics of the record's own subject", async () => {

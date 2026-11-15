@@ -45,6 +45,20 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
       !r.deletedAt &&
       (!subject || r.subjectId === subject),
   );
+  const chosenNote = notes.find((n) => n.id === source),
+    targetDeck = data.knowledge.find(
+      (r): r is FlashcardDeck =>
+        r.kind === "deck" && r.id === deckId && !r.deletedAt,
+    ),
+    targetSource = targetDeck?.sourceId
+      ? data.knowledge.find((r) => r.id === targetDeck.sourceId)
+      : undefined,
+    // A deck keeps its first source; say so before the user generates again.
+    sourceKept = Boolean(
+      targetDeck?.sourceId &&
+      chosenNote &&
+      targetDeck.sourceId !== chosenNote.id,
+    );
   const generate = async () => {
     const namespace = store.getSnapshot().namespace;
     setBusy(true);
@@ -377,6 +391,13 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
                   ))}
               </select>
             </label>
+            {sourceKept && (
+              <p className="tiny muted">
+                Энэ багцын эх материал өөрчлөгдөхгүй:{" "}
+                {targetSource?.title ?? "устсан эх материал"}. Шинэ эх материал
+                холбохыг хүсвэл шинэ багц үүсгэнэ үү.
+              </p>
+            )}
             {!deckId && (
               <label>
                 Шинэ багцын нэр

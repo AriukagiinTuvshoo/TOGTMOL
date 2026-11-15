@@ -58,6 +58,17 @@ describe("cloud pull with broken topic links", () => {
     store.destroy();
   });
 
+  it("accepts a schema 5 snapshot that predates topics", async () => {
+    const { store, cloud, engine } = await setup();
+    cloud.snapshot = {
+      revision: 2,
+      data: { ...fixture(), schemaVersion: 5 } as unknown as StudyData,
+    };
+    await engine.sync();
+    expect(store.getSnapshot().data.schemaVersion).toBe(6);
+    store.destroy();
+  });
+
   it("merges a valid snapshot", async () => {
     const { store, cloud, engine } = await setup();
     const remote = {
