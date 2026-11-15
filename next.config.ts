@@ -11,11 +11,12 @@ if (supabase)
   } catch {
     // Fall back to the wildcard when the configured URL is malformed.
   }
+const isProd = process.env.NODE_ENV === "production";
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
-  "frame-ancestors 'none'",
+  ...(isProd ? ["frame-ancestors 'none'"] : []),
   "form-action 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
@@ -33,6 +34,7 @@ const csp = [
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  allowedDevOrigins: ["*.e2b.app"],
   async headers() {
     return [
       {
@@ -40,7 +42,7 @@ const config: NextConfig = {
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "DENY" },
+          ...(isProd ? [{ key: "X-Frame-Options", value: "DENY" }] : []),
           {
             key: "Permissions-Policy",
             value: "geolocation=(), payment=(), usb=(), microphone=(self)",

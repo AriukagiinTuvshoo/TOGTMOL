@@ -1,45 +1,89 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Flame, Sparkles, Zap, Settings2, Maximize2 } from "lucide-react";
 import { useStudy, useClock } from "@/hooks/use-study";
-import {
-  companionProgress,
-  companionState,
-  greeting,
-} from "@/lib/world/progress";
+import { companionProgress, companionState } from "@/lib/world/progress";
 import { clock, currentStreak, formatTime } from "@/lib/calculations/dates";
-import { actions } from "@/lib/persistence/actions";
 import { RoomScene } from "./room-scene";
 import { StudyTimer } from "@/components/timer/study-timer";
 import { ModuleBoundary } from "@/components/ui/module-boundary";
 import { DailyKnowledge } from "@/components/dashboard/daily-knowledge";
-import { flexibleStreak } from "@/lib/calculations/dates";
 import { DailyPlan } from "@/components/dashboard/daily-plan";
-import { WeeklyPulse } from "@/components/dashboard/weekly-pulse";
-import { ACCESSORIES } from "@/lib/world/config";
 import { knowledgeIndex } from "@/lib/knowledge/index";
 import { Progress } from "@/components/ui/common";
 import { Icon } from "@/components/ui/icon";
-export function StudyRoom({ focus = false }: { focus?: boolean }) {
-  const { data, index, today, navigate, run, store } = useStudy(),
-    now = useClock(false);
+import { resolveV9RoomId, roomById } from "@/lib/v9/rooms";
+import { BONDOOK_TIPS, fmtMnDuration } from "@/lib/v9/focus";
+import { PRESETS, engine } from "@/lib/v9/audio-engine";
+import { TimerSystem } from "@/components/v9/timer-system";
+import { AudioMixer, useSoundEngine } from "@/components/v9/audio-mixer";
+import { Breathing } from "@/components/v9/breathing";
+import { BondookCard, type BondookMood } from "@/components/v9/bondook-widget";
+import type { TimerPhase } from "@/types/study";
+
+export function StudyRoom({
+  focus = false,
+  onCelebrate,
+  onDisplayChange,
+}: {
+  focus?: boolean;
+  onCelebrate?: (xp: number, title: string, desc?: string) => void;
+  onDisplayChange?: (
+    clockText: string,
+    phase: TimerPhase,
+    running: boolean,
+  ) => void;
+}) {
+  const { data, index, today, navigate, store } = useStudy();
+  useClock(false);
+  const soundState = useSoundEngine();
+
   const [timerSaved, setTimerSaved] = useState(false);
-  const state = companionState(data, index, today),
-    world = data.settings.world;
+  const [mood, setMood] = useState<BondookMood>("happy");
+  const [bondookMsg, setBondookMsg] = useState<string | undefined>(undefined);
+  const [tipIdx, setTipIdx] = useState(0);
+
+  const state = companionState(data, index, today);
+  const world = data.settings.world;
+  const room = roomById(resolveV9RoomId(world));
+  const accent = room.accent;
+
   const progress = useMemo(() => companionProgress(data, today), [data, today]);
-  const nextUnlock = ACCESSORIES.find((a) => a.level > progress.level);
-  const reviewCount = knowledgeIndex(data.knowledge, today, data.settings)
-    .reviewQueue.length;
-  const todaySeconds = index.days.get(today)?.seconds ?? 0,
-    daily =
-      data.goals.dailyMinutes ??
-      Math.round((data.goals.weeklyHours * 60) / data.goals.weeklyDays),
-    streak = currentStreak(new Set(index.sortedDates), today);
-  const recovery = flexibleStreak(
-    new Set(index.sortedDates),
-    today,
-    Math.max(0, Math.min(2, Number(data.settings.extras.graceDays ?? 1))),
+  const reviewCount = useMemo(
+    () =>
+      knowledgeIndex(data.knowledge, today, data.settings).reviewQueue.length,
+    [data.knowledge, data.settings, today],
   );
+  const openTasksCount = useMemo(
+    () => data.tasks.filter((t) => !t.deletedAt && !t.completed).length,
+    [data.tasks],
+  );
+
+  const todaySeconds = index.days.get(today)?.seconds ?? 0;
+  const daily =
+    data.goals.dailyMinutes ??
+    Math.max(
+      60,
+      Math.round(
+        (data.goals.weeklyHours * 60) / Math.max(1, data.goals.weeklyDays),
+      ) * 2,
+    );
+  const streak = currentStreak(new Set(index.sortedDates), today);
   const last = [...index.sessions].sort((a, b) => b.endEpoch - a.endEpoch)[0];
+  const lastReflection = last
+    ? last.note ||
+      `${index.subjects.get(last.subjectId)?.name ?? "Хичээл"} · ${clock(last.durationSec * 1000)}`
+    : null;
+
+  useEffect(() => {
+    const id = setInterval(
+      () => setTipIdx((i) => (i + 1) % BONDOOK_TIPS.length),
+      15000,
+    );
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     if (!focus) return;
     const exit = (e: KeyboardEvent) => {
@@ -49,205 +93,265 @@ export function StudyRoom({ focus = false }: { focus?: boolean }) {
     window.addEventListener("keydown", exit);
     return () => window.removeEventListener("keydown", exit);
   }, [focus, navigate]);
-  return (
-    <div className={`study-world ${focus ? "focus-world" : ""}`}>
-      <div className="world-heading">
-        <div>
-          <span className="eyebrow">
-            {focus ? "ТӨВЛӨРӨХ ЦАГ" : "МИНИЙ ТУХТАЙ ОРОН ЗАЙ"}
-          </span>
-          <h1>
-            {focus
-              ? "Яг одоо, нэг алхам."
-              : greeting(new Date(now).getHours(), state)}
-          </h1>
-          {!focus && <p>Бондооктой хамт. Өөрийн хэмнэлээр.</p>}
-        </div>
-        <div className="button-row">
-          {focus ? (
-            <button className="button" onClick={() => navigate("overview")}>
+
+  const handleSessionComplete = useCallback(
+    (info: {
+      seconds: number;
+      score: number;
+      xp: number;
+      completed: boolean;
+    }) => {
+      setMood("party");
+      setBondookMsg(
+        `Гайхалтай! ${fmtMnDuration(info.seconds)} гүн ажил — фокус ${info.score}/100. +${info.xp} XP! 🎉`,
+      );
+      onCelebrate?.(
+        info.xp,
+        `+${info.xp} XP · Фокус ${info.score}/100`,
+        `${fmtMnDuration(info.seconds)} суралцлаа`,
+      );
+      setTimeout(() => {
+        setMood("happy");
+        setBondookMsg(undefined);
+      }, 9000);
+    },
+    [onCelebrate],
+  );
+
+  const tip = BONDOOK_TIPS[tipIdx];
+
+  if (focus) {
+    return (
+      <div className="study-world focus-world space-y-4">
+        <div className="world-heading flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span className="eyebrow text-[11px] font-bold tracking-widest text-white/50">
+              ТӨВЛӨРӨХ ЦАГ · {room.emoji} {room.nameMn}
+            </span>
+            <h1 className="font-display text-2xl font-bold text-white md:text-3xl">
+              Яг одоо, нэг алхам.
+            </h1>
+          </div>
+          <div className="button-row">
+            <button
+              className="button glass rounded-2xl px-4 py-2.5 text-[13px] font-bold text-white"
+              onClick={() => navigate("overview")}
+            >
               <Icon name="close" /> Focus-оос гарах
             </button>
-          ) : (
-            <>
-              <button className="button" onClick={() => navigate("room")}>
-                <Icon name="settings" /> Өрөөгөө өөрчлөх
-              </button>
-              <button
-                className="icon-button bordered"
-                aria-label="Focus mode"
-                onClick={() => navigate("focus")}
-              >
-                <Icon name="expand" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-      {!focus && (
-        <section className="home-primary-cta" aria-label="Өнөөдрийн гол үйлдэл">
-          <div>
-            <span className="eyebrow">ӨНӨӨДРИЙН ХАМГИЙН ЧУХАЛ АЛХАМ</span>
-            <h2>
-              {reviewCount
-                ? "Өнөөдрийн " + reviewCount + " карт давт"
-                : "Шинэ хичээл эхлүүл"}
-            </h2>
-            <p>
-              {reviewCount
-                ? "Өмнө сурсан зүйлээ одоо нэг богино давтлагаар бататгаарай."
-                : "Өнөөдрийн жижиг алхмаа эхлүүлээд хэмнэлээ бий болгоорой."}
-            </p>
-          </div>
-          <button
-            className="button primary large"
-            onClick={() => navigate(reviewCount ? "knowledge" : "timer")}
-          >
-            <Icon name={reviewCount ? "book" : "play"} size={18} />
-            {reviewCount ? "Давтлага эхлүүлэх" : "Хичээл эхлүүлэх"}
-          </button>
-        </section>
-      )}
-      <section className="room-stage" aria-label="Study Room">
-        <div className="room-art">
-          <RoomScene world={world} state={state} />
-          <div className="companion-caption">
-            <span className="live-dot" />
-            <span>
-              Бондоок ·{" "}
-              {state === "studying"
-                ? "хамт суралцаж байна"
-                : state === "break"
-                  ? "цайны завсарлага"
-                  : state === "welcome"
-                    ? "дахин уулзсандаа баяртай"
-                    : state === "happy"
-                      ? "жижиг ялалтаа тэмдэглэе"
-                      : state === "celebrating"
-                        ? "таны хэмнэлийг тэмдэглэж байна"
-                        : state === "paused"
-                          ? "түр амсхийж байна"
-                          : "тантай хамт"}
-            </span>
-            <span className="level-pill">Lv. {progress.level}</span>
           </div>
         </div>
-        <StudyTimer
-          key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
-          compact
-          recentlySaved={focus && timerSaved}
-          onSessionSaved={() => setTimerSaved(true)}
-          onSessionStarted={() => setTimerSaved(false)}
-        />
-      </section>
-      <div className="daily-strip">
-        <div>
-          <span>Өнөөдөр</span>
-          <strong>
-            {formatTime(todaySeconds)} <small>/ {daily}м</small>
-          </strong>
-        </div>
-        <div className="daily-progress">
-          <Progress
-            value={(todaySeconds / (daily * 60)) * 100}
-            label="Өнөөдрийн суралцах зорилго"
+
+        <section className="room-stage" aria-label="Study Room">
+          <div className="room-art">
+            <RoomScene world={world} state={state} />
+            <div className="companion-caption">
+              <span className="live-dot" />
+              <span>
+                Бондоок ·{" "}
+                {state === "studying"
+                  ? "хамт суралцаж байна"
+                  : state === "break"
+                    ? "цайны завсарлага"
+                    : state === "paused"
+                      ? "түр амсхийж байна"
+                      : "тантай хамт"}
+              </span>
+              <span className="level-pill">Lv. {progress.level}</span>
+            </div>
+          </div>
+          <StudyTimer
+            key={`${data.activeTimer?.id ?? "new"}:${store.getSnapshot().namespace}`}
+            compact
+            recentlySaved={timerSaved}
+            onSessionSaved={() => setTimerSaved(true)}
+            onSessionStarted={() => setTimerSaved(false)}
           />
-          <span>
-            {todaySeconds >= daily * 60
-              ? "Өнөөдрийн зорилгодоо хүрлээ. Амралтаа ч бас бодоорой."
-              : "Бага багаар, өөрийн хэмнэлээр."}
-          </span>
+        </section>
+
+        {/* Quick Ambient Bar in Focus View */}
+        <div className="flex flex-wrap gap-1.5">
+          {PRESETS.slice(0, 8).map((p) => {
+            const isActive = soundState.activePreset === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() =>
+                  isActive ? engine.stopAll() : engine.applyPreset(p.id)
+                }
+                className={`flex items-center gap-1.5 rounded-2xl px-3 py-2 text-[11.5px] font-bold ring-1 transition ${
+                  isActive
+                    ? "text-white"
+                    : "bg-white/[.06] text-white/75 ring-white/10 hover:bg-white/12"
+                }`}
+                style={
+                  isActive
+                    ? {
+                        background: `${accent}30`,
+                        borderColor: `${accent}66`,
+                      }
+                    : undefined
+                }
+              >
+                <span>{p.emoji}</span>
+                <span>{p.nameMn}</span>
+              </button>
+            );
+          })}
         </div>
-        {!focus && (
+
+        <div className="daily-strip">
           <div>
-            <span>{recovery.recoveryDays ? "Тогтмол хэмнэл" : "Дараалал"}</span>
+            <span>Өнөөдөр</span>
             <strong>
-              {recovery.recoveryDays ? recovery.studied : streak}{" "}
-              <small>өдөр</small>
-              {recovery.recoveryDays > 0 && (
-                <small className="recovery-label">
-                  {recovery.recoveryDays} амралтын өдөртэй
-                </small>
-              )}
+              {formatTime(todaySeconds)} <small>/ {daily}м</small>
             </strong>
           </div>
-        )}
+          <div className="daily-progress">
+            <Progress
+              value={(todaySeconds / (daily * 60)) * 100}
+              label="Өнөөдрийн суралцах зорилго"
+            />
+            <span>
+              {todaySeconds >= daily * 60
+                ? "Өнөөдрийн зорилгодоо хүрлээ. Амралтаа ч бас бодоорой."
+                : "Бага багаар, өөрийн хэмнэлээр."}
+            </span>
+          </div>
+        </div>
       </div>
-      {!data.activeTimer &&
-        last?.mode === "pomodoro" &&
-        last.date === today && (
-          <div className="break-suggestion">
-            <span>Нүдээ амрааж, ус уух завсарлага аваарай.</span>
-            <button
-              className="button small"
-              onClick={() =>
-                run(() =>
-                  store.mutate(
-                    actions.start(
-                      last.subjectId,
-                      "pomodoro",
-                      "shortBreak",
-                      data.settings.shortBreakMinutes,
-                    ),
-                  ),
-                )
-              }
-            >
-              {data.settings.shortBreakMinutes} минут амрах
-            </button>
-          </div>
-        )}
-      {!focus && (
-        <>
-          <ModuleBoundary name="Өнөөдрийн мэдлэг">
-            <DailyKnowledge />
-          </ModuleBoundary>
-          <WeeklyPulse />
-          <div className="world-bottom">
-            <DailyPlan />
-            <section className="card world-journal">
-              <div className="eyebrow">A LITTLE AT A TIME</div>
-              <h2>Өчигдрөөс нэг алхам цааш.</h2>
-              <p>Бондоок тантай хамт {progress.xp} XP цуглуулжээ.</p>
-              <Progress
-                value={progress.intoLevel}
-                label="Бондоокийн түвшний ахиц"
-              />
-              <p className="tiny muted">
-                Дараагийн түвшин хүртэл {100 - progress.intoLevel} XP. Өдөрт 60
-                хүртэл XP; урт суулт хийх шаардлагагүй.
-              </p>
-              {nextUnlock && (
-                <div className="next-unlock">
-                  <Icon name="leaf" size={18} />
-                  <span>
-                    Дараагийн чимэглэл: <strong>{nextUnlock.name}</strong>
-                  </span>
-                </div>
-              )}
-              {last ? (
-                <div className="last-reflection">
-                  <span className="eyebrow">СҮҮЛЧИЙН ТЭМДЭГЛЭЛ</span>
-                  <p>
-                    {last.note ||
-                      `${index.subjects.get(last.subjectId)?.name ?? "Хичээл"} · ${clock(last.durationSec * 1000)}`}
-                  </p>
-                </div>
-              ) : (
-                <p className="muted">
-                  Эхний хичээлээ дуусгаад юу сурснаа үлдээгээрэй.
-                </p>
-              )}
+    );
+  }
+
+  return (
+    <div className="v9-overview space-y-5">
+      {/* ── Hero Greeting (Exact Match to image-1.png) ── */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[22px] font-bold leading-tight text-white md:text-[28px]">
+            {room.greeting.split(".")[0]}.
+          </h1>
+          <p className="mt-1 flex items-center gap-1.5 text-[12px] text-white/60 md:text-[13px]">
+            <Sparkles size={13} style={{ color: accent }} />
+            {room.tip}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => navigate("room")}
+            className="flex items-center gap-1.5 rounded-xl bg-white/[.06] px-3 py-2 text-[11.5px] font-bold text-white/70 ring-1 ring-white/10 transition hover:bg-white/12 hover:text-white"
+          >
+            <Settings2 size={13} /> Өрөөгөө өөрчлөх
+          </button>
+          <button
+            type="button"
+            aria-label="Focus mode"
+            onClick={() => navigate("focus")}
+            className="grid h-9 w-9 place-items-center rounded-xl bg-white/[.06] text-white/75 ring-1 ring-white/10 transition hover:bg-white/12 hover:text-white"
+            title="Төвлөрөх горим"
+          >
+            <Maximize2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── 3-Column Bento Grid (Exact Match to image-1.png) ── */}
+      <div className="grid gap-3.5 lg:grid-cols-12">
+        {/* Column 1: Timer System + Bondook */}
+        <div className="space-y-3.5 lg:col-span-5">
+          <TimerSystem
+            room={room}
+            todaySeconds={todaySeconds}
+            dailyGoalMinutes={daily}
+            onSessionComplete={handleSessionComplete}
+            onDisplayChange={onDisplayChange}
+          />
+          <BondookCard
+            mood={data.activeTimer?.running ? "focus" : mood}
+            message={bondookMsg}
+            lastReflection={lastReflection}
+            level={progress.level}
+            onMood={setMood}
+            onOpenChat={() => navigate("assistant")}
+          />
+        </div>
+
+        {/* Column 2: 13-Channel Audio System */}
+        <div className="space-y-3.5 lg:col-span-4">
+          <AudioMixer accent={accent} />
+        </div>
+
+        {/* Column 3: Today + Breathing + Focus Tip */}
+        <div className="space-y-3.5 lg:col-span-3">
+          {/* ӨНӨӨДӨР Card */}
+          <div className="glass rounded-3xl p-4 md:p-5">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-white/45">
+              Өнөөдөр
+            </div>
+            <div className="mt-1 font-display text-[30px] font-bold leading-tight text-white">
+              {fmtMnDuration(todaySeconds)}
+            </div>
+            <div className="mt-1.5 grid grid-cols-2 gap-2 text-[11.5px] text-white/60">
+              <span className="flex items-center gap-1">
+                <Flame size={13} className="shrink-0 text-orange-400" />
+                <span>{streak} өдрийн цуврал</span>
+              </span>
+              <span>{reviewCount} карт хүлээгдэж байна</span>
+            </div>
+            <div className="mt-3.5 grid grid-cols-2 gap-1.5">
               <button
-                className="text-button"
-                onClick={() => navigate("assistant")}
+                type="button"
+                onClick={() => navigate("knowledge")}
+                className="rounded-2xl bg-white/8 py-2.5 text-[12px] font-bold text-white/85 ring-1 ring-white/10 transition hover:bg-white/14"
               >
-                Бондооктой ярилцах <Icon name="arrow" size={16} />
+                🃏 Карт давтах
               </button>
-            </section>
+              <button
+                type="button"
+                onClick={() => navigate("goals")}
+                className="rounded-2xl bg-white/8 py-2.5 text-[12px] font-bold text-white/85 ring-1 ring-white/10 transition hover:bg-white/14"
+              >
+                🎯 {openTasksCount} даалгавар
+              </button>
+            </div>
           </div>
-        </>
-      )}
+
+          {/* Амьсгалын дасгал Card */}
+          <Breathing
+            accent={accent}
+            onDone={(c) =>
+              onCelebrate?.(
+                c * 2,
+                `Амьсгал +${c * 2} XP`,
+                "Төвлөрөл сэргэлээ ✨",
+              )
+            }
+          />
+
+          {/* ФОКУС ЗӨВЛӨГӨӨ Card */}
+          <div className="glass rounded-3xl p-4">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/45">
+              <Zap size={12} style={{ color: accent }} /> Фокус зөвлөгөө
+            </div>
+            <div className="mt-1.5 text-[13px] font-bold text-white">
+              {tip.title}
+            </div>
+            <div className="mt-0.5 text-[12px] leading-relaxed text-white/60">
+              {tip.body}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Below-the-fold Core Continuity: Daily Plan & Daily Knowledge ── */}
+      <div className="grid gap-3.5 lg:grid-cols-2">
+        <DailyPlan />
+        <ModuleBoundary name="Өнөөдрийн мэдлэг">
+          <DailyKnowledge />
+        </ModuleBoundary>
+      </div>
     </div>
   );
 }
