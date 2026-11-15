@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { isTtsSupported, speakText } from "@/lib/voice/speech-engine";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Modal } from "@/components/ui/common";
 import { knowledgeIndex, newCardsPerDay } from "@/lib/knowledge/index";
@@ -178,7 +179,22 @@ export function CardReview({
         )}
         {card ? (
           <>
-            <p className="eyebrow">ЭХЛЭЭД ӨӨРӨӨ САНААРАЙ</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="eyebrow">ЭХЛЭЭД ӨӨРӨӨ САНААРАЙ</p>
+              {isTtsSupported() && (
+                <button
+                  type="button"
+                  className="text-button tiny"
+                  onClick={() =>
+                    speakText(answer ? card.back : card.front, {
+                      preset: "calm",
+                    })
+                  }
+                >
+                  🔊 Сонсох
+                </button>
+              )}
+            </div>
             <h2 className="flashcard-front">{card.front}</h2>
             {answer ? (
               <>

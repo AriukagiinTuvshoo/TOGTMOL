@@ -25,6 +25,7 @@ import { parseYouTube, youtubeURL } from "@/lib/music/youtube";
 import { parseAudioURL } from "@/lib/music/native-audio";
 import { uid } from "@/lib/constants";
 import type { MusicSource } from "@/types/study";
+import { deck1Bridge } from "@/lib/v9/audio-bridge";
 
 const MAX_UPLOAD_BYTES = 80 * 1024 * 1024;
 const AUDIO_EXTENSIONS = /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac|webm)$/i;
@@ -541,8 +542,9 @@ function useMusicController() {
     if (actual.current === "playing") mark("paused");
   };
 
-  const addURL = async () => {
-    const input = url.trim();
+  const addURL = async (directUrl?: string, directTitle?: string) => {
+    const input = (directUrl ?? url).trim();
+    const chosenTitle = (directTitle ?? title).trim();
     if (!input) return;
     try {
       let parsedYouTube: ReturnType<typeof parseYouTube> | null = null;
@@ -574,7 +576,7 @@ function useMusicController() {
           ...parsedYouTube,
           id: uid("music"),
           title:
-            title.trim().slice(0, 120) ||
+            chosenTitle.slice(0, 120) ||
             (parsedYouTube.kind === "playlist"
               ? "Миний YouTube playlist"
               : "Миний YouTube бичлэг"),
@@ -622,7 +624,7 @@ function useMusicController() {
       const now = Date.now();
       const newSource: MusicSource = {
         id: uid("music"),
-        title: title.trim().slice(0, 120) || "Миний аудио",
+        title: chosenTitle.slice(0, 120) || "Миний аудио",
         kind: "audio",
         youtubeId: "",
         audioUrl,
@@ -936,6 +938,54 @@ class MusicBoundary extends Component<
 
 function MusicController({ children }: { children: ReactNode }) {
   const controller = useMusicController();
+  const actionsRef = useRef(controller);
+  useEffect(() => {
+    actionsRef.current = controller;
+  });
+  useEffect(() => {
+    deck1Bridge.publish(
+      {
+        ready: true,
+        name: controller.name,
+        selected: controller.selected,
+        playing: controller.playing,
+        playback: controller.playback,
+        volume: controller.volume,
+        muted: controller.muted,
+        open: controller.open,
+        busy: controller.busy,
+        error: controller.error,
+        sources: controller.sources,
+      },
+      {
+        toggle: () => actionsRef.current.toggle(),
+        stop: () => actionsRef.current.stop(),
+        next: (d = 1) => actionsRef.current.next(d),
+        select: (id) => actionsRef.current.select(id),
+        setOpen: (v) => actionsRef.current.setOpen(v),
+        setVolume: (v) => void actionsRef.current.savePreference({ volume: v }),
+        toggleMute: () =>
+          void actionsRef.current.savePreference({
+            muted: !actionsRef.current.muted,
+          }),
+        addUrl: (u, t) => actionsRef.current.addURL(u, t),
+        addFile: (f) => actionsRef.current.addFile(f),
+        removeSource: (id) => actionsRef.current.remove(id),
+      },
+    );
+  }, [
+    controller.name,
+    controller.selected,
+    controller.playing,
+    controller.playback,
+    controller.volume,
+    controller.muted,
+    controller.open,
+    controller.busy,
+    controller.error,
+    controller.sources,
+  ]);
+  useEffect(() => () => deck1Bridge.clear(), []);
   return (
     <MusicContext.Provider value={controller}>{children}</MusicContext.Provider>
   );

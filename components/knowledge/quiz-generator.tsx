@@ -4,6 +4,11 @@ import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { getSupabase } from "@/lib/supabase/client";
 import {
+  generateGeminiQuiz,
+  probeGeminiServerStatus,
+  readGeminiConfig,
+} from "@/lib/assistant/gemini";
+import {
   localQuizDrafts,
   parseQuizDrafts,
   type QuizDraft,
@@ -51,6 +56,16 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
     try {
       if (!online) {
         setDrafts(localQuizDrafts(text, count));
+        return;
+      }
+      const geminiCfg = readGeminiConfig();
+      const serverStatus = await probeGeminiServerStatus();
+      if (
+        (geminiCfg.enabled && Boolean(geminiCfg.apiKey)) ||
+        serverStatus.configuredOnServer
+      ) {
+        const parsed = await generateGeminiQuiz({ text, count, language });
+        if (!disposed.current) setDrafts(parsed);
         return;
       }
       const client = getSupabase();

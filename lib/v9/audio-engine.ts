@@ -1010,10 +1010,16 @@ export class SoundEngine {
     }
   }
 
+  private duckFactor = 1;
+
   setMaster(v: number) {
     const clamped = Math.max(0, Math.min(1, v));
     if (this.ctx && this.masterNode) {
-      this.masterNode.gain.setTargetAtTime(clamped, this.ctx.currentTime, 0.05);
+      this.masterNode.gain.setTargetAtTime(
+        clamped * this.duckFactor,
+        this.ctx.currentTime,
+        0.05,
+      );
     }
     this.emit({ master: clamped, muted: false });
   }
@@ -1021,12 +1027,24 @@ export class SoundEngine {
   setMuted(muted: boolean) {
     if (this.ctx && this.masterNode) {
       this.masterNode.gain.setTargetAtTime(
-        muted ? 0 : this.state.master,
+        muted ? 0 : this.state.master * this.duckFactor,
         this.ctx.currentTime,
         0.05,
       );
     }
     this.emit({ muted });
+  }
+
+  setDuckFactor(factor: number) {
+    const clamped = Math.max(0.15, Math.min(1, factor));
+    this.duckFactor = clamped;
+    if (this.ctx && this.masterNode && !this.state.muted) {
+      this.masterNode.gain.setTargetAtTime(
+        this.state.master * clamped,
+        this.ctx.currentTime,
+        0.25,
+      );
+    }
   }
 
   private syncLiveChannel(id: ChannelId, volume: number, pan = 0) {
@@ -1092,6 +1110,20 @@ export class SoundEngine {
     this.emit({
       mix: nextMix,
       activePreset: presetId,
+    });
+  }
+
+  applyCustomMix(mix: Partial<Record<ChannelId, number>>) {
+    const nextMix = { ...DEFAULT_MIX, ...mix } as Record<ChannelId, number>;
+    (Object.keys(GENERATORS) as ChannelId[]).forEach((id) => {
+      this.syncLiveChannel(
+        id,
+        Math.max(0, Math.min(1, Number(nextMix[id] ?? 0))),
+      );
+    });
+    this.emit({
+      mix: nextMix,
+      activePreset: null,
     });
   }
 

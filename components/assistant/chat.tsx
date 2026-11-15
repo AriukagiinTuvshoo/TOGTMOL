@@ -8,6 +8,21 @@ import {
   localChatProvider,
   createAIChatProvider,
 } from "@/lib/assistant/chat-provider";
+import {
+  createGeminiChatProvider,
+  probeGeminiServerStatus,
+  readGeminiConfig,
+  subscribeGeminiConfig,
+} from "@/lib/assistant/gemini";
+import { AuthModal } from "@/components/v9/auth-modal";
+import {
+  BrowserVoiceSession,
+  isBrowserSpeechSupported,
+  isTtsSupported,
+  speakText,
+  stopSpeaking,
+} from "@/lib/voice/speech-engine";
+import { processVoiceTranscript } from "@/lib/voice/text-processor";
 import { getSupabase } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui/icon";
 import { readMessages, type BondookMessage } from "@/lib/assistant/history";
@@ -25,12 +40,33 @@ export function BondookChat() {
     [notesConsent, setNotesConsent] = useState(false),
     [error, setError] = useState(""),
     [plan, setPlan] = useState<string | null>(null),
+    [geminiModalOpen, setGeminiModalOpen] = useState(false),
+    [geminiCfg, setGeminiCfg] = useState(() => readGeminiConfig()),
+    [serverGemini, setServerGemini] = useState(false),
+    [liveListening, setLiveListening] = useState(false),
+    [speakingId, setSpeakingId] = useState<string | null>(null),
+    liveSessionRef = useRef<BrowserVoiceSession | null>(null),
     end = useRef<HTMLDivElement>(null),
     request = useRef(0),
     disposed = useRef(false);
   const { language, t } = useI18n();
+  const geminiReady =
+    (geminiCfg.enabled && Boolean(geminiCfg.apiKey)) || serverGemini;
   const online = !forceLocal && data.settings.extras.aiEnabled === true;
   const includeNotes = data.settings.extras.aiIncludeNotes === true;
+
+  useEffect(() => {
+    let alive = true;
+    void probeGeminiServerStatus().then((s) => {
+      if (alive) setServerGemini(s.configuredOnServer);
+    });
+    const unsub = subscribeGeminiConfig(() => setGeminiCfg(readGeminiConfig()));
+    return () => {
+      alive = false;
+      unsub();
+      liveSessionRef.current?.stop();
+    };
+  }, []);
   const messages = useMemo(
     () => readMessages(data.extras.bondookMessages),
     [data.extras.bondookMessages],
@@ -109,24 +145,26 @@ export function BondookChat() {
         namespace,
       );
       const provider = online
-        ? createAIChatProvider(
-            async () => {
-              if (store.getSnapshot().data.settings.extras.aiEnabled !== true)
-                throw Error("Онлайн AI зөвшөөрөл унтраалттай байна.");
-              const client = await getSupabase();
-              const session = client
-                ? (await client.auth.getSession()).data.session
-                : null;
-              if (
-                store.getSnapshot().namespace !== namespace ||
-                namespace !== `account:${session?.user.id}`
-              )
-                return null;
-              return session?.access_token ?? null;
-            },
-            includeNotes,
-            language,
-          )
+        ? geminiReady
+          ? createGeminiChatProvider(includeNotes, language)
+          : createAIChatProvider(
+              async () => {
+                if (store.getSnapshot().data.settings.extras.aiEnabled !== true)
+                  throw Error("Онлайн AI зөвшөөрөл унтраалттай байна.");
+                const client = await getSupabase();
+                const session = client
+                  ? (await client.auth.getSession()).data.session
+                  : null;
+                if (
+                  store.getSnapshot().namespace !== namespace ||
+                  namespace !== `account:${session?.user.id}`
+                )
+                  return null;
+                return session?.access_token ?? null;
+              },
+              includeNotes,
+              language,
+            )
         : localChatProvider;
       const reply = await provider.reply(prompt, {
         data,
@@ -213,9 +251,22 @@ export function BondookChat() {
             <h2>{t("assistant.greeting")}</h2>
             <p>{t("assistant.smallStep")}</p>
           </div>
-          <span className="badge">
-            {online ? t("assistant.online") : t("assistant.local")}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="button small"
+              onClick={() => setGeminiModalOpen(true)}
+            >
+              ✨ {geminiReady ? "Google AI · Идэвхтэй" : "Google AI холбох"}
+            </button>
+            <span className="badge">
+              {online
+                ? geminiReady
+                  ? `Gemini · ${geminiCfg.model}`
+                  : t("assistant.online")
+                : t("assistant.local")}
+            </span>
+          </div>
         </div>
         <div className="chat-options">
           <label className="check-label">
@@ -336,11 +387,34 @@ export function BondookChat() {
           )}
           {messages.slice(-messageLimit).map((m) => (
             <article key={m.id} className={`chat-message chat-${m.role}`}>
-              <small>
-                {m.role === "user"
-                  ? t("assistant.you")
-                  : `Бондоок · ${m.kind === "local" ? t("common.local") : t("common.ai")}`}
-              </small>
+              <div className="flex items-center justify-between gap-2">
+                <small>
+                  {m.role === "user"
+                    ? t("assistant.you")
+                    : `Бондоок · ${m.kind === "local" ? t("common.local") : t("common.ai")}`}
+                </small>
+                {m.role === "assistant" && isTtsSupported() && (
+                  <button
+                    type="button"
+                    className="text-button tiny"
+                    aria-label="Хариултыг дуугаар унших"
+                    onClick={() => {
+                      if (speakingId === m.id) {
+                        stopSpeaking();
+                        setSpeakingId(null);
+                      } else {
+                        setSpeakingId(m.id);
+                        speakText(m.text, {
+                          preset: "warm",
+                          onEnd: () => setSpeakingId(null),
+                        });
+                      }
+                    }}
+                  >
+                    {speakingId === m.id ? "⏹ Зогсоох" : "🔊 Сонсох"}
+                  </button>
+                )}
+              </div>
               <p>{m.text}</p>
               {m.action && (
                 <button
@@ -407,6 +481,40 @@ export function BondookChat() {
               }
               disabled={busy || changingAI}
             />
+            {isBrowserSpeechSupported() && (
+              <button
+                type="button"
+                className="button small"
+                disabled={busy || changingAI}
+                onClick={() => {
+                  if (liveListening) {
+                    liveSessionRef.current?.stop();
+                    setLiveListening(false);
+                    return;
+                  }
+                  const sess = new BrowserVoiceSession(
+                    {
+                      onFinal: (seg) => {
+                        const clean = processVoiceTranscript(seg);
+                        setText((prev) =>
+                          [prev.trim(), clean]
+                            .filter(Boolean)
+                            .join(" ")
+                            .slice(0, 3000),
+                        );
+                      },
+                      onStateChange: (on) => setLiveListening(on),
+                      onError: (msg) => setError(msg),
+                    },
+                    language === "en" ? "en-US" : "mn-MN",
+                  );
+                  liveSessionRef.current = sess;
+                  void sess.start(language === "en" ? "en-US" : "mn-MN");
+                }}
+              >
+                {liveListening ? "⏹ Яриа зогсоох" : "🎙️ Шууд ярих"}
+              </button>
+            )}
             <VoiceInput
               disabled={busy || changingAI}
               getAccessToken={getVoiceAccessToken}
@@ -443,6 +551,12 @@ export function BondookChat() {
       </details>
       {plan !== null && (
         <PlanWizard initial={plan} onClose={() => setPlan(null)} />
+      )}
+      {geminiModalOpen && (
+        <AuthModal
+          initialTab="gemini"
+          onClose={() => setGeminiModalOpen(false)}
+        />
       )}
     </div>
   );

@@ -29,6 +29,9 @@ import {
   Settings as SettingsIcon,
   PartyPopper,
   Menu,
+  Mic,
+  User as UserIcon,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -64,6 +67,9 @@ import { PwaManager } from "./settings/pwa";
 import { RoomBackground } from "./v9/room-background";
 import { BondookAvatar } from "./v9/bondook-widget";
 import { SoundStudioView, useSoundEngine } from "./v9/audio-mixer";
+import { VoiceFlowBar } from "./v9/voice-flowbar";
+import { AuthModal, type AuthModalTab } from "./v9/auth-modal";
+import { QuickToolsModal } from "./v9/quick-tools";
 import { ROOMS, resolveV9RoomId, roomById } from "@/lib/v9/rooms";
 import { PRESETS, engine } from "@/lib/v9/audio-engine";
 import { BONDOOK_TIPS, fmtClock, fmtMnDuration } from "@/lib/v9/focus";
@@ -224,12 +230,64 @@ function Shell() {
   const soundSubView = view === "overview" && soundTabRequested;
   const [showRooms, setShowRooms] = useState(false);
   const [shield, setShield] = useState(false);
+  const [voiceBarOpen, setVoiceBarOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<AuthModalTab | null>(null);
+  const [quickToolsOpen, setQuickToolsOpen] = useState(false);
   const [toasts, setToasts] = useState<V9Toast[]>([]);
   const [tipIdx, setTipIdx] = useState(0);
+  const prevTimerPhaseRef = useRef<string | null>(null);
 
   const activeRoomId = resolveV9RoomId(data.settings.world);
   const room = roomById(activeRoomId);
   const accent = room.accent;
+
+  // Global keyboard shortcuts: Alt+V (Voice FlowBar) & Alt+K (Quick Tools)
+  useEffect(() => {
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.altKey && ev.code === "KeyV") {
+        ev.preventDefault();
+        setVoiceBarOpen((v) => !v);
+      } else if (ev.altKey && ev.code === "KeyK") {
+        ev.preventDefault();
+        setQuickToolsOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Timer-linked Smart Audio Automation (Auto-Duck on Break & Auto-Start Focus Sound)
+  useEffect(() => {
+    const currentPhase = data.activeTimer?.running
+      ? data.activeTimer.phase
+      : null;
+    const autoDuck = Boolean(data.settings.extras.autoDuckOnBreak);
+    const autoStart = Boolean(data.settings.extras.autoStartFocusSound);
+
+    if (autoDuck) {
+      const isBreak =
+        currentPhase === "shortBreak" || currentPhase === "longBreak";
+      engine.setDuckFactor(isBreak ? 0.45 : 1);
+    } else {
+      engine.setDuckFactor(1);
+    }
+
+    if (
+      autoStart &&
+      currentPhase === "focus" &&
+      prevTimerPhaseRef.current !== "focus" &&
+      engine.getSnapshot().activeCount === 0
+    ) {
+      engine.applyPreset(room.preset || "rainy_cafe");
+    }
+    prevTimerPhaseRef.current = currentPhase;
+  }, [
+    data.activeTimer?.phase,
+    data.activeTimer?.running,
+    data.settings.extras.autoDuckOnBreak,
+    data.settings.extras.autoStartFocusSound,
+    room.preset,
+  ]);
 
   const todaySeconds = index.days.get(today)?.seconds ?? 0;
   const streak = useMemo(
@@ -760,8 +818,33 @@ function Shell() {
 
               <button
                 type="button"
+                onClick={() => setVoiceBarOpen((v) => !v)}
+                className={`grid h-9 w-9 place-items-center rounded-xl ring-1 transition ${
+                  voiceBarOpen
+                    ? "bg-amber-400 text-slate-950 ring-amber-300"
+                    : "bg-white/8 text-white/80 ring-white/10 hover:bg-white/15"
+                }`}
+                title="Дуу хоолойн удирдлага (Alt+V)"
+                aria-label="Дуу хоолойн удирдлага"
+                aria-pressed={voiceBarOpen}
+              >
+                <Mic size={16} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQuickToolsOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/80 ring-1 ring-white/10 transition hover:bg-white/15"
+                title="Оюутны түргэн хэрэгсэл ба хүртээмж (Alt+K)"
+                aria-label="Оюутны түргэн хэрэгсэл"
+              >
+                <Zap size={16} />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setShield(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/75 ring-1 ring-white/10 transition hover:bg-white/15"
+                className="hidden h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/75 ring-1 ring-white/10 transition hover:bg-white/15 sm:grid"
                 title="Фокус бамбай"
                 aria-label="Фокус бамбай"
               >
@@ -771,14 +854,27 @@ function Shell() {
               <button
                 type="button"
                 onClick={() => setShowRooms(true)}
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold text-white ring-1 transition hover:scale-[1.02]"
+                className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-bold text-white ring-1 transition hover:scale-[1.02]"
                 style={{
                   background: `${accent}2c`,
                   borderColor: `${accent}55`,
                 }}
               >
                 <span className="text-sm">{room.emoji}</span>
-                <span className="hidden sm:inline">{room.nameMn}</span>
+                <span className="hidden md:inline">{room.nameMn}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAuthModalTab("account")}
+                className="flex items-center gap-1.5 rounded-xl bg-white/8 px-2.5 py-2 text-[11.5px] font-bold text-white/90 ring-1 ring-white/12 transition hover:bg-white/15"
+                title="Бүртгэл, Cloud Sync ба Google AI Studio тохиргоо"
+                aria-label="Нэвтрэх ба бүртгэл"
+              >
+                <UserIcon size={14} />
+                <span className="hidden sm:inline">
+                  {user ? user.email?.split("@")[0] : "Нэвтрэх"}
+                </span>
               </button>
 
               <div className="hidden items-center gap-1.5 xl:flex">
@@ -1224,11 +1320,35 @@ function Shell() {
       </div>
 
       {state.ready && (
-        <ModuleBoundary key={state.namespace} name={t("settings.music")}>
-          <MusicProvider>
-            <MusicPlayer />
-          </MusicProvider>
-        </ModuleBoundary>
+        <>
+          <VoiceFlowBar
+            open={voiceBarOpen}
+            onClose={() => setVoiceBarOpen(false)}
+            accent={accent}
+            onNavigate={(target) => {
+              if (target === "sound") {
+                setSoundTabRequested(true);
+                navigate("overview");
+              } else {
+                go(target);
+              }
+            }}
+          />
+          {authModalTab !== null && (
+            <AuthModal
+              initialTab={authModalTab}
+              onClose={() => setAuthModalTab(null)}
+            />
+          )}
+          {quickToolsOpen && (
+            <QuickToolsModal onClose={() => setQuickToolsOpen(false)} />
+          )}
+          <ModuleBoundary key={state.namespace} name={t("settings.music")}>
+            <MusicProvider>
+              <MusicPlayer />
+            </MusicProvider>
+          </ModuleBoundary>
+        </>
       )}
       <PwaManager />
     </div>

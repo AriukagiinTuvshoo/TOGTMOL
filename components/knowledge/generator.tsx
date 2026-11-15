@@ -6,6 +6,11 @@ import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { getSupabase } from "@/lib/supabase/client";
 import {
+  generateGeminiCards,
+  probeGeminiServerStatus,
+  readGeminiConfig,
+} from "@/lib/assistant/gemini";
+import {
   generatedDeckSource,
   localCardDrafts,
   parseCardDrafts,
@@ -66,6 +71,23 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
     try {
       if (!online) {
         setDrafts(localCardDrafts(text, title, count));
+        return;
+      }
+      const geminiCfg = readGeminiConfig();
+      const serverStatus = await probeGeminiServerStatus();
+      if (
+        (geminiCfg.enabled && Boolean(geminiCfg.apiKey)) ||
+        serverStatus.configuredOnServer
+      ) {
+        const cards = await generateGeminiCards({
+          text,
+          count,
+          image: shareImage ? image : null,
+          language,
+        });
+        if (!disposed.current && store.getSnapshot().namespace === namespace) {
+          setDrafts(cards);
+        }
         return;
       }
       const client = getSupabase(),

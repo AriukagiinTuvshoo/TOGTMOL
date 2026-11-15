@@ -23,7 +23,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self' blob: data: https:",
-  `connect-src 'self' ${supabaseOrigins}`,
+  `connect-src 'self' ${supabaseOrigins} https://generativelanguage.googleapis.com https://aiplatform.googleapis.com`,
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
