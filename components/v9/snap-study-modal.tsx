@@ -5,6 +5,7 @@ import { Modal, SubjectSelect } from "@/components/ui/common";
 import { useStudy } from "@/hooks/use-study";
 import { useI18n } from "@/components/i18n/language-provider";
 import { prepareImage } from "@/lib/knowledge/images";
+import { extractPdfText } from "@/lib/knowledge/pdf";
 import { addCards, recordBase, saveKnowledge } from "@/lib/knowledge/actions";
 import { localCardDrafts, localQuizDrafts } from "@/lib/knowledge/generation";
 import {
@@ -36,6 +37,8 @@ export function SnapStudyModal({ onClose }: { onClose: () => void }) {
 
   const cameraRef = useRef<HTMLInputElement | null>(null);
   const galleryRef = useRef<HTMLInputElement | null>(null);
+  const pdfRef = useRef<HTMLInputElement | null>(null);
+  const [pdfInfo, setPdfInfo] = useState<string | null>(null);
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -47,6 +50,26 @@ export function SnapStudyModal({ onClose }: { onClose: () => void }) {
       setError(
         err instanceof Error ? err.message : "Зураг уншихад алдаа гарлаа.",
       );
+    }
+  };
+
+  const handlePdfFile = async (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const res = await extractPdfText(bytes, 14000);
+      setHintText(res.text);
+      setPdfInfo(
+        `📄 "${file.name}" (${res.pages} хуудас${res.truncated ? ", эхний хэсэг" : ""}) амжилттай уншлаа!`,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "PDF файл уншихад алдаа гарлаа.",
+      );
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -187,25 +210,47 @@ export function SnapStudyModal({ onClose }: { onClose: () => void }) {
               </div>
             </label>
 
-            {/* Mobile-first large touch camera & gallery buttons */}
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {/* Mobile-first large touch camera, gallery & PDF buttons */}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
                 type="button"
                 onClick={() => cameraRef.current?.click()}
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-indigo-400/40 bg-indigo-500/20 px-4 py-3 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/30 active:scale-[0.99]"
+                className="flex min-h-[50px] items-center justify-center gap-1.5 rounded-2xl border border-indigo-400/40 bg-indigo-500/20 px-3 py-2.5 text-xs font-semibold text-indigo-100 transition hover:bg-indigo-500/30 active:scale-[0.99]"
               >
                 <span>📷</span>
-                <span>Камераар зураг дарах</span>
+                <span>Камер дарах</span>
               </button>
               <button
                 type="button"
                 onClick={() => galleryRef.current?.click()}
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/10 active:scale-[0.99]"
+                className="flex min-h-[50px] items-center justify-center gap-1.5 rounded-2xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-xs font-medium text-slate-200 transition hover:bg-white/10 active:scale-[0.99]"
               >
                 <span>🖼️</span>
-                <span>Зураг / Скриншот сонгох</span>
+                <span>Зураг сонгох</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => pdfRef.current?.click()}
+                className="flex min-h-[50px] items-center justify-center gap-1.5 rounded-2xl border border-amber-400/35 bg-amber-500/15 px-3 py-2.5 text-xs font-semibold text-amber-100 transition hover:bg-amber-500/25 active:scale-[0.99]"
+              >
+                <span>📄</span>
+                <span>PDF лекц оруулах</span>
               </button>
             </div>
+
+            {pdfInfo && (
+              <p className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+                {pdfInfo}
+              </p>
+            )}
+
+            <input
+              ref={pdfRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => void handlePdfFile(e.target.files?.[0])}
+            />
 
             <input
               ref={cameraRef}

@@ -1,6 +1,14 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+const ogFontRegular = readFileSync(
+  join(process.cwd(), "public/fonts/DejaVuSans.ttf"),
+);
+const ogFontBold = readFileSync(
+  join(process.cwd(), "public/fonts/DejaVuSans-Bold.ttf"),
+);
+
 export const alt = "Тогтмол — Бондооктой хамт суралцъя";
 export const size = {
   width: 1200,
@@ -21,7 +29,7 @@ export default function OpenGraphImage() {
         background:
           "linear-gradient(135deg, #f5f5f0 0%, #e8eee5 52%, #d8e4d3 100%)",
         color: "#272e27",
-        fontFamily: "Arial, Helvetica, sans-serif",
+        fontFamily: "DejaVu Sans",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
@@ -39,7 +47,7 @@ export default function OpenGraphImage() {
             fontWeight: 800,
           }}
         >
-          ✦
+          T
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: -1 }}>
@@ -54,6 +62,8 @@ export default function OpenGraphImage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div
           style={{
+            display: "flex",
+            flexDirection: "column",
             fontSize: 62,
             lineHeight: 1.08,
             fontWeight: 750,
@@ -105,12 +115,26 @@ export default function OpenGraphImage() {
           }}
           aria-hidden="true"
         >
-          🤖🌱
+          • •
         </div>
       </div>
     </div>,
     {
       ...size,
+      fonts: [
+        {
+          name: "DejaVu Sans",
+          data: ogFontRegular,
+          weight: 400,
+          style: "normal",
+        },
+        {
+          name: "DejaVu Sans",
+          data: ogFontBold,
+          weight: 700,
+          style: "normal",
+        },
+      ],
     },
   );
 }

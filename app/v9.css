@@ -563,6 +563,36 @@ html[data-high-contrast="true"] .v9-shell .music-player {
   }
 }
 
+@keyframes v12EmojiFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+    transform: translate3d(calc(var(--drift-x, 0px) * 0.35), -36px, 0)
+      scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift-x, 0px), -220px, 0) scale(0.92);
+  }
+}
+
+.v12-emoji-particle {
+  animation-name: v12EmojiFloat;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v12-emoji-particle {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 .v9-shell .page-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.45);

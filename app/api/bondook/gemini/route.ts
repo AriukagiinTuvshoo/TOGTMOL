@@ -41,6 +41,49 @@ export async function GET() {
   });
 }
 
+const PUBLIC_RATE_WINDOW_MS = 10 * 60 * 1000;
+const PUBLIC_RATE_MAX_REQUESTS = 30;
+const publicIpBuckets = new Map<string, number[]>();
+
+function checkPublicServerRateLimit(request: Request): boolean {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "anon";
+  const now = Date.now();
+  const recent = (publicIpBuckets.get(ip) ?? []).filter(
+    (ts) => now - ts < PUBLIC_RATE_WINDOW_MS,
+  );
+  if (recent.length >= PUBLIC_RATE_MAX_REQUESTS) {
+    publicIpBuckets.set(ip, recent);
+    return false;
+  }
+  recent.push(now);
+  publicIpBuckets.set(ip, recent);
+  if (publicIpBuckets.size > 500) {
+    for (const [k, arr] of publicIpBuckets) {
+      if (arr.every((ts) => now - ts >= PUBLIC_RATE_WINDOW_MS)) {
+        publicIpBuckets.delete(k);
+      }
+    }
+  }
+  // Bound memory even if many unique addresses arrive within one window.
+  while (publicIpBuckets.size > 1000) {
+    let oldestIp: string | null = null;
+    let oldestSeen = Infinity;
+    for (const [candidate, timestamps] of publicIpBuckets) {
+      const firstSeen = timestamps[0] ?? now;
+      if (firstSeen < oldestSeen) {
+        oldestSeen = firstSeen;
+        oldestIp = candidate;
+      }
+    }
+    if (oldestIp === null) break;
+    publicIpBuckets.delete(oldestIp);
+  }
+  return true;
+}
+
 export async function POST(request: Request) {
   const headerKey = request.headers.get("x-gemini-api-key")?.trim() || "";
   const envKey = (
@@ -57,6 +100,17 @@ export async function POST(request: Request) {
           "Google AI Studio API түлхүүр тохируулаагүй байна. Бондоок → Google AI тохиргоо хэсэгт түлхүүрээ оруулна уу.",
       },
       503,
+    );
+  }
+
+  // Protect shared server key against public abuse; personal device keys are unrestricted
+  if (!headerKey && envKey && !checkPublicServerRateLimit(request)) {
+    return json(
+      {
+        error:
+          "Нийтийн үнэгүй AI хязгаар түр дүүрлээ. 10 минутын дараа оролдох эсвэл өөрийн Google AI түлхүүрээ оруулж хязгааргүй ашиглаарай.",
+      },
+      429,
     );
   }
 

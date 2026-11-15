@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Flame, Sparkles, Zap, Settings2, Maximize2 } from "lucide-react";
 import { useStudy, useClock } from "@/hooks/use-study";
 import { companionProgress, companionState } from "@/lib/world/progress";
@@ -24,6 +30,12 @@ import { CoFocusWidget } from "@/components/v9/cofocus-widget";
 import { ExamCountdown } from "@/components/v9/exam-countdown";
 import { CozyCollectiblesCard } from "@/components/v9/cozy-shelf";
 import { ShareCardModal } from "@/components/v9/share-card-modal";
+import { MoodCheckinCard } from "@/components/v9/mood-checkin";
+import { CozyOnboardingBanner } from "@/components/v9/onboarding-card";
+import {
+  getActiveSimpleProfileSnapshot,
+  subscribeSimpleProfile,
+} from "@/lib/v9/simple-profile";
 import type { TimerPhase } from "@/types/study";
 
 export function StudyRoom({
@@ -48,6 +60,11 @@ export function StudyRoom({
   const [bondookMsg, setBondookMsg] = useState<string | undefined>(undefined);
   const [tipIdx, setTipIdx] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  const activeProfile = useSyncExternalStore(
+    subscribeSimpleProfile,
+    getActiveSimpleProfileSnapshot,
+    () => null,
+  );
 
   const state = companionState(data, index, today);
   const world = data.settings.world;
@@ -231,11 +248,20 @@ export function StudyRoom({
 
   return (
     <div className="v9-overview space-y-5">
-      {/* ── Hero Greeting (Exact Match to image-1.png) ── */}
+      {/* ── 30-Second Cozy Onboarding for New Learners ── */}
+      <CozyOnboardingBanner />
+      <MoodCheckinCard
+        onSelectBondookMood={setMood}
+        onBondookMessage={setBondookMsg}
+      />
+
+      {/* ── Hero Greeting (Exact Match to image-1.png + Cute Profile Greeting) ── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-[22px] font-bold leading-tight text-white md:text-[28px]">
-            {room.greeting.split(".")[0]}.
+            {activeProfile
+              ? `${activeProfile.avatar} Сайн уу, ${activeProfile.name}! ✨`
+              : `${room.greeting.split(".")[0]}.`}
           </h1>
           <p className="mt-1 flex items-center gap-1.5 text-[12px] text-white/60 md:text-[13px]">
             <Sparkles size={13} style={{ color: accent }} />

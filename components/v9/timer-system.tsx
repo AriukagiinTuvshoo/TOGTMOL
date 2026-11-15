@@ -52,9 +52,29 @@ import type { TimerMode as CoreTimerMode, TimerPhase } from "@/types/study";
 export type V9TimerMode = "pomodoro" | "countdown" | "stopwatch" | "flowtime";
 
 const POMODORO_PRESETS = [
-  { label: "25/5", focus: 25, shortBreak: 5, longBreak: 15, desc: "Хөнгөн" },
-  { label: "50/10", focus: 50, shortBreak: 10, longBreak: 20, desc: "Гүн" },
-  { label: "90/20", focus: 90, shortBreak: 20, longBreak: 30, desc: "Урсгал" },
+  { label: "15/3", focus: 15, shortBreak: 3, longBreak: 10, desc: "🌱 Зөөлөн" },
+  {
+    label: "25/5",
+    focus: 25,
+    shortBreak: 5,
+    longBreak: 15,
+    desc: "🍅 Сонгодог",
+  },
+  {
+    label: "40/8",
+    focus: 40,
+    shortBreak: 8,
+    longBreak: 18,
+    desc: "🎯 Төвлөрөл",
+  },
+  { label: "50/10", focus: 50, shortBreak: 10, longBreak: 20, desc: "🔥 Гүн" },
+  {
+    label: "90/20",
+    focus: 90,
+    shortBreak: 20,
+    longBreak: 30,
+    desc: "🚀 Урсгал",
+  },
 ];
 
 const QUICK_AMBIENT_IDS = [
@@ -748,20 +768,21 @@ export function TimerSystem({
           </div>
         </div>
 
-        {/* Inline Pomodoro Settings Popover */}
+        {/* Inline Pomodoro & Custom Duration Settings Popover */}
         {showSettings && (
-          <div className="anim-pop mt-3 rounded-2xl bg-black/40 p-3 ring-1 ring-white/12">
-            <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/50">
-              <span>Помодоро хэмнэл</span>
+          <div className="anim-pop mt-3 space-y-3 rounded-2xl bg-black/45 p-3.5 ring-1 ring-white/15">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/60">
+              <span>⏱ Помодоро ба өөрийн цаг тохиргоо</span>
               <button
                 type="button"
                 onClick={() => setShowSettings(false)}
                 className="text-white/50 hover:text-white"
+                aria-label="Тохиргоо хаах"
               >
-                <X size={13} />
+                <X size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
               {POMODORO_PRESETS.map((p) => {
                 const isSelected =
                   focusMin === p.focus && shortBreakMin === p.shortBreak;
@@ -794,11 +815,133 @@ export function TimerSystem({
                         : undefined
                     }
                   >
-                    <div className="text-[13px] font-bold">{p.label}</div>
-                    <div className="text-[10px] opacity-70">{p.desc}</div>
+                    <div className="text-[12.5px] font-bold">{p.label}</div>
+                    <div className="text-[9.5px] opacity-80">{p.desc}</div>
                   </button>
                 );
               })}
+            </div>
+
+            {/* Custom Sliders & Direct Minute Inputs */}
+            <div className="space-y-2 rounded-2xl bg-white/[0.04] p-3 ring-1 ring-white/10">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-semibold text-white/85">
+                  🎯 Фокус минут:
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    aria-label="Фокус 5 минутаар багасгах"
+                    onClick={() =>
+                      void run(() =>
+                        store.mutate(
+                          actions.settings({
+                            focusMinutes: Math.max(1, focusMin - 5),
+                          }),
+                        ),
+                      )
+                    }
+                    className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                  >
+                    <Minus size={12} />
+                  </button>
+                  <input
+                    type="number"
+                    aria-label="Фокус минут оруулах"
+                    min={1}
+                    max={240}
+                    value={focusMin}
+                    onChange={(e) => {
+                      const val = Math.max(
+                        1,
+                        Math.min(240, Number(e.target.value) || 25),
+                      );
+                      void store.mutate(
+                        actions.settings({ focusMinutes: val }),
+                        { reportError: false, reportBusy: false },
+                      );
+                    }}
+                    className="w-14 rounded-lg bg-black/40 px-1.5 py-1 text-center font-bold text-white ring-1 ring-white/15"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Фокус 5 минутаар нэмэх"
+                    onClick={() =>
+                      void run(() =>
+                        store.mutate(
+                          actions.settings({
+                            focusMinutes: Math.min(240, focusMin + 5),
+                          }),
+                        ),
+                      )
+                    }
+                    className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+
+              <input
+                type="range"
+                aria-label="Фокус хугацаа гулсуур"
+                min={5}
+                max={120}
+                step={5}
+                value={Math.min(120, Math.max(5, focusMin))}
+                onChange={(e) =>
+                  void store.mutate(
+                    actions.settings({ focusMinutes: Number(e.target.value) }),
+                    { reportError: false, reportBusy: false },
+                  )
+                }
+                className="w-full accent-indigo-400"
+              />
+
+              <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                <label className="flex items-center justify-between gap-1.5 rounded-xl bg-black/30 px-2.5 py-1.5 text-white/80">
+                  <span>☕ Амралт:</span>
+                  <input
+                    type="number"
+                    aria-label="Богино амралтын минут"
+                    min={1}
+                    max={90}
+                    value={shortBreakMin}
+                    onChange={(e) => {
+                      const val = Math.max(
+                        1,
+                        Math.min(90, Number(e.target.value) || 5),
+                      );
+                      void store.mutate(
+                        actions.settings({ shortBreakMinutes: val }),
+                        { reportError: false, reportBusy: false },
+                      );
+                    }}
+                    className="w-12 rounded-lg bg-white/10 px-1.5 py-0.5 text-center font-bold text-white"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-1.5 rounded-xl bg-black/30 px-2.5 py-1.5 text-white/80">
+                  <span>🌿 Урт амралт:</span>
+                  <input
+                    type="number"
+                    aria-label="Урт амралтын минут"
+                    min={5}
+                    max={90}
+                    value={longBreakMin}
+                    onChange={(e) => {
+                      const val = Math.max(
+                        5,
+                        Math.min(90, Number(e.target.value) || 15),
+                      );
+                      void store.mutate(
+                        actions.settings({ longBreakMinutes: val }),
+                        { reportError: false, reportBusy: false },
+                      );
+                    }}
+                    className="w-12 rounded-lg bg-white/10 px-1.5 py-0.5 text-center font-bold text-white"
+                  />
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -837,26 +980,105 @@ export function TimerSystem({
           ))}
         </div>
 
-        {/* Countdown Custom Duration Stepper */}
+        {/* Pomodoro Quick Custom Time Bar (visible right on the card when idle!) */}
+        {v9Mode === "pomodoro" && !t && (
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white/[0.04] px-3 py-2 ring-1 ring-white/10">
+            <div className="flex items-center gap-1.5 text-xs text-white/80">
+              <button
+                type="button"
+                aria-label="5 минут хасах"
+                onClick={() =>
+                  void store.mutate(
+                    actions.settings({
+                      focusMinutes: Math.max(5, focusMin - 5),
+                    }),
+                    { reportError: false, reportBusy: false },
+                  )
+                }
+                className="grid h-7 w-7 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
+              >
+                <Minus size={12} />
+              </button>
+              <span className="px-1 font-display text-xs font-bold text-white">
+                ⏱ {focusMin}м фокус · {shortBreakMin}м амралт
+              </span>
+              <button
+                type="button"
+                aria-label="5 минут нэмэх"
+                onClick={() =>
+                  void store.mutate(
+                    actions.settings({
+                      focusMinutes: Math.min(240, focusMin + 5),
+                    }),
+                    { reportError: false, reportBusy: false },
+                  )
+                }
+                className="grid h-7 w-7 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSettings((v) => !v)}
+              className="rounded-xl bg-indigo-500/20 px-2.5 py-1 text-[11px] font-bold text-indigo-100 ring-1 ring-indigo-400/35 transition hover:bg-indigo-500/30"
+            >
+              {showSettings ? "✓ Болсон" : "⚙️ Цаг өөрчлөх"}
+            </button>
+          </div>
+        )}
+
+        {/* Countdown Custom Duration Stepper & Presets */}
         {v9Mode === "countdown" && !t && (
-          <div className="mt-3 flex items-center justify-center gap-3 rounded-2xl bg-white/5 py-2 ring-1 ring-white/10">
-            <button
-              type="button"
-              onClick={() => setCountdownMin((m) => Math.max(5, m - 5))}
-              className="grid h-7 w-7 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
-            >
-              <Minus size={13} />
-            </button>
-            <span className="font-display text-sm font-bold text-white">
-              {countdownMin} мин
-            </span>
-            <button
-              type="button"
-              onClick={() => setCountdownMin((m) => Math.min(240, m + 5))}
-              className="grid h-7 w-7 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
-            >
-              <Plus size={13} />
-            </button>
+          <div className="mt-3 space-y-2 rounded-2xl bg-white/5 p-2.5 ring-1 ring-white/10">
+            <div className="flex items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setCountdownMin((m) => Math.max(1, m - 5))}
+                className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
+              >
+                <Minus size={13} />
+              </button>
+              <label className="flex items-center gap-1.5 text-xs text-white/80">
+                <input
+                  type="number"
+                  aria-label="Тоолуурын минут"
+                  min={1}
+                  max={240}
+                  value={countdownMin}
+                  onChange={(e) =>
+                    setCountdownMin(
+                      Math.max(1, Math.min(240, Number(e.target.value) || 25)),
+                    )
+                  }
+                  className="w-16 rounded-xl bg-black/40 px-2 py-1 text-center font-display text-sm font-bold text-white ring-1 ring-white/15"
+                />
+                <span>мин</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setCountdownMin((m) => Math.min(240, m + 5))}
+                className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 text-white hover:bg-white/20"
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1">
+              {[10, 15, 25, 45, 60, 90, 120].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setCountdownMin(m)}
+                  className={`rounded-lg px-2 py-0.5 text-[11px] font-bold transition ${
+                    countdownMin === m
+                      ? "bg-white text-slate-950"
+                      : "bg-white/8 text-white/70 hover:bg-white/15"
+                  }`}
+                >
+                  {m}м
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1109,9 +1331,35 @@ export function TimerSystem({
           )}
         </div>
 
-        {/* Distraction Counter while active */}
+        {/* Distraction Counter & Live +5m / -5m Adjust while active */}
         {t && t.status === "active" && (
-          <div className="mt-2.5 flex items-center justify-center gap-2">
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
+            {t.targetMs !== null && (
+              <button
+                type="button"
+                onClick={() =>
+                  void store.mutate(
+                    (d) =>
+                      d.activeTimer && d.activeTimer.targetMs !== null
+                        ? {
+                            ...d,
+                            activeTimer: {
+                              ...d.activeTimer,
+                              targetMs: Math.max(
+                                60_000,
+                                d.activeTimer.targetMs - 5 * 60_000,
+                              ),
+                            },
+                          }
+                        : d,
+                    { reportError: false, reportBusy: false },
+                  )
+                }
+                className="rounded-xl bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-white/70 ring-1 ring-white/10 transition hover:bg-white/12"
+              >
+                −5 мин
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setInterruptions((i) => i + 1)}
@@ -1119,6 +1367,32 @@ export function TimerSystem({
             >
               <Waves size={13} /> Сатаарал: {interruptions}
             </button>
+            {t.targetMs !== null && (
+              <button
+                type="button"
+                onClick={() =>
+                  void store.mutate(
+                    (d) =>
+                      d.activeTimer && d.activeTimer.targetMs !== null
+                        ? {
+                            ...d,
+                            activeTimer: {
+                              ...d.activeTimer,
+                              targetMs: Math.min(
+                                240 * 60_000,
+                                d.activeTimer.targetMs + 5 * 60_000,
+                              ),
+                            },
+                          }
+                        : d,
+                    { reportError: false, reportBusy: false },
+                  )
+                }
+                className="rounded-xl bg-indigo-500/20 px-2.5 py-1.5 text-[11px] font-bold text-indigo-200 ring-1 ring-indigo-400/30 transition hover:bg-indigo-500/30"
+              >
+                +5 мин сунгах
+              </button>
+            )}
           </div>
         )}
 

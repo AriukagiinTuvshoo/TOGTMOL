@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   House,
@@ -70,6 +71,12 @@ import { SoundStudioView, useSoundEngine } from "./v9/audio-mixer";
 import { VoiceFlowBar } from "./v9/voice-flowbar";
 import { AuthModal, type AuthModalTab } from "./v9/auth-modal";
 import { QuickToolsModal } from "./v9/quick-tools";
+import { EmojiBurstLayer } from "./v9/emoji-burst";
+import {
+  getActiveSimpleProfileSnapshot,
+  namespaceForProfile,
+  subscribeSimpleProfile,
+} from "@/lib/v9/simple-profile";
 import { ROOMS, resolveV9RoomId, roomById } from "@/lib/v9/rooms";
 import { PRESETS, engine } from "@/lib/v9/audio-engine";
 import { BONDOOK_TIPS, fmtClock, fmtMnDuration } from "@/lib/v9/focus";
@@ -235,7 +242,21 @@ function Shell() {
   const [quickToolsOpen, setQuickToolsOpen] = useState(false);
   const [toasts, setToasts] = useState<V9Toast[]>([]);
   const [tipIdx, setTipIdx] = useState(0);
+  const simpleProfile = useSyncExternalStore(
+    subscribeSimpleProfile,
+    getActiveSimpleProfileSnapshot,
+    () => null,
+  );
   const prevTimerPhaseRef = useRef<string | null>(null);
+
+  // Automatically restore saved Simple Profile namespace after initial guest boot
+  useEffect(() => {
+    if (!state.ready || !simpleProfile || user) return;
+    const expectedNs = namespaceForProfile(simpleProfile.id);
+    if (state.namespace === "guest") {
+      void store.switchNamespace(expectedNs, true).catch(() => {});
+    }
+  }, [simpleProfile, state.namespace, state.ready, store, user]);
 
   const activeRoomId = resolveV9RoomId(data.settings.world);
   const room = roomById(activeRoomId);
@@ -871,12 +892,22 @@ function Shell() {
                 type="button"
                 onClick={() => setAuthModalTab("account")}
                 className="flex items-center gap-1.5 rounded-xl bg-white/8 px-2.5 py-2 text-[11.5px] font-bold text-white/90 ring-1 ring-white/12 transition hover:bg-white/15"
-                title="Бүртгэл, Cloud Sync ба Google AI Studio тохиргоо"
+                title="Профайл, Бүртгэл ба Google AI тохиргоо"
                 aria-label="Нэвтрэх ба бүртгэл"
               >
-                <UserIcon size={14} />
+                {simpleProfile ? (
+                  <span className="text-sm leading-none">
+                    {simpleProfile.avatar}
+                  </span>
+                ) : (
+                  <UserIcon size={14} />
+                )}
                 <span className="hidden sm:inline">
-                  {user ? user.email?.split("@")[0] : "Нэвтрэх"}
+                  {simpleProfile
+                    ? simpleProfile.name
+                    : user
+                      ? user.email?.split("@")[0]
+                      : "Нэвтрэх"}
                 </span>
               </button>
 
@@ -1423,6 +1454,7 @@ function Shell() {
               <MusicPlayer />
             </MusicProvider>
           </ModuleBoundary>
+          <EmojiBurstLayer />
         </>
       )}
       <PwaManager />

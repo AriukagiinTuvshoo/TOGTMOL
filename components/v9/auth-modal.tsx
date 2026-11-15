@@ -35,6 +35,18 @@ import {
   speakText,
   type TtsVoicePreset,
 } from "@/lib/voice/speech-engine";
+import {
+  PROFILE_AVATARS,
+  loginOrCreateSimpleProfile,
+  namespaceForProfile,
+  readActiveSimpleProfile,
+  readSimpleProfiles,
+  setActiveSimpleProfileId,
+  subscribeSimpleProfile,
+  updateActiveProfileMeta,
+  type SimpleProfile,
+} from "@/lib/v9/simple-profile";
+import { triggerEmojiBurst } from "./emoji-burst";
 
 export type AuthModalTab = "account" | "gemini" | "voice";
 
@@ -49,7 +61,6 @@ export function AuthModal({
   const {
     client,
     user,
-    status,
     error: authError,
     sync,
     connect,
@@ -59,6 +70,20 @@ export function AuthModal({
   const { store, today, run } = useStudy();
   const restoreInputRef = useRef<HTMLInputElement | null>(null);
   const [cloudBackupMsg, setCloudBackupMsg] = useState("");
+
+  // Simple Local Profile state (Name + Password + Cute Avatar)
+  const [activeProfile, setActiveProfile] = useState<SimpleProfile | null>(() =>
+    readActiveSimpleProfile(),
+  );
+  const [savedProfiles, setSavedProfiles] = useState<SimpleProfile[]>(() =>
+    readSimpleProfiles(),
+  );
+  const [profName, setProfName] = useState("");
+  const [profPass, setProfPass] = useState("");
+  const [profAvatar, setProfAvatar] = useState<string>("🦊");
+  const [profMotto, setProfMotto] = useState("");
+  const [adoptGuest, setAdoptGuest] = useState(true);
+  const [profBusy, setProfBusy] = useState(false);
 
   // Account form state
   const [authMode, setAuthMode] = useState<"login" | "signup" | "magic">(
@@ -108,6 +133,68 @@ export function AuthModal({
       }),
     [],
   );
+
+  useEffect(
+    () =>
+      subscribeSimpleProfile(() => {
+        setActiveProfile(readActiveSimpleProfile());
+        setSavedProfiles(readSimpleProfiles());
+      }),
+    [],
+  );
+
+  const handleSimpleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError("");
+    setAuthNotice("");
+    setProfBusy(true);
+    try {
+      const wasGuest = store.getSnapshot().namespace === "guest";
+      const guestSnapshot =
+        wasGuest && adoptGuest ? JSON.stringify(store.exportData()) : null;
+      const res = await loginOrCreateSimpleProfile({
+        name: profName,
+        password: profPass,
+        avatar: profAvatar,
+        motto: profMotto,
+      });
+      if (!res.ok) {
+        setLocalError(res.error);
+        return;
+      }
+      await store.switchNamespace(namespaceForProfile(res.profile.id), true);
+      if (res.isNew && guestSnapshot) {
+        await store.importData(guestSnapshot);
+      }
+      triggerEmojiBurst([res.profile.avatar, "🎉", "✨", "💖", "🌸"]);
+      setProfPass("");
+      setAuthNotice(
+        res.isNew
+          ? `${res.profile.avatar} "${res.profile.name}" профайл үүслээ! Таны бүх мэдээлэл тусдаа хадгалагдана ✨`
+          : `Тавтай морил, ${res.profile.avatar} ${res.profile.name}! ✨`,
+      );
+    } catch (err) {
+      setLocalError(
+        err instanceof Error ? err.message : "Профайл нээхэд алдаа гарлаа.",
+      );
+    } finally {
+      setProfBusy(false);
+    }
+  };
+
+  const handleSimpleProfileLogout = async () => {
+    setProfBusy(true);
+    setLocalError("");
+    try {
+      setActiveSimpleProfileId(null);
+      await store.switchNamespace("guest", true);
+      setAuthNotice("Зочны горим руу шилжлээ 👋");
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : "Алдаа гарлаа.");
+    } finally {
+      setProfBusy(false);
+    }
+  };
 
   const runAuth = async (fn: () => Promise<void>, doneNotice?: string) => {
     setAuthBusy(true);
@@ -164,17 +251,6 @@ export function AuthModal({
     });
   };
 
-  const downloadLocalBackup = async () => {
-    const payload = JSON.stringify(store.exportData(), null, 2);
-    const blob = new Blob([payload], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `togtmol-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Modal title="Бүртгэл · Google AI · Дуу хоолой" onClose={onClose}>
       <div className="space-y-4">
@@ -224,29 +300,9 @@ export function AuthModal({
           </button>
         </div>
 
-        {/* TAB 1: ACCOUNT & CLOUD LOGIN */}
+        {/* TAB 1: ACCOUNT & SIMPLE PROFILE LOGIN */}
         {tab === "account" && (
           <div className="space-y-3.5">
-            <div className="flex items-center justify-between rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10">
-              <div>
-                <div className="text-xs font-bold">
-                  {user
-                    ? `Нэвтэрсэн: ${user.email}`
-                    : "Зочны горим (Local-First)"}
-                </div>
-                <div className="text-[11px] opacity-70">{status}</div>
-              </div>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${
-                  user
-                    ? "bg-emerald-400/20 text-emerald-300"
-                    : "bg-amber-400/20 text-amber-200"
-                }`}
-              >
-                {user ? "Cloud Ready" : "Офлайн Хадгалалт"}
-              </span>
-            </div>
-
             {(localError || authError) && (
               <p
                 role="alert"
@@ -264,33 +320,197 @@ export function AuthModal({
               </p>
             )}
 
-            {!client ? (
-              <div className="space-y-3 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-                <p className="text-xs leading-relaxed opacity-85">
-                  Таны бүх хичээлийн цаг, зорилго, тэмдэглэл болон картууд{" "}
-                  <b>энэ төхөөрөмжийн IndexedDB санд 100% найдвартай</b>{" "}
-                  хадгалагдаж байна. Олон төхөөрөмжийн Cloud Sync идэвхжүүлэхийн
-                  тулд орчны хувьсагчид (<code>NEXT_PUBLIC_SUPABASE_URL</code>,{" "}
-                  <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>) тохируулж болно.
-                </p>
-                <div className="flex flex-wrap gap-2">
+            {/* ── PRIMARY: SUPER-SIMPLE INSTANT PROFILE (NAME + PASSWORD + CUTE AVATAR) ── */}
+            {activeProfile ? (
+              <div className="space-y-3 rounded-3xl border border-pink-400/30 bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-pink-950/35 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/20">
+                      {activeProfile.avatar}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-base font-extrabold text-white">
+                          {activeProfile.name}
+                        </span>
+                        <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                          ✓ Идэвхтэй
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-pink-200/90">
+                        {activeProfile.motto}
+                      </p>
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => void downloadLocalBackup()}
-                    className="button small flex items-center gap-1.5"
+                    disabled={profBusy}
+                    onClick={() => void handleSimpleProfileLogout()}
+                    className="min-h-[38px] rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white/85 ring-1 ring-white/15 hover:bg-white/20"
                   >
-                    <Download size={14} /> Нөөц файл (JSON) татах
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab("gemini")}
-                    className="button primary small flex items-center gap-1.5"
-                  >
-                    <Sparkles size={14} /> Бүртгэлгүйгээр Google AI холбох →
+                    Гарах
                   </button>
                 </div>
+
+                {/* Quick Avatar Changer */}
+                <div>
+                  <div className="mb-1.5 text-[11px] font-semibold text-white/65">
+                    Дүрсээ солих:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PROFILE_AVATARS.map((em) => (
+                      <button
+                        key={em}
+                        type="button"
+                        onClick={() => {
+                          updateActiveProfileMeta({ avatar: em });
+                          triggerEmojiBurst([em, "✨", "💖"]);
+                        }}
+                        className={`grid h-9 w-9 place-items-center rounded-xl text-lg transition ${
+                          activeProfile.avatar === em
+                            ? "bg-pink-500/30 ring-2 ring-pink-300 scale-105"
+                            : "bg-white/5 hover:bg-white/15"
+                        }`}
+                      >
+                        {em}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ) : user ? (
+            ) : (
+              <form
+                onSubmit={(e) => void handleSimpleProfileSubmit(e)}
+                className="space-y-3 rounded-3xl border border-indigo-400/30 bg-indigo-950/30 p-4"
+              >
+                <div>
+                  <div className="text-xs font-extrabold text-indigo-200">
+                    ✨ Хялбар Профайл · Нэр ба нууц үгээр шууд орох
+                  </div>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-slate-300">
+                    И-мэйл баталгаажуулалт шаардахгүй — өөрийн нэр, нууц үгээ
+                    оруулаад шууд хувийн суралцах өрөөгөө үүсгээрэй!
+                  </p>
+                </div>
+
+                {/* Existing Saved Profiles Quick-Tap Chips */}
+                {savedProfiles.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10.5px] font-semibold text-slate-400">
+                      Хадгалсан профайлууд (дарж сонгоно уу):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {savedProfiles.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setProfName(p.name);
+                            setProfAvatar(p.avatar);
+                            setProfMotto(p.motto);
+                          }}
+                          className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ring-1 transition ${
+                            profName.toLocaleLowerCase() ===
+                            p.name.toLocaleLowerCase()
+                              ? "bg-amber-400 text-slate-950 ring-amber-300"
+                              : "bg-white/8 text-white ring-white/15 hover:bg-white/15"
+                          }`}
+                        >
+                          <span>{p.avatar}</span>
+                          <span>{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Cute Avatar Picker */}
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold text-slate-300">
+                    Хөөрхөн дүрсээ сонгоорой:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PROFILE_AVATARS.map((em) => (
+                      <button
+                        key={em}
+                        type="button"
+                        onClick={() => setProfAvatar(em)}
+                        className={`grid h-9 w-9 place-items-center rounded-xl text-lg transition ${
+                          profAvatar === em
+                            ? "bg-amber-400/30 ring-2 ring-amber-300 scale-105"
+                            : "bg-white/5 hover:bg-white/15"
+                        }`}
+                      >
+                        {em}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <label className="block text-xs font-semibold text-slate-200">
+                    Таны нэр
+                    <input
+                      type="text"
+                      required
+                      minLength={2}
+                      maxLength={40}
+                      value={profName}
+                      onChange={(e) => setProfName(e.target.value)}
+                      placeholder="Жишээ: Түвшөө"
+                      className="mt-1 w-full rounded-xl bg-black/40 px-3 py-2 text-base text-white ring-1 ring-white/15 sm:text-xs"
+                    />
+                  </label>
+                  <label className="block text-xs font-semibold text-slate-200">
+                    Нууц үг (4+ тэмдэгт)
+                    <input
+                      type="password"
+                      required
+                      minLength={4}
+                      value={profPass}
+                      onChange={(e) => setProfPass(e.target.value)}
+                      placeholder="••••"
+                      className="mt-1 w-full rounded-xl bg-black/40 px-3 py-2 text-base text-white ring-1 ring-white/15 sm:text-xs"
+                    />
+                  </label>
+                </div>
+
+                <label className="block text-xs font-semibold text-slate-200">
+                  Миний уриа үг (заавал биш)
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={profMotto}
+                    onChange={(e) => setProfMotto(e.target.value)}
+                    placeholder="Өдөр бүр 1% илүү 🌱"
+                    className="mt-1 w-full rounded-xl bg-black/40 px-3 py-2 text-base text-white ring-1 ring-white/15 sm:text-xs"
+                  />
+                </label>
+
+                <label className="flex cursor-pointer items-center gap-2 text-[11.5px] text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={adoptGuest}
+                    onChange={(e) => setAdoptGuest(e.target.checked)}
+                  />
+                  <span>
+                    Одоо байгаа хичээл, тэмдэглэлүүдээ энэ профайл руу авч орох
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={profBusy}
+                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 disabled:opacity-50"
+                >
+                  {profBusy
+                    ? "Нээж байна..."
+                    : `🚀 ${profAvatar} Профайлаар шууд орох`}
+                </button>
+              </form>
+            )}
+
+            {client && user ? (
               <div className="space-y-2.5">
                 {!syncEnabled ? (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -344,130 +564,135 @@ export function AuthModal({
                   <LogOut size={15} /> Бүртгэлээс гарах
                 </button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="segmented">
-                  <button
-                    type="button"
-                    aria-pressed={authMode === "login"}
-                    onClick={() => setAuthMode("login")}
-                  >
-                    Нэвтрэх
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={authMode === "signup"}
-                    onClick={() => setAuthMode("signup")}
-                  >
-                    Бүртгүүлэх
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={authMode === "magic"}
-                    onClick={() => setAuthMode("magic")}
-                  >
-                    Magic Link
-                  </button>
-                </div>
+            ) : client ? (
+              <details className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <summary className="cursor-pointer text-xs font-bold text-slate-300">
+                  ☁️ И-мэйл / Cloud Sync бүртгэлээр холбох (нэмэлт)
+                </summary>
+                <div className="mt-3 space-y-3">
+                  <div className="segmented">
+                    <button
+                      type="button"
+                      aria-pressed={authMode === "login"}
+                      onClick={() => setAuthMode("login")}
+                    >
+                      Нэвтрэх
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={authMode === "signup"}
+                      onClick={() => setAuthMode("signup")}
+                    >
+                      Бүртгүүлэх
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={authMode === "magic"}
+                      onClick={() => setAuthMode("magic")}
+                    >
+                      Magic Link
+                    </button>
+                  </div>
 
-                <form
-                  className="form-stack"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void runAuth(async () => {
-                      if (authMode === "magic") {
-                        const { error } = await client.auth.signInWithOtp({
-                          email,
-                          options: {
-                            emailRedirectTo: window.location.origin,
-                          },
-                        });
-                        if (error) throw new Error(error.message);
-                        setAuthNotice(
-                          "И-мэйл рүү тань нэвтрэх линк илгээлээ. Шуудангаа шалгана уу!",
-                        );
-                        return;
-                      }
-                      const res =
-                        authMode === "login"
-                          ? await client.auth.signInWithPassword({
-                              email,
-                              password,
-                            })
-                          : await client.auth.signUp({
-                              email,
-                              password,
-                              options: {
-                                emailRedirectTo: window.location.origin,
-                              },
-                            });
-                      if (res.error) throw new Error(res.error.message);
-                      setPassword("");
-                      if (authMode === "signup" && !res.data.session) {
-                        setAuthNotice(
-                          "Бүртгэл баталгаажуулах захидлаа шалгана уу.",
-                        );
-                      }
-                    });
-                  }}
-                >
-                  <label>
-                    И-мэйл хаяг
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="student@example.com"
-                    />
-                  </label>
-                  {authMode !== "magic" && (
-                    <label>
-                      Нууц үг
-                      <input
-                        type="password"
-                        required
-                        minLength={8}
-                        autoComplete={
-                          authMode === "login"
-                            ? "current-password"
-                            : "new-password"
+                  <form
+                    className="form-stack"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void runAuth(async () => {
+                        if (authMode === "magic") {
+                          const { error } = await client.auth.signInWithOtp({
+                            email,
+                            options: {
+                              emailRedirectTo: window.location.origin,
+                            },
+                          });
+                          if (error) throw new Error(error.message);
+                          setAuthNotice(
+                            "И-мэйл рүү тань нэвтрэх линк илгээлээ. Шуудангаа шалгана уу!",
+                          );
+                          return;
                         }
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="8 ба түүнээс дээш тэмдэгт"
+                        const res =
+                          authMode === "login"
+                            ? await client.auth.signInWithPassword({
+                                email,
+                                password,
+                              })
+                            : await client.auth.signUp({
+                                email,
+                                password,
+                                options: {
+                                  emailRedirectTo: window.location.origin,
+                                },
+                              });
+                        if (res.error) throw new Error(res.error.message);
+                        setPassword("");
+                        if (authMode === "signup" && !res.data.session) {
+                          setAuthNotice(
+                            "Бүртгэл баталгаажуулах захидлаа шалгана уу.",
+                          );
+                        }
+                      });
+                    }}
+                  >
+                    <label>
+                      И-мэйл хаяг
+                      <input
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="student@example.com"
                       />
                     </label>
-                  )}
-                  <button className="button primary full" disabled={authBusy}>
-                    {authMode === "login"
-                      ? "Нэвтрэх"
-                      : authMode === "signup"
-                        ? "Бүртгүүлэх"
-                        : "И-мэйл линк илгээх"}
-                  </button>
-                </form>
+                    {authMode !== "magic" && (
+                      <label>
+                        Нууц үг
+                        <input
+                          type="password"
+                          required
+                          minLength={8}
+                          autoComplete={
+                            authMode === "login"
+                              ? "current-password"
+                              : "new-password"
+                          }
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="8 ба түүнээс дээш тэмдэгт"
+                        />
+                      </label>
+                    )}
+                    <button className="button primary full" disabled={authBusy}>
+                      {authMode === "login"
+                        ? "Нэвтрэх"
+                        : authMode === "signup"
+                          ? "Бүртгүүлэх"
+                          : "И-мэйл линк илгээх"}
+                    </button>
+                  </form>
 
-                <div className="auth-divider">эсвэл</div>
-                <button
-                  type="button"
-                  className="button full flex items-center justify-center gap-2"
-                  disabled={authBusy}
-                  onClick={() =>
-                    void runAuth(async () => {
-                      const { error } = await client.auth.signInWithOAuth({
-                        provider: "google",
-                        options: { redirectTo: window.location.origin },
-                      });
-                      if (error) throw new Error(error.message);
-                    })
-                  }
-                >
-                  <Mail size={15} /> Google хаягаар үргэлжлүүлэх
-                </button>
-              </div>
-            )}
+                  <div className="auth-divider">эсвэл</div>
+                  <button
+                    type="button"
+                    className="button full flex items-center justify-center gap-2"
+                    disabled={authBusy}
+                    onClick={() =>
+                      void runAuth(async () => {
+                        const { error } = await client.auth.signInWithOAuth({
+                          provider: "google",
+                          options: { redirectTo: window.location.origin },
+                        });
+                        if (error) throw new Error(error.message);
+                      })
+                    }
+                  >
+                    <Mail size={15} /> Google хаягаар үргэлжлүүлэх
+                  </button>
+                </div>
+              </details>
+            ) : null}
 
             {/* 1-Tap Google Drive / iCloud / Mobile File Backup & Restore */}
             <div className="rounded-2xl border border-indigo-400/25 bg-indigo-950/25 p-3.5 text-xs">
