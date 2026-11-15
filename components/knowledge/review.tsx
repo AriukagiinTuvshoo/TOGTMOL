@@ -1,5 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  BrowserVoiceSession,
+  isBrowserSpeechSupported,
+  isTtsSupported,
+  speakText,
+} from "@/lib/voice/speech-engine";
+import { gradeOralRecall, type OralRecallGrade } from "@/lib/voice/oral-grader";
+import { MarkdownView } from "@/components/knowledge/markdown-view";
 import { useStudy, useStoreState } from "@/hooks/use-study";
 import { Modal } from "@/components/ui/common";
 import { knowledgeIndex, newCardsPerDay } from "@/lib/knowledge/index";
@@ -69,7 +77,17 @@ export function CardReview({
     [completed, setCompleted] = useState(0),
     [minutes, setMinutes] = useState<number>(0),
     [deadline, setDeadline] = useState<number | null>(null),
-    [clock, setClock] = useState(() => Date.now());
+    [clock, setClock] = useState(() => Date.now()),
+    [oralOpen, setOralOpen] = useState(false),
+    [oralListening, setOralListening] = useState(false),
+    [oralDraft, setOralDraft] = useState(""),
+    [oralGrade, setOralGrade] = useState<OralRecallGrade | null>(null);
+  const oralSessionRef = useRef<BrowserVoiceSession | null>(null);
+  useEffect(() => {
+    return () => {
+      oralSessionRef.current?.stop();
+    };
+  }, []);
   useEffect(() => {
     if (deadline === null) return;
     const timer = window.setInterval(() => setClock(Date.now()), 1000);
@@ -93,6 +111,11 @@ export function CardReview({
       setQueue((q) => (n < 4 ? [...q.slice(1), q[0]] : q.slice(1)));
       if (n >= 4) setCompleted((v) => v + 1);
       setAnswer(false);
+      setOralOpen(false);
+      setOralDraft("");
+      setOralGrade(null);
+      oralSessionRef.current?.stop();
+      setOralListening(false);
     }
   };
   return (
@@ -178,11 +201,115 @@ export function CardReview({
         )}
         {card ? (
           <>
-            <p className="eyebrow">ЭХЛЭЭД ӨӨРӨӨ САНААРАЙ</p>
-            <h2 className="flashcard-front">{card.front}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <p className="eyebrow">ЭХЛЭЭД ӨӨРӨӨ САНААРАЙ</p>
+              {isTtsSupported() && (
+                <button
+                  type="button"
+                  className="text-button tiny"
+                  onClick={() =>
+                    speakText(answer ? card.back : card.front, {
+                      preset: "calm",
+                    })
+                  }
+                >
+                  🔊 Сонсох
+                </button>
+              )}
+            </div>
+            <h2 className="flashcard-front">
+              <MarkdownView body={card.front} />
+            </h2>
+            {oralOpen && !answer && (
+              <div className="mb-3 space-y-2 rounded-2xl border border-indigo-400/30 bg-indigo-950/30 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-indigo-200">
+                    🎙️ Амаар эсвэл өөрийн үгээр хариулж шалгаарай
+                  </span>
+                  {isBrowserSpeechSupported() && (
+                    <button
+                      type="button"
+                      className="button small"
+                      onClick={() => {
+                        if (oralListening) {
+                          oralSessionRef.current?.stop();
+                          setOralListening(false);
+                          return;
+                        }
+                        const sess = new BrowserVoiceSession(
+                          {
+                            onFinal: (seg) =>
+                              setOralDraft((prev) =>
+                                [prev.trim(), seg.trim()]
+                                  .filter(Boolean)
+                                  .join(" "),
+                              ),
+                            onStateChange: (on) => setOralListening(on),
+                          },
+                          typeof document !== "undefined" &&
+                            document.documentElement.lang === "en"
+                            ? "en-US"
+                            : "mn-MN",
+                        );
+                        oralSessionRef.current = sess;
+                        void sess.start();
+                      }}
+                    >
+                      {oralListening ? "⏹ Зогсоох" : "🎙️ Микрофоноор хэлэх"}
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  rows={2}
+                  value={oralDraft}
+                  onChange={(e) => setOralDraft(e.target.value)}
+                  placeholder="Хариултаа микрофоноор хэлэх эсвэл энд товч бичээд шалгана уу..."
+                  className="w-full rounded-xl border border-white/15 bg-slate-950/70 px-3 py-2 text-base text-slate-100 sm:text-sm"
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="button small primary"
+                    onClick={() => {
+                      oralSessionRef.current?.stop();
+                      setOralListening(false);
+                      setOralGrade(gradeOralRecall(card.back, oralDraft));
+                      setAnswer(true);
+                    }}
+                  >
+                    ✨ Хариулт тулгаж шалгах
+                  </button>
+                </div>
+              </div>
+            )}
             {answer ? (
               <>
-                <div className="flashcard-answer">{card.back}</div>
+                <div className="flashcard-answer">
+                  <MarkdownView body={card.back} />
+                </div>
+                {oralGrade && (
+                  <div
+                    role="status"
+                    className="my-2 rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-3 text-xs text-slate-200"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <strong className="text-emerald-300">
+                        🎯 Аман шалгалт: {oralGrade.scorePercent}% таарлаа
+                      </strong>
+                      <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200">
+                        Санал болгох дүн: {oralGrade.suggestedGrade}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-slate-300">
+                      {oralGrade.feedbackMn}
+                    </p>
+                    {oralGrade.missingKeywords.length > 0 && (
+                      <p className="mt-1 text-[11px] text-amber-300">
+                        Анхаарах үгс: {oralGrade.missingKeywords.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <p className="tiny muted">
                   Хэр санаснаа үнэлээрэй. Дараагийн давтлагын өдөр үүнд
                   тулгуурлана.
@@ -192,7 +319,11 @@ export function CardReview({
                     <button
                       key={i}
                       disabled={busy}
-                      className="button"
+                      className={
+                        oralGrade?.suggestedGrade === i
+                          ? "button primary"
+                          : "button"
+                      }
                       onClick={() => void grade(i)}
                     >
                       {label}
@@ -201,12 +332,21 @@ export function CardReview({
                 </div>
               </>
             ) : (
-              <button
-                className="button primary large"
-                onClick={() => setAnswer(true)}
-              >
-                Хариулт харах
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="button primary large flex-1"
+                  onClick={() => setAnswer(true)}
+                >
+                  Хариулт харах
+                </button>
+                <button
+                  type="button"
+                  className="button large"
+                  onClick={() => setOralOpen((v) => !v)}
+                >
+                  🎙️ Амаар хариулах
+                </button>
+              </div>
             )}
             <button
               className="text-button"

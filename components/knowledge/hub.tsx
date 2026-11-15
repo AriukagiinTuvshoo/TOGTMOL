@@ -26,6 +26,9 @@ import { sortKnowledge } from "@/lib/knowledge/sort";
 import { formatTime } from "@/lib/calculations/dates";
 import { MarkdownView } from "./markdown-view";
 import { QuizGenerator } from "./quiz-generator";
+import { SnapStudyModal } from "@/components/v9/snap-study-modal";
+import { KnowledgeGraph } from "@/components/v9/knowledge-graph";
+import { VocabHelper } from "@/components/v9/vocab-helper";
 
 import type { KnowledgeRecord, StudyQuiz } from "@/types/knowledge";
 import type { KnowledgeView } from "@/types/study";
@@ -115,7 +118,10 @@ export function KnowledgeHub() {
     } | null>(null),
     [quiz, setQuiz] = useState<StudyQuiz | null>(null),
     [generator, setGenerator] = useState(false),
-    [quizGenerator, setQuizGenerator] = useState(false);
+    [quizGenerator, setQuizGenerator] = useState(false),
+    [snapOpen, setSnapOpen] = useState(false),
+    [showGraph, setShowGraph] = useState(false),
+    [vocabOpen, setVocabOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(selectedRecord);
   const [cardLimit, setCardLimit] = useState(100);
   const index = useMemo(
@@ -352,6 +358,19 @@ export function KnowledgeHub() {
             <Icon name="spark" size={16} />{" "}
             {language === "en" ? "Create quiz" : "Quiz үүсгэх"}
           </button>
+          <button className="button" onClick={() => setSnapOpen(true)}>
+            📸 {language === "en" ? "Snap to study" : "Зургаас хичээл"}
+          </button>
+          <button
+            className={showGraph ? "button primary" : "button"}
+            aria-pressed={showGraph}
+            onClick={() => setShowGraph((v) => !v)}
+          >
+            🕸️ {language === "en" ? "Knowledge map" : "Мэдлэгийн зураглал"}
+          </button>
+          <button className="button" onClick={() => setVocabOpen(true)}>
+            🌏 {language === "en" ? "MN·EN·JA Vocab" : "MN·EN·JA Толь"}
+          </button>
           <button
             className="text-button"
             onClick={() => setEditor({ kind: "quiz" })}
@@ -366,6 +385,15 @@ export function KnowledgeHub() {
           </button>
         </div>
       </section>
+      {showGraph && (
+        <KnowledgeGraph
+          subjects={data.subjects.filter((s) => !s.deletedAt && !s.archived)}
+          records={data.knowledge}
+          today={today}
+          onSelectSubject={(sid) => setSubject(sid)}
+          onReviewDeck={(did) => setReview({ deckId: did })}
+        />
+      )}
       <nav
         className="knowledge-tabs"
         aria-label={language === "en" ? "Knowledge type" : "Мэдлэгийн төрөл"}
@@ -943,6 +971,15 @@ export function KnowledgeHub() {
       {generator && <CardGenerator onClose={() => setGenerator(false)} />}
       {quizGenerator && (
         <QuizGenerator onClose={() => setQuizGenerator(false)} />
+      )}
+      {snapOpen && <SnapStudyModal onClose={() => setSnapOpen(false)} />}
+      {vocabOpen && (
+        <Modal
+          title="🌏 MN ↔ EN ↔ JA Түргэн Толь бичиг"
+          onClose={() => setVocabOpen(false)}
+        >
+          <VocabHelper />
+        </Modal>
       )}
     </div>
   );

@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { AMBIENTS } from "@/lib/music/catalog";
 import { youtubeURL } from "@/lib/music/youtube";
 import { Icon } from "@/components/ui/icon";
+import { CHANNELS, PRESETS, engine } from "@/lib/v9/audio-engine";
 import { useMusic } from "./music-provider";
 import "./music.css";
 import type { MusicSource } from "@/types/study";
@@ -64,7 +65,18 @@ export function MusicPlayer() {
     onState,
     onError,
   } = useMusic();
+
   const dock = useRef<HTMLElement>(null);
+  const [drawerTab, setDrawerTab] = useState<"library" | "layers">("library");
+  const engState = useSyncExternalStore(
+    engine.subscribe,
+    engine.getSnapshot,
+    engine.getSnapshot,
+  );
+
+  const activeLayerCount = CHANNELS.filter(
+    (c) => (engState.mix[c.id] ?? 0) > 0.01,
+  ).length;
 
   useEffect(() => {
     const element = dock.current;
@@ -73,7 +85,7 @@ export function MusicPlayer() {
     const measure = () =>
       shell.style.setProperty(
         "--music-dock-height",
-        `${Math.ceil(element.getBoundingClientRect().height)}px`,
+        `${Math.ceil(Math.min(72, element.getBoundingClientRect().height))}px`,
       );
     measure();
     const observer =
@@ -92,7 +104,7 @@ export function MusicPlayer() {
   return (
     <aside
       ref={dock}
-      className={`music-player music-dock ${open ? "music-expanded" : ""}`}
+      className={`music-player music-dock v10-audio-dock ${open ? "music-expanded" : ""}`}
       aria-label="Study music"
       data-open={open}
       data-kind={source?.kind ?? "ambient"}
@@ -104,19 +116,25 @@ export function MusicPlayer() {
           aria-expanded={open}
           onClick={() => (open ? minimize() : setOpen(true))}
         >
-          <span className={`music-disc ${playing ? "is-playing" : ""}`}>
+          <span
+            className={`music-disc ${playing || activeLayerCount > 0 ? "is-playing" : ""}`}
+          >
             <Icon name="music" />
           </span>
           <span>
             <strong>{name}</strong>
             <small>
               {playing
-                ? "Тоглож байна"
-                : playback === "paused" && session.playback === "playing"
-                  ? "Үргэлжлүүлэхэд Play дарна уу"
-                  : playback === "paused"
-                    ? "Түр зогссон"
-                    : "Хөгжим сонгоод эхлүүлнэ"}
+                ? activeLayerCount > 0
+                  ? `Тоглож байна · +${activeLayerCount} давхарга`
+                  : "Тоглож байна"
+                : activeLayerCount > 0
+                  ? `Орчны ${activeLayerCount} суваг идэвхтэй`
+                  : playback === "paused" && session.playback === "playing"
+                    ? "Үргэлжлүүлэхэд Play дарна уу"
+                    : playback === "paused"
+                      ? "Түр зогссон"
+                      : "Хөгжим & орчны дуу"}
             </small>
           </span>
         </button>
@@ -127,7 +145,7 @@ export function MusicPlayer() {
             aria-label="Өмнөх хөгжим"
             onClick={() => next(-1)}
           >
-            <Icon name="previous" size={18} />
+            <Icon name="previous" size={16} />
           </button>
           <button
             className="icon-button music-play"
@@ -135,14 +153,14 @@ export function MusicPlayer() {
             onClick={toggle}
             disabled={busy}
           >
-            <Icon name={playing ? "pause" : "play"} />
+            <Icon name={playing ? "pause" : "play"} size={16} />
           </button>
           <button
             className="icon-button music-step"
             aria-label="Дараагийн хөгжим"
             onClick={() => next(1)}
           >
-            <Icon name="next" size={18} />
+            <Icon name="next" size={16} />
           </button>
           <button
             className="icon-button music-stop"
@@ -150,7 +168,7 @@ export function MusicPlayer() {
             onClick={stop}
             disabled={!playing && playback === "stopped"}
           >
-            <Icon name="stop" size={17} />
+            <Icon name="stop" size={15} />
           </button>
           <button
             className="icon-button"
@@ -158,10 +176,10 @@ export function MusicPlayer() {
             aria-pressed={muted}
             onClick={() => void savePreference({ muted: !muted })}
           >
-            <Icon name={muted ? "muted" : "volume"} size={18} />
+            <Icon name={muted ? "muted" : "volume"} size={16} />
           </button>
           <input
-            className="music-volume"
+            className="music-volume v9-range"
             aria-label="Дууны түвшин"
             type="range"
             min="0"
@@ -178,7 +196,7 @@ export function MusicPlayer() {
             aria-expanded={open}
             onClick={() => (open ? minimize() : setOpen(true))}
           >
-            <Icon name={open ? "chevron-down" : "chevron-up"} size={18} />
+            <Icon name={open ? "chevron-down" : "chevron-up"} size={16} />
           </button>
         </div>
       </div>
@@ -192,13 +210,131 @@ export function MusicPlayer() {
         </p>
       )}
 
+      {open && (
+        <div
+          className="music-drawer-tabs"
+          role="tablist"
+          aria-label="Аудио табууд"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={drawerTab === "library"}
+            className={`music-drawer-tab ${drawerTab === "library" ? "is-active" : ""}`}
+            onClick={() => setDrawerTab("library")}
+          >
+            🎵 Хөгжим & YouTube
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={drawerTab === "layers"}
+            className={`music-drawer-tab ${drawerTab === "layers" ? "is-active" : ""}`}
+            onClick={() => setDrawerTab("layers")}
+          >
+            🎛 Орчны давхарга{" "}
+            {activeLayerCount > 0 ? `(${activeLayerCount})` : ""}
+          </button>
+        </div>
+      )}
+
       <div className="music-body">
-        <section className="music-library" hidden={!open}>
+        {/* Persistent Preview / YouTube Stage (never unmounted while source exists so playback stays uninterrupted) */}
+        <div
+          className={`music-preview ${source?.kind === "audio" ? "music-native-preview" : ""}`}
+          hidden={!open && !source}
+        >
+          {source?.kind === "audio" ? (
+            <div className="music-native-card">
+              <span className="soundscape-art">
+                <Icon name="music" size={28} />
+              </span>
+              <div>
+                <span className="eyebrow">{sourceKind(source)}</span>
+                <h3>{name}</h3>
+                <p className="muted">
+                  {playing
+                    ? "Background горимд тасралтгүй тоглож байна."
+                    : "Play дарж эхлүүлнэ үү."}
+                </p>
+              </div>
+            </div>
+          ) : source && isYouTubeSource(source) ? (
+            <div className="music-youtube-runtime">
+              {activated ? (
+                <YouTubeEmbed
+                  key={`${source.id}:${attempt}`}
+                  source={
+                    source as MusicSource & {
+                      kind: "video" | "playlist";
+                      youtubeId: string;
+                    }
+                  }
+                  resume={session}
+                  onReady={onReady}
+                  onState={onState}
+                  onError={onError}
+                />
+              ) : (
+                <button className="button small" onClick={() => setOpen(true)}>
+                  YouTube тоглуулагчийг ачаалах
+                </button>
+              )}
+              {open && (
+                <div className="music-details">
+                  <p className="tiny muted">
+                    Таб шилжих болон багасгах үед YouTube тасралтгүй үргэлжилнэ.
+                  </p>
+                  <a
+                    href={session.track.url || youtubeURL(source)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    YouTube ↗
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="music-native-card">
+              <span className="soundscape-art">
+                <Icon
+                  name={selected === "ambient:rain" ? "rain" : "leaf"}
+                  size={28}
+                />
+              </span>
+              <div>
+                <span className="eyebrow">DECK 1 · STUDY LOOP</span>
+                <h3>{name}</h3>
+                <p className="muted">
+                  13 сувгийн орчны дуутай зэрэг давхарлан сонсож болно.
+                </p>
+              </div>
+            </div>
+          )}
+          {open && (
+            <div className="music-details">
+              <div className="button-row mobile-music-steps">
+                <button className="button small" onClick={() => next(-1)}>
+                  Өмнөх
+                </button>
+                <button className="button small" onClick={() => next(1)}>
+                  Дараах
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <section
+          className="music-library"
+          hidden={!open || drawerTab !== "library"}
+        >
           <div className="music-library-heading">
             <div>
-              <span className="eyebrow">МИНИЙ ХӨГЖМИЙН САН</span>
+              <span className="eyebrow">DECK 1 · МИНИЙ ХӨГЖМИЙН САН</span>
               <p className="tiny muted">
-                Цөөн, хэрэгтэй аялгуу. Өөрийн дуугаа бас хадгалж болно.
+                Суурь аялгуу, YouTube playlist болон өөрийн аудио файл.
               </p>
             </div>
             <span className="music-count">
@@ -247,11 +383,11 @@ export function MusicPlayer() {
                   }}
                 />
                 <span className="button small">
-                  <Icon name="upload" size={16} /> Аудио файл
+                  <Icon name="upload" size={15} /> Аудио файл
                 </span>
               </label>
               <span className="tiny muted">
-                80 MB хүртэл · төхөөрөмж дээр хадгална
+                80 MB хүртэл · офлайн хадгалагдана
               </span>
             </div>
 
@@ -294,7 +430,7 @@ export function MusicPlayer() {
 
           {sources.length > 0 && (
             <div className="saved-music">
-              <span className="eyebrow">ХАДГАЛСАН</span>
+              <span className="eyebrow">ХАДГАЛСАН ЖАГСААЛТ</span>
               <ul>
                 {sources.map((s) => (
                   <li key={s.id}>
@@ -305,7 +441,7 @@ export function MusicPlayer() {
                     >
                       <Icon
                         name={s.kind === "audio" ? "music" : "cloud"}
-                        size={16}
+                        size={15}
                       />
                       <span>
                         <strong>{s.title}</strong>
@@ -317,7 +453,7 @@ export function MusicPlayer() {
                       aria-label={`${s.title} устгах`}
                       onClick={() => void remove(s.id)}
                     >
-                      <Icon name="close" size={16} />
+                      <Icon name="close" size={15} />
                     </button>
                   </li>
                 ))}
@@ -326,98 +462,72 @@ export function MusicPlayer() {
           )}
 
           <p className="tiny music-storage-note">
-            Upload хийсэн файл энэ төхөөрөмжийн браузерийн хадгалалтад үлдэнэ.
-            Аудио холбоос нь холбоосоо хадгалж, тоглуулах үед интернэт ашиглана.
+            Upload хийсэн файл энэ төхөөрөмжийн IndexedDB-д хадгалагдана.
           </p>
         </section>
 
-        <div
-          className={`music-preview ${source?.kind === "audio" ? "music-native-preview" : ""}`}
-          hidden={!open && !source}
-        >
-          {source?.kind === "audio" ? (
-            <div className="music-native-card">
-              <span className="soundscape-art">
-                <Icon name="music" size={36} />
-              </span>
+        {open && drawerTab === "layers" && (
+          <section className="music-layers-pane">
+            <div className="music-library-heading">
               <div>
-                <span className="eyebrow">{sourceKind(source)}</span>
-                <h3>{name}</h3>
-                <p className="muted">
-                  {playing
-                    ? "Дэмждэг браузер, төхөөрөмж дээр background-аар үргэлжилнэ."
-                    : "Play дарж эхлүүлнэ үү."}
+                <span className="eyebrow">DECK 2 & 3 · 13-СУВАГ ОРЧИН</span>
+                <p className="tiny muted">
+                  YouTube болон хөгжмийн дээр бороо, кафе, тархины долгион
+                  давхарлана.
                 </p>
               </div>
-            </div>
-          ) : source && isYouTubeSource(source) ? (
-            <div className="music-youtube-runtime">
-              {activated ? (
-                <YouTubeEmbed
-                  key={`${source.id}:${attempt}`}
-                  source={
-                    source as MusicSource & {
-                      kind: "video" | "playlist";
-                      youtubeId: string;
-                    }
-                  }
-                  resume={session}
-                  onReady={onReady}
-                  onState={onState}
-                  onError={onError}
-                />
-              ) : (
-                <button className="button small" onClick={() => setOpen(true)}>
-                  YouTube тоглуулагчийг ачаалах
+              {activeLayerCount > 0 && (
+                <button
+                  type="button"
+                  className="v9-btn v9-btn-ghost v9-btn-sm"
+                  onClick={() => engine.stopAll()}
+                >
+                  Зогсоох
                 </button>
               )}
-              {open && (
-                <div className="music-details">
-                  <p className="tiny muted">
-                    YouTube-ийн playback нь браузер, төхөөрөмжөөс хамаарна.
-                    Background/lock-screen control нь native audio шиг
-                    тогтвортой биш байж болно.
-                  </p>
-                  <a
-                    href={session.track.url || youtubeURL(source)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    YouTube дээр нээх ↗
-                  </a>
-                </div>
-              )}
             </div>
-          ) : (
-            <div className="music-native-card">
-              <span className="soundscape-art">
-                <Icon
-                  name={selected === "ambient:rain" ? "rain" : "leaf"}
-                  size={36}
-                />
-              </span>
-              <div>
-                <span className="eyebrow">STUDY SOUNDS</span>
-                <h3>{name}</h3>
-                <p className="muted">
-                  Нэг жижиг алхамдаа анхаарлаа төвлөрүүлээрэй.
-                </p>
-              </div>
-            </div>
-          )}
-          {open && (
-            <div className="music-details">
-              <div className="button-row mobile-music-steps">
-                <button className="button small" onClick={() => next(-1)}>
-                  Өмнөх
+
+            <div className="music-quick-presets">
+              {PRESETS.slice(0, 6).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`v9-preset-pill ${engState.activePreset === p.id ? "is-active" : ""}`}
+                  onClick={() => engine.applyPreset(p.id)}
+                >
+                  <span>{p.emoji}</span>
+                  <span>{p.nameMn}</span>
                 </button>
-                <button className="button small" onClick={() => next(1)}>
-                  Дараах
-                </button>
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+
+            <div className="music-mini-channels">
+              {CHANNELS.slice(0, 8).map((ch) => {
+                const v = engState.mix[ch.id] ?? 0;
+                return (
+                  <label key={ch.id} className="music-mini-ch">
+                    <span>
+                      <strong>{ch.nameMn}</strong>
+                      <small>{Math.round(v * 100)}%</small>
+                    </span>
+                    <input
+                      type="range"
+                      className="v9-range"
+                      min={0}
+                      max={1}
+                      step={0.02}
+                      value={v}
+                      aria-label={`${ch.nameMn} суваг`}
+                      onChange={(e) =>
+                        engine.setChannel(ch.id, Number(e.target.value))
+                      }
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
     </aside>
   );

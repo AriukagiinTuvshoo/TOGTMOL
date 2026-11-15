@@ -18,19 +18,37 @@ import {
   Volume2,
   VolumeX,
   Play,
+  Pause,
   Square,
+  SkipBack,
+  SkipForward,
   Sparkles,
   Headphones,
   ChevronDown,
   SlidersHorizontal,
+  BookmarkPlus,
+  Trash2,
+  Music2,
+  Upload,
+  Link2,
+  ExternalLink,
   type LucideIcon,
 } from "lucide-react";
+import { AMBIENTS } from "@/lib/music/catalog";
+import { uid } from "@/lib/constants";
+import { useStudy } from "@/hooks/use-study";
 import {
   CHANNELS,
   PRESETS,
   engine,
   type ChannelId,
 } from "@/lib/v9/audio-engine";
+import {
+  deck1Bridge,
+  readSavedMixes,
+  type Deck1BridgeState,
+  type SavedAudioMix,
+} from "@/lib/v9/audio-bridge";
 import { BondookCard } from "./bondook-widget";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -60,9 +78,23 @@ export function useSoundEngine() {
   );
 }
 
-export function AudioMixer({ accent }: { accent: string }) {
+export function useDeck1Bridge(): Deck1BridgeState {
+  const [snap, setSnap] = useState<Deck1BridgeState>(() =>
+    deck1Bridge.getState(),
+  );
+  useEffect(() => deck1Bridge.subscribe(setSnap), []);
+  return snap;
+}
+
+export function AudioMixer({
+  accent,
+  defaultExpanded = false,
+}: {
+  accent: string;
+  defaultExpanded?: boolean;
+}) {
   const { mix, master, muted, activePreset, activeCount } = useSoundEngine();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -156,8 +188,8 @@ export function AudioMixer({ accent }: { accent: string }) {
             </h3>
             <p className="text-[11px] text-white/55">
               {activeCount === 0
-                ? "13 суваг бэлэн — пресет сонго"
-                : `${activeCount} суваг тоглож байна`}
+                ? "Deck 2 & 3 · 13 суваг бэлэн — пресет сонго"
+                : `${activeCount} суваг идэвхтэй давхарлаж байна`}
             </p>
           </div>
         </div>
@@ -212,7 +244,7 @@ export function AudioMixer({ accent }: { accent: string }) {
 
       <div className="mt-3">
         <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/50">
-          <Sparkles size={12} /> Бэлэн орчин
+          <Sparkles size={12} /> Бэлэн орчны пресетүүд (11)
         </div>
         <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
           {PRESETS.map((p) => (
@@ -324,8 +356,7 @@ export function AudioMixer({ accent }: { accent: string }) {
             <Headphones size={15} className="mt-0.5 shrink-0" />
             <span>
               <b>Хоёр чихний долгион (Binaural α 10Hz)</b> нь чихэвчтэй үед
-              хамгийн үр дүнтэй. Альфа долгион нь тайван төвлөрлийг дэмждэг нь
-              судалгаагаар батлагдсан.
+              хамгийн үр дүнтэй. Альфа долгион нь тайван төвлөрлийг дэмждэг.
             </span>
           </div>
         </div>
@@ -335,39 +366,439 @@ export function AudioMixer({ accent }: { accent: string }) {
 }
 
 export function SoundStudioView({ accent }: { accent: string }) {
+  const { data, store } = useStudy();
+  const { mix, activeCount } = useSoundEngine();
+  const deck1 = useDeck1Bridge();
+  const [streamUrl, setStreamUrl] = useState("");
+  const [streamTitle, setStreamTitle] = useState("");
+  const [mixName, setMixName] = useState("");
+  const [studioNotice, setStudioNotice] = useState("");
+
+  const savedMixes = readSavedMixes(data.settings.extras);
+  const autoDuckOnBreak = Boolean(data.settings.extras.autoDuckOnBreak);
+  const autoStartFocusSound = Boolean(data.settings.extras.autoStartFocusSound);
+
+  const saveCurrentMix = async () => {
+    const trimmed = mixName.trim() || `Микс #${savedMixes.length + 1}`;
+    const nonZeroChannels: Partial<Record<ChannelId, number>> = {};
+    CHANNELS.forEach((c) => {
+      const val = mix[c.id] ?? 0;
+      if (val > 0.01) nonZeroChannels[c.id] = Number(val.toFixed(2));
+    });
+    const entry: SavedAudioMix = {
+      id: uid("mix"),
+      name: trimmed.slice(0, 50),
+      createdAt: Date.now(),
+      deck1Selected: deck1.selected || null,
+      deck1Name: deck1.name,
+      channels: nonZeroChannels,
+    };
+    const nextList = [entry, ...savedMixes].slice(0, 20);
+    await store.mutate(
+      (d) => ({
+        ...d,
+        settings: {
+          ...d.settings,
+          updatedAt: Date.now(),
+          extras: { ...d.settings.extras, savedMixes: nextList },
+        },
+      }),
+      { reportError: false, reportBusy: false },
+    );
+    setMixName("");
+    setStudioNotice(`"${entry.name}" миксийг хадгаллаа!`);
+  };
+
+  const loadSavedMix = (item: SavedAudioMix) => {
+    engine.applyCustomMix(item.channels);
+    if (item.deck1Selected) {
+      deck1Bridge.getActions()?.select(item.deck1Selected);
+    }
+    setStudioNotice(`"${item.name}" миксийг ачааллаа.`);
+  };
+
+  const deleteSavedMix = async (id: string) => {
+    const nextList = savedMixes.filter((m) => m.id !== id);
+    await store.mutate(
+      (d) => ({
+        ...d,
+        settings: {
+          ...d.settings,
+          updatedAt: Date.now(),
+          extras: { ...d.settings.extras, savedMixes: nextList },
+        },
+      }),
+      { reportError: false, reportBusy: false },
+    );
+  };
+
+  const toggleExtraFlag = async (
+    key: "autoDuckOnBreak" | "autoStartFocusSound",
+    value: boolean,
+  ) => {
+    await store.mutate(
+      (d) => ({
+        ...d,
+        settings: {
+          ...d.settings,
+          updatedAt: Date.now(),
+          extras: { ...d.settings.extras, [key]: value },
+        },
+      }),
+      { reportError: false, reportBusy: false },
+    );
+  };
+
   return (
-    <div className="grid gap-3.5 lg:grid-cols-2">
-      <AudioMixer accent={accent} />
-      <div className="space-y-3.5">
-        <div className="glass rounded-3xl p-5">
-          <h3 className="font-display text-[16px] font-bold text-white">
-            Дууны шинжлэх ухаан 🎧
-          </h3>
-          <div className="mt-3 space-y-2.5 text-[13px] leading-relaxed text-white/70">
-            <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-              <b className="text-white">Ягаан/бор чимээ</b> — тархины
-              “санамсаргүй яриа” мэдрэмжийг дарж, унших ойлголтыг 15–25%
-              нэмэгдүүлдэг.
+    <div className="space-y-4">
+      {studioNotice && (
+        <div
+          role="status"
+          className="glass flex items-center justify-between rounded-2xl px-4 py-2.5 text-xs font-semibold text-amber-200 ring-1 ring-amber-400/30"
+        >
+          <span>✨ {studioNotice}</span>
+          <button
+            type="button"
+            onClick={() => setStudioNotice("")}
+            className="text-white/60 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-12">
+        {/* Left Column: Deck 2 & 3 (13-Channel Procedural Soundscape) */}
+        <div className="space-y-4 lg:col-span-7">
+          <AudioMixer accent={accent} defaultExpanded />
+        </div>
+
+        {/* Right Column: Deck 1 (Music, YouTube & 80MB Local Files) + Saved Mixes + Smart Timer Sync */}
+        <div className="space-y-4 lg:col-span-5">
+          {/* Deck 1 Card */}
+          <div className="glass rounded-3xl p-4 md:p-5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="grid h-10 w-10 place-items-center rounded-2xl"
+                  style={{
+                    background: `${accent}22`,
+                    border: `1px solid ${accent}44`,
+                  }}
+                >
+                  <Music2 size={19} style={{ color: accent }} />
+                </div>
+                <div>
+                  <h3 className="font-display text-[15px] font-bold text-white">
+                    Deck 1 · Хөгжим & YouTube
+                  </h3>
+                  <p className="text-[11px] text-white/55">
+                    {deck1.playing ? `Тоглож байна: ${deck1.name}` : deck1.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => deck1Bridge.getActions()?.setOpen(!deck1.open)}
+                className="flex items-center gap-1 rounded-xl bg-white/8 px-2.5 py-1.5 text-[11px] font-semibold text-white/80 ring-1 ring-white/12 transition hover:bg-white/15"
+              >
+                <ExternalLink size={12} />
+                {deck1.open ? "Видео хураах" : "Видео цонх"}
+              </button>
             </div>
-            <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-              <b className="text-white">Бороо + кафе (~70dB)</b> — судалгаагаар
-              дунд зэргийн орчны чимээ бүтээлч сэтгэлгээг идэвхжүүлдэг.
+
+            {/* Transport Row */}
+            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/5 p-2.5 ring-1 ring-white/10">
+              <button
+                type="button"
+                onClick={() => deck1Bridge.getActions()?.next(-1)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/80 hover:bg-white/15"
+                title="Өмнөх"
+              >
+                <SkipBack size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => deck1Bridge.getActions()?.toggle()}
+                className="grid h-10 w-10 place-items-center rounded-xl font-bold text-slate-950 transition hover:scale-105"
+                style={{ background: accent }}
+                title={deck1.playing ? "Түр зогсоох" : "Тоглуулах"}
+              >
+                {deck1.playing ? <Pause size={17} /> : <Play size={17} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => deck1Bridge.getActions()?.next(1)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/80 hover:bg-white/15"
+                title="Дараах"
+              >
+                <SkipForward size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => deck1Bridge.getActions()?.stop()}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/80 hover:bg-red-500/25"
+                title="Зогсоох"
+              >
+                <Square size={14} />
+              </button>
+              <div className="ml-1 flex flex-1 items-center gap-2">
+                <Volume2 size={14} className="shrink-0 text-white/55" />
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={deck1.muted ? 0 : deck1.volume}
+                  onChange={(e) =>
+                    deck1Bridge.getActions()?.setVolume(Number(e.target.value))
+                  }
+                  className="v9-range w-full"
+                  aria-label="Deck 1 хөгжмийн түвшин"
+                />
+              </div>
             </div>
-            <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-              <b className="text-white">Альфа бинаурал 10Hz</b> — чихэвчтэй
-              сонсоход тайван сэргэг байдал (relaxed alertness) нэмэгддэг.
+
+            {/* Built-in Study Loops */}
+            <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {AMBIENTS.map((a) => {
+                const active = deck1.selected === `ambient:${a.id}`;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() =>
+                      deck1Bridge.getActions()?.select(`ambient:${a.id}`)
+                    }
+                    className={`rounded-xl px-2.5 py-2 text-left text-[11.5px] font-semibold ring-1 transition ${
+                      active
+                        ? "bg-amber-400/20 text-amber-200 ring-amber-400/50"
+                        : "bg-white/5 text-white/75 ring-white/10 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="truncate font-bold">{a.name}</div>
+                    <div className="truncate text-[10px] text-white/45">
+                      {a.detail}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-              <b className="text-white">Муурны хурхираа 25Hz</b> — бага
-              давтамжийн чичиргээ стрессийн кортизолыг бууруулдаг.
+
+            {/* Add YouTube / Audio Link + 80MB File Upload */}
+            <form
+              className="mt-3 space-y-2 rounded-2xl bg-white/[.03] p-3 ring-1 ring-white/10"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!streamUrl.trim()) return;
+                void deck1Bridge
+                  .getActions()
+                  ?.addUrl(streamUrl, streamTitle)
+                  .then(() => {
+                    setStreamUrl("");
+                    setStreamTitle("");
+                    setStudioNotice("Хөгжмийн эх үүсвэр нэмэгдлээ!");
+                  });
+              }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                  <Link2 size={12} /> YouTube / Аудио файл нэмэх
+                </span>
+                <label className="flex cursor-pointer items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-white/15">
+                  <Upload size={12} /> MP3/WAV (80MB)
+                  <input
+                    type="file"
+                    accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.aac,.flac,.webm"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      e.currentTarget.value = "";
+                      if (f) void deck1Bridge.getActions()?.addFile(f);
+                    }}
+                  />
+                </label>
+              </div>
+              <input
+                type="url"
+                required
+                value={streamUrl}
+                onChange={(e) => setStreamUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... эсвэл playlist"
+                className="w-full rounded-xl bg-black/35 px-3 py-2 text-xs text-white placeholder-white/35 ring-1 ring-white/12 focus:outline-none focus:ring-amber-400/60"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={streamTitle}
+                  onChange={(e) => setStreamTitle(e.target.value)}
+                  placeholder="Нэр өгөх (заавал биш)"
+                  maxLength={100}
+                  className="flex-1 rounded-xl bg-black/35 px-3 py-1.5 text-xs text-white placeholder-white/35 ring-1 ring-white/12 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-950 transition hover:opacity-95"
+                  style={{ background: accent }}
+                >
+                  Нэмэх
+                </button>
+              </div>
+            </form>
+
+            {deck1.sources.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                <div className="text-[10.5px] font-bold uppercase tracking-wider text-white/45">
+                  Хадгалсан дуунууд ({deck1.sources.length})
+                </div>
+                {deck1.sources.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 ring-1 ring-white/10"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => deck1Bridge.getActions()?.select(s.id)}
+                      className="min-w-0 flex-1 truncate text-left text-xs font-semibold text-white hover:text-amber-300"
+                    >
+                      {deck1.selected === s.id ? "▶ " : ""}
+                      {s.title}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void deck1Bridge.getActions()?.removeSource(s.id)
+                      }
+                      className="text-white/45 hover:text-red-300"
+                      title="Устгах"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Saved Custom Mixes Card */}
+          <div className="glass rounded-3xl p-4 md:p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-[15px] font-bold text-white">
+                💾 Миний хадгалсан миксүүд
+              </h3>
+              <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-[11px] font-bold text-white/65">
+                {savedMixes.length}
+              </span>
+            </div>
+            <p className="mt-1 text-[11.5px] text-white/55">
+              Deck 1 хөгжим + 13 сувгийн түвшинг нэг товчоор дуудахаар хадгална.
+            </p>
+
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={mixName}
+                onChange={(e) => setMixName(e.target.value)}
+                placeholder="Жишээ: Шөнийн код + Бороо"
+                maxLength={50}
+                className="flex-1 rounded-xl bg-black/35 px-3 py-2 text-xs text-white placeholder-white/35 ring-1 ring-white/12 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void saveCurrentMix()}
+                disabled={activeCount === 0 && !deck1.playing}
+                className="flex items-center gap-1.5 rounded-xl bg-white/12 px-3 py-2 text-xs font-bold text-white ring-1 ring-white/20 transition hover:bg-white/20 disabled:opacity-45"
+              >
+                <BookmarkPlus size={14} /> Хадгалах
+              </button>
+            </div>
+
+            {savedMixes.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {savedMixes.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2 ring-1 ring-white/10"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => loadSavedMix(m)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <div className="truncate text-xs font-bold text-white">
+                        🎧 {m.name}
+                      </div>
+                      <div className="truncate text-[10.5px] text-white/50">
+                        {Object.keys(m.channels).length} амбиент суваг
+                        {m.deck1Name ? ` · ${m.deck1Name}` : ""}
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void deleteSavedMix(m.id)}
+                      className="text-white/45 hover:text-red-300"
+                      aria-label={`${m.name} микс устгах`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Timer-Linked Smart Audio Automation */}
+          <div className="glass rounded-3xl p-4 md:p-5">
+            <h3 className="font-display text-[15px] font-bold text-white">
+              ⏱ Фокус цагтай автомат уялдах
+            </h3>
+            <div className="mt-3 space-y-2.5 text-xs text-white/80">
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
+                <span>
+                  <strong className="block text-white">
+                    Завсарлагаар дууг зөөлрүүлэх (Auto-Duck)
+                  </strong>
+                  <small className="text-white/50">
+                    Break эхлэхэд орчны дууг 45% болгож тайвшруулна
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={autoDuckOnBreak}
+                  onChange={(e) =>
+                    void toggleExtraFlag("autoDuckOnBreak", e.target.checked)
+                  }
+                />
+              </label>
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
+                <span>
+                  <strong className="block text-white">
+                    Фокус эхлэхэд орчны дууг сэргээх
+                  </strong>
+                  <small className="text-white/50">
+                    Идэвхтэй суваг байхгүй бол зөөлөн бороо автоматаар асна
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={autoStartFocusSound}
+                  onChange={(e) =>
+                    void toggleExtraFlag(
+                      "autoStartFocusSound",
+                      e.target.checked,
+                    )
+                  }
+                />
+              </label>
             </div>
           </div>
+
+          <BondookCard
+            mood="love"
+            compact
+            message="YouTube Lo-Fi эсвэл өөрийн дуун дээрээ Бороо + 10Hz Альфа долгион давхарлаад 'Хадгалах' дарчих — нэг товчоор гүн төвлөрлийн горимдоо орно!"
+          />
         </div>
-        <BondookCard
-          mood="love"
-          compact
-          message="Дуртай хослолоо хадгал — тархи чинь тэр дууг 'фокусын дохио' гэж сурна. YouTube болон өөрийн аудио файлаа доод хөгжмийн самбараас зэрэг ашиглаарай!"
-        />
       </div>
     </div>
   );

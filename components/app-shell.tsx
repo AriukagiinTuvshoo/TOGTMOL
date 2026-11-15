@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   House,
@@ -29,6 +30,9 @@ import {
   Settings as SettingsIcon,
   PartyPopper,
   Menu,
+  Mic,
+  User as UserIcon,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -64,6 +68,15 @@ import { PwaManager } from "./settings/pwa";
 import { RoomBackground } from "./v9/room-background";
 import { BondookAvatar } from "./v9/bondook-widget";
 import { SoundStudioView, useSoundEngine } from "./v9/audio-mixer";
+import { VoiceFlowBar } from "./v9/voice-flowbar";
+import { AuthModal, type AuthModalTab } from "./v9/auth-modal";
+import { QuickToolsModal } from "./v9/quick-tools";
+import { EmojiBurstLayer } from "./v9/emoji-burst";
+import {
+  getActiveSimpleProfileSnapshot,
+  namespaceForProfile,
+  subscribeSimpleProfile,
+} from "@/lib/v9/simple-profile";
 import { ROOMS, resolveV9RoomId, roomById } from "@/lib/v9/rooms";
 import { PRESETS, engine } from "@/lib/v9/audio-engine";
 import { BONDOOK_TIPS, fmtClock, fmtMnDuration } from "@/lib/v9/focus";
@@ -224,12 +237,78 @@ function Shell() {
   const soundSubView = view === "overview" && soundTabRequested;
   const [showRooms, setShowRooms] = useState(false);
   const [shield, setShield] = useState(false);
+  const [voiceBarOpen, setVoiceBarOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<AuthModalTab | null>(null);
+  const [quickToolsOpen, setQuickToolsOpen] = useState(false);
   const [toasts, setToasts] = useState<V9Toast[]>([]);
   const [tipIdx, setTipIdx] = useState(0);
+  const simpleProfile = useSyncExternalStore(
+    subscribeSimpleProfile,
+    getActiveSimpleProfileSnapshot,
+    () => null,
+  );
+  const prevTimerPhaseRef = useRef<string | null>(null);
+
+  // Automatically restore saved Simple Profile namespace after initial guest boot
+  useEffect(() => {
+    if (!state.ready || !simpleProfile || user) return;
+    const expectedNs = namespaceForProfile(simpleProfile.id);
+    if (state.namespace === "guest") {
+      void store.switchNamespace(expectedNs, true).catch(() => {});
+    }
+  }, [simpleProfile, state.namespace, state.ready, store, user]);
 
   const activeRoomId = resolveV9RoomId(data.settings.world);
   const room = roomById(activeRoomId);
   const accent = room.accent;
+
+  // Global keyboard shortcuts: Alt+V (Voice FlowBar) & Alt+K (Quick Tools)
+  useEffect(() => {
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.altKey && ev.code === "KeyV") {
+        ev.preventDefault();
+        setVoiceBarOpen((v) => !v);
+      } else if (ev.altKey && ev.code === "KeyK") {
+        ev.preventDefault();
+        setQuickToolsOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Timer-linked Smart Audio Automation (Auto-Duck on Break & Auto-Start Focus Sound)
+  useEffect(() => {
+    const currentPhase = data.activeTimer?.running
+      ? data.activeTimer.phase
+      : null;
+    const autoDuck = Boolean(data.settings.extras.autoDuckOnBreak);
+    const autoStart = Boolean(data.settings.extras.autoStartFocusSound);
+
+    if (autoDuck) {
+      const isBreak =
+        currentPhase === "shortBreak" || currentPhase === "longBreak";
+      engine.setDuckFactor(isBreak ? 0.45 : 1);
+    } else {
+      engine.setDuckFactor(1);
+    }
+
+    if (
+      autoStart &&
+      currentPhase === "focus" &&
+      prevTimerPhaseRef.current !== "focus" &&
+      engine.getSnapshot().activeCount === 0
+    ) {
+      engine.applyPreset(room.preset || "rainy_cafe");
+    }
+    prevTimerPhaseRef.current = currentPhase;
+  }, [
+    data.activeTimer?.phase,
+    data.activeTimer?.running,
+    data.settings.extras.autoDuckOnBreak,
+    data.settings.extras.autoStartFocusSound,
+    room.preset,
+  ]);
 
   const todaySeconds = index.days.get(today)?.seconds ?? 0;
   const streak = useMemo(
@@ -509,7 +588,10 @@ function Shell() {
       className={`app-shell v9-shell ${view === "focus" ? "is-focus" : ""}`}
       style={{ ["--v9-accent" as string]: accent }}
     >
-      <RoomBackground room={room} />
+      <RoomBackground
+        room={room}
+        autoDayNight={data.settings.extras.autoDayNight !== false}
+      />
 
       <a
         className="skip-link"
@@ -760,8 +842,33 @@ function Shell() {
 
               <button
                 type="button"
+                onClick={() => setVoiceBarOpen((v) => !v)}
+                className={`grid h-9 w-9 place-items-center rounded-xl ring-1 transition ${
+                  voiceBarOpen
+                    ? "bg-amber-400 text-slate-950 ring-amber-300"
+                    : "bg-white/8 text-white/80 ring-white/10 hover:bg-white/15"
+                }`}
+                title="Дуу хоолойн удирдлага (Alt+V)"
+                aria-label="Дуу хоолойн удирдлага"
+                aria-pressed={voiceBarOpen}
+              >
+                <Mic size={16} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQuickToolsOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/80 ring-1 ring-white/10 transition hover:bg-white/15"
+                title="Оюутны түргэн хэрэгсэл ба хүртээмж (Alt+K)"
+                aria-label="Оюутны түргэн хэрэгсэл"
+              >
+                <Zap size={16} />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setShield(true)}
-                className="grid h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/75 ring-1 ring-white/10 transition hover:bg-white/15"
+                className="hidden h-9 w-9 place-items-center rounded-xl bg-white/8 text-white/75 ring-1 ring-white/10 transition hover:bg-white/15 sm:grid"
                 title="Фокус бамбай"
                 aria-label="Фокус бамбай"
               >
@@ -771,14 +878,37 @@ function Shell() {
               <button
                 type="button"
                 onClick={() => setShowRooms(true)}
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold text-white ring-1 transition hover:scale-[1.02]"
+                className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-bold text-white ring-1 transition hover:scale-[1.02]"
                 style={{
                   background: `${accent}2c`,
                   borderColor: `${accent}55`,
                 }}
               >
                 <span className="text-sm">{room.emoji}</span>
-                <span className="hidden sm:inline">{room.nameMn}</span>
+                <span className="hidden md:inline">{room.nameMn}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAuthModalTab("account")}
+                className="flex items-center gap-1.5 rounded-xl bg-white/8 px-2.5 py-2 text-[11.5px] font-bold text-white/90 ring-1 ring-white/12 transition hover:bg-white/15"
+                title="Профайл, Бүртгэл ба Google AI тохиргоо"
+                aria-label="Нэвтрэх ба бүртгэл"
+              >
+                {simpleProfile ? (
+                  <span className="text-sm leading-none">
+                    {simpleProfile.avatar}
+                  </span>
+                ) : (
+                  <UserIcon size={14} />
+                )}
+                <span className="hidden sm:inline">
+                  {simpleProfile
+                    ? simpleProfile.name
+                    : user
+                      ? user.email?.split("@")[0]
+                      : "Нэвтрэх"}
+                </span>
               </button>
 
               <div className="hidden items-center gap-1.5 xl:flex">
@@ -877,6 +1007,78 @@ function Shell() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Mobile Horizontal Swipeable Quick-Nav Strip (< 1024px) */}
+          <div
+            role="toolbar"
+            aria-label="Гар утасны хурдан шилжилт"
+            className="v11-mobile-strip flex items-center gap-1.5 overflow-x-auto px-3 pb-2 lg:hidden"
+          >
+            {data.activeTimer?.running && (
+              <button
+                type="button"
+                onClick={() => go("focus")}
+                className="flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full bg-red-500/20 px-3 py-1 text-[11.5px] font-bold text-red-200 ring-1 ring-red-400/40"
+              >
+                <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                <span>{liveTimerClock}</span>
+              </button>
+            )}
+            {PRIMARY_TABS.map((tab) => (
+              <button
+                key={`m-${tab.id}`}
+                type="button"
+                onClick={tab.onClick}
+                className={`flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-bold transition ${
+                  tab.active
+                    ? "text-white"
+                    : "bg-white/[0.06] text-white/75 active:bg-white/15"
+                }`}
+                style={
+                  tab.active
+                    ? {
+                        background: `${accent}36`,
+                        boxShadow: `inset 0 0 0 1px ${accent}75`,
+                      }
+                    : undefined
+                }
+              >
+                <tab.icon size={13} />
+                <span>{tab.label}</span>
+                {tab.badge ? (
+                  <span className="rounded-full bg-red-400 px-1.5 text-[10px] font-extrabold text-white">
+                    {tab.badge}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+            {SECONDARY_TABS.map((item) => {
+              const isActive = view === item.view;
+              return (
+                <button
+                  key={`ms-${item.view}`}
+                  type="button"
+                  onClick={() => go(item.view)}
+                  className={`flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-semibold transition ${
+                    isActive
+                      ? "text-white"
+                      : "bg-white/[0.04] text-white/65 active:bg-white/15"
+                  }`}
+                  style={
+                    isActive
+                      ? {
+                          background: `${accent}2e`,
+                          boxShadow: `inset 0 0 0 1px ${accent}66`,
+                        }
+                      : undefined
+                  }
+                >
+                  <item.icon size={13} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </header>
 
@@ -1224,11 +1426,36 @@ function Shell() {
       </div>
 
       {state.ready && (
-        <ModuleBoundary key={state.namespace} name={t("settings.music")}>
-          <MusicProvider>
-            <MusicPlayer />
-          </MusicProvider>
-        </ModuleBoundary>
+        <>
+          <VoiceFlowBar
+            open={voiceBarOpen}
+            onClose={() => setVoiceBarOpen(false)}
+            accent={accent}
+            onNavigate={(target) => {
+              if (target === "sound") {
+                setSoundTabRequested(true);
+                navigate("overview");
+              } else {
+                go(target);
+              }
+            }}
+          />
+          {authModalTab !== null && (
+            <AuthModal
+              initialTab={authModalTab}
+              onClose={() => setAuthModalTab(null)}
+            />
+          )}
+          {quickToolsOpen && (
+            <QuickToolsModal onClose={() => setQuickToolsOpen(false)} />
+          )}
+          <ModuleBoundary key={state.namespace} name={t("settings.music")}>
+            <MusicProvider>
+              <MusicPlayer />
+            </MusicProvider>
+          </ModuleBoundary>
+          <EmojiBurstLayer />
+        </>
       )}
       <PwaManager />
     </div>

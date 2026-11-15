@@ -1,6 +1,7 @@
 "use client";
 import { GoalPlanner } from "./goal-planner";
 import { GoalsV9Strip } from "@/components/v9/goals-v9-strip";
+import { ExamCountdown } from "@/components/v9/exam-countdown";
 import { useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { actions } from "@/lib/persistence/actions";
@@ -58,6 +59,7 @@ export function Goals() {
   return (
     <div className="stack">
       <GoalsV9Strip />
+      <ExamCountdown />
       <GoalPlanner />
       <details className="card" open>
         <summary>

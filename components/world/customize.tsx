@@ -132,23 +132,20 @@ export function CustomizeRoom() {
       ),
     );
   return (
-    <div className="stack room-customizer">
-      <SectionTitle
-        title={language === "en" ? "Your little world" : "Таны жижиг ертөнц"}
-        subtitle={
-          language === "en"
-            ? "Choose a room, Bondook, and lighting that feel comfortable."
-            : "Өрөө, Бондоок, гэрэл — өөртөө тухтайг сонгоорой."
-        }
-        action={
-          <button
-            className="button primary"
-            onClick={() => navigate("overview")}
-          >
-            {language === "en" ? "Go to room" : "Өрөөндөө очих"}
-          </button>
-        }
-      />
+    <div className="stack room-customizer v10-room-studio">
+      <div className="v10-studio-toolbar card">
+        <div>
+          <span className="eyebrow">ROOM & BONDOOK STUDIO</span>
+          <p className="muted" style={{ margin: "4px 0 0" }}>
+            {language === "en"
+              ? "Choose a room, Bondook, and lighting that feel comfortable."
+              : "Өрөө, Бондоок, гэрэл — өөртөө тухтайг сонгоорой."}
+          </p>
+        </div>
+        <button className="button primary" onClick={() => navigate("overview")}>
+          {language === "en" ? "Go to room" : "Өрөөндөө очих"}
+        </button>
+      </div>
       <div className="customizer-layout">
         <div className="customizer-preview">
           <RoomScene world={world} />
@@ -446,6 +443,10 @@ export function CustomizeRoom() {
                   background: d.background,
                   companion: d.companion,
                   atmosphere: d.atmosphere,
+                  extras: {
+                    ...world.extras,
+                    v9Room: d.id,
+                  },
                 })
               }
             >

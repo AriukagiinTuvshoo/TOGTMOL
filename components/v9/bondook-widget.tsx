@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { BONDOOK_QUOTES } from "@/lib/v9/focus";
+import { triggerEmojiBurst } from "./emoji-burst";
 
 export type BondookMood =
   "happy" | "focus" | "sleep" | "party" | "think" | "love";
@@ -251,12 +252,39 @@ export function BondookCard({
   onOpenChat?: () => void;
 }) {
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [careMsg, setCareMsg] = useState<string | null>(null);
+  const [hearts, setHearts] = useState<number>(() => {
+    if (typeof window === "undefined") return 3;
+    const saved = Number(window.localStorage.getItem("togtmol:bondook:hearts"));
+    return Number.isFinite(saved) && saved > 0 ? saved : 3;
+  });
+
   useEffect(() => {
     const t = setInterval(() => {
       setQuoteIdx((i) => (i + 1) % BONDOOK_QUOTES.length);
     }, 12000);
     return () => clearInterval(t);
   }, []);
+
+  const giveCare = (
+    nextMood: BondookMood,
+    reaction: string,
+    emojis: string[],
+  ) => {
+    onMood?.(nextMood);
+    setCareMsg(reaction);
+    triggerEmojiBurst(emojis);
+    setHearts((prev) => {
+      const next = prev + 1;
+      try {
+        window.localStorage.setItem("togtmol:bondook:hearts", String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+    window.setTimeout(() => setCareMsg(null), 5500);
+  };
 
   const moods: BondookMood[] = [
     "happy",
@@ -292,10 +320,59 @@ export function BondookCard({
                 Lv. {level}
               </span>
             )}
+            <span
+              className="rounded-full bg-pink-500/20 px-2 py-0.5 text-[10px] font-bold text-pink-200"
+              title="Бондоокийн дотносол"
+            >
+              💖 {hearts}
+            </span>
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-white/85">
-            {message ?? BONDOOK_QUOTES[quoteIdx]}
+            {careMsg ?? message ?? BONDOOK_QUOTES[quoteIdx]}
           </p>
+          {!compact && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  giveCare(
+                    "love",
+                    "Хэ-хэ, толгой илэхээр ямар дулаахан гоё юм бэ~ 🥰🐾 Хамтдаа хичээе!",
+                    ["💕", "🥰", "🐾", "✨"],
+                  )
+                }
+                className="rounded-xl bg-pink-500/15 px-2.5 py-1 text-[11px] font-semibold text-pink-100 ring-1 ring-pink-400/25 transition hover:scale-105 hover:bg-pink-500/25 active:scale-95"
+              >
+                👋 Илэх
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  giveCare(
+                    "happy",
+                    "Ам-ам! 🍪 Халуун жигнэмэг хамгийн амттай нь! Эрч хүч дүүрлээ ✨",
+                    ["🍪", "😋", "💛", "✨"],
+                  )
+                }
+                className="rounded-xl bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-100 ring-1 ring-amber-400/25 transition hover:scale-105 hover:bg-amber-500/25 active:scale-95"
+              >
+                🍪 Жигнэмэг
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  giveCare(
+                    "party",
+                    "Ммм~ сүүтэй цай! 🧋🎉 Одоо хоёулаа ямар ч хичээлийг дийлнэ ээ!",
+                    ["🧋", "🌸", "🎉", "💜"],
+                  )
+                }
+                className="rounded-xl bg-purple-500/15 px-2.5 py-1 text-[11px] font-semibold text-purple-100 ring-1 ring-purple-400/25 transition hover:scale-105 hover:bg-purple-500/25 active:scale-95"
+              >
+                🧋 Цай өгөх
+              </button>
+            </div>
+          )}
           {lastReflection && (
             <div className="mt-2 rounded-2xl bg-white/[.05] px-3 py-2 ring-1 ring-white/10">
               <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">

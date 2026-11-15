@@ -2,6 +2,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n/language-provider";
 import { getSupabase } from "@/lib/supabase/client";
+import {
+  generateGeminiPlan,
+  probeGeminiServerStatus,
+  readGeminiConfig,
+} from "@/lib/assistant/gemini";
 import { parsePlanProposal } from "@/lib/assistant/plan";
 import { useStudy } from "@/hooks/use-study";
 import {
@@ -308,6 +313,33 @@ export function PlanWizard({
     setBusy(true);
     setError("");
     try {
+      const draft = input ?? inferPlan(text, data, today);
+      const geminiCfg = readGeminiConfig();
+      const serverStatus = await probeGeminiServerStatus();
+      if (
+        (geminiCfg.enabled && Boolean(geminiCfg.apiKey)) ||
+        serverStatus.configuredOnServer
+      ) {
+        const proposal = await generateGeminiPlan({
+          message: text,
+          context: {
+            today,
+            subject: data.subjects.find((s) => s.id === draft.subjectId)?.name,
+            availableWeeks: draft.weeks,
+            daysPerWeek: draft.daysPerWeek,
+            minutesPerDay: draft.minutesPerDay,
+          },
+          language,
+        });
+        if (
+          !controller.signal.aborted &&
+          store.getSnapshot().namespace === namespace
+        ) {
+          setInput({ ...draft, ...proposal });
+          setPreview(null);
+        }
+        return;
+      }
       const client = getSupabase(),
         session = client ? (await client.auth.getSession()).data.session : null;
       if (
@@ -316,7 +348,6 @@ export function PlanWizard({
         store.getSnapshot().namespace !== namespace
       )
         throw Error("Онлайн санал авахын тулд бүртгэлээрээ нэвтэрнэ үү.");
-      const draft = input ?? inferPlan(text, data, today);
       await store.mutate((d) => {
         if (store.getSnapshot().namespace !== namespace)
           throw Error("Бүртгэл өөрчлөгдсөн.");
