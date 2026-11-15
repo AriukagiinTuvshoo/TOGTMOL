@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { APP_VERSION_LABEL } from "@/lib/version";
 import "./globals.css";
 import "./world.css";
 import "./knowledge.css";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ??
       "https://togtmol.tuvshoo0331.workers.dev",
   ),
-  title: "ТОГТМОЛ v9 — Гүн төвлөрлийн өрөө",
+  title: `ТОГТМОЛ ${APP_VERSION_LABEL} — Гүн төвлөрлийн өрөө`,
   description:
     "Өөрийн өрөөндөө төвлөрч, тэмдэглэлээ хадгалж, картаар давтаарай. Бондооктой хамт нэг жижиг алхмаас эхэлье.",
   applicationName: "Тогтмол",

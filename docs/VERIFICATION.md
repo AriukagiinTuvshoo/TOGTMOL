@@ -1,6 +1,8 @@
-# Тогтмол v7 — шалгалтын тайлан
+# Тогтмол — шалгалтын тайлан
 
 Огноо: 2026-11-12. Орчин: Linux (cloud), Node.js 26.13.0, Next.js 16.3.8, TypeScript 6.0.3, React 19.3.0, апп 7.0.0. Өмнөх тайлан (v5, 2026-09-22) нь энэ файлыг орлов; түүхэн Phase-ийн шийдвэрийг [v7 суурь](BASELINE-7.md)-аас харна.
+
+Хамгийн сүүлийн тайлан нь §6 (v12, 2026-11-15); §§1–5 нь v7 (2026-11-12)-ийн бүртгэл юм.
 
 Доорх нь **энэ орчинд бодитоор ажиллуулсан** шалгалт. Бодит Supabase төсөл, хоёр дахь хэрэглэгч/төхөөрөмж, Lighthouse/Core Web Vitals болон screen reader-ийг ажиллуулж чадаагүй зүйлсийг тусад нь (§4) жагсаав.
 
@@ -65,3 +67,26 @@ Lighthouse энэ VM дээр ажиллахгүй тул contrast-ыг DOM дэ
 ## 5. Дүгнэлт
 
 `main` дээр локал шалгалт бүрэн ногоон (typecheck, lint, format, 383 тест, build). Браузер дээр үндсэн урсгалууд (импорт, давтлага, багц шүүлт, тоолуур) ажиллаж байгааг нүдээр баталсан, contrast нь 11 route дээр 0 failure болтол засагдаж, тестээр хамгаалагдсан. **Production орчин, хоёр бодит төхөөрөмжийн синк, Lighthouse-ийн Core Web Vitals хийгдээгүй** — тэдгээрийг тэнцсэн гэж тайлагнахгүй.
+
+## 6. v12 шалгалт (2026-11-15)
+
+PR #41 (`arena/6bca6269-togtmol`) нь v9–v12-ын бүх ажлыг `main` дээр нэгтгэсний дараах шалгалт. Орчин: Linux (cloud), Node.js 22.22.3, npm 10.9.8, Next.js 16.3.8, TypeScript 6.0.3, React 19.3.0, апп `12.0.0`, хадгалалтын схем `6`.
+
+| Шалгалт            | Команд                 | Үр дүн                                            |
+| ------------------ | ---------------------- | ------------------------------------------------- |
+| Хамаарлын суулгалт | `npm ci`               | Тэнцсэн; lockfile өөрчлөгдөөгүй                   |
+| TypeScript         | `npm run typecheck`    | Алдаагүй                                          |
+| ESLint             | `npm run lint`         | Алдаагүй (0 error, 0 warning)                     |
+| Формат             | `npm run format:check` | Тэнцсэн                                           |
+| Тест               | `npm run test`         | **402 / 402** тест, **51 / 51** файл (~77 секунд) |
+| Production build   | `npm run build`        | Тэнцсэн; offline manifest **34** immutable asset  |
+
+Build-ийн route-ууд: `/`, `/_not-found`, `/api/bondook`, `/api/bondook/cards`, `/api/bondook/gemini`, `/api/bondook/plan`, `/api/bondook/quiz`, `/api/chimege/transcribe`, `/api/csp-report`, `/api/health`, `/api/togi`, `/manifest.webmanifest`, `/opengraph-image`, `/privacy`, `/terms`.
+
+PR #41-ийн CI: `check`, `lighthouse`, `Vercel` preview болон preview comment бүгд тэнцэж, merge commit `0f71e68` болж `main`-д орсон.
+
+**Энэ шатанд батлагдаагүй зүйл:**
+
+- Бодит Google AI Studio / Supabase түлхүүртэй орчинд v10–v12-ын AI урсгалууд (`/api/bondook/gemini`, IP хязгаар) хараахан туршаагүй.
+- v9–v12-ын шинэ дэлгэцүүдийг (профайл, onboarding, мэдрэмжийн бүртгэл, Snap-to-Study, Co-Focus) браузер дээр нүдээр гүйцээж шалгаагүй — тестүүд нь бүрэлдэхүүний түвшинд хамгаална.
+- Шинэ v9–v12 UI-ийн текст монгол хэл дээр тэргүүлэх ба англи руу бүрэн орчуулагдаагүй (`lib/i18n/dictionary.ts` нь хуучин модулиудыг л хамарна). Энэ нь мэдэгдэж буй дутагдал бөгөөд дараагийн ажлаар орчуулна.
