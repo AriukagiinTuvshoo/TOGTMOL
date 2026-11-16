@@ -290,6 +290,7 @@ export function SnapStudyModal({ onClose }: { onClose: () => void }) {
               Нэмэлт тайлбар эсвэл текст (заавал биш)
               <textarea
                 rows={3}
+                maxLength={15000}
                 value={hintText}
                 onChange={(e) => setHintText(e.target.value)}
                 placeholder="Жишээ нь: Термодинамикийн 1-р хууль, эсвэл лекцийн текстээ шууд буулгаж болно..."

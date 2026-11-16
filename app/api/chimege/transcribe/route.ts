@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { readLimitedBody } from "@/lib/http/request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -6,30 +7,6 @@ export const dynamic = "force-dynamic";
 const MAX_WAV_BYTES = 1_920_044;
 const json = (value: unknown, status = 200) =>
   Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
-
-async function readLimitedBody(request: Request) {
-  const reader = request.body?.getReader();
-  if (!reader) throw new Error("empty");
-  const parts: Uint8Array[] = [];
-  let size = 0;
-  while (true) {
-    const part = await reader.read();
-    if (part.done) break;
-    size += part.value.byteLength;
-    if (size > MAX_WAV_BYTES) {
-      await reader.cancel();
-      throw new Error("large");
-    }
-    parts.push(part.value);
-  }
-  const body = new Uint8Array(size);
-  let offset = 0;
-  for (const part of parts) {
-    body.set(part, offset);
-    offset += part.byteLength;
-  }
-  return body;
-}
 
 function validWav(bytes: Uint8Array) {
   if (bytes.length < 44) return false;
@@ -105,23 +82,21 @@ export async function POST(request: Request) {
       403,
     );
 
-  let audio: Uint8Array;
-  try {
-    const declaredLength = Number(request.headers.get("content-length"));
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_WAV_BYTES)
-      return json({ error: "Бичлэг 60 секундээс хэтэрч болохгүй." }, 413);
-    audio = await readLimitedBody(request);
-  } catch (error) {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_WAV_BYTES)
+    return json({ error: "Бичлэг 60 секундээс хэтэрч болохгүй." }, 413);
+  const bodyResult = await readLimitedBody(request, MAX_WAV_BYTES, "bytes");
+  if (!bodyResult.ok)
     return json(
       {
         error:
-          error instanceof Error && error.message === "large"
+          bodyResult.reason === "too_large"
             ? "Бичлэгийн хэмжээ хэтэрлээ."
             : "Аудио хүсэлтийг уншиж чадсангүй.",
       },
-      error instanceof Error && error.message === "large" ? 413 : 400,
+      bodyResult.reason === "too_large" ? 413 : 400,
     );
-  }
+  const audio = bodyResult.value;
   if (!validWav(audio))
     return json(
       { error: "Аудио формат буруу байна. Дахин бичлэг хийнэ үү." },

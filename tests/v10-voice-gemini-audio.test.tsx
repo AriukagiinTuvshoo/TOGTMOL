@@ -78,8 +78,33 @@ describe("TOGTMOL v10 · Voice OS, Google AI Studio & Unified 3-Deck Audio", () 
     expect(matchVoiceCommand("түр зогс")).toEqual({ kind: "timer_pause" });
     expect(matchVoiceCommand("бороо асаа")).toEqual({
       kind: "sound_preset",
-      presetId: "rainy_cafe",
+      presetId: "rainy-cafe",
       label: "Бороотой Кафе",
+    });
+    expect(matchVoiceCommand("гүн шөнө")).toEqual({
+      kind: "sound_preset",
+      presetId: "deep-night",
+      label: "Гүн Шөнө",
+    });
+    expect(matchVoiceCommand("ойн үүр")).toEqual({
+      kind: "sound_preset",
+      presetId: "forest-dawn",
+      label: "Ойн Үүр",
+    });
+    expect(matchVoiceCommand("номын сангийн дуу")).toEqual({
+      kind: "sound_preset",
+      presetId: "library-hush",
+      label: "Номын Сан",
+    });
+    expect(matchVoiceCommand("сансар асаа")).toEqual({
+      kind: "sound_preset",
+      presetId: "deep-space",
+      label: "Сансар",
+    });
+    expect(matchVoiceCommand("галын илч")).toEqual({
+      kind: "sound_preset",
+      presetId: "cabin-fire",
+      label: "Галын Илч",
     });
     expect(matchVoiceCommand("дуу зогсоо")).toEqual({ kind: "sound_stop" });
     expect(matchVoiceCommand("даалгавар нэм: Физикийн 5 бодлого")).toEqual({
@@ -165,10 +190,17 @@ describe("TOGTMOL v10 · Voice OS, Google AI Studio & Unified 3-Deck Audio", () 
     };
     expect(cardsPayload.cards).toHaveLength(1);
     expect(cardsPayload.cards[0]?.front).toContain("Ньютон");
-    // AQ. key should hit Vertex AI Express endpoint first
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
-      "aiplatform.googleapis.com",
-    );
+    // AQ. key should hit Vertex AI Express endpoint first and pass key via header (never query string)
+    const calledUrl = String(fetchMock.mock.calls[0]?.[0]);
+    const calledInit = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(calledUrl).toContain("aiplatform.googleapis.com");
+    expect(calledUrl).not.toContain("key=");
+    expect(calledUrl).not.toContain("AQ.sample-key");
+    expect(
+      (calledInit?.headers as Record<string, string> | undefined)?.[
+        "x-goog-api-key"
+      ],
+    ).toBe("AQ.sample-key");
 
     vi.unstubAllGlobals();
   });

@@ -1,3 +1,5 @@
+import { readLimitedBody } from "@/lib/http/request";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -35,25 +37,6 @@ function withinLimit(key: string) {
   }
   entry.count += 1;
   return entry.count <= LIMIT;
-}
-
-async function readLimited(request: Request) {
-  const reader = request.body?.getReader();
-  if (!reader) return null;
-  const decoder = new TextDecoder();
-  let size = 0,
-    raw = "";
-  while (true) {
-    const part = await reader.read();
-    if (part.done) break;
-    size += part.value.byteLength;
-    if (size > MAX_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    raw += decoder.decode(part.value, { stream: true });
-  }
-  return raw + decoder.decode();
 }
 
 // A report may carry the full blocked URL, including query strings with tokens.
@@ -116,8 +99,10 @@ export async function POST(request: Request) {
   )
     return empty(415);
   if (!withinLimit(clientKey(request))) return empty(429);
-  const raw = await readLimited(request);
-  if (raw === null) return empty(413);
+  const bodyResult = await readLimitedBody(request, MAX_BYTES);
+  if (!bodyResult.ok)
+    return empty(bodyResult.reason === "too_large" ? 413 : 400);
+  const raw = bodyResult.value;
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);

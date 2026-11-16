@@ -91,6 +91,11 @@ export interface SpeechCallbacks {
   onError?: (friendlyError: string) => void;
 }
 
+export const MAX_NETWORK_RETRIES = 3;
+const NETWORK_RETRY_BASE_MS = 500;
+const NETWORK_RETRY_MAX_MS = 8_000;
+const LANGUAGE_RESTART_DELAY_MS = 120;
+
 export class BrowserVoiceSession {
   private recognition: SpeechRecognitionInstance | null = null;
   private keepRunning = false;
@@ -100,17 +105,36 @@ export class BrowserVoiceSession {
   private stream: MediaStream | null = null;
   private audioCtx: AudioContext | null = null;
   private rafId: number | null = null;
+  private langSwitchTimer: ReturnType<typeof setTimeout> | null = null;
+  private networkRetryTimer: ReturnType<typeof setTimeout> | null = null;
+  private networkRetries = 0;
+  private pendingNetworkError = false;
 
   constructor(callbacks: SpeechCallbacks, lang: VoiceLangCode = "mn-MN") {
     this.callbacks = callbacks;
     this.lang = lang;
   }
 
+  private clearTimers() {
+    if (this.langSwitchTimer !== null) {
+      clearTimeout(this.langSwitchTimer);
+      this.langSwitchTimer = null;
+    }
+    if (this.networkRetryTimer !== null) {
+      clearTimeout(this.networkRetryTimer);
+      this.networkRetryTimer = null;
+    }
+  }
+
   setLanguage(lang: VoiceLangCode) {
     this.lang = lang;
-    if (this.keepRunning) {
+    const shouldRestart = this.keepRunning || this.langSwitchTimer !== null;
+    if (shouldRestart) {
       this.stop();
-      setTimeout(() => void this.start(lang), 120);
+      this.langSwitchTimer = setTimeout(() => {
+        this.langSwitchTimer = null;
+        void this.start(lang);
+      }, LANGUAGE_RESTART_DELAY_MS);
     }
   }
 
@@ -130,6 +154,8 @@ export class BrowserVoiceSession {
 
     this.stop();
     this.accumulated = "";
+    this.networkRetries = 0;
+    this.pendingNetworkError = false;
     this.keepRunning = true;
 
     // Optional mic level visualizer via getUserMedia
@@ -143,6 +169,8 @@ export class BrowserVoiceSession {
       rec.lang = this.lang === "auto" ? "mn-MN" : this.lang;
 
       rec.onresult = (ev) => {
+        this.networkRetries = 0;
+        this.pendingNetworkError = false;
         let interim = "";
         let latestFinal = "";
         for (let i = ev.resultIndex; i < ev.results.length; i += 1) {
@@ -168,6 +196,8 @@ export class BrowserVoiceSession {
         if (ev.error === "aborted" || ev.error === "no-speech") return;
         if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
           this.keepRunning = false;
+          this.pendingNetworkError = false;
+          this.clearTimers();
           this.cleanupMeter();
           this.callbacks.onStateChange?.(false);
           this.callbacks.onError?.(
@@ -176,6 +206,7 @@ export class BrowserVoiceSession {
           return;
         }
         if (ev.error === "network") {
+          this.pendingNetworkError = true;
           this.callbacks.onError?.(
             "Яриа таних сүлжээ түр тасарлаа. Интернэт холболтоо шалгана уу.",
           );
@@ -183,7 +214,43 @@ export class BrowserVoiceSession {
       };
 
       rec.onend = () => {
+        if (this.recognition !== rec) return;
         if (this.keepRunning) {
+          if (this.pendingNetworkError) {
+            this.pendingNetworkError = false;
+            if (this.networkRetries < MAX_NETWORK_RETRIES) {
+              const delayMs = Math.min(
+                NETWORK_RETRY_MAX_MS,
+                NETWORK_RETRY_BASE_MS * 2 ** this.networkRetries,
+              );
+              this.networkRetries += 1;
+              this.clearTimers();
+              this.networkRetryTimer = setTimeout(() => {
+                this.networkRetryTimer = null;
+                if (!this.keepRunning || this.recognition !== rec) return;
+                try {
+                  rec.start();
+                } catch {
+                  this.keepRunning = false;
+                  this.recognition = null;
+                  this.cleanupMeter();
+                  this.callbacks.onStateChange?.(false);
+                  this.callbacks.onError?.(
+                    "Яриа таних сүлжээ түр тасарлаа. Интернэт холболтоо шалгана уу.",
+                  );
+                }
+              }, delayMs);
+              return;
+            }
+            this.keepRunning = false;
+            this.recognition = null;
+            this.cleanupMeter();
+            this.callbacks.onStateChange?.(false);
+            this.callbacks.onError?.(
+              "Яриа таних сүлжээ тасарлаа. Интернэт холболтоо шалгаад дахин оролдоно уу.",
+            );
+            return;
+          }
           try {
             rec.start();
             return;
@@ -192,6 +259,7 @@ export class BrowserVoiceSession {
           }
         }
         this.keepRunning = false;
+        this.recognition = null;
         this.cleanupMeter();
         this.callbacks.onStateChange?.(false);
       };
@@ -202,6 +270,7 @@ export class BrowserVoiceSession {
       return true;
     } catch {
       this.keepRunning = false;
+      this.clearTimers();
       this.cleanupMeter();
       this.callbacks.onStateChange?.(false);
       this.callbacks.onError?.("Яриа танигчийг эхлүүлж чадсангүй.");
@@ -211,12 +280,21 @@ export class BrowserVoiceSession {
 
   stop(): string {
     this.keepRunning = false;
-    try {
-      this.recognition?.stop();
-    } catch {
-      /* ignore */
-    }
+    this.pendingNetworkError = false;
+    this.networkRetries = 0;
+    this.clearTimers();
+    const rec = this.recognition;
     this.recognition = null;
+    if (rec) {
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
+      try {
+        rec.stop();
+      } catch {
+        /* ignore */
+      }
+    }
     this.cleanupMeter();
     this.callbacks.onStateChange?.(false);
     return this.accumulated;

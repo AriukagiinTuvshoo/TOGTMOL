@@ -85,30 +85,34 @@ export function matchVoiceCommand(rawText: string): VoiceCommandIntent | null {
     return { kind: "timer_finish" };
   }
 
-  // 5. Sound & Ambient Presets
+  // 5. Sound & Ambient Presets (aligned with PRESETS in lib/v9/audio-engine.ts)
   if (/^(?:бороо\s+асаа|бороотой\s+кафе|rainy\s+cafe|play\s+rain)$/iu.test(q)) {
     return {
       kind: "sound_preset",
-      presetId: "rainy_cafe",
+      presetId: "rainy-cafe",
       label: "Бороотой Кафе",
     };
   }
   if (/^(?:гүн\s+шөнө|шөнийн\s+фокус|deep\s+night)$/iu.test(q)) {
-    return { kind: "sound_preset", presetId: "deep_night", label: "Гүн Шөнө" };
+    return { kind: "sound_preset", presetId: "deep-night", label: "Гүн Шөнө" };
   }
   if (/^(?:ойн\s+үүр|байгалийн\s+дуу|forest\s+dawn)$/iu.test(q)) {
-    return { kind: "sound_preset", presetId: "forest_dawn", label: "Ойн Үүр" };
+    return { kind: "sound_preset", presetId: "forest-dawn", label: "Ойн Үүр" };
   }
   if (/^(?:номын\s+сангийн\s+дуу|library\s+sound)$/iu.test(q)) {
-    return { kind: "sound_preset", presetId: "library", label: "Номын Сан" };
+    return {
+      kind: "sound_preset",
+      presetId: "library-hush",
+      label: "Номын Сан",
+    };
   }
   if (/^(?:сансар\s+асаа|space\s+drift)$/iu.test(q)) {
-    return { kind: "sound_preset", presetId: "space_drift", label: "Сансар" };
+    return { kind: "sound_preset", presetId: "deep-space", label: "Сансар" };
   }
   if (/^(?:галын\s+илч|ил\s+зуух|fireplace)$/iu.test(q)) {
     return {
       kind: "sound_preset",
-      presetId: "fireplace_study",
+      presetId: "cabin-fire",
       label: "Галын Илч",
     };
   }

@@ -5,6 +5,7 @@ import {
   type CardDraft,
   type QuizDraft,
 } from "@/lib/knowledge/generation";
+import { stripJsonFence } from "@/lib/http/request";
 import { parsePlanProposal, type PlanProposal } from "./plan";
 import {
   aiContext,
@@ -134,18 +135,9 @@ export async function probeGeminiServerStatus(): Promise<{
   }
 }
 
-function stripJsonFence(raw: string): string {
-  return raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-}
-
 function buildDirectEndpoints(apiKey: string, model: string): string[] {
-  const encodedKey = encodeURIComponent(apiKey);
-  const aiStudioUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodedKey}`;
-  const vertexExpressUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodedKey}`;
+  const aiStudioUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const vertexExpressUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
   return apiKey.startsWith("AQ.")
     ? [vertexExpressUrl, aiStudioUrl]
     : [aiStudioUrl, vertexExpressUrl];
@@ -163,7 +155,10 @@ async function callDirectBrowserGemini(
     try {
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
         body: JSON.stringify(geminiPayload),
         signal: AbortSignal.timeout(28000),
       });
@@ -279,12 +274,14 @@ async function runGeminiRequest(params: {
               });
               if (
                 typeof params.image === "string" &&
-                /^data:image\/(png|jpeg|webp);base64,/.test(params.image)
+                params.image.length <= 2 * 1024 * 1024
               ) {
-                const [meta, b64] = params.image.split(",");
-                const m = meta.match(/^data:(image\/[a-z]+);base64$/);
-                if (m && b64) {
-                  parts.push({ inlineData: { mimeType: m[1], data: b64 } });
+                const m =
+                  /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(
+                    params.image,
+                  );
+                if (m) {
+                  parts.push({ inlineData: { mimeType: m[1], data: m[2] } });
                 }
               }
             }
@@ -530,11 +527,13 @@ export async function generateGeminiSnapStudy(params: {
         : "Зургаас задалсан хичээл",
     summaryMarkdown:
       typeof raw.summaryMarkdown === "string" ? raw.summaryMarkdown : "",
-    cards: Array.isArray(raw.cards)
-      ? parseCardDrafts({ cards: raw.cards }).slice(0, 10)
-      : [],
-    questions: Array.isArray(raw.questions)
-      ? parseQuizDrafts({ questions: raw.questions }).slice(0, 6)
-      : [],
+    cards:
+      Array.isArray(raw.cards) && raw.cards.length > 0
+        ? parseCardDrafts({ cards: raw.cards.slice(0, 10) })
+        : [],
+    questions:
+      Array.isArray(raw.questions) && raw.questions.length > 0
+        ? parseQuizDrafts({ questions: raw.questions.slice(0, 6) })
+        : [],
   };
 }
