@@ -1,7 +1,26 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import type { Room } from "@/lib/v9/rooms";
+
+const SKY_REFRESH_MS = 10 * 60 * 1000;
+
+function computeSkyOverlay(h: number): string {
+  if (h >= 5 && h < 10) {
+    // Morning golden-pink dawn
+    return "linear-gradient(180deg, rgba(251,191,36,0.11) 0%, rgba(244,114,182,0.06) 45%, transparent 100%)";
+  }
+  if (h >= 10 && h < 17) {
+    // Crisp clear daylight lift
+    return "linear-gradient(180deg, rgba(56,189,248,0.09) 0%, transparent 65%)";
+  }
+  if (h >= 17 && h < 21) {
+    // Cozy sunset amber-violet
+    return "linear-gradient(180deg, rgba(249,115,22,0.14) 0%, rgba(168,85,247,0.08) 55%, transparent 100%)";
+  }
+  // Deep starry night 21:00 - 05:00
+  return "linear-gradient(180deg, rgba(2,6,23,0.42) 0%, rgba(15,23,42,0.22) 60%, rgba(2,6,23,0.35) 100%)";
+}
 
 /** Deterministic PRNG so SSR and client render identical particle coordinates. */
 function mulberry32(seed: number) {
@@ -21,23 +40,19 @@ export const RoomBackground = memo(function RoomBackground({
   room: Room;
   autoDayNight?: boolean;
 }) {
-  const skyOverlay = useMemo(() => {
-    if (!autoDayNight) return null;
-    const h = new Date().getHours();
-    if (h >= 5 && h < 10) {
-      // Morning golden-pink dawn
-      return "linear-gradient(180deg, rgba(251,191,36,0.11) 0%, rgba(244,114,182,0.06) 45%, transparent 100%)";
-    }
-    if (h >= 10 && h < 17) {
-      // Crisp clear daylight lift
-      return "linear-gradient(180deg, rgba(56,189,248,0.09) 0%, transparent 65%)";
-    }
-    if (h >= 17 && h < 21) {
-      // Cozy sunset amber-violet
-      return "linear-gradient(180deg, rgba(249,115,22,0.14) 0%, rgba(168,85,247,0.08) 55%, transparent 100%)";
-    }
-    // Deep starry night 21:00 - 05:00
-    return "linear-gradient(180deg, rgba(2,6,23,0.42) 0%, rgba(15,23,42,0.22) 60%, rgba(2,6,23,0.35) 100%)";
+  const [skyOverlay, setSkyOverlay] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!autoDayNight) return;
+    const update = () => {
+      setSkyOverlay(computeSkyOverlay(new Date().getHours()));
+    };
+    const initial = window.setTimeout(update, 0);
+    const interval = window.setInterval(update, SKY_REFRESH_MS);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, [autoDayNight]);
   const kind =
     room.id === "rainy"
@@ -88,8 +103,9 @@ export const RoomBackground = memo(function RoomBackground({
           background: `linear-gradient(165deg, ${room.bg[0]}, ${room.bg[1]} 55%, ${room.bg[2]})`,
         }}
       />
-      {skyOverlay && (
+      {autoDayNight && skyOverlay && (
         <div
+          data-sky-overlay=""
           className="absolute inset-0 transition-opacity duration-1000"
           style={{ background: skyOverlay }}
         />

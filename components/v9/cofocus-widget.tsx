@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { engine, PRESETS } from "@/lib/v9/audio-engine";
 import { getSupabase } from "@/lib/supabase/client";
 import { uid } from "@/lib/constants";
@@ -66,29 +67,69 @@ function formatClockSec(sec: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function sanitizeRoomCode(raw: string): string {
+  return raw
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "")
+    .slice(0, 12);
+}
+
+function isReactionItem(value: unknown): value is ReactionItem {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "string" &&
+    Boolean(candidate.id) &&
+    typeof candidate.sender === "string" &&
+    typeof candidate.emoji === "string" &&
+    (candidate.note === undefined || typeof candidate.note === "string")
+  );
+}
+
 export function CoFocusWidget() {
-  const [joinedCode, setJoinedCode] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get("cofocus");
-    if (fromUrl) return fromUrl.toUpperCase().slice(0, 12);
-    return window.localStorage.getItem("togtmol:cofocus:code");
-  });
+  const [joinedCode, setJoinedCode] = useState<string | null>(null);
   const [codeInput, setCodeInput] = useState("");
-  const [nickname, setNickname] = useState<string>(() => {
-    if (typeof window === "undefined") return "Оюутан";
-    return window.localStorage.getItem("togtmol:cofocus:nick") || "Оюутан";
-  });
-  const [now, setNow] = useState(() => Date.now());
+  const [nickname, setNickname] = useState<string>("Оюутан");
+  const [now, setNow] = useState(0);
   const [reactions, setReactions] = useState<ReactionItem[]>([]);
   const [breakNote, setBreakNote] = useState("");
   const [shareToast, setShareToast] = useState("");
 
   const bcRef = useRef<BroadcastChannel | null>(null);
-  const supaChannelRef = useRef<{
-    send: (payload: Record<string, unknown>) => Promise<unknown>;
-    unsubscribe: () => Promise<unknown>;
-  } | null>(null);
+  const supaChannelRef = useRef<RealtimeChannel | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      let initialCode: string | null = null;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = params.get("cofocus");
+        if (fromUrl) {
+          initialCode = sanitizeRoomCode(fromUrl) || null;
+        } else {
+          const saved = window.localStorage.getItem("togtmol:cofocus:code");
+          if (saved) {
+            initialCode = sanitizeRoomCode(saved) || null;
+          }
+        }
+      } catch {
+        /* ignore storage/URL errors */
+      }
+      try {
+        const savedNick = window.localStorage.getItem("togtmol:cofocus:nick");
+        if (savedNick) {
+          setNickname(savedNick.slice(0, 18));
+        }
+      } catch {
+        /* ignore storage errors */
+      }
+      if (initialCode) {
+        setNow(Date.now());
+        setJoinedCode(initialCode);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!joinedCode) return;
@@ -108,8 +149,8 @@ export function CoFocusWidget() {
     if (typeof BroadcastChannel !== "undefined") {
       const bc = new BroadcastChannel(`togtmol-cofocus-${joinedCode}`);
       bc.onmessage = (ev) => {
-        const item = ev.data as ReactionItem;
-        if (item?.id) {
+        if (isReactionItem(ev.data)) {
+          const item = ev.data;
           setReactions((prev) => [item, ...prev].slice(0, 8));
         }
       };
@@ -118,26 +159,30 @@ export function CoFocusWidget() {
 
     // Cross-device realtime via Supabase Broadcast if configured
     const client = getSupabase();
-    if (client) {
-      const channel = client.channel(`cofocus:${joinedCode}`);
+    const channel = client ? client.channel(`cofocus:${joinedCode}`) : null;
+    if (channel) {
       channel
         .on("broadcast", { event: "signal" }, (msg: { payload?: unknown }) => {
-          const item = msg.payload as ReactionItem | undefined;
-          if (item?.id) {
+          if (isReactionItem(msg.payload)) {
+            const item = msg.payload;
             setReactions((prev) => [item, ...prev].slice(0, 8));
           }
         })
         .subscribe();
-      supaChannelRef.current =
-        channel as unknown as typeof supaChannelRef.current;
+      supaChannelRef.current = channel;
     }
 
     return () => {
       bcRef.current?.close();
       bcRef.current = null;
-      if (supaChannelRef.current) {
-        void supaChannelRef.current.unsubscribe();
-        supaChannelRef.current = null;
+      const activeChannel = supaChannelRef.current;
+      supaChannelRef.current = null;
+      if (activeChannel) {
+        if (client && typeof client.removeChannel === "function") {
+          void client.removeChannel(activeChannel);
+        } else {
+          void activeChannel.unsubscribe();
+        }
       }
     };
   }, [joinedCode]);
@@ -145,11 +190,11 @@ export function CoFocusWidget() {
   const cycle = useMemo(() => computeCoFocusPhase(now), [now]);
 
   const joinOrCreate = (codeRaw?: string) => {
-    const clean = (codeRaw || codeInput.trim() || createRoomCode())
-      .toUpperCase()
-      .replace(/[^A-Z0-9-]/g, "")
-      .slice(0, 12);
+    const clean = sanitizeRoomCode(
+      codeRaw || codeInput.trim() || createRoomCode(),
+    );
     if (!clean) return;
+    setNow(Date.now());
     setJoinedCode(clean);
     setCodeInput("");
   };

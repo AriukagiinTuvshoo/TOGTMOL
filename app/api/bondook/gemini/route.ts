@@ -1,5 +1,17 @@
 import { parseCardDrafts, parseQuizDrafts } from "@/lib/knowledge/generation";
 import { parsePlanProposal } from "@/lib/assistant/plan";
+import { readLimitedBody, stripJsonFence } from "@/lib/http/request";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const MAX_BODY_BYTES = 3 * 1024 * 1024;
+const MAX_IMAGE_CHARS = 2 * 1024 * 1024;
+const MAX_TEXT_CHARS = 15_000;
+const MAX_MESSAGE_CHARS = 3_000;
+const MAX_API_KEY_CHARS = 512;
+const DATA_IMAGE_RE =
+  /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
 
 const json = (value: unknown, status = 200) =>
   Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
@@ -21,14 +33,34 @@ function resolveModel(headerModel: string | null): string {
 }
 
 function buildEndpoints(apiKey: string, model: string): string[] {
-  const encodedKey = encodeURIComponent(apiKey);
-  const aiStudioUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodedKey}`;
-  const vertexExpressUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent?key=${encodedKey}`;
+  const aiStudioUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const vertexExpressUrl = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
 
   // Keys prefixed with "AQ." are Google Cloud / Vertex AI Express keys; "AIza" are Google AI Studio keys.
   return apiKey.startsWith("AQ.")
     ? [vertexExpressUrl, aiStudioUrl]
     : [aiStudioUrl, vertexExpressUrl];
+}
+
+function parseValidatedImage(
+  image: unknown,
+):
+  | { ok: true; inlineData: { mimeType: string; data: string } | null }
+  | { ok: false } {
+  if (image === undefined || image === null) {
+    return { ok: true, inlineData: null };
+  }
+  if (typeof image !== "string" || image.length > MAX_IMAGE_CHARS) {
+    return { ok: false };
+  }
+  const match = DATA_IMAGE_RE.exec(image);
+  if (!match) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    inlineData: { mimeType: match[1], data: match[2] },
+  };
 }
 
 export async function GET() {
@@ -86,6 +118,12 @@ function checkPublicServerRateLimit(request: Request): boolean {
 
 export async function POST(request: Request) {
   const headerKey = request.headers.get("x-gemini-api-key")?.trim() || "";
+  if (
+    headerKey &&
+    (headerKey.length > MAX_API_KEY_CHARS || /[\r\n]/.test(headerKey))
+  ) {
+    return json({ error: "API түлхүүрийн бүтэц буруу байна." }, 400);
+  }
   const envKey = (
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_AI_API_KEY ||
@@ -118,25 +156,20 @@ export async function POST(request: Request) {
     return json({ error: "Хүсэлтийн бүтэц буруу." }, 415);
   }
 
-  let raw = "";
-  const reader = request.body?.getReader();
-  if (!reader) return json({ error: "Хүсэлт хоосон." }, 400);
-  const decoder = new TextDecoder();
-  let bytes = 0;
-  try {
-    while (true) {
-      const part = await reader.read();
-      if (part.done) break;
-      bytes += part.value.byteLength;
-      if (bytes > 3 * 1024 * 1024) {
-        await reader.cancel();
-        return json({ error: "Хүсэлт хэт урт байна." }, 413);
-      }
-      raw += decoder.decode(part.value, { stream: true });
+  const bodyResult = await readLimitedBody(request, MAX_BODY_BYTES);
+  if (!bodyResult.ok) {
+    if (bodyResult.reason === "too_large") {
+      return json({ error: "Хүсэлт хэт урт байна." }, 413);
     }
-    raw += decoder.decode();
-  } catch {
-    return json({ error: "Хүсэлтийг уншиж чадсангүй." }, 400);
+    return json(
+      {
+        error:
+          bodyResult.reason === "empty"
+            ? "Хүсэлт хоосон."
+            : "Хүсэлтийг уншиж чадсангүй.",
+      },
+      400,
+    );
   }
 
   let input: {
@@ -149,7 +182,11 @@ export async function POST(request: Request) {
     language?: unknown;
   };
   try {
-    input = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(bodyResult.value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return json({ error: "Хүсэлтийн JSON бүтэц буруу." }, 400);
+    }
+    input = parsed as typeof input;
   } catch {
     return json({ error: "Хүсэлтийн JSON бүтэц буруу." }, 400);
   }
@@ -194,11 +231,23 @@ export async function POST(request: Request) {
     });
   }
 
+  const imageCheck = parseValidatedImage(input.image);
+  if (!imageCheck.ok) {
+    return json(
+      {
+        error:
+          "Зургийн формат эсвэл хэмжээ буруу байна (PNG, JPEG, WebP · дээд тал нь 2MB).",
+      },
+      400,
+    );
+  }
+
   if (
     (kind === "chat" || kind === "plan") &&
-    (typeof input.message !== "string" ||
+    (imageCheck.inlineData !== null ||
+      typeof input.message !== "string" ||
       !input.message.trim() ||
-      input.message.length > 3000 ||
+      input.message.length > MAX_MESSAGE_CHARS ||
       !input.context ||
       typeof input.context !== "object" ||
       Array.isArray(input.context))
@@ -206,19 +255,28 @@ export async function POST(request: Request) {
     return json({ error: "Асуулт болон контекстээ шалгана уу." }, 400);
   }
 
-  if (
-    kind === "snap" &&
-    typeof input.image !== "string" &&
-    (typeof input.text !== "string" || !input.text.trim())
-  ) {
-    return json({ error: "Зураг эсвэл тайлбар текст оруулна уу." }, 400);
+  if (kind === "snap") {
+    if (
+      input.text !== undefined &&
+      input.text !== null &&
+      (typeof input.text !== "string" || input.text.length > MAX_TEXT_CHARS)
+    ) {
+      return json(
+        { error: "Тайлбар текст хэт урт эсвэл буруу бүтэцтэй байна." },
+        400,
+      );
+    }
+    const snapText = typeof input.text === "string" ? input.text.trim() : "";
+    if (!imageCheck.inlineData && !snapText) {
+      return json({ error: "Зураг эсвэл тайлбар текст оруулна уу." }, 400);
+    }
   }
 
   if (
     (kind === "cards" || kind === "quiz") &&
     (typeof input.text !== "string" ||
-      input.text.length > 15000 ||
-      (!input.text.trim() && !input.image) ||
+      input.text.length > MAX_TEXT_CHARS ||
+      (!input.text.trim() && !imageCheck.inlineData) ||
       !Number.isInteger(input.count) ||
       Number(input.count) < 1 ||
       Number(input.count) > 12)
@@ -269,25 +327,16 @@ export async function POST(request: Request) {
             ? `Create up to ${input.count} retrieval-practice quiz questions from this material:\n${input.text}`
             : `Create up to ${input.count} concise Q/A flashcards from this material:\n${input.text}`,
     });
-    if (
-      typeof input.image === "string" &&
-      /^data:image\/(png|jpeg|webp);base64,/.test(input.image)
-    ) {
-      const [meta, b64] = input.image.split(",");
-      const mimeMatch = meta.match(/^data:(image\/[a-z]+);base64$/);
-      if (mimeMatch && b64) {
-        userParts.push({
-          inlineData: {
-            mimeType: mimeMatch[1],
-            data: b64,
-          },
-        });
-      }
+    if (imageCheck.inlineData) {
+      userParts.push({
+        inlineData: imageCheck.inlineData,
+      });
     }
   }
 
   const generationConfig: Record<string, unknown> = {
-    maxOutputTokens: kind === "cards" || kind === "quiz" ? 4096 : 1600,
+    maxOutputTokens:
+      kind === "cards" || kind === "quiz" || kind === "snap" ? 4096 : 1600,
     temperature: kind === "chat" ? 0.65 : 0.35,
   };
 
@@ -336,12 +385,14 @@ export async function POST(request: Request) {
           typeof parsed.summaryMarkdown === "string"
             ? parsed.summaryMarkdown.slice(0, 15000)
             : "",
-        cards: Array.isArray(parsed.cards)
-          ? parseCardDrafts({ cards: parsed.cards }).slice(0, 10)
-          : [],
-        questions: Array.isArray(parsed.questions)
-          ? parseQuizDrafts({ questions: parsed.questions }).slice(0, 6)
-          : [],
+        cards:
+          Array.isArray(parsed.cards) && parsed.cards.length > 0
+            ? parseCardDrafts({ cards: parsed.cards.slice(0, 10) })
+            : [],
+        questions:
+          Array.isArray(parsed.questions) && parsed.questions.length > 0
+            ? parseQuizDrafts({ questions: parsed.questions.slice(0, 6) })
+            : [],
         kind: "ai",
         model,
       });
@@ -414,14 +465,6 @@ export async function POST(request: Request) {
     : json({ error: "AI хоосон хариу буцаалаа." }, 502);
 }
 
-function stripJsonFence(raw: string): string {
-  return raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-}
-
 async function invokeGemini(
   apiKey: string,
   model: string,
@@ -437,7 +480,10 @@ async function invokeGemini(
     try {
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(28000),
       });
@@ -459,7 +505,9 @@ async function invokeGemini(
       }
 
       lastStatus = res.status >= 400 && res.status < 600 ? res.status : 502;
-      const upstreamMsg = body.error?.message || "";
+      const upstreamMsg = (body.error?.message || "")
+        .replaceAll(apiKey, "[REDACTED]")
+        .slice(0, 180);
       if (res.status === 429) {
         lastError =
           "Google AI Studio хүсэлтийн хязгаарт (Rate limit) хүрлээ. Түр хүлээгээд дахин оролдоно уу.";
@@ -467,10 +515,10 @@ async function invokeGemini(
       }
       if (res.status === 400 || res.status === 401 || res.status === 403) {
         lastError = upstreamMsg
-          ? `Google AI түлхүүр эсвэл эрх шалгана уу: ${upstreamMsg.slice(0, 180)}`
+          ? `Google AI түлхүүр эсвэл эрх шалгана уу: ${upstreamMsg}`
           : "Google AI API түлхүүр хүчингүй эсвэл эрх хүрэлцэхгүй байна (aistudio.google.com/apikey).";
       } else if (upstreamMsg) {
-        lastError = `Google AI алдаа: ${upstreamMsg.slice(0, 180)}`;
+        lastError = `Google AI алдаа: ${upstreamMsg}`;
       }
     } catch {
       lastError =

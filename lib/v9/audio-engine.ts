@@ -1077,6 +1077,26 @@ export class SoundEngine {
     }
   }
 
+  private disconnectLiveChannel(ch: LiveChannel) {
+    try {
+      ch.stop();
+    } catch {
+      /* noop */
+    }
+    try {
+      ch.gain.disconnect();
+    } catch {
+      /* noop */
+    }
+    if (ch.pan) {
+      try {
+        ch.pan.disconnect();
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
   private syncLiveChannel(id: ChannelId, volume: number, pan = 0) {
     const ctx = this.ensure();
     if (!ctx || !this.masterNode) return;
@@ -1087,12 +1107,7 @@ export class SoundEngine {
         existing.gain.gain.setTargetAtTime(0, t, 0.25);
         const ch = existing;
         setTimeout(() => {
-          try {
-            ch.stop();
-          } catch {
-            /* noop */
-          }
-          ch.gain.disconnect();
+          this.disconnectLiveChannel(ch);
         }, 900);
         this.live.delete(id);
       }
@@ -1160,15 +1175,18 @@ export class SoundEngine {
   stopAll(fadeMs = 600) {
     if (this.ctx) {
       const t = this.ctx.currentTime;
+      const safeFade = Math.max(0, fadeMs);
       this.live.forEach((ch) => {
-        ch.gain.gain.setTargetAtTime(0, t, fadeMs / 1000 / 3);
+        if (safeFade > 0) {
+          ch.gain.gain.setTargetAtTime(0, t, safeFade / 1000 / 3);
+        } else if (typeof ch.gain.gain.setValueAtTime === "function") {
+          ch.gain.gain.setValueAtTime(0, t);
+        } else {
+          ch.gain.gain.value = 0;
+        }
         setTimeout(() => {
-          try {
-            ch.stop();
-          } catch {
-            /* noop */
-          }
-        }, fadeMs + 150);
+          this.disconnectLiveChannel(ch);
+        }, safeFade + 150);
       });
       this.live.clear();
     }

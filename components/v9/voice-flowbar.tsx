@@ -148,8 +148,21 @@ export function VoiceFlowBar({
             return;
           }
           case "timer_finish": {
-            onNavigate("overview");
-            announce("Фокус өрөө рүү шилжлээ.");
+            const active =
+              store.getSnapshot().data.activeTimer ?? data.activeTimer;
+            if (active) {
+              await store.mutate(actions.finish(), {
+                reportError: false,
+                reportBusy: false,
+              });
+              onNavigate("overview");
+              announce(
+                "Фокус цагийг дуусгалаа. Тэмдэглэлээ шалгаад хадгалаарай.",
+              );
+            } else {
+              onNavigate("overview");
+              announce("Идэвхтэй цаг хэмжигч алга байна.");
+            }
             return;
           }
           case "sound_preset": {

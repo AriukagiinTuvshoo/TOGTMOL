@@ -1,7 +1,7 @@
 "use client";
 import { StoredImage } from "@/components/ui/stored-image";
 import { useI18n } from "@/components/i18n/language-provider";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { getSupabase } from "@/lib/supabase/client";
@@ -199,7 +199,7 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
     >
       <div className="form-stack">
         {!drafts ? (
-          <>
+          <Fragment key="source">
             <SubjectSelect value={subject} onChange={setSubject} />
             <label>
               Эх материал
@@ -350,9 +350,9 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
                   ? "Бондоокоор бэлдүүлэх"
                   : "Төхөөрөмж дээр загвар бэлдэх"}
             </button>
-          </>
+          </Fragment>
         ) : (
-          <>
+          <Fragment key="drafts">
             <p>
               Асуулт, хариулт бүрийг хянаж, шаардлагатайг засаарай. Одоогоор юу
               ч хадгалаагүй.
@@ -446,7 +446,7 @@ export function CardGenerator({ onClose }: { onClose: () => void }) {
                 Хянасан {drafts.length} картыг хадгалах
               </button>
             </div>
-          </>
+          </Fragment>
         )}
         {error && (
           <div className="error-banner" role="alert">

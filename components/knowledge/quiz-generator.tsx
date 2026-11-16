@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useStudy } from "@/hooks/use-study";
 import { Modal, SubjectSelect } from "@/components/ui/common";
 import { getSupabase } from "@/lib/supabase/client";
@@ -134,7 +134,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
     <Modal title="Бондоок · тэмдэглэлээс Quiz руу" onClose={onClose}>
       <div className="form-stack">
         {!drafts ? (
-          <>
+          <Fragment key="source">
             <label>
               Сэдэв
               <SubjectSelect value={subject} onChange={setSubject} />
@@ -150,9 +150,9 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                     setText(
                       notes
                         .map((r) =>
-                          r.kind === "note" ? `${r.title}\\n${r.body}` : "",
+                          r.kind === "note" ? `${r.title}\n${r.body}` : "",
                         )
-                        .join("\\n\\n")
+                        .join("\n\n")
                         .slice(0, 12000),
                     );
                     return;
@@ -230,9 +230,9 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                   ? "AI Quiz бэлдэх"
                   : "Local Quiz бэлдэх"}
             </button>
-          </>
+          </Fragment>
         ) : (
-          <>
+          <Fragment key="drafts">
             <p className="tiny muted">
               Хадгалахаас өмнө бүх асуулт, сонголт, зөв хариултыг хянаарай.
             </p>
@@ -278,7 +278,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                   <label>
                     Сонголтууд (мөр тус бүр)
                     <textarea
-                      value={q.options.join("\\n")}
+                      value={q.options.join("\n")}
                       onChange={(e) =>
                         setDrafts((ds) =>
                           ds!.map((d, j) =>
@@ -286,7 +286,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                               ? {
                                   ...d,
                                   options: e.target.value
-                                    .split(/\\n+/)
+                                    .split(/\n+/)
                                     .map((v) => v.trim())
                                     .filter(Boolean),
                                 }
@@ -350,7 +350,7 @@ export function QuizGenerator({ onClose }: { onClose: () => void }) {
                 Хянасан Quiz хадгалах
               </button>
             </div>
-          </>
+          </Fragment>
         )}
         {error && (
           <div className="error-banner" role="alert">

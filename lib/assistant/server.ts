@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { parseCardDrafts, parseQuizDrafts } from "@/lib/knowledge/generation";
+import { readLimitedBody } from "@/lib/http/request";
 import { parsePlanProposal, planSchema } from "./plan";
 const json = (value: unknown, status = 200) =>
   Response.json(value, { status, headers: { "Cache-Control": "no-store" } });
@@ -32,28 +33,24 @@ export async function handleBondookRequest(
   if (!request.headers.get("content-type")?.includes("application/json"))
     return json({ error: "Хүсэлтийн бүтэц буруу." }, 415);
   // Bound streamed bytes as well as Content-Length, which a client can omit or forge.
-  let raw = "";
-  const reader = request.body?.getReader();
-  if (!reader) return json({ error: "Хүсэлт хоосон." }, 400);
-  const decoder = new TextDecoder();
-  let bytes = 0;
-  try {
-    while (true) {
-      const part = await reader.read();
-      if (part.done) break;
-      bytes += part.value.byteLength;
-      if (
-        bytes > (kind === "cards" || kind === "quiz" ? 3 * 1024 * 1024 : 24000)
-      ) {
-        await reader.cancel();
-        return json({ error: "Асуулт хэт урт байна." }, 413);
-      }
-      raw += decoder.decode(part.value, { stream: true });
-    }
-    raw += decoder.decode();
-  } catch {
-    return json({ error: "Хүсэлтийг уншиж чадсангүй." }, 400);
+  const bodyResult = await readLimitedBody(
+    request,
+    kind === "cards" || kind === "quiz" ? 3 * 1024 * 1024 : 24000,
+  );
+  if (!bodyResult.ok) {
+    if (bodyResult.reason === "too_large")
+      return json({ error: "Асуулт хэт урт байна." }, 413);
+    return json(
+      {
+        error:
+          bodyResult.reason === "empty"
+            ? "Хүсэлт хоосон."
+            : "Хүсэлтийг уншиж чадсангүй.",
+      },
+      400,
+    );
   }
+  const raw = bodyResult.value;
   let input: {
     message?: unknown;
     context?: unknown;
@@ -63,7 +60,10 @@ export async function handleBondookRequest(
     language?: unknown;
   };
   try {
-    input = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      return json({ error: "Хүсэлтийн бүтэц буруу." }, 400);
+    input = parsed as typeof input;
   } catch {
     return json({ error: "Хүсэлтийн бүтэц буруу." }, 400);
   }
